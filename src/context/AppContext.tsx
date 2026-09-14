@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Notification, Position, ShiftSession, ShiftType, User } from "../types";
-import { getChecklistTemplate } from "../data/checklists";
+import { getChecklistTemplate, STAFF_POSITIONS } from "../data/checklists";
 import {
   ensureDefaultManager,
   getActiveSession,
@@ -18,14 +18,20 @@ import {
   saveUsers,
   uid,
 } from "../data/storage";
+import {
+  getOrCreateShiftSessionAction,
+  toggleTaskWorkAction,
+  endShiftSessionAction,
+} from "../actions/checklist";
 
 interface AppContextType {
   currentUser: User | null;
   selectedShift: ShiftType | null;
   activeSession: ShiftSession | null;
+  sessions: ShiftSession[];
   isReady: boolean;
-  login: (user: User, shift?: ShiftType) => void;
-  logout: () => void;
+  login: (user: User, shift?: ShiftType, redirectPath?: string) => void;
+  logout: (redirectTo?: string) => void;
   selectShift: (shift: ShiftType) => void;
   selectPosition: (position: string) => void;
   updateSession: (updated: ShiftSession) => void;
@@ -44,16 +50,19 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [currentUser, setCurrentUserState] = useState<User | null>(null);
   const [selectedShift, setSelectedShiftState] = useState<ShiftType | null>(null);
   const [activeSession, setActiveSessionState] = useState<ShiftSession | null>(null);
+  const [sessions, setSessionsState] = useState<ShiftSession[]>([]);
 
   useEffect(() => {
     ensureDefaultManager();
     const storedUser = getCurrentUser();
     const storedShift = getSelectedShift();
     const storedSession = getActiveSession();
+    const storedSessions = getSessions();
 
     if (storedUser) setCurrentUserState(storedUser);
     if (storedShift) setSelectedShiftState(storedShift);
     if (storedSession) setActiveSessionState(storedSession);
+    setSessionsState(storedSessions);
 
     setIsReady(true);
   }, []);
@@ -87,50 +96,56 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     saveActiveSession(session);
   }
 
-  function login(user: User, shift?: ShiftType) {
-    setCurrentUser(user);
-    if (user.role === "manager") {
+  function login(user: User, shift?: ShiftType, redirectPath?: unknown) {
+    const targetPath = typeof redirectPath === "string" ? redirectPath : null;
+    if (targetPath) {
+      setCurrentUser(user);
+      startTransition(() => {
+        router.push(targetPath);
+      });
+      return;
+    }
+    if (user.role === "admin" || user.role === "committee" || user.role === "general_manager") {
+      setCurrentUser(user);
       startTransition(() => {
         router.push("/admin/dashboard");
       });
+    } else if (user.role === "manager" || user.role === "manager_assistant") {
+      setCurrentUser(user);
+      startTransition(() => {
+        router.push("/manager/dashboard");
+      });
     } else {
-      if (shift) {
-        setSelectedShift(shift);
-        startTransition(() => {
-          router.push("/position");
-        });
-      } else {
-        startTransition(() => {
-          router.push("/shift");
-        });
-      }
+      const staffUser: User = { ...user, position: undefined };
+      setCurrentUser(staffUser);
+      startTransition(() => {
+        router.push("/position");
+      });
     }
   }
 
-  function logout() {
-    const wasManager = currentUser?.role === "manager";
+  function logout(redirectTo?: unknown) {
+    const targetUrl = typeof redirectTo === "string" ? redirectTo : null;
+    const prevRole = currentUser?.role;
     setCurrentUser(null);
     setSelectedShift(null);
     setActiveSession(null);
 
     startTransition(() => {
-      if (wasManager) {
+      if (targetUrl) {
+        router.push(targetUrl);
+      } else if (prevRole === "admin" || prevRole === "committee" || prevRole === "general_manager") {
         router.push("/admin");
+      } else if (prevRole === "manager" || prevRole === "manager_assistant") {
+        router.push("/manager");
       } else {
         router.push("/");
       }
     });
   }
 
-  function selectShift(shift: ShiftType) {
-    setSelectedShift(shift);
-    startTransition(() => {
-      router.push("/position");
-    });
-  }
-
   function selectPosition(position: string) {
-    if (!currentUser || !selectedShift) return;
+    if (!currentUser) return;
 
     let activeUser = currentUser;
     if (position !== activeUser.position) {
@@ -140,35 +155,140 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       saveUsers(users);
     }
 
-    const template = getChecklistTemplate(position, selectedShift);
-    const session: ShiftSession = {
-      id: uid(),
-      userId: activeUser.id,
-      userName: activeUser.name,
-      userPosition: position,
-      shift: selectedShift,
-      startedAt: new Date().toISOString(),
-      completedAt: null,
-      items: template.map((i) => ({ ...i, completedAt: null })),
-      notified: false,
-    };
+    startTransition(() => {
+      router.push("/shift");
+    });
+  }
 
-    const sessions = getSessions();
-    saveSessions([...sessions, session]);
-    setActiveSession(session);
+  async function selectShift(shift: ShiftType) {
+    if (!currentUser) return;
+    setSelectedShift(shift);
+
+    const position = currentUser.position || STAFF_POSITIONS[0];
+
+    // Attempt to fetch or create session from Supabase DB
+    try {
+      const res = await getOrCreateShiftSessionAction({
+        userId: currentUser.id,
+        userName: currentUser.name,
+        position,
+        shift,
+      });
+
+      if (res.success && res.session) {
+        const session = res.session;
+        const allSessions = getSessions();
+        const existingIdx = allSessions.findIndex((s) => s.id === session.id);
+        const next =
+          existingIdx >= 0
+            ? allSessions.map((s) => (s.id === session.id ? session : s))
+            : [...allSessions, session];
+        saveSessions(next);
+        setSessionsState(next);
+        setActiveSession(session);
+
+        startTransition(() => {
+          router.push(currentUser.role === "manager" ? "/admin/dashboard" : "/checklist");
+        });
+        return;
+      }
+    } catch (err) {
+      console.warn("Could not sync shift session from DB, fallback to local:", err);
+    }
+
+    // Local fallback
+    const allSessions = getSessions();
+    const todayStr = new Date().toDateString();
+
+    const existingIndex = allSessions.findIndex(
+      (s) =>
+        s.shift === shift &&
+        s.userPosition?.trim() === position.trim() &&
+        (new Date(s.startedAt).toDateString() === todayStr ||
+          (s.completedAt ? new Date(s.completedAt).toDateString() === todayStr : false))
+    );
+
+    let session: ShiftSession;
+    if (existingIndex >= 0) {
+      session = {
+        ...allSessions[existingIndex],
+        completedAt: allSessions[existingIndex].items.every((i) => i.completedAt !== null)
+          ? allSessions[existingIndex].completedAt
+          : null,
+      };
+      setActiveSession(session);
+    } else {
+      const template = getChecklistTemplate(position, shift);
+      session = {
+        id: uid(),
+        userId: currentUser.id,
+        userName: currentUser.name,
+        userPosition: position,
+        shift: shift,
+        startedAt: new Date().toISOString(),
+        completedAt: null,
+        items: template.map((i) => ({ ...i, completedAt: null })),
+        notified: false,
+      };
+      const next = [...allSessions, session];
+      saveSessions(next);
+      setSessionsState(next);
+      setActiveSession(session);
+    }
 
     startTransition(() => {
-      router.push(activeUser.role === "manager" ? "/admin/dashboard" : "/checklist");
+      router.push(currentUser.role === "manager" ? "/admin/dashboard" : "/checklist");
     });
   }
 
   function updateSession(updated: ShiftSession) {
-    const sessions = getSessions().map((s) => (s.id === updated.id ? updated : s));
-    saveSessions(sessions);
+    const allSessions = getSessions();
+    const hasSess = allSessions.some((s) => s.id === updated.id);
+    const next = hasSess
+      ? allSessions.map((s) => (s.id === updated.id ? updated : s))
+      : [...allSessions, updated];
+    saveSessions(next);
+    setSessionsState(next);
+
+    // Sync toggle status with Supabase task_work
+    const changedItem = updated.items.find((item) => {
+      const prev = activeSession?.items.find((p) => p.id === item.id);
+      return prev ? prev.completedAt !== item.completedAt : false;
+    });
+
+    if (changedItem) {
+      toggleTaskWorkAction({
+        taskWorkId: changedItem.taskWorkId,
+        shiftSessionId: updated.id,
+        taskId: changedItem.id,
+        userId: updated.userId,
+        completed: Boolean(changedItem.completedAt),
+      }).catch((err) => console.error("Failed to sync toggle to DB:", err));
+    }
+
     setActiveSession(updated);
   }
 
   function endShift() {
+    if (activeSession) {
+      const endedAt = new Date().toISOString();
+      const updated: ShiftSession = {
+        ...activeSession,
+        completedAt: activeSession.completedAt || endedAt,
+      };
+      const allSessions = getSessions();
+      const hasSess = allSessions.some((s) => s.id === updated.id);
+      const next = hasSess
+        ? allSessions.map((s) => (s.id === updated.id ? updated : s))
+        : [...allSessions, updated];
+      saveSessions(next);
+      setSessionsState(next);
+
+      // Record shift end in Supabase shift_session
+      endShiftSessionAction(activeSession.id).catch((err) =>
+        console.error("Failed to end shift in DB:", err)
+      );
+    }
     const wasManager = currentUser?.role === "manager";
     setActiveSession(null);
     setSelectedShift(null);
@@ -188,6 +308,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         currentUser,
         selectedShift,
         activeSession,
+        sessions,
         isReady,
         login,
         logout,

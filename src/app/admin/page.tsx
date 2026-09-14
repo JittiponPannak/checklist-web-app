@@ -11,7 +11,7 @@ export default function AdminLoginPage() {
 
   useEffect(() => {
     if (!isReady) return;
-    if (currentUser?.role === "manager") {
+    if (currentUser && (currentUser.role === "admin" || currentUser.role === "committee" || currentUser.role === "general_manager")) {
       router.replace("/admin/dashboard");
     }
   }, [currentUser, isReady, router]);

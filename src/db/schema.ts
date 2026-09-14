@@ -40,6 +40,7 @@ export const taskWork = pgTable("task_work", {
     id: uuid("id").primaryKey().defaultRandom(),
     task: uuid("task_id").notNull().references(() => tasks.id),
     user: uuid("user_id").notNull().references(() => users.id),
+    shift_session: uuid("shift_session_id").notNull().references(() => shiftSession.id),
 
     timestamp: timestamp("timestamp"),
     manager_assistance_approve_timestamp: timestamp("manager_assistance_approve_timestamp"),

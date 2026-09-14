@@ -12,10 +12,10 @@ export default function HomePage() {
   useEffect(() => {
     if (!isReady) return;
     if (currentUser) {
-      if (currentUser.role === "manager") {
-        router.replace("/admin/dashboard");
+      if (currentUser.role === "manager" || currentUser.role === "manager_assistant" || currentUser.role === "committee") {
+        router.replace("/manager/dashboard");
       } else {
-        router.replace("/shift");
+        router.replace("/position");
       }
     }
   }, [currentUser, isReady, router]);

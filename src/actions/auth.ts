@@ -3,7 +3,7 @@
 import { db } from "../db";
 import { users } from "../db/schema";
 import { eq, sql } from "drizzle-orm";
-import { User } from "../types";
+import { User, Role } from "../types";
 
 export interface AuthResponse {
   success: boolean;
@@ -91,18 +91,16 @@ export async function loginAction(email: string, password: string): Promise<Auth
     const isManagement = ['committee', 'general_manager', 'manager', 'manager_assistant'].includes(foundUser.role);
 
     // Map DB role to UI position
-    let defaultPosition = "พนักงานทั่วไป";
+    let defaultPosition: string | undefined = undefined;
     if (foundUser.role === "manager") defaultPosition = "ผู้จัดการร้าน";
     else if (foundUser.role === "committee") defaultPosition = "กรรมการ";
     else if (foundUser.role === "manager_assistant") defaultPosition = "ผู้ช่วยผู้จัดการร้าน";
-    else if (cleanEmail.includes("cashier")) defaultPosition = "แคชเชียร์";
-    else if (cleanEmail.includes("stock")) defaultPosition = "พนักงานสต็อก/จัดเรียง";
 
     const userObj: User = {
       id: foundUser.id,
       name: foundUser.name,
       email: foundUser.email,
-      role: isManagement ? "manager" : "employee",
+      role: (foundUser.role as Role),
       position: defaultPosition,
     };
 
@@ -172,8 +170,8 @@ export async function registerAction(data: {
       id: created.id,
       name: created.name,
       email: created.email,
-      role: isManagement ? "manager" : "employee",
-      position: data.position ?? (isManagement ? 'ผู้จัดการร้าน' : 'แคชเชียร์'),
+      role: (created.role as Role),
+      position: isManagement ? (data.position ?? 'ผู้จัดการร้าน') : undefined,
     };
 
     return {

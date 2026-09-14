@@ -31,14 +31,13 @@ export function ChecklistPage({
   });
 
   function toggleItem(id: string) {
-    if (session.completedAt) return;
     const updated = session.items.map((item) =>
       item.id === id ? { ...item, completedAt: item.completedAt ? null : new Date().toISOString() } : item
     );
     const allComplete = updated.every((i) => i.completedAt);
-    let updatedSession = { ...session, items: updated };
+    let updatedSession = { ...session, items: updated, completedAt: allComplete ? (session.completedAt || new Date().toISOString()) : null };
     if (allComplete && !session.notified) {
-      const completedAt = new Date().toISOString();
+      const completedAt = updatedSession.completedAt || new Date().toISOString();
       updatedSession = { ...updatedSession, completedAt, notified: true };
       const notifs = getNotifications();
       notifs.push({

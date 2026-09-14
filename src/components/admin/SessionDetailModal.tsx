@@ -6,13 +6,24 @@ import { useModalFocusTrap } from "../common/ModalFocusTrap";
 export function SessionDetailModal({
   session,
   onClose,
+  canApprove = false,
+  isApproved = false,
+  onApprove,
+  approveRoleTitle = "ผู้จัดการ",
 }: {
   session: ShiftSession | null;
   onClose: () => void;
+  canApprove?: boolean;
+  isApproved?: boolean;
+  onApprove?: (sessionId: string) => void;
+  approveRoleTitle?: string;
 }) {
   const { dialogRef, handleKeyDown } = useModalFocusTrap(Boolean(session), onClose);
 
   if (!session) return null;
+
+  const total = session.items.length;
+  const done = session.items.filter((i) => i.completedAt).length;
 
   return (
     <div
@@ -26,7 +37,7 @@ export function SessionDetailModal({
         aria-modal="true"
         aria-labelledby="session-detail-title"
         tabIndex={-1}
-        className="bg-white border border-slate-200 rounded-2xl w-full max-w-lg max-h-[85vh] overflow-y-auto shadow-2xl p-6 sm:p-8 focus-visible:outline-2 focus-visible:outline-slate-900"
+        className="bg-white border border-slate-200 rounded-2xl w-full max-w-lg max-h-[85vh] overflow-y-auto shadow-2xl p-6 sm:p-8 focus-visible:outline-2 focus-visible:outline-slate-900 flex flex-col justify-between"
         onClick={(e) => e.stopPropagation()}
       >
         <div>
@@ -39,21 +50,36 @@ export function SessionDetailModal({
                 {session.userPosition && <Badge color="muted">{session.userPosition}</Badge>}
                 {getShiftBadge(session.shift)}
                 <span className="text-xs font-mono text-slate-500">{fmtDate(session.startedAt)}</span>
+                {isApproved ? (
+                  <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-300 px-2 py-0.5 rounded-full">
+                    ✓ รับรองผลแล้ว
+                  </span>
+                ) : (
+                  <span className="text-[10px] font-bold text-amber-800 bg-amber-50 border border-amber-300 px-2 py-0.5 rounded-full">
+                    รอรับรองผล
+                  </span>
+                )}
               </div>
             </div>
             <button
               type="button"
               onClick={onClose}
               aria-label="ปิดรายละเอียดกะ"
-              className="p-2 -mr-2 text-slate-500 hover:text-slate-800 rounded-lg min-w-[36px] min-h-[36px] flex items-center justify-center focus-visible:outline-2 focus-visible:outline-slate-900"
+              className="p-2 -mr-2 text-slate-500 hover:text-slate-800 rounded-lg min-w-[36px] min-h-[36px] flex items-center justify-center focus-visible:outline-2 focus-visible:outline-slate-900 cursor-pointer"
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
               </svg>
             </button>
           </div>
+
+          <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 mb-4 flex items-center justify-between text-xs font-semibold text-slate-700">
+            <span>ความคืบหน้างาน: {done}/{total} ข้อ</span>
+            <span className="font-mono font-bold text-slate-900">{total > 0 ? Math.round((done / total) * 100) : 0}%</span>
+          </div>
+
           <Divider />
-          <div className="mt-4 space-y-2.5">
+          <div className="mt-4 space-y-2.5 max-h-[50vh] overflow-y-auto pr-1">
             {session.items.map((item, idx) => {
               const prevItem = idx > 0 ? session.items[idx - 1] : null;
               const showCat = item.category && (!prevItem || prevItem.category !== item.category);
@@ -93,7 +119,7 @@ export function SessionDetailModal({
                       </div>
                       {item.completedAt && (
                         <p className="text-[10px] font-mono text-emerald-800 font-semibold mt-0.5">
-                          {fmtTime(item.completedAt)}
+                          เสร็จเมื่อ {fmtTime(item.completedAt)}
                         </p>
                       )}
                     </div>
@@ -103,6 +129,22 @@ export function SessionDetailModal({
             })}
           </div>
         </div>
+
+        {/* Modal Bottom Action: Approve Button */}
+        {canApprove && onApprove && !isApproved && (
+          <div className="mt-5 pt-4 border-t border-slate-200">
+            <button
+              type="button"
+              onClick={() => onApprove(session.id)}
+              className="w-full py-2.5 px-4 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs sm:text-sm font-semibold transition-all shadow-xs cursor-pointer flex items-center justify-center gap-2"
+            >
+              <span>รับรองผลการตรวจงาน ({approveRoleTitle})</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

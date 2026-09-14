@@ -9,89 +9,105 @@ export function AdminAuthPage({ onLogin }: { onLogin: (user: User) => void }) {
   const [tab, setTab] = useState<"login" | "register">("login");
   const [form, setForm] = useState({
     name: "",
-    email: "",
+    email: "admin@factory.com",
     password: "",
-    position: MANAGEMENT_POSITIONS[1], // default "ผู้จัดการร้าน"
+    position: "ผู้ดูแลระบบส่วนกลาง",
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  async function directLogin(email: string, pass: string, position: string) {
+  function directLogin(email: string, pass: string, position: string) {
     setLoading(true);
     setError("");
-    try {
-      const res = await loginAction(email, pass);
-      if (!res.success || !res.user) {
-        setError(res.error || "อีเมลหรือรหัสผ่านไม่ถูกต้อง");
-        setLoading(false);
-        return;
-      }
-      const activeUser: User = { ...res.user, role: "manager", position: position || res.user.position };
-      const localUsers = getUsers();
-      if (!localUsers.some((u) => u.id === activeUser.id)) {
-        saveUsers([...localUsers, activeUser]);
-      }
-      onLogin(activeUser);
-    } catch {
-      setError("เกิดข้อผิดพลาดในการเชื่อมต่อฐานข้อมูล");
-      setLoading(false);
+    const localUsers = getUsers();
+    let found = localUsers.find((u) => u.email.toLowerCase() === email.toLowerCase());
+    if (!found) {
+      found = {
+        id: "u-admin",
+        name: "คุณสมเกียรติ บริหารกิจ",
+        email: email,
+        password: pass,
+        role: "admin",
+        position: position || "ผู้ดูแลระบบส่วนกลาง",
+      };
+      saveUsers([...localUsers, found]);
     }
+    onLogin(found);
   }
 
-  async function handleLogin() {
+  function handleLogin() {
     if (!form.email.trim() || !form.password.trim()) {
       setError("กรุณากรอกอีเมลและรหัสผ่าน");
       return;
     }
     setLoading(true);
     setError("");
-    try {
-      const res = await loginAction(form.email, form.password);
-      if (!res.success || !res.user) {
-        setError(res.error || "อีเมลหรือรหัสผ่านไม่ถูกต้อง");
-        setLoading(false);
-        return;
+
+    const localUsers = getUsers();
+    const found = localUsers.find(
+      (u) =>
+        u.email.trim().toLowerCase() === form.email.trim().toLowerCase() &&
+        u.password === form.password.trim()
+    );
+
+    // Fallback support for default admin credentials
+    if (form.email.trim().toLowerCase() === "admin@factory.com" && form.password.trim() === "admin123") {
+      const adminUser: User = found || {
+        id: "u-admin",
+        name: "คุณสมเกียรติ บริหารกิจ",
+        email: "admin@factory.com",
+        password: "admin123",
+        role: "admin",
+        position: "ผู้ดูแลระบบส่วนกลาง",
+      };
+      if (!localUsers.some((u) => u.id === adminUser.id)) {
+        saveUsers([...localUsers, adminUser]);
       }
-      const activeUser: User = { ...res.user, role: "manager", position: res.user.position || form.position };
-      const localUsers = getUsers();
-      if (!localUsers.some((u) => u.id === activeUser.id)) {
-        saveUsers([...localUsers, activeUser]);
-      }
-      onLogin(activeUser);
-    } catch {
-      setError("เกิดข้อผิดพลาดในการเชื่อมต่อฐานข้อมูล");
-      setLoading(false);
+      onLogin(adminUser);
+      return;
     }
+
+    if (!found) {
+      setError("อีเมลหรือรหัสผ่านไม่ถูกต้อง (เฉพาะผู้ดูแลระบบ)");
+      setLoading(false);
+      return;
+    }
+
+    if (found.role !== "admin") {
+      setError("บัญชีนี้ไม่มีสิทธิ์ผู้ดูแลระบบส่วนกลาง (Admin)");
+      setLoading(false);
+      return;
+    }
+
+    onLogin(found);
   }
 
-  async function handleRegister() {
+  function handleRegister() {
     if (!form.name.trim() || !form.email.trim() || !form.password.trim()) {
       setError("กรุณากรอกข้อมูลให้ครบถ้วน");
       return;
     }
     setLoading(true);
     setError("");
-    try {
-      const res = await registerAction({
-        name: form.name,
-        email: form.email,
-        password: form.password,
-        role: "manager",
-        position: form.position,
-      });
-      if (!res.success || !res.user) {
-        setError(res.error || "ไม่สามารถลงทะเบียนได้");
-        setLoading(false);
-        return;
-      }
-      const activeUser: User = { ...res.user, role: "manager", position: form.position };
-      const localUsers = getUsers();
-      saveUsers([...localUsers, activeUser]);
-      onLogin(activeUser);
-    } catch {
-      setError("เกิดข้อผิดพลาดในการลงทะเบียน");
+
+    const localUsers = getUsers();
+    if (localUsers.some((u) => u.email.trim().toLowerCase() === form.email.trim().toLowerCase())) {
+      setError("อีเมลนี้มีอยู่ในระบบแล้ว");
       setLoading(false);
+      return;
     }
+
+    const newUser: User = {
+      id: "u-" + Date.now().toString(36),
+      name: form.name.trim(),
+      email: form.email.trim().toLowerCase(),
+      password: form.password.trim(),
+      role: "admin",
+      position: "ผู้ดูแลระบบส่วนกลาง",
+    };
+
+    saveUsers([...localUsers, newUser]);
+    onLogin(newUser);
   }
 
   const inputStyle =
@@ -204,23 +220,8 @@ export function AdminAuthPage({ onLogin }: { onLogin: (user: User) => void }) {
           </div>
 
           {tab === "register" && (
-            <div>
-              <label htmlFor="admin-position" className="block text-xs font-semibold text-slate-700 mb-1 flex items-center justify-between">
-                <span>ตำแหน่งฝ่ายบริหาร</span>
-                <span className="text-[10px] text-slate-700 bg-slate-100 border border-slate-300 px-2 py-0.5 rounded font-medium">3 ตำแหน่ง</span>
-              </label>
-              <select
-                id="admin-position"
-                value={form.position}
-                onChange={(e) => setForm({ ...form, position: e.target.value })}
-                aria-invalid={Boolean(error)}
-                aria-describedby={error ? "admin-auth-error" : undefined}
-                className="w-full bg-slate-50/80 hover:bg-slate-50 focus:bg-white border border-slate-300 focus:border-slate-900 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-slate-900 cursor-pointer focus-visible:outline-none focus:ring-3 focus:ring-slate-950/10 transition-all"
-              >
-                <option value="ผู้ช่วยผู้จัดการร้าน">ผู้ช่วยผู้จัดการร้าน</option>
-                <option value="ผู้จัดการร้าน">ผู้จัดการร้าน</option>
-                <option value="กรรมการ">กรรมการ</option>
-              </select>
+            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-600">
+              <span className="font-semibold text-slate-800">สิทธิ์การใช้งาน:</span> ผู้ดูแลระบบส่วนกลาง (System Administrator)
             </div>
           )}
 
@@ -243,7 +244,7 @@ export function AdminAuthPage({ onLogin }: { onLogin: (user: User) => void }) {
               loading ? "opacity-70 cursor-not-allowed" : ""
             }`}
           >
-            <span>{loading ? "กำลังตรวจสอบข้อมูล..." : (tab === "login" ? "เข้าสู่ระบบผู้จัดการ" : "ยืนยันการลงทะเบียน")}</span>
+            <span>{loading ? "กำลังเข้าสู่ระบบ..." : (tab === "login" ? "เข้าสู่ระบบผู้ดูแลระบบ (Admin)" : "ยืนยันการลงทะเบียน")}</span>
             {!loading && (
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M5 12h14M12 5l7 7-7 7" />
@@ -257,75 +258,47 @@ export function AdminAuthPage({ onLogin }: { onLogin: (user: User) => void }) {
           <div className="pt-4 border-t border-slate-100">
             <div className="flex items-center justify-between mb-2.5">
               <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
-                คลิกทดสอบด่วน (Sample Accounts):
+                คลิกทดสอบด่วน (Admin Sample Account):
               </span>
-              <span className="text-[10px] text-amber-900 bg-amber-50 border border-amber-200/80 px-2 py-0.5 rounded-md font-semibold">
+              <span className="text-[10px] text-indigo-900 bg-indigo-50 border border-indigo-200/80 px-2 py-0.5 rounded-md font-semibold">
                 1-Click Login
               </span>
             </div>
-            <div className="space-y-2">
-              {[
-                {
-                  role: "ผู้จัดการร้าน",
-                  name: "คุณอนุรักษ์ วงศ์สวัสดิ์",
-                  email: "manager@factory.com",
-                  pass: "manager123",
-                  pos: "ผู้จัดการร้าน",
-                  badge: "bg-slate-900 text-white border-slate-900",
-                },
-                {
-                  role: "ผู้ช่วยผู้จัดการ",
-                  name: "คุณพรทิพย์ สุขเจริญ",
-                  email: "asst@factory.com",
-                  pass: "123",
-                  pos: "ผู้ช่วยผู้จัดการร้าน",
-                  badge: "bg-indigo-50 text-indigo-900 border-indigo-200",
-                },
-                {
-                  role: "กรรมการบริหาร",
-                  name: "คุณกิตติศักดิ์ พัฒนกิจ",
-                  email: "director@factory.com",
-                  pass: "director123",
-                  pos: "กรรมการ",
-                  badge: "bg-amber-50 text-amber-950 border-amber-200",
-                },
-              ].map((acc) => (
-                <button
-                  key={acc.email}
-                  type="button"
-                  onClick={() => directLogin(acc.email, acc.pass, acc.pos)}
-                  className="w-full flex items-center justify-between p-2.5 rounded-xl border border-slate-200 hover:border-slate-400 hover:bg-slate-50 transition-all group cursor-pointer text-left shadow-2xs"
-                >
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-lg bg-slate-100 group-hover:bg-slate-900 group-hover:text-white flex items-center justify-center text-xs font-bold text-slate-700 border border-slate-200 transition-colors">
-                      {acc.role.charAt(0)}
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-xs font-bold text-slate-900 group-hover:text-slate-950">{acc.name}</span>
-                        <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-md border ${acc.badge}`}>
-                          {acc.role}
-                        </span>
-                      </div>
-                      <span className="text-[11px] text-slate-500 font-mono">{acc.email}</span>
-                    </div>
+            <div>
+              <button
+                type="button"
+                onClick={() => directLogin("admin@factory.com", "admin123", "ผู้ดูแลระบบส่วนกลาง")}
+                className="w-full flex items-center justify-between p-3 rounded-xl border border-slate-200 hover:border-indigo-400 hover:bg-indigo-50/20 transition-all group cursor-pointer text-left shadow-2xs"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-slate-900 text-white flex items-center justify-center text-xs font-bold shadow-xs">
+                    AD
                   </div>
-                  <span className="text-[11px] text-slate-700 font-bold group-hover:translate-x-0.5 transition-transform flex items-center gap-0.5">
-                    เข้าสู่ระบบ →
-                  </span>
-                </button>
-              ))}
+                  <div>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="text-xs font-bold text-slate-900">คุณสมเกียรติ บริหารกิจ</span>
+                      <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-indigo-50 text-indigo-900 border border-indigo-200">
+                        System Admin
+                      </span>
+                    </div>
+                    <span className="text-[11px] text-slate-500 font-mono">admin@factory.com</span>
+                  </div>
+                </div>
+                <span className="text-xs text-indigo-600 font-bold group-hover:translate-x-0.5 transition-transform flex items-center gap-1 flex-shrink-0">
+                  เข้าสู่ระบบ →
+                </span>
+              </button>
             </div>
           </div>
         )}
 
-        {/* Back link */}
-        <div className="text-center pt-2">
+        {/* Portal Links */}
+        <div className="pt-2 border-t border-slate-100 text-center text-xs text-slate-500">
           <a
             href="/"
-            className="text-xs text-slate-500 hover:text-slate-900 font-medium transition-colors inline-flex items-center gap-1 cursor-pointer"
+            className="hover:text-slate-900 font-medium transition-colors inline-flex items-center gap-1 cursor-pointer"
           >
-            ← กลับไปหน้าพนักงานทั่วไป (Staff Checklist)
+            ← กลับไปหน้าระบบร้านสาขา (เข้าสู่ระบบพนักงาน & ผู้จัดการ)
           </a>
         </div>
       </div>

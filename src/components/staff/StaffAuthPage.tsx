@@ -4,13 +4,22 @@ import { STAFF_POSITIONS } from "../../data/checklists";
 import { getUsers, saveUsers } from "../../data/storage";
 import { BrandLogo } from "../common/BrandLogo";
 import { loginAction, registerAction } from "../../actions/auth";
+import Link from "next/link";
 
-export function StaffAuthPage({ onLogin }: { onLogin: (user: User) => void }) {
-  const [tab, setTab] = useState<"login" | "register">("login");
+type AuthTab = "staff" | "manager" | "register";
+
+export function StaffAuthPage({
+  onLogin,
+}: {
+  onLogin: (user: User, shift?: any, redirectPath?: string) => void;
+}) {
+  const [tab, setTab] = useState<AuthTab>("staff");
   const [form, setForm] = useState({
     name: "",
     email: "",
     password: "",
+    role: "employee" as 'employee' | 'manager' | 'committee' | 'manager_assistant',
+    position: STAFF_POSITIONS[0],
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -33,7 +42,18 @@ export function StaffAuthPage({ onLogin }: { onLogin: (user: User) => void }) {
       if (!localUsers.some((u) => u.id === res.user!.id)) {
         saveUsers([...localUsers, res.user]);
       }
-      onLogin(res.user);
+      // If logging in from manager tab, redirect directly to /manager/dashboard
+      if (tab === "manager") {
+        const isExec = res.user.role !== "employee";
+        if (!isExec) {
+          setError("บัญชีนี้เป็นบัญชีพนักงานทั่วไป กรุณาเข้าสู่ระบบผ่านแท็บ 'เข้าสู่ระบบพนักงาน'");
+          setLoading(false);
+          return;
+        }
+        onLogin(res.user, undefined, "/manager/dashboard");
+      } else {
+        onLogin(res.user);
+      }
     } catch (err: any) {
       console.error("Login error:", err);
       setError(err?.message || "เกิดข้อผิดพลาดในการเชื่อมต่อฐานข้อมูล กรุณาลองใหม่อีกครั้ง");
@@ -53,8 +73,8 @@ export function StaffAuthPage({ onLogin }: { onLogin: (user: User) => void }) {
         name: form.name,
         email: form.email,
         password: form.password,
-        role: "employee",
-        position: STAFF_POSITIONS[0],
+        role: form.role,
+        position: form.position,
       });
       if (!res.success || !res.user) {
         setError(res.error || "ไม่สามารถสมัครสมาชิกได้");
@@ -63,7 +83,11 @@ export function StaffAuthPage({ onLogin }: { onLogin: (user: User) => void }) {
       }
       const localUsers = getUsers();
       saveUsers([...localUsers, res.user]);
-      onLogin(res.user);
+      if (res.user.role !== "employee") {
+        onLogin(res.user, undefined, "/manager/dashboard");
+      } else {
+        onLogin(res.user);
+      }
     } catch (err: any) {
       console.error("Register error:", err);
       setError(err?.message || "เกิดข้อผิดพลาดในการสมัครสมาชิก กรุณาลองใหม่อีกครั้ง");
@@ -90,39 +114,47 @@ export function StaffAuthPage({ onLogin }: { onLogin: (user: User) => void }) {
         <div
           role="tablist"
           aria-label="ตัวเลือกการเข้าสู่ระบบ"
-          onKeyDown={(e) => {
-            if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
-              e.preventDefault();
-              setTab(tab === "login" ? "register" : "login");
-              setError("");
-            }
-          }}
-          className="flex bg-slate-100 p-1 rounded-xl mb-5 border border-slate-200/70"
+          className="flex bg-slate-100 p-1 rounded-xl mb-5 border border-slate-200/70 gap-1"
         >
-          {(["login", "register"] as const).map((t) => (
+          {[
+            { id: "staff" as AuthTab, label: "เข้าสู่ระบบพนักงาน" },
+            { id: "manager" as AuthTab, label: "เข้าสู่ระบบฝ่ายบริหาร" },
+            { id: "register" as AuthTab, label: "สมัครสมาชิก" },
+          ].map((t) => (
             <button
-              key={t}
+              key={t.id}
               type="button"
               role="tab"
-              id={`staff-${t}-tab`}
-              tabIndex={tab === t ? 0 : -1}
-              aria-selected={tab === t}
-              aria-controls={`staff-${t}-panel`}
+              id={`tab-${t.id}`}
+              tabIndex={tab === t.id ? 0 : -1}
+              aria-selected={tab === t.id}
               onClick={() => {
-                setTab(t);
+                setTab(t.id);
                 setError("");
               }}
-              className={`flex-1 py-1.5 min-h-[32px] text-xs sm:text-sm font-semibold rounded-lg transition-all cursor-pointer ${
-                tab === t ? "bg-white text-slate-900 shadow-xs" : "text-slate-600 hover:text-slate-900"
+              className={`flex-1 py-1.5 min-h-[34px] text-xs font-semibold rounded-lg transition-all cursor-pointer text-center ${
+                tab === t.id
+                  ? t.id === "manager"
+                    ? "bg-slate-900 text-white shadow-xs font-bold"
+                    : "bg-white text-slate-900 shadow-xs font-bold"
+                  : "text-slate-600 hover:text-slate-900"
               }`}
             >
-              {t === "login" ? "เข้าสู่ระบบพนักงาน" : "สมัครสมาชิก"}
+              {t.label}
             </button>
           ))}
         </div>
 
+        {/* Manager Mode Banner Notification */}
+        {tab === "manager" && (
+          <div className="mb-4 p-2.5 rounded-xl bg-indigo-50/80 border border-indigo-200/80 text-[11px] text-indigo-900 flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-indigo-600 animate-pulse" />
+            <span>เข้าสู่ระบบเพื่อไปยัง <strong>Manager Dashboard</strong> (ผู้ช่วย, ผู้จัดการ, กรรมการ)</span>
+          </div>
+        )}
+
         {/* Form Panel */}
-        <div role="tabpanel" id={`staff-${tab}-panel`} aria-labelledby={`staff-${tab}-tab`} tabIndex={0} className="space-y-4 focus-visible:outline-none">
+        <div role="tabpanel" id={`tab-${tab}-panel`} tabIndex={0} className="space-y-4 focus-visible:outline-none">
           {tab === "register" && (
             <div>
               <label htmlFor="staff-name" className="block text-xs font-semibold text-slate-800 mb-1.5">
@@ -143,12 +175,12 @@ export function StaffAuthPage({ onLogin }: { onLogin: (user: User) => void }) {
 
           <div>
             <label htmlFor="staff-email" className="block text-xs font-semibold text-slate-800 mb-1.5">
-              อีเมลพนักงาน
+              {tab === "manager" ? "อีเมลฝ่ายบริหาร" : tab === "register" ? "อีเมล" : "อีเมลพนักงาน"}
             </label>
             <input
               id="staff-email"
               className={inp}
-              placeholder="cashier@factory.com"
+              placeholder={tab === "manager" ? "manager@factory.com" : "cashier@factory.com"}
               type="email"
               autoComplete="email"
               aria-invalid={Boolean(error)}
@@ -167,14 +199,32 @@ export function StaffAuthPage({ onLogin }: { onLogin: (user: User) => void }) {
               className={inp}
               placeholder="••••••••"
               type="password"
-              autoComplete={tab === "login" ? "current-password" : "new-password"}
+              autoComplete={tab === "register" ? "new-password" : "current-password"}
               aria-invalid={Boolean(error)}
               aria-describedby={error ? "staff-auth-error" : undefined}
               value={form.password}
               onChange={(e) => setForm({ ...form, password: e.target.value })}
-              onKeyDown={(e) => e.key === "Enter" && (tab === "login" ? handleLogin() : handleRegister())}
+              onKeyDown={(e) => e.key === "Enter" && (tab === "register" ? handleRegister() : handleLogin())}
             />
           </div>
+
+          {tab === "register" && (
+            <div>
+              <label className="block text-xs font-semibold text-slate-800 mb-1.5">
+                บทบาท / ตำแหน่ง
+              </label>
+              <select
+                value={form.role}
+                onChange={(e) => setForm({ ...form, role: e.target.value as any })}
+                className={inp}
+              >
+                <option value="employee">พนักงานทั่วไป (แคชเชียร์ / สต็อก)</option>
+                <option value="manager_assistant">ผู้ช่วยผู้จัดการร้าน (Assistant Manager)</option>
+                <option value="manager">ผู้จัดการร้าน (Store Manager)</option>
+                <option value="committee">กรรมการบริหาร (Executive Committee)</option>
+              </select>
+            </div>
+          )}
 
           {error && (
             <div id="staff-auth-error" role="alert" className="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-900 text-center font-semibold my-2 flex items-center justify-center gap-1.5">
@@ -191,12 +241,22 @@ export function StaffAuthPage({ onLogin }: { onLogin: (user: User) => void }) {
           <button
             type="button"
             disabled={loading}
-            onClick={tab === "login" ? handleLogin : handleRegister}
-            className={`w-full py-2.5 bg-slate-900 hover:bg-slate-800 active:bg-black text-white text-sm font-semibold rounded-xl shadow-sm transition-all mt-3 cursor-pointer flex items-center justify-center gap-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 ${
-              loading ? "opacity-70 cursor-not-allowed" : ""
-            }`}
+            onClick={tab === "register" ? handleRegister : handleLogin}
+            className={`w-full py-2.5 text-white text-sm font-semibold rounded-xl shadow-sm transition-all mt-3 cursor-pointer flex items-center justify-center gap-2 focus-visible:outline-2 focus-visible:outline-offset-2 ${
+              tab === "manager"
+                ? "bg-slate-900 hover:bg-slate-800 active:bg-black focus-visible:outline-slate-900"
+                : "bg-slate-900 hover:bg-slate-800 active:bg-black focus-visible:outline-slate-900"
+            } ${loading ? "opacity-70 cursor-not-allowed" : ""}`}
           >
-            <span>{loading ? "กำลังตรวจสอบข้อมูล..." : (tab === "login" ? "เข้าสู่ระบบ" : "ยืนยันการสมัครสมาชิก")}</span>
+            <span>
+              {loading
+                ? "กำลังตรวจสอบข้อมูล..."
+                : tab === "manager"
+                ? "เข้าสู่ระบบฝ่ายบริหาร (Manager) →"
+                : tab === "register"
+                ? "ยืนยันการสมัครสมาชิก"
+                : "เข้าสู่ระบบพนักงาน →"}
+            </span>
             {!loading && (
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M5 12h14M12 5l7 7-7 7" />
@@ -205,9 +265,9 @@ export function StaffAuthPage({ onLogin }: { onLogin: (user: User) => void }) {
           </button>
 
           {/* Quick 1-click credential helper for employee */}
-          {tab === "login" && (
+          {tab === "staff" && (
             <div className="pt-3.5 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-              <span className="text-[11px] font-medium text-slate-500">บัญชีทดสอบ:</span>
+              <span className="text-[11px] font-medium text-slate-500">บัญชีทดสอบพนักงาน:</span>
               <button
                 type="button"
                 onClick={() => {
@@ -222,22 +282,45 @@ export function StaffAuthPage({ onLogin }: { onLogin: (user: User) => void }) {
               </button>
             </div>
           )}
+
+          {/* Quick 1-click credentials for manager */}
+          {tab === "manager" && (
+            <div className="pt-3.5 border-t border-slate-100 space-y-2">
+              <span className="text-[11px] font-bold text-slate-600 block">
+                คลิกทดสอบด่วน (เข้าสู่ Manager Dashboard ทันที):
+              </span>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-1.5">
+                {[
+                  { role: "ผู้จัดการร้าน", email: "manager@factory.com", pass: "manager123" },
+                  { role: "ผู้ช่วยฯ", email: "assistant@factory.com", pass: "123" },
+                  { role: "กรรมการ", email: "director@factory.com", pass: "director123" },
+                ].map((acc) => (
+                  <button
+                    key={acc.email}
+                    type="button"
+                    onClick={() => {
+                      setForm({ ...form, email: acc.email, password: acc.pass });
+                      setError("");
+                    }}
+                    className="p-2 rounded-xl border border-slate-200 hover:border-slate-400 bg-slate-50 hover:bg-white text-left transition-all cursor-pointer shadow-2xs"
+                  >
+                    <span className="block text-xs font-bold text-slate-800">{acc.role}</span>
+                    <span className="block text-[10px] font-mono text-slate-500 truncate">{acc.email}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Link to Admin */}
-        <div className="mt-5 text-center">
-          <a
-            href="#admin"
-            onClick={(e) => {
-              e.preventDefault();
-              window.location.hash = "admin";
-              window.dispatchEvent(new HashChangeEvent("hashchange"));
-            }}
-            className="text-xs text-slate-500 hover:text-slate-900 font-medium transition-colors inline-flex items-center gap-1 cursor-pointer"
+        {/* Link to Admin Portal */}
+        <div className="mt-5 pt-4 border-t border-slate-100 text-center">
+          <Link
+            href="/admin"
+            className="text-xs text-slate-500 hover:text-slate-800 font-medium transition-colors inline-flex items-center gap-1 cursor-pointer"
           >
-            <span>สำหรับผู้บริหาร / ผู้จัดการร้าน</span>
-            <span>→</span>
-          </a>
+            <span>สำหรับผู้ดูแลระบบส่วนกลาง (Admin Portal) →</span>
+          </Link>
         </div>
       </div>
     </div>

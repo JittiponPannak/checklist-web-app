@@ -100,13 +100,14 @@ export function seedSampleData(force = false) {
   let notifs = getNotifications();
 
   const hasDirtyUsers = users.some((u) => u.name === "sdsd" || u.name === "ผู้จัดการร้าน");
-  const needsUsers = force || hasDirtyUsers || users.length < 5 || !users.some((u) => u.email === "director@factory.com");
+  const needsUsers = force || hasDirtyUsers || users.length < 5 || !users.some((u) => u.email === "admin@factory.com");
 
   if (needsUsers) {
     users = [
+      { id: "u-admin", name: "คุณสมเกียรติ บริหารกิจ", email: "admin@factory.com", password: "admin123", role: "admin", position: "ผู้ดูแลระบบส่วนกลาง" },
       { id: "u-manager", name: "คุณวิภาดา สุขเจริญ", email: "manager@factory.com", password: "manager123", role: "manager", position: "ผู้จัดการร้าน" },
-      { id: "u-director", name: "คุณกิตติศักดิ์ พัฒนกิจ", email: "director@factory.com", password: "director123", role: "manager", position: "กรรมการ" },
-      { id: "u-asst", name: "คุณธนากร เกียรติไพบูลย์", email: "assistant@factory.com", password: "123", role: "manager", position: "ผู้ช่วยผู้จัดการร้าน" },
+      { id: "u-asst", name: "คุณธนากร เกียรติไพบูลย์", email: "assistant@factory.com", password: "123", role: "manager_assistant", position: "ผู้ช่วยผู้จัดการร้าน" },
+      { id: "u-director", name: "คุณกิตติศักดิ์ พัฒนกิจ", email: "director@factory.com", password: "director123", role: "committee", position: "กรรมการ" },
       { id: "u-cashier", name: "สมศรี ใจดี", email: "cashier@factory.com", password: "123", role: "employee", position: "แคชเชียร์" },
       { id: "u-stock", name: "สมชาย มั่นคง", email: "stock@factory.com", password: "123", role: "employee", position: "พนักงานสต็อก/จัดเรียง" },
       { id: "u-qc", name: "กัญญาภัทร พิมพา", email: "kanya@factory.com", password: "123", role: "employee", position: "แคชเชียร์" },
@@ -115,8 +116,8 @@ export function seedSampleData(force = false) {
     saveUsers(users);
   }
 
-  const hasDirtySessions = sessions.some((s) => s.userName === "sdsd" || s.userName === "ผู้จัดการร้าน");
-  const needsSessions = force || hasDirtySessions || sessions.length === 0 || !sessions.some((s) => s.id === "sess-sample-1");
+  const hasSessionsKey = localStorage.getItem("app_sessions") !== null;
+  const needsSessions = force || !hasSessionsKey;
 
   if (needsSessions) {
     const now = new Date();

@@ -10,15 +10,15 @@ export function PositionSelectPage({
   onLogout,
 }: {
   user: User;
-  shift: ShiftType;
+  shift?: ShiftType;
   onSelectPosition: (position: string) => void;
-  onBack: () => void;
+  onBack?: () => void;
   onLogout: () => void;
 }) {
   const isMorning = shift === "morning";
   const isAfternoon = shift === "afternoon";
-  const shiftTitle = isMorning ? "กะเช้า" : isAfternoon ? "กะบ่าย" : "กะควบ (2 กะ)";
-  const shiftHours = isMorning ? "08:00 – 16:00" : isAfternoon ? "16:00 – 00:00" : "08:00 – 00:00";
+  const shiftTitle = shift ? (isMorning ? "กะเช้า" : isAfternoon ? "กะบ่าย" : "กะควบ (2 กะ)") : null;
+  const shiftHours = shift ? (isMorning ? "08:00 – 16:00" : isAfternoon ? "16:00 – 00:00" : "08:00 – 00:00") : null;
 
   const availablePositions = user.role === "manager" ? MANAGEMENT_POSITIONS : STAFF_POSITIONS;
 
@@ -27,20 +27,14 @@ export function PositionSelectPage({
       {/* Top Header Card */}
       <header className="w-full max-w-4xl mx-auto mb-6 flex items-center justify-between gap-4 p-4 bg-white border border-slate-200/90 rounded-2xl shadow-xs">
         <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={onBack}
-            className="w-9 h-9 rounded-xl border border-slate-300 hover:border-slate-500 hover:bg-slate-50 flex items-center justify-center text-slate-700 transition-all cursor-pointer"
-            title="ย้อนกลับไปเลือกกะ"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M15 18l-6-6 6-6" />
-            </svg>
-          </button>
           <div>
             <h1 className="text-sm sm:text-base font-bold text-slate-900">{user.name}</h1>
             <p className="text-[11px] text-slate-600 font-medium">
-              กะที่เลือก: <span className="font-bold text-slate-900">{shiftTitle} ({shiftHours})</span>
+              {shiftTitle ? (
+                <>กะที่เลือก: <span className="font-bold text-slate-900">{shiftTitle} ({shiftHours})</span></>
+              ) : (
+                <>ขั้นตอนที่ 1 จาก 2 • <span className="font-bold text-slate-900">เลือกตำแหน่งที่ปฏิบัติงาน</span></>
+              )}
             </p>
           </div>
         </div>
@@ -59,13 +53,13 @@ export function PositionSelectPage({
         {/* Step Indicator & Title */}
         <div className="text-center mb-8">
           <span className="inline-block text-[11px] font-bold text-slate-700 tracking-wider uppercase bg-slate-100 border border-slate-300 px-3 py-1 rounded-full mb-3">
-            ขั้นตอนที่ 2 จาก 2 • เลือกตำแหน่งหน้าที่
+            ขั้นตอนที่ 1 จาก 2 • เลือกตำแหน่งหน้าที่
           </span>
           <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
             เลือกตำแหน่งงาน
           </h2>
           <p className="text-xs sm:text-sm text-slate-600 mt-1 max-w-md mx-auto">
-            เลือกหน้าที่ที่คุณปฏิบัติงานในกะนี้ เพื่อเริ่มต้นตรวจเช็คงาน
+            เลือกหน้าที่ที่คุณปฏิบัติงาน เพื่อดำเนินการเลือกกะการทำงานในขั้นตอนถัดไป
           </p>
         </div>
 
@@ -73,7 +67,7 @@ export function PositionSelectPage({
         <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
           {availablePositions.map((pos) => {
             const isCashier = pos === "แคชเชียร์";
-            const itemCount = getChecklistTemplate(pos, shift).length;
+            const itemCount = getChecklistTemplate(pos, shift || "morning").length;
             const cardTheme = isCashier
               ? {
                   hoverBorder: "hover:border-emerald-300 hover:shadow-[0_12px_28px_-6px_rgba(16,185,129,0.15)]",
@@ -171,7 +165,7 @@ export function PositionSelectPage({
                     aria-hidden="true"
                     className={`w-full py-2.5 px-4 rounded-xl bg-slate-900 ${cardTheme.btnHover} active:bg-black text-white text-xs sm:text-sm font-semibold shadow-[inset_0_1px_0_rgba(255,255,255,0.15),0_1px_2px_rgba(0,0,0,0.1)] transition-all flex items-center justify-center gap-2 select-none`}
                   >
-                    <span>เลือกหน้าที่{pos}</span>
+                    <span>เลือกหน้าที่{pos} → ไปเลือกกะ</span>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="group-hover:translate-x-1 transition-transform">
                       <path d="M5 12h14M12 5l7 7-7 7" />
                     </svg>
@@ -183,18 +177,20 @@ export function PositionSelectPage({
         </div>
 
         {/* Back link */}
-        <div className="mt-6 text-center">
-          <button
-            type="button"
-            onClick={onBack}
-            className="text-xs text-slate-600 hover:text-slate-900 font-semibold inline-flex items-center gap-1.5 transition-colors cursor-pointer"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M19 12H5M12 19l-7-7 7-7" />
-            </svg>
-            <span>ต้องการเปลี่ยนกะ? กลับไปเลือกกะ</span>
-          </button>
-        </div>
+        {onBack && (
+          <div className="mt-6 text-center">
+            <button
+              type="button"
+              onClick={onBack}
+              className="text-xs text-slate-600 hover:text-slate-900 font-semibold inline-flex items-center gap-1.5 transition-colors cursor-pointer"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M19 12H5M12 19l-7-7 7-7" />
+              </svg>
+              <span>ย้อนกลับไปหน้าเข้าสู่ระบบ</span>
+            </button>
+          </div>
+        )}
       </div>
 
       <footer className="text-center text-[11px] text-slate-500 font-medium py-2">

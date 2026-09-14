@@ -7,16 +7,20 @@ import { useApp } from "../../context/AppContext";
 
 export default function ShiftRoutePage() {
   const router = useRouter();
-  const { currentUser, isReady, selectShift, logout } = useApp();
+  const { currentUser, sessions, isReady, selectShift, logout } = useApp();
 
   useEffect(() => {
     if (!isReady) return;
     if (!currentUser) {
       router.replace("/");
+      return;
+    }
+    if (currentUser.role === "employee" && !currentUser.position) {
+      router.replace("/position");
     }
   }, [currentUser, isReady, router]);
 
-  if (!isReady || !currentUser) {
+  if (!isReady || !currentUser || (currentUser.role === "employee" && !currentUser.position)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50/70">
         <div className="h-8 w-8 animate-spin rounded-full border-3 border-slate-900 border-t-transparent" />
@@ -27,7 +31,9 @@ export default function ShiftRoutePage() {
   return (
     <ShiftSelectPage
       user={currentUser}
+      sessions={sessions}
       onSelect={selectShift}
+      onBack={() => router.push("/position")}
       onLogout={logout}
     />
   );

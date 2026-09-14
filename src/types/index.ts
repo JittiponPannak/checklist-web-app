@@ -1,4 +1,4 @@
-export type Role = "employee" | "manager";
+export type Role = "employee" | "manager" | "manager_assistant" | "committee" | "general_manager" | "admin";
 export type ShiftType = "morning" | "afternoon" | "both";
 
 export interface Position {
@@ -20,6 +20,7 @@ export interface ChecklistItem {
   label: string;
   category?: string;
   completedAt: string | null;
+  taskWorkId?: string;
 }
 
 export interface ShiftSession {
@@ -27,6 +28,7 @@ export interface ShiftSession {
   userId: string;
   userName: string;
   userPosition?: string;
+  taskRole?: "cashier" | "stock" | "manager_assistant";
   shift: ShiftType;
   startedAt: string;
   completedAt: string | null;

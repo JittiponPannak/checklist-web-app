@@ -2,49 +2,40 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ManagerDashboard } from "../../../components/admin/ManagerDashboard";
+import { AdminDashboardView } from "../../../components/admin/AdminDashboardView";
 import { useApp } from "../../../context/AppContext";
 
 export default function AdminDashboardPage() {
   const router = useRouter();
-  const {
-    currentUser,
-    activeSession,
-    isReady,
-    logout,
-    selectShift,
-    updateSession,
-    endShift,
-  } = useApp();
+  const { currentUser, isReady, logout } = useApp();
 
   useEffect(() => {
     if (!isReady) return;
-    if (!currentUser) {
-      router.replace("/admin");
-      return;
-    }
-    if (currentUser.role !== "manager") {
+    if (currentUser && currentUser.role === "employee") {
       router.replace("/");
     }
   }, [currentUser, isReady, router]);
 
-  if (!isReady || !currentUser || currentUser.role !== "manager") {
+  if (!isReady) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50/70">
-        <div className="h-8 w-8 animate-spin rounded-full border-3 border-slate-900 border-t-transparent" />
+      <div className="min-h-screen flex items-center justify-center bg-slate-900">
+        <div className="h-8 w-8 animate-spin rounded-full border-3 border-indigo-500 border-t-transparent" />
       </div>
     );
   }
 
+  const activeUser = currentUser || {
+    id: "preview-admin-user",
+    name: "คุณสมเกียรติ บริหารกิจ",
+    email: "admin@factory.com",
+    role: "admin" as const,
+    position: "ผู้ดูแลระบบส่วนกลาง",
+  };
+
   return (
-    <ManagerDashboard
-      user={currentUser}
+    <AdminDashboardView
+      user={activeUser}
       onLogout={logout}
-      activeSession={activeSession}
-      onStartChecklist={selectShift}
-      onUpdateSession={updateSession}
-      onEndShift={endShift}
-      onOpenChecklistPage={() => router.push("/checklist")}
     />
   );
 }
