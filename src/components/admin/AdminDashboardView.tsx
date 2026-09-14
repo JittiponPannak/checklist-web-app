@@ -1,19 +1,10 @@
 import { useState, useEffect } from "react";
 import { User } from "../../types";
 import { BrandLogo } from "../common/BrandLogo";
-import { getUsers, saveUsers } from "../../data/storage";
 import Link from "next/link";
-
-interface Branch {
-  id: string;
-  code: string;
-  name: string;
-  location: string;
-  managerName: string;
-  staffCount: number;
-  status: "active" | "maintenance" | "standby";
-  todayCompletionRate: number;
-}
+import { getBranchesAction, createBranchAction, assignStaffToBranchAction, assignTasksToBranchAction, DashboardBranch as Branch } from "../../actions/branch";
+import { getAllUsersAction } from "../../actions/auth";
+import { getAllTasksAction, createTaskAction } from "../../actions/task";
 
 interface MasterTask {
   id: string;
@@ -34,58 +25,7 @@ interface AuditLog {
   severity: "info" | "success" | "warning";
 }
 
-const INITIAL_BRANCHES: Branch[] = [
-  {
-    id: "b-1",
-    code: "BKK-001",
-    name: "สาขาพญาไท (สำนักงานใหญ่)",
-    location: "เขตราชเทวี กรุงเทพฯ",
-    managerName: "คุณวิภาดา สุขเจริญ",
-    staffCount: 12,
-    status: "active",
-    todayCompletionRate: 100,
-  },
-  {
-    id: "b-2",
-    code: "BKK-002",
-    name: "สาขาอารีย์ มาร์เก็ต",
-    location: "เขตพญาไท กรุงเทพฯ",
-    managerName: "คุณทนงศักดิ์ วงศ์ชื่น",
-    staffCount: 8,
-    status: "active",
-    todayCompletionRate: 91,
-  },
-  {
-    id: "b-3",
-    code: "BKK-003",
-    name: "สาขาสุขุมวิท 24",
-    location: "เขตคลองเตย กรุงเทพฯ",
-    managerName: "คุณรสรินทร์ สมบูรณ์",
-    staffCount: 10,
-    status: "active",
-    todayCompletionRate: 95,
-  },
-  {
-    id: "b-4",
-    code: "BKK-004",
-    name: "สาขาพระราม 9",
-    location: "เขตห้วยขวาง กรุงเทพฯ",
-    managerName: "คุณชาญวิทย์ ปิติพร",
-    staffCount: 7,
-    status: "active",
-    todayCompletionRate: 100,
-  },
-  {
-    id: "b-5",
-    code: "CNX-001",
-    name: "สาขานิมมานเหมินท์",
-    location: "อ.เมือง จ.เชียงใหม่",
-    managerName: "กำลังสรรหา",
-    staffCount: 4,
-    status: "standby",
-    todayCompletionRate: 0,
-  },
-];
+// Removed INITIAL_BRANCHES
 
 const INITIAL_MASTER_TASKS: MasterTask[] = [
   {
@@ -204,24 +144,166 @@ export function AdminDashboardView({
   onLogout: () => void;
 }) {
   const [activeTab, setActiveTab] = useState<"overview" | "branches" | "tasks" | "users" | "audit">("overview");
-  const [branches, setBranches] = useState<Branch[]>(INITIAL_BRANCHES);
+  const [branches, setBranches] = useState<Branch[]>([]);
   const [tasks, setTasks] = useState<MasterTask[]>(INITIAL_MASTER_TASKS);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>(INITIAL_AUDIT_LOGS);
   const [usersList, setUsersList] = useState<User[]>([]);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
+
+  // Modal states
+  const [isNewBranchModalOpen, setIsNewBranchModalOpen] = useState(false);
+  const [newBranchName, setNewBranchName] = useState("");
+
+  const [isManageStaffModalOpen, setIsManageStaffModalOpen] = useState(false);
+  const [selectedBranchForStaff, setSelectedBranchForStaff] = useState<string | null>(null);
+  const [selectedStaffIds, setSelectedStaffIds] = useState<string[]>([]);
+  const [isSavingStaff, setIsSavingStaff] = useState(false);
+  const [isCreatingBranch, setIsCreatingBranch] = useState(false);
+  const [staffSearchQuery, setStaffSearchQuery] = useState("");
+
+  const [isManageTasksModalOpen, setIsManageTasksModalOpen] = useState(false);
+  const [selectedBranchForTasks, setSelectedBranchForTasks] = useState<string | null>(null);
+  const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([]);
+  const [isSavingTasks, setIsSavingTasks] = useState(false);
+  const [taskSearchQuery, setTaskSearchQuery] = useState("");
+  const [tasksList, setTasksList] = useState<any[]>([]);
+
+  const [isCreateTaskModalOpen, setIsCreateTaskModalOpen] = useState(false);
+  const [newTaskName, setNewTaskName] = useState("");
+  const [newTaskRole, setNewTaskRole] = useState<"manager_assistant" | "cashier" | "stock">("cashier");
+  const [newTaskShift, setNewTaskShift] = useState<"morning" | "afternoon" | "morning_afternoon">("morning");
+  const [newTaskStart, setNewTaskStart] = useState("");
+  const [newTaskEnd, setNewTaskEnd] = useState("");
+  const [isCreatingTask, setIsCreatingTask] = useState(false);
 
   // Filters
   const [branchSearch, setBranchSearch] = useState("");
   const [taskRoleFilter, setTaskRoleFilter] = useState<"all" | "cashier" | "stock" | "manager_assistant">("all");
   const [userSearch, setUserSearch] = useState("");
 
+  const loadBranches = async () => {
+    const res = await getBranchesAction();
+    if (res.success && res.branches) setBranches(res.branches);
+    else showToast(res.error || "โหลดข้อมูลสาขาไม่สำเร็จ");
+  };
+
+  const loadUsers = async () => {
+    const res = await getAllUsersAction();
+    if (res.success && res.users) {
+      setUsersList(res.users);
+    } else {
+      showToast(res.error || "โหลดข้อมูลผู้ใช้ไม่สำเร็จ");
+    }
+  };
+
+  const loadTasks = async () => {
+    const res = await getAllTasksAction();
+    if (res.success && res.tasks) {
+      setTasksList(res.tasks);
+    } else {
+      showToast(res.error || "โหลดข้อมูลงานไม่สำเร็จ");
+    }
+  };
+
   useEffect(() => {
-    setUsersList(getUsers());
+    loadUsers();
+    loadTasks();
+    loadBranches();
   }, []);
 
   function showToast(msg: string) {
     setToastMsg(msg);
     setTimeout(() => setToastMsg(null), 3000);
+  }
+
+  async function handleCreateBranch(e: React.FormEvent) {
+    e.preventDefault();
+    if (!newBranchName.trim()) return showToast("กรุณาระบุชื่อสาขา");
+
+    setIsCreatingBranch(true);
+    const res = await createBranchAction(newBranchName);
+    setIsCreatingBranch(false);
+
+    if (res.success) {
+      showToast("เพิ่มสาขาใหม่สำเร็จ");
+      setIsNewBranchModalOpen(false);
+      setNewBranchName("");
+      loadBranches();
+    } else {
+      showToast(res.error || "เกิดข้อผิดพลาด");
+    }
+  }
+
+  function openManageStaffModal(branchId: string) {
+    setSelectedBranchForStaff(branchId);
+    const branch = branches.find((b) => b.id === branchId);
+    setSelectedStaffIds(branch ? branch.members : []);
+    setIsManageStaffModalOpen(true);
+  }
+
+  async function handleSaveStaff() {
+    if (!selectedBranchForStaff) return;
+    setIsSavingStaff(true);
+
+    const res = await assignStaffToBranchAction(selectedBranchForStaff, selectedStaffIds);
+    setIsSavingStaff(false);
+
+    if (res.success) {
+      showToast("บันทึกการมอบหมายพนักงานสำเร็จ");
+      setIsManageStaffModalOpen(false);
+      loadBranches();
+    } else {
+      showToast(res.error || "เกิดข้อผิดพลาด");
+    }
+  }
+
+  function openManageTasksModal(branchId: string) {
+    const branch = branches.find((b) => b.id === branchId);
+    if (!branch) return;
+    setSelectedBranchForTasks(branch.id);
+    setSelectedTaskIds(branch.tasks || []);
+    setIsManageTasksModalOpen(true);
+  }
+
+  async function handleSaveTasks() {
+    if (!selectedBranchForTasks) return;
+    setIsSavingTasks(true);
+    const res = await assignTasksToBranchAction(selectedBranchForTasks, selectedTaskIds);
+    if (res.success) {
+      showToast("บันทึกการตั้งค่างานของสาขาสำเร็จ");
+      await loadBranches();
+      setIsManageTasksModalOpen(false);
+    } else {
+      showToast(res.error || "เกิดข้อผิดพลาด");
+    }
+    setIsSavingTasks(false);
+  }
+
+  async function handleCreateTask(e: React.FormEvent) {
+    e.preventDefault();
+    if (!newTaskName.trim()) return showToast("กรุณาระบุชื่องาน");
+
+    setIsCreatingTask(true);
+    const res = await createTaskAction({
+      name: newTaskName,
+      task_role: newTaskRole,
+      shift: newTaskShift,
+      start: newTaskStart,
+      end: newTaskEnd,
+      disabled: false
+    });
+    setIsCreatingTask(false);
+
+    if (res.success) {
+      showToast("เพิ่มงานใหม่สำเร็จ");
+      setIsCreateTaskModalOpen(false);
+      setNewTaskName("");
+      setNewTaskStart("");
+      setNewTaskEnd("");
+      loadTasks(); // reload from DB
+    } else {
+      showToast(res.error || "เกิดข้อผิดพลาด");
+    }
   }
 
   function toggleTaskStatus(taskId: string) {
@@ -234,7 +316,7 @@ export function AdminDashboardView({
   function handlePromoteUser(userId: string, newRole: any) {
     const updated = usersList.map((u) => (u.id === userId ? { ...u, role: newRole } : u));
     setUsersList(updated);
-    saveUsers(updated);
+    // TODO: implement updateUserRoleAction in the future
     showToast(`ปรับเปลี่ยนสิทธิ์ผู้ใช้เป็น ${newRole} สำเร็จ`);
   }
 
@@ -243,8 +325,8 @@ export function AdminDashboardView({
     b.code.toLowerCase().includes(branchSearch.toLowerCase())
   );
 
-  const filteredTasks = tasks.filter((t) =>
-    taskRoleFilter === "all" ? true : t.role === taskRoleFilter
+  const filteredTasks = tasksList.filter((t) =>
+    taskRoleFilter === "all" ? true : t.task_role === taskRoleFilter
   );
 
   const filteredUsers = usersList.filter((u) =>
@@ -322,11 +404,10 @@ export function AdminDashboardView({
                 key={tab.id}
                 type="button"
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`px-3.5 py-2 rounded-xl transition-all cursor-pointer ${
-                  activeTab === tab.id
-                    ? "bg-indigo-600 text-white shadow-md font-bold"
-                    : "text-slate-400 hover:text-slate-200 hover:bg-slate-900"
-                }`}
+                className={`px-3.5 py-2 rounded-xl transition-all cursor-pointer ${activeTab === tab.id
+                  ? "bg-indigo-600 text-white shadow-md font-bold"
+                  : "text-slate-400 hover:text-slate-200 hover:bg-slate-900"
+                  }`}
               >
                 {tab.label}
               </button>
@@ -434,11 +515,10 @@ export function AdminDashboardView({
                         <td className="py-3 px-3 text-slate-400 font-mono">{b.staffCount} คน</td>
                         <td className="py-3 px-3">
                           <span
-                            className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                              b.status === "active"
-                                ? "bg-emerald-950 text-emerald-400 border border-emerald-800"
-                                : "bg-amber-950 text-amber-400 border border-amber-800"
-                            }`}
+                            className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${b.status === "active"
+                              ? "bg-emerald-950 text-emerald-400 border border-emerald-800"
+                              : "bg-amber-950 text-amber-400 border border-amber-800"
+                              }`}
                           >
                             {b.status === "active" ? "เปิดปกติ" : "รอเปิด"}
                           </span>
@@ -447,13 +527,12 @@ export function AdminDashboardView({
                           <div className="flex items-center justify-end gap-2">
                             <div className="w-24 h-2 bg-slate-800 rounded-full overflow-hidden">
                               <div
-                                className={`h-full rounded-full ${
-                                  b.todayCompletionRate === 100
-                                    ? "bg-emerald-500"
-                                    : b.todayCompletionRate > 80
+                                className={`h-full rounded-full ${b.todayCompletionRate === 100
+                                  ? "bg-emerald-500"
+                                  : b.todayCompletionRate > 80
                                     ? "bg-indigo-500"
                                     : "bg-slate-600"
-                                }`}
+                                  }`}
                                 style={{ width: `${b.todayCompletionRate}%` }}
                               />
                             </div>
@@ -484,7 +563,7 @@ export function AdminDashboardView({
               />
               <button
                 type="button"
-                onClick={() => showToast("เปิดหน้าต่างเพิ่มสาขาใหม่ (Mockup)")}
+                onClick={() => setIsNewBranchModalOpen(true)}
                 className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold px-4 py-2 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5"
               >
                 <span>+ เพิ่มสาขาใหม่</span>
@@ -503,11 +582,10 @@ export function AdminDashboardView({
                       <p className="text-xs text-slate-400">{b.location}</p>
                     </div>
                     <span
-                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                        b.status === "active"
-                          ? "bg-emerald-950 text-emerald-400 border border-emerald-800"
-                          : "bg-amber-950 text-amber-400 border border-amber-800"
-                      }`}
+                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${b.status === "active"
+                        ? "bg-emerald-950 text-emerald-400 border border-emerald-800"
+                        : "bg-amber-950 text-amber-400 border border-amber-800"
+                        }`}
                     >
                       {b.status === "active" ? "เปิดทำการ" : "Standby"}
                     </span>
@@ -524,20 +602,20 @@ export function AdminDashboardView({
                     </div>
                   </div>
 
-                  <div className="pt-2 flex items-center justify-between gap-2">
+                  <div className="pt-2 flex items-center justify-between gap-1">
                     <button
                       type="button"
-                      onClick={() => showToast(`กำหนดผู้จัดการสำหรับ ${b.name}`)}
-                      className="text-[11px] font-semibold text-slate-300 hover:text-white bg-slate-900 hover:bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-800 transition-all cursor-pointer flex-1"
+                      onClick={() => openManageStaffModal(b.id)}
+                      className="text-[11px] font-semibold text-slate-300 hover:text-white bg-slate-900 hover:bg-slate-800 px-1 py-1.5 rounded-lg border border-slate-800 transition-all cursor-pointer flex-1"
                     >
                       จัดการสาขา
                     </button>
                     <button
                       type="button"
-                      onClick={() => showToast(`เปิดดูแดชบอร์ดสาขา ${b.name}`)}
-                      className="text-[11px] font-semibold text-indigo-400 hover:text-indigo-300 bg-indigo-950/50 hover:bg-indigo-900/50 px-3 py-1.5 rounded-lg border border-indigo-900/80 transition-all cursor-pointer"
+                      onClick={() => openManageTasksModal(b.id)}
+                      className="text-[11px] font-semibold text-emerald-300 hover:text-emerald-100 bg-emerald-950 hover:bg-emerald-900 px-1 py-1.5 rounded-lg border border-emerald-900/50 transition-all cursor-pointer flex-1"
                     >
-                      ดูผลตรวจ →
+                      จัดการงาน
                     </button>
                   </div>
                 </div>
@@ -561,9 +639,8 @@ export function AdminDashboardView({
                     key={f.id}
                     type="button"
                     onClick={() => setTaskRoleFilter(f.id as any)}
-                    className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
-                      taskRoleFilter === f.id ? "bg-slate-800 text-white font-bold" : "text-slate-400 hover:text-slate-200"
-                    }`}
+                    className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${taskRoleFilter === f.id ? "bg-slate-800 text-white font-bold" : "text-slate-400 hover:text-slate-200"
+                      }`}
                   >
                     {f.label}
                   </button>
@@ -572,7 +649,7 @@ export function AdminDashboardView({
 
               <button
                 type="button"
-                onClick={() => showToast("เปิดแบบฟอร์มเพิ่มงานเช็คลิสต์กลาง (Mockup)")}
+                onClick={() => setIsCreateTaskModalOpen(true)}
                 className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold px-4 py-2 rounded-xl transition-all cursor-pointer"
               >
                 + เพิ่มรายการงานใหม่
@@ -588,44 +665,41 @@ export function AdminDashboardView({
                       <th className="py-3.5 px-3">ตำแหน่งงาน</th>
                       <th className="py-3.5 px-3">กะงาน</th>
                       <th className="py-3.5 px-3">ช่วงเวลา</th>
-                      <th className="py-3.5 px-3">ความสำคัญ</th>
-                      <th className="py-3.5 px-3 text-right">เปิด/ปิดการใช้งาน</th>
+                      <th className="py-3.5 px-3 text-right">สถานะระบบ</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-800/60">
-                    {filteredTasks.map((t, idx) => (
-                      <tr key={t.id} className="hover:bg-slate-900/40 transition-colors">
-                        <td className="py-3.5 px-4 font-medium text-slate-200 max-w-md">
-                          <span className="font-mono text-slate-500 mr-2">{String(idx + 1).padStart(2, "0")}</span>
-                          <span>{t.title}</span>
-                        </td>
-                        <td className="py-3.5 px-3">
-                          <span className="px-2 py-0.5 rounded-md bg-slate-800 text-slate-300 font-semibold text-[11px]">
-                            {t.role === "cashier" ? "แคชเชียร์" : t.role === "stock" ? "สต็อก" : "ผู้ช่วยผจก."}
-                          </span>
-                        </td>
-                        <td className="py-3.5 px-3 text-slate-400 capitalize">{t.shift}</td>
-                        <td className="py-3.5 px-3 font-mono text-slate-400">{t.timeWindow}</td>
-                        <td className="py-3.5 px-3">
-                          <span className="text-[10px] font-bold text-amber-400 bg-amber-950/60 border border-amber-900 px-2 py-0.5 rounded">
-                            จำเป็น
-                          </span>
-                        </td>
-                        <td className="py-3.5 px-3 text-right">
-                          <button
-                            type="button"
-                            onClick={() => toggleTaskStatus(t.id)}
-                            className={`px-3 py-1 rounded-full text-[11px] font-bold transition-all cursor-pointer ${
-                              t.active
-                                ? "bg-emerald-950 text-emerald-400 border border-emerald-800 hover:bg-rose-950 hover:text-rose-400 hover:border-rose-800"
-                                : "bg-slate-800 text-slate-400 border border-slate-700 hover:bg-emerald-950 hover:text-emerald-400"
-                            }`}
-                          >
-                            {t.active ? "ใช้งานอยู่" : "ปิดชั่วคราว"}
-                          </button>
-                        </td>
+                    {filteredTasks.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="py-8 text-center text-slate-500">ไม่มีข้อมูล หรือ ไม่มีงานในตำแหน่งนี้</td>
                       </tr>
-                    ))}
+                    ) : (
+                      filteredTasks.map((t, idx) => (
+                        <tr key={t.id} className="hover:bg-slate-900/40 transition-colors">
+                          <td className="py-3.5 px-4 font-medium text-slate-200 max-w-md">
+                            <span className="font-mono text-slate-500 mr-2">{String(idx + 1).padStart(2, "0")}</span>
+                            <span>{t.name}</span>
+                          </td>
+                          <td className="py-3.5 px-3">
+                            <span className="px-2 py-0.5 rounded-md bg-slate-800 text-slate-300 font-semibold text-[11px]">
+                              {t.task_role === "cashier" ? "แคชเชียร์" : t.task_role === "stock" ? "สต็อก/จัดเรียง" : "ผู้ช่วยผจก."}
+                            </span>
+                          </td>
+                          <td className="py-3.5 px-3 text-slate-400 capitalize">{t.shift === "morning" ? "กะเช้า" : t.shift === "afternoon" ? "กะบ่าย" : "ควบกะ"}</td>
+                          <td className="py-3.5 px-3 font-mono text-slate-400">{t.start ? `${t.start} - ${t.end}` : "ตามเวลาปฏิบัติการ"}</td>
+                          <td className="py-3.5 px-3 text-right">
+                            <span
+                              className={`px-3 py-1 rounded-full text-[11px] font-bold ${!t.disabled
+                                ? "bg-emerald-950 text-emerald-400 border border-emerald-800"
+                                : "bg-slate-800 text-slate-400 border border-slate-700"
+                                }`}
+                            >
+                              {!t.disabled ? "ทำงานได้" : "ปิดชั่วคราว"}
+                            </span>
+                          </td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -678,13 +752,12 @@ export function AdminDashboardView({
                         <td className="py-3.5 px-3 font-mono text-slate-400">{u.email}</td>
                         <td className="py-3.5 px-3">
                           <span
-                            className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                              u.role === "admin" || u.role === "committee"
-                                ? "bg-purple-950 text-purple-300 border border-purple-800"
-                                : u.role === "manager"
+                            className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${u.role === "admin" || u.role === "committee"
+                              ? "bg-purple-950 text-purple-300 border border-purple-800"
+                              : u.role === "manager"
                                 ? "bg-indigo-950 text-indigo-300 border border-indigo-800"
                                 : "bg-slate-800 text-slate-300 border border-slate-700"
-                            }`}
+                              }`}
                           >
                             {u.role}
                           </span>
@@ -737,13 +810,12 @@ export function AdminDashboardView({
                   >
                     <div className="flex items-center gap-3">
                       <span
-                        className={`w-2 h-2 rounded-full flex-shrink-0 ${
-                          log.severity === "success"
-                            ? "bg-emerald-500"
-                            : log.severity === "warning"
+                        className={`w-2 h-2 rounded-full flex-shrink-0 ${log.severity === "success"
+                          ? "bg-emerald-500"
+                          : log.severity === "warning"
                             ? "bg-amber-500"
                             : "bg-indigo-500"
-                        }`}
+                          }`}
                       />
                       <span className="font-mono text-slate-400 text-[11px]">{log.timestamp}</span>
                       <span className="font-bold text-slate-200">{log.user}</span>
@@ -755,6 +827,474 @@ export function AdminDashboardView({
                   </div>
                 ))}
               </div>
+            </div>
+          </div>
+        )}
+        {/* MODALS */}
+        {isNewBranchModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 animate-fade-in">
+            <div className="bg-slate-900 border border-slate-700 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl">
+              <div className="px-6 py-4 border-b border-slate-800 flex justify-between items-center bg-slate-800/50">
+                <h3 className="font-bold text-white text-lg">เพิ่มสาขาใหม่</h3>
+                <button
+                  type="button"
+                  onClick={() => setIsNewBranchModalOpen(false)}
+                  className="text-slate-400 hover:text-white"
+                >
+                  ✕
+                </button>
+              </div>
+              <div className="p-6">
+                <form onSubmit={handleCreateBranch} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-400 mb-1.5">ชื่อสาขา (อย่างน้อย 3 ตัวอักษร)</label>
+                    <input
+                      type="text"
+                      required
+                      value={newBranchName}
+                      onChange={(e) => setNewBranchName(e.target.value)}
+                      placeholder="เช่น สาขาพญาไท"
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-indigo-500 transition-colors"
+                    />
+                  </div>
+                  <div className="flex gap-3 pt-4">
+                    <button
+                      type="button"
+                      onClick={() => setIsNewBranchModalOpen(false)}
+                      className="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm font-bold transition-all"
+                    >
+                      ยกเลิก
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isCreatingBranch || newBranchName.length < 3}
+                      className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl text-sm font-bold transition-all"
+                    >
+                      {isCreatingBranch ? "กำลังสร้าง..." : "บันทึกข้อมูลสาขา"}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {isManageStaffModalOpen && selectedBranchForStaff && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 animate-fade-in">
+            <div className="bg-slate-900 border border-slate-700 rounded-3xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl">
+              <div className="px-6 py-4 border-b border-slate-800 flex justify-between items-center bg-slate-800/50">
+                <h3 className="font-bold text-white text-lg">จัดการพนักงานและผู้จัดการสาขา</h3>
+                <button
+                  type="button"
+                  onClick={() => setIsManageStaffModalOpen(false)}
+                  className="text-slate-400 hover:text-white"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+                {/* Left Panel: Assigned Staff (Cards Stack) */}
+                <div className="w-full md:w-1/2 border-r border-slate-800 flex flex-col bg-slate-900/50">
+                  <div className="p-4 border-b border-slate-800">
+                    <h4 className="font-semibold text-emerald-400">พนักงานประจำสาขานี้</h4>
+                    <p className="text-xs text-slate-400">บุคลากรที่ถูกคัดเลือกและจัดตารางงานแล้ว</p>
+                  </div>
+                  <div className="p-4 overflow-y-auto flex-1 space-y-4">
+                    {/* Management Level */}
+                    <div className="bg-slate-800/80 border border-slate-700/80 rounded-xl overflow-hidden">
+                      <div className="bg-indigo-950/40 border-b border-slate-700/50 px-3 py-2 text-xs font-bold text-indigo-300">
+                        ผู้จัดการร้าน (Manager)
+                      </div>
+                      <div className="p-2 space-y-1">
+                        {usersList.filter(u => selectedStaffIds.includes(u.id) && (u.role === "manager" || u.role === "general_manager")).length === 0 && (
+                          <div className="text-xs text-slate-500 text-center py-2">ยังไม่มีบุคลากร</div>
+                        )}
+                        {usersList.filter(u => selectedStaffIds.includes(u.id) && (u.role === "manager" || u.role === "general_manager")).map((user) => (
+                          <div key={user.id} className="flex justify-between items-center p-2 rounded-lg bg-slate-900 border border-slate-800">
+                            <div>
+                              <p className="text-sm font-bold text-white leading-tight">{user.name}</p>
+                              <p className="text-[10px] text-slate-500 mt-0.5">{user.email}</p>
+                            </div>
+                            <button onClick={() => setSelectedStaffIds(prev => prev.filter(id => id !== user.id))} className="text-rose-400 text-xs px-2 py-1 rounded bg-rose-950/40 hover:bg-rose-900/60 font-semibold cursor-pointer">นำออก</button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Assistant Level */}
+                    <div className="bg-slate-800/80 border border-slate-700/80 rounded-xl overflow-hidden">
+                      <div className="bg-purple-950/40 border-b border-slate-700/50 px-3 py-2 text-xs font-bold text-purple-300">
+                        ผู้ช่วยผู้จัดการ (Assistant)
+                      </div>
+                      <div className="p-2 space-y-1">
+                        {usersList.filter(u => selectedStaffIds.includes(u.id) && u.role === "manager_assistant").length === 0 && (
+                          <div className="text-xs text-slate-500 text-center py-2">ยังไม่มีบุคลากร</div>
+                        )}
+                        {usersList.filter(u => selectedStaffIds.includes(u.id) && u.role === "manager_assistant").map((user) => (
+                          <div key={user.id} className="flex justify-between items-center p-2 rounded-lg bg-slate-900 border border-slate-800">
+                            <div>
+                              <p className="text-sm font-bold text-white leading-tight">{user.name}</p>
+                            </div>
+                            <button onClick={() => setSelectedStaffIds(prev => prev.filter(id => id !== user.id))} className="text-rose-400 text-xs px-2 py-1 rounded bg-rose-950/40 hover:bg-rose-900/60 font-semibold cursor-pointer">นำออก</button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Staff Level */}
+                    <div className="bg-slate-800/80 border border-slate-700/80 rounded-xl overflow-hidden">
+                      <div className="bg-slate-800 border-b border-slate-700/50 px-3 py-2 text-xs font-bold text-slate-300">
+                        พนักงานทั่วไป (Staff)
+                      </div>
+                      <div className="p-2 space-y-1">
+                        {usersList.filter(u => selectedStaffIds.includes(u.id) && u.role === "employee").length === 0 && (
+                          <div className="text-xs text-slate-500 text-center py-2">ยังไม่มีบุคลากร</div>
+                        )}
+                        {usersList.filter(u => selectedStaffIds.includes(u.id) && u.role === "employee").map((user) => (
+                          <div key={user.id} className="flex justify-between items-center p-2 rounded-lg bg-slate-900 border border-slate-800">
+                            <div>
+                              <p className="text-sm font-bold text-white leading-tight">{user.name}</p>
+                              <p className="text-[10px] text-slate-500">{user.position || "พนักงาน"}</p>
+                            </div>
+                            <button onClick={() => setSelectedStaffIds(prev => prev.filter(id => id !== user.id))} className="text-rose-400 text-xs px-2 py-1 rounded bg-rose-950/40 hover:bg-rose-900/60 font-semibold cursor-pointer">นำออก</button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Panel: Available Users (Searchable) */}
+                <div className="w-full md:w-1/2 flex flex-col">
+                  <div className="p-4 border-b border-slate-800">
+                    <h4 className="font-semibold text-slate-200">รายชื่อพนักงานในระบบ</h4>
+                    <input
+                      type="text"
+                      placeholder="ค้นหาชื่อ หรืออีเมล..."
+                      value={staffSearchQuery}
+                      onChange={(e) => setStaffSearchQuery(e.target.value)}
+                      className="mt-2 w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500 transition-colors"
+                    />
+                  </div>
+                  <div className="p-4 overflow-y-auto flex-1 space-y-2">
+                    {usersList
+                      .filter(u => !selectedStaffIds.includes(u.id))
+                      .filter(u => u.role === "manager" || u.role === "manager_assistant" || u.role === "employee")
+                      .filter(u => u.name.toLowerCase().includes(staffSearchQuery.toLowerCase()) || u.email.toLowerCase().includes(staffSearchQuery.toLowerCase()))
+                      .sort((a, b) => {
+                        const rank = { manager: 1, manager_assistant: 2, employee: 3 };
+                        const rankA = rank[a.role as keyof typeof rank] || 99;
+                        const rankB = rank[b.role as keyof typeof rank] || 99;
+                        return rankA - rankB;
+                      })
+                      .map((user) => (
+                        <div key={user.id} className="flex justify-between items-center p-3 rounded-xl border border-slate-800 bg-slate-950 hover:border-slate-700 transition-colors">
+                          <div className="flex-1">
+                            <div className="text-sm font-bold text-white leading-tight">{user.name}</div>
+                            <div className="text-[10px] text-slate-500 mt-0.5">{user.position || "พนักงาน"}</div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setSelectedStaffIds(prev => [...prev, user.id])}
+                            className="bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-bold px-3 py-1.5 rounded-lg cursor-pointer"
+                          >
+                            + เพิ่มเข้าสาขา
+                          </button>
+                        </div>
+                      ))}
+                    {usersList
+                      .filter(u => !selectedStaffIds.includes(u.id))
+                      .filter(u => u.role === "manager" || u.role === "manager_assistant" || u.role === "employee")
+                      .filter(u => u.name.toLowerCase().includes(staffSearchQuery.toLowerCase()) || u.email.toLowerCase().includes(staffSearchQuery.toLowerCase())).length === 0 && (
+                        <div className="text-center text-slate-500 text-sm py-8">
+                          ไม่พบรายชื่อพนักงาน หรือถูกเพิ่มเข้าสาขาหมดแล้ว
+                        </div>
+                      )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Bottom Actions */}
+              <div className="px-6 py-4 border-t border-slate-800 bg-slate-800/50 flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsManageStaffModalOpen(false)}
+                  className="px-6 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm font-bold transition-all cursor-pointer"
+                >
+                  ยกเลิก
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveStaff}
+                  disabled={isSavingStaff}
+                  className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white rounded-xl text-sm font-bold transition-all cursor-pointer"
+                >
+                  {isSavingStaff ? "กำลังบันทึก..." : "ยืนยันการตั้งค่าพนักงาน"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {isManageTasksModalOpen && selectedBranchForTasks && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 animate-fade-in">
+            <div className="bg-slate-900 border border-slate-700 rounded-3xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl">
+              <div className="px-6 py-4 border-b border-slate-800 flex justify-between items-center bg-slate-800/50">
+                <h3 className="font-bold text-white text-lg">กำหนดขอบเขตงานของสาขา</h3>
+                <button
+                  type="button"
+                  onClick={() => setIsManageTasksModalOpen(false)}
+                  className="text-slate-400 hover:text-white"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+                {/* Left Panel: Assigned Tasks */}
+                <div className="w-full md:w-1/2 border-r border-slate-800 flex flex-col bg-slate-900/50">
+                  <div className="p-4 border-b border-slate-800">
+                    <h4 className="font-semibold text-emerald-400">งานที่สาขานี้ต้องทำ</h4>
+                    <p className="text-xs text-slate-400">รายการงานที่จะแสดงให้พนักงานในสาขาทำ</p>
+                  </div>
+                  <div className="p-4 overflow-y-auto flex-1 space-y-4">
+                    {/* Management Level */}
+                    <div className="bg-slate-800/80 border border-slate-700/80 rounded-xl overflow-hidden">
+                      <div className="bg-purple-950/40 border-b border-slate-700/50 px-3 py-2 text-xs font-bold text-purple-300">
+                        ผู้ช่วยผู้จัดการ (Assistant)
+                      </div>
+                      <div className="p-2 space-y-1">
+                        {tasksList.filter(t => selectedTaskIds.includes(t.id) && t.task_role === "manager_assistant").length === 0 && (
+                          <div className="text-xs text-slate-500 text-center py-2">ไม่มีระบบงาน</div>
+                        )}
+                        {tasksList.filter(t => selectedTaskIds.includes(t.id) && t.task_role === "manager_assistant").map((t) => (
+                          <div key={t.id} className="flex justify-between items-center p-2 rounded-lg bg-slate-900 border border-slate-800">
+                            <div>
+                              <p className="text-sm font-bold text-white leading-tight">{t.name}</p>
+                              <p className="text-[10px] text-slate-500 mt-0.5">{t.shift} | {t.start || "ตามกำหนด"}</p>
+                            </div>
+                            <button onClick={() => setSelectedTaskIds(prev => prev.filter(id => id !== t.id))} className="text-rose-400 text-xs px-2 py-1 rounded bg-rose-950/40 hover:bg-rose-900/60 font-semibold cursor-pointer">นำออก</button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Staff Level - Cashier */}
+                    <div className="bg-slate-800/80 border border-slate-700/80 rounded-xl overflow-hidden">
+                      <div className="bg-slate-800 border-b border-slate-700/50 px-3 py-2 text-xs font-bold text-emerald-300">
+                        พนักงานแคชเชียร์ (Cashier)
+                      </div>
+                      <div className="p-2 space-y-1">
+                        {tasksList.filter(t => selectedTaskIds.includes(t.id) && t.task_role === "cashier").length === 0 && (
+                          <div className="text-xs text-slate-500 text-center py-2">ไม่มีระบบงาน</div>
+                        )}
+                        {tasksList.filter(t => selectedTaskIds.includes(t.id) && t.task_role === "cashier").map((t) => (
+                          <div key={t.id} className="flex justify-between items-center p-2 rounded-lg bg-slate-900 border border-slate-800">
+                            <div>
+                              <p className="text-sm font-bold text-white leading-tight">{t.name}</p>
+                              <p className="text-[10px] text-slate-500 mt-0.5">{t.shift} | {t.start || "ตามกำหนด"}</p>
+                            </div>
+                            <button onClick={() => setSelectedTaskIds(prev => prev.filter(id => id !== t.id))} className="text-rose-400 text-xs px-2 py-1 rounded bg-rose-950/40 hover:bg-rose-900/60 font-semibold cursor-pointer">นำออก</button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Staff Level - Stock */}
+                    <div className="bg-slate-800/80 border border-slate-700/80 rounded-xl overflow-hidden">
+                      <div className="bg-slate-800 border-b border-slate-700/50 px-3 py-2 text-xs font-bold text-amber-300">
+                        พนักงานสต็อก (Stock)
+                      </div>
+                      <div className="p-2 space-y-1">
+                        {tasksList.filter(t => selectedTaskIds.includes(t.id) && t.task_role === "stock").length === 0 && (
+                          <div className="text-xs text-slate-500 text-center py-2">ไม่มีระบบงาน</div>
+                        )}
+                        {tasksList.filter(t => selectedTaskIds.includes(t.id) && t.task_role === "stock").map((t) => (
+                          <div key={t.id} className="flex justify-between items-center p-2 rounded-lg bg-slate-900 border border-slate-800">
+                            <div>
+                              <p className="text-sm font-bold text-white leading-tight">{t.name}</p>
+                              <p className="text-[10px] text-slate-500 mt-0.5">{t.shift} | {t.start || "ตามกำหนด"}</p>
+                            </div>
+                            <button onClick={() => setSelectedTaskIds(prev => prev.filter(id => id !== t.id))} className="text-rose-400 text-xs px-2 py-1 rounded bg-rose-950/40 hover:bg-rose-900/60 font-semibold cursor-pointer">นำออก</button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Panel: Available Tasks (Searchable) */}
+                <div className="w-full md:w-1/2 flex flex-col">
+                  <div className="p-4 border-b border-slate-800">
+                    <h4 className="font-semibold text-slate-200">งานทั้งหมดในระบบกลาง</h4>
+                    <input
+                      type="text"
+                      placeholder="ค้นหาชื่องาน..."
+                      value={taskSearchQuery}
+                      onChange={(e) => setTaskSearchQuery(e.target.value)}
+                      className="mt-2 w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500 transition-colors"
+                    />
+                  </div>
+                  <div className="p-4 overflow-y-auto flex-1 space-y-2">
+                    {tasksList
+                      .filter(t => !selectedTaskIds.includes(t.id))
+                      .filter(t => t.name.toLowerCase().includes(taskSearchQuery.toLowerCase()))
+                      .sort((a, b) => a.task_role.localeCompare(b.task_role))
+                      .map((t) => (
+                        <div key={t.id} className="flex justify-between items-center p-3 rounded-xl border border-slate-800 bg-slate-950 hover:border-slate-700 transition-colors">
+                          <div className="flex-1">
+                            <div className="text-sm font-bold text-white leading-tight">{t.name}</div>
+                            <div className="text-[10px] text-slate-500 mt-0.5">{t.task_role} | กะ: {t.shift} | {t.start || "ตามกำหนด"}</div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setSelectedTaskIds(prev => [...prev, t.id])}
+                            className="bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-bold px-3 py-1.5 rounded-lg cursor-pointer flex-shrink-0 ml-2"
+                          >
+                            + มอบหมาย
+                          </button>
+                        </div>
+                      ))}
+                    {tasksList
+                      .filter(t => !selectedTaskIds.includes(t.id))
+                      .filter(t => t.name.toLowerCase().includes(taskSearchQuery.toLowerCase())).length === 0 && (
+                        <div className="text-center text-slate-500 text-sm py-8">
+                          ไม่พบรายการงาน หรือถูกกำหนดเข้าสาขาหมดแล้ว
+                        </div>
+                      )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Bottom Actions */}
+              <div className="px-6 py-4 border-t border-slate-800 bg-slate-800/50 flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsManageTasksModalOpen(false)}
+                  className="px-6 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm font-bold transition-all cursor-pointer"
+                >
+                  ยกเลิก
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveTasks}
+                  disabled={isSavingTasks}
+                  className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white rounded-xl text-sm font-bold transition-all cursor-pointer"
+                >
+                  {isSavingTasks ? "กำลังบันทึก..." : "ยืนยันการตั้งค่างานสาขา"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {isCreateTaskModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 animate-fade-in">
+            <div className="bg-slate-900 border border-slate-700 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl">
+              <div className="px-6 py-4 border-b border-slate-800 flex justify-between items-center bg-slate-800/50">
+                <h3 className="font-bold text-white text-lg">เพิ่มรายการงานใหม่ (Master Task)</h3>
+                <button
+                  type="button"
+                  onClick={() => setIsCreateTaskModalOpen(false)}
+                  className="text-slate-400 hover:text-white"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <form onSubmit={handleCreateTask}>
+                <div className="p-6 space-y-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-400 mb-1.5">
+                      ชื่อรายการงาน <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={newTaskName}
+                      onChange={(e) => setNewTaskName(e.target.value)}
+                      placeholder="เช่น ทำความสะอาดจุดแคชเชียร์"
+                      className="bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-indigo-500 w-full transition-all"
+                      required
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-400 mb-1.5">
+                        ตำแหน่งงาน <span className="text-rose-500">*</span>
+                      </label>
+                      <select
+                        value={newTaskRole}
+                        onChange={(e) => setNewTaskRole(e.target.value as any)}
+                        className="bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 w-full transition-all"
+                      >
+                        <option value="cashier">แคชเชียร์</option>
+                        <option value="stock">สต็อก / จัดเรียง</option>
+                        <option value="manager_assistant">ผู้ช่วยผู้จัดการ</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-400 mb-1.5">
+                        กะงาน <span className="text-rose-500">*</span>
+                      </label>
+                      <select
+                        value={newTaskShift}
+                        onChange={(e) => setNewTaskShift(e.target.value as any)}
+                        className="bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 w-full transition-all"
+                      >
+                        <option value="morning">กะเช้า</option>
+                        <option value="afternoon">กะบ่าย</option>
+                        <option value="morning_afternoon">ควบกะ (เช้า-บ่าย)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-400 mb-1.5">
+                        เวลาเริ่ม (Optional)
+                      </label>
+                      <input
+                        type="time"
+                        value={newTaskStart}
+                        onChange={(e) => setNewTaskStart(e.target.value)}
+                        className="bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-indigo-500 w-full transition-all"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-400 mb-1.5">
+                        เวลาสิ้นสุด (Optional)
+                      </label>
+                      <input
+                        type="time"
+                        value={newTaskEnd}
+                        onChange={(e) => setNewTaskEnd(e.target.value)}
+                        className="bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-indigo-500 w-full transition-all"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="px-6 py-4 border-t border-slate-800 bg-slate-800/50 flex justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setIsCreateTaskModalOpen(false)}
+                    className="px-6 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm font-bold transition-all cursor-pointer"
+                  >
+                    ยกเลิก
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isCreatingTask}
+                    className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-xl text-sm font-bold transition-all cursor-pointer flex items-center gap-2"
+                  >
+                    {isCreatingTask ? "กำลังบันทึก..." : "เพิ่มงาน"}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         )}

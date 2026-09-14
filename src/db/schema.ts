@@ -2,7 +2,7 @@ import { boolean, date, integer, pgEnum, pgTable, timestamp, varchar, time, uuid
 
 export const roleEnum = pgEnum('role', ['committee', 'general_manager', 'manager', 'manager_assistant', 'employee']);
 export const taskRoleEnum = pgEnum('task_role', ['manager_assistant', 'cashier', 'stock']);
-export const shiftEnum = pgEnum('shift', ['morning', 'noon', 'morning_noon']);
+export const shiftEnum = pgEnum('shift', ['morning', 'afternoon', 'morning_afternoon']);
 
 export const users = pgTable("users", {
     id: uuid("id").primaryKey().defaultRandom(),
@@ -29,6 +29,7 @@ export const tasks = pgTable("tasks", {
 export const shiftSession = pgTable("shift_session", {
     id: uuid("id").primaryKey().defaultRandom(),
     user: uuid("user_id").notNull().references(() => users.id),
+    branch: uuid("branch_id").notNull().references(() => branches.id),
     task_role: taskRoleEnum("task_role").notNull(),
     shift: shiftEnum("shift").notNull(),
 

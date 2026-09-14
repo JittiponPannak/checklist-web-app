@@ -32,9 +32,9 @@ export interface ManagerShiftSummary {
   }>;
 }
 
-function mapDbShiftToUi(dbShift: "morning" | "noon" | "morning_noon"): ShiftType {
+function mapDbShiftToUi(dbShift: "morning" | "afternoon" | "morning_afternoon"): ShiftType {
   if (dbShift === "morning") return "morning";
-  if (dbShift === "noon") return "afternoon";
+  if (dbShift === "afternoon") return "afternoon";
   return "both";
 }
 
@@ -165,7 +165,7 @@ export async function getManagerShiftSessionsAction(filterDate?: string): Promis
  */
 export async function approveShiftSessionAction(params: {
   shiftSessionId: string;
-  role: "manager" | "manager_assistant" | "committee";
+  role: "manager" | "manager_assistant" | "committee" | "general_manager";
 }): Promise<{ success: boolean; error?: string }> {
   try {
     const { shiftSessionId, role } = params;
@@ -192,7 +192,7 @@ export async function approveShiftSessionAction(params: {
         .set({ manager_assistance_approve_timestamp: now })
         .where(eq(taskWork.shift_session, shiftSessionId));
     } else {
-      // manager or committee
+      // manager, committee, or general_manager
       await db
         .update(taskWork)
         .set({ manager_approve_timestamp: now })

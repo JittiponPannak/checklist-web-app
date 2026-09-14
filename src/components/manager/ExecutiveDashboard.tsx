@@ -24,7 +24,7 @@ import {
   resetTodayChecklistDataAction,
 } from "../../actions/checklist";
 
-export type ExecutiveRole = "manager_assistant" | "manager" | "committee";
+export type ExecutiveRole = "manager_assistant" | "manager" | "committee" | "general_manager";
 
 export function ExecutiveDashboard({
   user,
@@ -45,6 +45,7 @@ export function ExecutiveDashboard({
 }) {
   // Determine role directly from logged-in user account
   const currentRole: ExecutiveRole = useMemo(() => {
+    if (user.role === "general_manager" || user.position?.includes("ผู้จัดการทั่วไป")) return "general_manager";
     if (user.role === "committee" || user.position?.includes("กรรมการ")) return "committee";
     if (user.role === "manager_assistant" || user.position?.includes("ผู้ช่วย")) return "manager_assistant";
     return "manager";
@@ -219,6 +220,13 @@ export function ExecutiveDashboard({
       primaryDuty: "ตรวจสอบดัชนีคุณภาพ (Quality Audit) & สรุปผลการดำเนินงาน",
       icon: "🏛️",
     },
+    general_manager: {
+      title: "ผู้จัดการทั่วไป (General Manager)",
+      badge: "bg-emerald-100 text-emerald-950 border-emerald-300 font-bold",
+      description: "บริหารระดับสูง กำหนดทิศทาง ระเบียบปฏิบัติของทุกสาขา มีอำนาจสูงสุดคล้ายกรรมการบริหาร",
+      primaryDuty: "ตรวจสอบดัชนีภาพรวม และติดตามความก้าวหน้า",
+      icon: "🌟",
+    },
   }[currentRole];
 
   // Helper metrics
@@ -272,9 +280,9 @@ export function ExecutiveDashboard({
       const roleForDb =
         type === "assistant"
           ? "manager_assistant"
-          : currentRole === "committee"
-          ? "committee"
-          : "manager";
+          : (currentRole === "committee" || currentRole === "general_manager")
+            ? currentRole
+            : "manager";
 
       const res = await approveShiftSessionAction({
         shiftSessionId: sessionId,
@@ -285,9 +293,9 @@ export function ExecutiveDashboard({
         showToast(
           type === "assistant"
             ? "บันทึกการรับรองกะโดยผู้ช่วยผู้จัดการลงฐานข้อมูลเรียบร้อยแล้ว ✓"
-            : currentRole === "committee"
-            ? "รับรองผลการตรวจงานโดยกรรมการบริหารลงฐานข้อมูลเรียบร้อยแล้ว ✓"
-            : "อนุมัติกะโดยผู้จัดการร้านลงฐานข้อมูลเรียบร้อยแล้ว ✓"
+            : (currentRole === "committee" || currentRole === "general_manager")
+              ? `รับรองผลการตรวจงานโดย${roleConfig.title}ลงฐานข้อมูลเรียบร้อยแล้ว ✓`
+              : "อนุมัติกะโดยผู้จัดการร้านลงฐานข้อมูลเรียบร้อยแล้ว ✓"
         );
         await loadDbSessions();
       } else {
@@ -352,7 +360,7 @@ export function ExecutiveDashboard({
     const allIds = notifications.map((n) => n.shiftSessionId);
     try {
       localStorage.setItem("app_manager_read_notifs", JSON.stringify(allIds));
-    } catch {}
+    } catch { }
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
     showToast("ทำเครื่องหมายว่าอ่านแล้วทั้งหมดเรียบร้อย");
   }
@@ -492,13 +500,13 @@ export function ExecutiveDashboard({
               },
               ...(currentRole === "manager_assistant"
                 ? [
-                    {
-                      id: "checklist" as DashboardTab,
-                      label: "เช็คลิสต์ตรวจงานของฉัน",
-                      icon: "✅",
-                      desc: "บันทึกเช็คลิสต์ประจำกะ",
-                    },
-                  ]
+                  {
+                    id: "checklist" as DashboardTab,
+                    label: "เช็คลิสต์ตรวจงานของฉัน",
+                    icon: "✅",
+                    desc: "บันทึกเช็คลิสต์ประจำกะ",
+                  },
+                ]
                 : []),
               {
                 id: "history" as DashboardTab,
@@ -511,11 +519,10 @@ export function ExecutiveDashboard({
                 key={tab.id}
                 type="button"
                 onClick={() => setActiveTab(tab.id)}
-                className={`p-2.5 sm:p-3 rounded-xl text-left transition-all cursor-pointer flex flex-col ${
-                  activeTab === tab.id
+                className={`p-2.5 sm:p-3 rounded-xl text-left transition-all cursor-pointer flex flex-col ${activeTab === tab.id
                     ? "bg-white text-slate-900 shadow-sm border border-slate-200/80 font-bold"
                     : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
-                }`}
+                  }`}
               >
                 <div className="flex items-center gap-2">
                   <span>{tab.icon}</span>
@@ -626,11 +633,10 @@ export function ExecutiveDashboard({
                           <td className="py-3 px-3 space-y-1">
                             <div className="flex items-center gap-1.5 flex-wrap">
                               <span
-                                className={`px-2 py-0.5 rounded-md font-medium text-[11px] ${
-                                  isAssistantSession
+                                className={`px-2 py-0.5 rounded-md font-medium text-[11px] ${isAssistantSession
                                     ? "bg-indigo-50 text-indigo-800 border border-indigo-200"
                                     : "bg-slate-100 text-slate-700"
-                                }`}
+                                  }`}
                               >
                                 {sess.userPosition || "พนักงาน"}
                               </span>
@@ -701,16 +707,16 @@ export function ExecutiveDashboard({
                                 ตรวจดู
                               </button>
 
-                              {/* If session is from manager assistant, ONLY manager or committee can approve */}
+                              {/* If session is from manager assistant, ONLY manager or committee or general_manager can approve */}
                               {isAssistantSession ? (
-                                (currentRole === "manager" || currentRole === "committee") &&
+                                (currentRole === "manager" || currentRole === "committee" || currentRole === "general_manager") &&
                                 !app.managerApproved && (
                                   <button
                                     type="button"
                                     onClick={() => handleApproveSession(sess.id, "manager")}
                                     className="px-2.5 py-1 text-white bg-slate-900 hover:bg-black rounded-lg text-xs font-semibold cursor-pointer transition-colors"
                                   >
-                                    {currentRole === "committee" ? "รับรองผล (กรรมการ)" : "อนุมัติงานผู้ช่วย"}
+                                    {(currentRole === "committee" || currentRole === "general_manager") ? "รับรองผล (กจ.)" : "อนุมัติงานผู้ช่วย"}
                                   </button>
                                 )
                               ) : (
@@ -725,14 +731,14 @@ export function ExecutiveDashboard({
                                     </button>
                                   )}
 
-                                  {(currentRole === "manager" || currentRole === "committee") &&
+                                  {(currentRole === "manager" || currentRole === "committee" || currentRole === "general_manager") &&
                                     !app.managerApproved && (
                                       <button
                                         type="button"
                                         onClick={() => handleApproveSession(sess.id, "manager")}
                                         className="px-2.5 py-1 text-white bg-slate-900 hover:bg-black rounded-lg text-xs font-semibold cursor-pointer transition-colors"
                                       >
-                                        {currentRole === "committee" ? "รับรองผล (กรรมการ)" : "อนุมัติ"}
+                                        {(currentRole === "committee" || currentRole === "general_manager") ? "รับรองผล (กจ.)" : "อนุมัติ"}
                                       </button>
                                     )}
                                 </>
@@ -783,17 +789,15 @@ export function ExecutiveDashboard({
                     return (
                       <div
                         key={notif.id}
-                        className={`p-3 rounded-xl border flex items-center justify-between gap-3 transition-all ${
-                          notif.read
+                        className={`p-3 rounded-xl border flex items-center justify-between gap-3 transition-all ${notif.read
                             ? "bg-slate-50/60 border-slate-200/70"
                             : "bg-amber-50/40 border-amber-200"
-                        }`}
+                          }`}
                       >
                         <div className="flex items-center gap-3">
                           <div
-                            className={`w-2 h-2 rounded-full ${
-                              notif.read ? "bg-slate-300" : "bg-amber-500"
-                            }`}
+                            className={`w-2 h-2 rounded-full ${notif.read ? "bg-slate-300" : "bg-amber-500"
+                              }`}
                           />
                           <div>
                             <p className="text-xs font-semibold text-slate-900">
@@ -859,11 +863,10 @@ export function ExecutiveDashboard({
                         setMyChecklistShift(sh);
                         loadAssistantChecklist(sh);
                       }}
-                      className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
-                        myChecklistShift === sh
+                      className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer ${myChecklistShift === sh
                           ? "bg-white text-slate-900 shadow-xs"
                           : "text-slate-600 hover:text-slate-900"
-                      }`}
+                        }`}
                     >
                       {sh === "morning" ? "กะเช้า" : "กะบ่าย"}
                     </button>
@@ -914,18 +917,16 @@ export function ExecutiveDashboard({
                           <div
                             key={item.id}
                             onClick={() => handleToggleMyItem(item.id)}
-                            className={`p-3.5 rounded-xl border flex items-start gap-3 cursor-pointer transition-all ${
-                              isDone
+                            className={`p-3.5 rounded-xl border flex items-start gap-3 cursor-pointer transition-all ${isDone
                                 ? "bg-emerald-50/40 border-emerald-200 hover:bg-emerald-50/70"
                                 : "bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50/50"
-                            }`}
+                              }`}
                           >
                             <div
-                              className={`w-5 h-5 rounded-md border flex items-center justify-center mt-0.5 transition-colors ${
-                                isDone
+                              className={`w-5 h-5 rounded-md border flex items-center justify-center mt-0.5 transition-colors ${isDone
                                   ? "bg-emerald-600 border-emerald-600 text-white"
                                   : "border-slate-300 bg-white"
-                              }`}
+                                }`}
                             >
                               {isDone && (
                                 <svg
@@ -955,11 +956,10 @@ export function ExecutiveDashboard({
                                 )}
                               </div>
                               <p
-                                className={`text-xs sm:text-sm font-medium mt-1 ${
-                                  isDone
+                                className={`text-xs sm:text-sm font-medium mt-1 ${isDone
                                     ? "text-slate-800 line-through opacity-80"
                                     : "text-slate-900"
-                                }`}
+                                  }`}
                               >
                                 {item.label}
                               </p>
@@ -1099,23 +1099,23 @@ export function ExecutiveDashboard({
         const isAssistantSess =
           selectedSession.taskRole === "manager_assistant" ||
           selectedSession.userPosition === "ผู้ช่วยผู้จัดการร้าน";
-        const isMgrOrHigher = currentRole === "manager" || currentRole === "committee";
+        const isMgrOrHigher = currentRole === "manager" || currentRole === "committee" || currentRole === "general_manager";
 
         const canApprove = isAssistantSess
           ? isMgrOrHigher && !approvals[selectedSession.id]?.managerApproved
           : currentRole === "manager_assistant"
-          ? !approvals[selectedSession.id]?.assistantApproved
-          : !approvals[selectedSession.id]?.managerApproved;
+            ? !approvals[selectedSession.id]?.assistantApproved
+            : !approvals[selectedSession.id]?.managerApproved;
 
         const isApproved = isAssistantSess
           ? !!approvals[selectedSession.id]?.managerApproved
           : currentRole === "manager_assistant"
-          ? !!approvals[selectedSession.id]?.assistantApproved
-          : !!approvals[selectedSession.id]?.managerApproved;
+            ? !!approvals[selectedSession.id]?.assistantApproved
+            : !!approvals[selectedSession.id]?.managerApproved;
 
         const approveTitle = isAssistantSess
-          ? currentRole === "committee"
-            ? "กรรมการบริหาร"
+          ? (currentRole === "committee" || currentRole === "general_manager")
+            ? roleConfig.title
             : "ผู้จัดการร้าน"
           : roleConfig.title;
 

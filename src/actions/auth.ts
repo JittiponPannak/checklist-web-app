@@ -18,16 +18,16 @@ const INITIAL_USERS: Array<{
   role: 'committee' | 'general_manager' | 'manager' | 'manager_assistant' | 'employee';
   position?: string;
 }> = [
-  { name: "คุณวิภาดา สุขเจริญ", email: "manager@factory.com", password: "manager123", role: "manager", position: "ผู้จัดการร้าน" },
-  { name: "คุณกิตติศักดิ์ พัฒนกิจ", email: "director@factory.com", password: "director123", role: "committee", position: "กรรมการ" },
-  { name: "คุณธนากร เกียรติไพบูลย์", email: "assistant@factory.com", password: "123", role: "manager_assistant", position: "ผู้ช่วยผู้จัดการร้าน" },
-  { name: "คุณอนุรักษ์ วงศ์สวัสดิ์", email: "manager2@factory.com", password: "manager123", role: "manager", position: "ผู้จัดการร้าน" },
-  { name: "คุณพรทิพย์ สุขเจริญ", email: "asst@factory.com", password: "123", role: "manager_assistant", position: "ผู้ช่วยผู้จัดการร้าน" },
-  { name: "สมศรี ใจดี", email: "cashier@factory.com", password: "123", role: "employee", position: "แคชเชียร์" },
-  { name: "สมชาย มั่นคง", email: "stock@factory.com", password: "123", role: "employee", position: "พนักงานสต็อก/จัดเรียง" },
-  { name: "กัญญาภัทร พิมพา", email: "kanya@factory.com", password: "123", role: "employee", position: "แคชเชียร์" },
-  { name: "ศุภชัย มีสุข", email: "suphachai@factory.com", password: "123", role: "employee", position: "พนักงานทั่วไป" },
-];
+    { name: "คุณวิภาดา สุขเจริญ", email: "manager@factory.com", password: "manager123", role: "manager", position: "ผู้จัดการร้าน" },
+    { name: "คุณกิตติศักดิ์ พัฒนกิจ", email: "director@factory.com", password: "director123", role: "committee", position: "กรรมการ" },
+    { name: "คุณธนากร เกียรติไพบูลย์", email: "assistant@factory.com", password: "123", role: "manager_assistant", position: "ผู้ช่วยผู้จัดการร้าน" },
+    { name: "คุณอนุรักษ์ วงศ์สวัสดิ์", email: "manager2@factory.com", password: "manager123", role: "manager", position: "ผู้จัดการร้าน" },
+    { name: "คุณพรทิพย์ สุขเจริญ", email: "asst@factory.com", password: "123", role: "manager_assistant", position: "ผู้ช่วยผู้จัดการร้าน" },
+    { name: "สมศรี ใจดี", email: "cashier@factory.com", password: "123", role: "employee", position: "แคชเชียร์" },
+    { name: "สมชาย มั่นคง", email: "stock@factory.com", password: "123", role: "employee", position: "พนักงานสต็อก/จัดเรียง" },
+    { name: "กัญญาภัทร พิมพา", email: "kanya@factory.com", password: "123", role: "employee", position: "แคชเชียร์" },
+    { name: "ศุภชัย มีสุข", email: "suphachai@factory.com", password: "123", role: "employee", position: "พนักงานทั่วไป" },
+  ];
 
 /**
  * Seed initial sample users if table is empty
@@ -181,5 +181,32 @@ export async function registerAction(data: {
   } catch (err) {
     console.error("registerAction error:", err);
     return { success: false, error: "เกิดข้อผิดพลาดในการบันทึกข้อมูลลงฐานข้อมูล" };
+  }
+}
+
+/**
+ * Get all users from database
+ */
+export async function getAllUsersAction(): Promise<{ success: boolean; users?: User[]; error?: string }> {
+  try {
+    const allUsers = await db.select().from(users);
+    const formatted = allUsers.map((u) => {
+      let defaultPosition: string | undefined = undefined;
+      if (u.role === "manager") defaultPosition = "ผู้จัดการร้าน";
+      else if (u.role === "committee") defaultPosition = "กรรมการ";
+      else if (u.role === "manager_assistant") defaultPosition = "ผู้ช่วยผู้จัดการร้าน";
+
+      return {
+        id: u.id,
+        name: u.name,
+        email: u.email,
+        role: u.role as Role,
+        position: defaultPosition,
+      };
+    });
+    return { success: true, users: formatted };
+  } catch (err) {
+    console.error("getAllUsersAction error:", err);
+    return { success: false, error: "เกิดข้อผิดพลาดในการดึงข้อมูลผู้ใช้งาน" };
   }
 }

@@ -1,8 +1,8 @@
 "use server";
 
 import { db } from "../db";
-import { tasks, taskWork, shiftSession, users } from "../db/schema";
-import { eq, and, gte, lte, desc, inArray } from "drizzle-orm";
+import { tasks, taskWork, shiftSession, users, branches } from "../db/schema";
+import { eq, and, gte, lte, desc, inArray, sql } from "drizzle-orm";
 import { ShiftSession, ShiftType, ChecklistItem } from "../types";
 
 // Helper functions (internal to this file, not exported)
@@ -13,10 +13,10 @@ function mapPositionToTaskRole(pos: string): "cashier" | "stock" | "manager_assi
   return "cashier";
 }
 
-function mapShiftToDbShift(shift: ShiftType): "morning" | "noon" | "morning_noon" {
+function mapShiftToDbShift(shift: ShiftType): "morning" | "afternoon" | "morning_afternoon" {
   if (shift === "morning") return "morning";
-  if (shift === "afternoon") return "noon";
-  return "morning_noon";
+  if (shift === "afternoon") return "afternoon";
+  return "morning_afternoon";
 }
 
 function isValidUuid(id: string): boolean {
@@ -59,8 +59,31 @@ export async function getOrCreateShiftSessionAction(params: {
     const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0);
     const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
 
+    // Find branch and its authorized tasks for this user
+    const branchForUser = await db
+      .select({ id: branches.id, tasks: branches.tasks })
+      .from(branches)
+      .where(sql`${validUserId} = ANY(${branches.members})`)
+      .limit(1);
+
+    let branchId: string;
+    let branchTaskIds: string[] = [];
+
+    if (branchForUser.length > 0) {
+      branchId = branchForUser[0].id;
+      branchTaskIds = branchForUser[0].tasks || [];
+    } else {
+      const [anyBranch] = await db.select({ id: branches.id, tasks: branches.tasks }).from(branches).limit(1);
+      if (anyBranch) {
+        branchId = anyBranch.id;
+        branchTaskIds = anyBranch.tasks || [];
+      } else {
+        return { success: false, error: "กรุณาสร้างสาขาอย่างน้อย 1 สาขาก่อนเริ่มกะ" };
+      }
+    }
+
     // Fetch tasks for this role & shift from DB
-    const dbTasks = await db
+    let dbTasks = await db
       .select()
       .from(tasks)
       .where(
@@ -70,6 +93,13 @@ export async function getOrCreateShiftSessionAction(params: {
           eq(tasks.disabled, false)
         )
       );
+
+    // Apply branch task filter
+    if (branchTaskIds.length > 0) {
+      dbTasks = dbTasks.filter((t) => branchTaskIds.includes(t.id));
+    } else {
+      dbTasks = [];
+    }
 
     // Check if session already exists today for this role and shift
     const [existingSession] = await db
@@ -90,11 +120,13 @@ export async function getOrCreateShiftSessionAction(params: {
     let workRows: Array<typeof taskWork.$inferSelect> = [];
 
     if (!activeDbSession) {
+      // branchId is already acquired above
       // Create new shift_session
       const [newSession] = await db
         .insert(shiftSession)
         .values({
           user: validUserId,
+          branch: branchId,
           task_role: taskRole,
           shift: dbShift,
           start: new Date(),
@@ -160,8 +192,8 @@ export async function getOrCreateShiftSessionAction(params: {
       completedAt: activeDbSession.end
         ? new Date(activeDbSession.end).toISOString()
         : isAllComplete
-        ? new Date().toISOString()
-        : null,
+          ? new Date().toISOString()
+          : null,
       items,
       notified: isAllComplete,
     };
@@ -289,10 +321,10 @@ export async function getPositionShiftsStatusAction(position: string): Promise<{
       both: { status: "none", total: 0, done: 0 },
     };
 
-    const shiftMap: Record<"morning" | "noon" | "morning_noon", ShiftType> = {
+    const shiftMap: Record<"morning" | "afternoon" | "morning_afternoon", ShiftType> = {
       morning: "morning",
-      noon: "afternoon",
-      morning_noon: "both",
+      afternoon: "afternoon",
+      morning_afternoon: "both",
     };
 
     const sessionIds = todaySessions.map((s) => s.id);
@@ -304,7 +336,7 @@ export async function getPositionShiftsStatusAction(position: string): Promise<{
         .where(inArray(taskWork.shift_session, sessionIds));
     }
 
-    for (const [dbShift, uiShift] of Object.entries(shiftMap) as Array<["morning" | "noon" | "morning_noon", ShiftType]>) {
+    for (const [dbShift, uiShift] of Object.entries(shiftMap) as Array<["morning" | "afternoon" | "morning_afternoon", ShiftType]>) {
       const sess = todaySessions.find((s) => s.shift === dbShift);
       if (!sess) continue;
 
