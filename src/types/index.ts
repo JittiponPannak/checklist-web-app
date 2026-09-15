@@ -13,6 +13,7 @@ export interface User {
   password?: string;
   role: Role;
   position?: string;
+  branchName?: string;
 }
 
 export interface ChecklistItem {
@@ -34,6 +35,7 @@ export interface ShiftSession {
   completedAt: string | null;
   items: ChecklistItem[];
   notified: boolean;
+  branchName?: string;
 }
 
 export interface Notification {

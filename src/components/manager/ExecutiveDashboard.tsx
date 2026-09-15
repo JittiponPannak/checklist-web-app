@@ -59,6 +59,7 @@ export function ExecutiveDashboard({
   const [actionFeedback, setActionFeedback] = useState<string | null>(null);
   const [isLiveFromDb, setIsLiveFromDb] = useState(false);
   const [isLoadingDb, setIsLoadingDb] = useState(false);
+  const [hasAssistantLoggedInToday, setHasAssistantLoggedInToday] = useState(true);
 
   // Approval status tracking in client state (synced with Supabase task_work)
   const [approvals, setApprovals] = useState<Record<string, { assistantApproved?: boolean; managerApproved?: boolean }>>({});
@@ -81,6 +82,9 @@ export function ExecutiveDashboard({
       const res = await getManagerShiftSessionsAction();
       if (res.success && res.sessions) {
         setIsLiveFromDb(true);
+        if (res.hasAssistantLoggedInToday !== undefined) {
+          setHasAssistantLoggedInToday(res.hasAssistantLoggedInToday);
+        }
         const mappedSessions: ShiftSession[] = res.sessions.map((s) => ({
           id: s.id,
           userId: s.userId,
@@ -98,6 +102,7 @@ export function ExecutiveDashboard({
             taskWorkId: it.taskWorkId,
           })),
           notified: true,
+          branchName: s.branchName,
         }));
         setSessions(mappedSessions);
 
@@ -386,7 +391,7 @@ export function ExecutiveDashboard({
                   Eater Egg Fresh Mart
                 </span>
                 <span className="hidden sm:inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">
-                  สาขาหลัก 001
+                  {user.branchName || "ไม่ได้ระบุสาขา"}
                 </span>
               </div>
               <p className="text-[11px] text-slate-500 hidden sm:block">
@@ -520,8 +525,8 @@ export function ExecutiveDashboard({
                 type="button"
                 onClick={() => setActiveTab(tab.id)}
                 className={`p-2.5 sm:p-3 rounded-xl text-left transition-all cursor-pointer flex flex-col ${activeTab === tab.id
-                    ? "bg-white text-slate-900 shadow-sm border border-slate-200/80 font-bold"
-                    : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
+                  ? "bg-white text-slate-900 shadow-sm border border-slate-200/80 font-bold"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
                   }`}
               >
                 <div className="flex items-center gap-2">
@@ -634,8 +639,8 @@ export function ExecutiveDashboard({
                             <div className="flex items-center gap-1.5 flex-wrap">
                               <span
                                 className={`px-2 py-0.5 rounded-md font-medium text-[11px] ${isAssistantSession
-                                    ? "bg-indigo-50 text-indigo-800 border border-indigo-200"
-                                    : "bg-slate-100 text-slate-700"
+                                  ? "bg-indigo-50 text-indigo-800 border border-indigo-200"
+                                  : "bg-slate-100 text-slate-700"
                                   }`}
                               >
                                 {sess.userPosition || "พนักงาน"}
@@ -674,6 +679,10 @@ export function ExecutiveDashboard({
                               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
                                 ✓ รับรองแล้ว
                               </span>
+                            ) : !hasAssistantLoggedInToday ? (
+                              <span className="text-[10px] text-slate-400 font-medium tooltip" title="ไม่มีผู้ช่วยเข้างานในวันนี้ จึงข้ามขั้นตอนนี้ให้ผู้จัดการพิจารณาโดยตรง">
+                                - (ข้าม)
+                              </span>
                             ) : (
                               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-50 text-amber-800 border border-amber-200">
                                 รอดำเนินการ
@@ -691,9 +700,15 @@ export function ExecutiveDashboard({
                                 รอผู้จัดการอนุมัติ
                               </span>
                             ) : (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-600 border border-slate-200">
-                                รอผู้จัดการ
-                              </span>
+                              (!hasAssistantLoggedInToday || app.assistantApproved) ? (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-sky-50 text-sky-700 border border-sky-200">
+                                  รอผู้จัดการอนุมัติ
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-600 border border-slate-200">
+                                  รอผู้ช่วยตรวจสอบ
+                                </span>
+                              )
                             )}
                           </td>
                           {/* Action Buttons */}
@@ -733,13 +748,19 @@ export function ExecutiveDashboard({
 
                                   {(currentRole === "manager" || currentRole === "committee" || currentRole === "general_manager") &&
                                     !app.managerApproved && (
-                                      <button
-                                        type="button"
-                                        onClick={() => handleApproveSession(sess.id, "manager")}
-                                        className="px-2.5 py-1 text-white bg-slate-900 hover:bg-black rounded-lg text-xs font-semibold cursor-pointer transition-colors"
-                                      >
-                                        {(currentRole === "committee" || currentRole === "general_manager") ? "รับรองผล (กจ.)" : "อนุมัติ"}
-                                      </button>
+                                      (!hasAssistantLoggedInToday || app.assistantApproved) ? (
+                                        <button
+                                          type="button"
+                                          onClick={() => handleApproveSession(sess.id, "manager")}
+                                          className="px-2.5 py-1 text-white bg-slate-900 hover:bg-black rounded-lg text-xs font-semibold cursor-pointer transition-colors"
+                                        >
+                                          {(currentRole === "committee" || currentRole === "general_manager") ? "รับรองผล (กจ.)" : "อนุมัติ"}
+                                        </button>
+                                      ) : (
+                                        <span className="text-[10px] text-slate-400 font-medium px-1">
+                                          รอผู้ช่วยตรวจ
+                                        </span>
+                                      )
                                     )}
                                 </>
                               )}
@@ -790,8 +811,8 @@ export function ExecutiveDashboard({
                       <div
                         key={notif.id}
                         className={`p-3 rounded-xl border flex items-center justify-between gap-3 transition-all ${notif.read
-                            ? "bg-slate-50/60 border-slate-200/70"
-                            : "bg-amber-50/40 border-amber-200"
+                          ? "bg-slate-50/60 border-slate-200/70"
+                          : "bg-amber-50/40 border-amber-200"
                           }`}
                       >
                         <div className="flex items-center gap-3">
@@ -864,8 +885,8 @@ export function ExecutiveDashboard({
                         loadAssistantChecklist(sh);
                       }}
                       className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer ${myChecklistShift === sh
-                          ? "bg-white text-slate-900 shadow-xs"
-                          : "text-slate-600 hover:text-slate-900"
+                        ? "bg-white text-slate-900 shadow-xs"
+                        : "text-slate-600 hover:text-slate-900"
                         }`}
                     >
                       {sh === "morning" ? "กะเช้า" : "กะบ่าย"}
@@ -918,14 +939,14 @@ export function ExecutiveDashboard({
                             key={item.id}
                             onClick={() => handleToggleMyItem(item.id)}
                             className={`p-3.5 rounded-xl border flex items-start gap-3 cursor-pointer transition-all ${isDone
-                                ? "bg-emerald-50/40 border-emerald-200 hover:bg-emerald-50/70"
-                                : "bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50/50"
+                              ? "bg-emerald-50/40 border-emerald-200 hover:bg-emerald-50/70"
+                              : "bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50/50"
                               }`}
                           >
                             <div
                               className={`w-5 h-5 rounded-md border flex items-center justify-center mt-0.5 transition-colors ${isDone
-                                  ? "bg-emerald-600 border-emerald-600 text-white"
-                                  : "border-slate-300 bg-white"
+                                ? "bg-emerald-600 border-emerald-600 text-white"
+                                : "border-slate-300 bg-white"
                                 }`}
                             >
                               {isDone && (
@@ -957,8 +978,8 @@ export function ExecutiveDashboard({
                               </div>
                               <p
                                 className={`text-xs sm:text-sm font-medium mt-1 ${isDone
-                                    ? "text-slate-800 line-through opacity-80"
-                                    : "text-slate-900"
+                                  ? "text-slate-800 line-through opacity-80"
+                                  : "text-slate-900"
                                   }`}
                               >
                                 {item.label}

@@ -61,21 +61,24 @@ export async function getOrCreateShiftSessionAction(params: {
 
     // Find branch and its authorized tasks for this user
     const branchForUser = await db
-      .select({ id: branches.id, tasks: branches.tasks })
+      .select({ id: branches.id, name: branches.name, tasks: branches.tasks })
       .from(branches)
       .where(sql`${validUserId} = ANY(${branches.members})`)
       .limit(1);
 
     let branchId: string;
+    let branchNameForSession: string;
     let branchTaskIds: string[] = [];
 
     if (branchForUser.length > 0) {
       branchId = branchForUser[0].id;
+      branchNameForSession = branchForUser[0].name;
       branchTaskIds = branchForUser[0].tasks || [];
     } else {
-      const [anyBranch] = await db.select({ id: branches.id, tasks: branches.tasks }).from(branches).limit(1);
+      const [anyBranch] = await db.select({ id: branches.id, name: branches.name, tasks: branches.tasks }).from(branches).limit(1);
       if (anyBranch) {
         branchId = anyBranch.id;
+        branchNameForSession = anyBranch.name;
         branchTaskIds = anyBranch.tasks || [];
       } else {
         return { success: false, error: "กรุณาสร้างสาขาอย่างน้อย 1 สาขาก่อนเริ่มกะ" };
@@ -196,6 +199,7 @@ export async function getOrCreateShiftSessionAction(params: {
           : null,
       items,
       notified: isAllComplete,
+      branchName: branchNameForSession,
     };
 
     return { success: true, session: sessionObj };
@@ -205,9 +209,6 @@ export async function getOrCreateShiftSessionAction(params: {
   }
 }
 
-/**
- * Toggle a task_work item status (checked / unchecked)
- */
 export async function toggleTaskWorkAction(params: {
   taskWorkId?: string;
   shiftSessionId?: string;
@@ -219,17 +220,21 @@ export async function toggleTaskWorkAction(params: {
     const { taskWorkId, shiftSessionId, taskId, userId, completed } = params;
     const completedAt = completed ? new Date() : null;
 
+    let targetShiftSessionId = shiftSessionId;
+
     if (taskWorkId && isValidUuid(taskWorkId)) {
       await db
         .update(taskWork)
         .set({ timestamp: completedAt })
         .where(eq(taskWork.id, taskWorkId));
 
-      return { success: true, completedAt: completedAt ? completedAt.toISOString() : null };
-    }
-
-    // If taskWorkId not provided, search by shiftSessionId and taskId
-    if (shiftSessionId && taskId && isValidUuid(shiftSessionId) && isValidUuid(taskId)) {
+      if (!targetShiftSessionId) {
+        const [work] = await db.select({ shift_session: taskWork.shift_session }).from(taskWork).where(eq(taskWork.id, taskWorkId)).limit(1);
+        if (work) {
+          targetShiftSessionId = work.shift_session;
+        }
+      }
+    } else if (shiftSessionId && taskId && isValidUuid(shiftSessionId) && isValidUuid(taskId)) {
       const [existing] = await db
         .select({ id: taskWork.id })
         .from(taskWork)
@@ -254,11 +259,19 @@ export async function toggleTaskWorkAction(params: {
           timestamp: completedAt,
         });
       }
-
-      return { success: true, completedAt: completedAt ? completedAt.toISOString() : null };
+    } else {
+      return { success: false, error: "ข้อมูลระบุรายการไม่ถูกต้อง" };
     }
 
-    return { success: false, error: "ข้อมูลระบุรายการไม่ถูกต้อง" };
+    if (targetShiftSessionId && isValidUuid(targetShiftSessionId)) {
+      // Find branch and update last_update
+      const [sess] = await db.select({ branch: shiftSession.branch }).from(shiftSession).where(eq(shiftSession.id, targetShiftSessionId)).limit(1);
+      if (sess && sess.branch) {
+        await db.update(branches).set({ last_update: new Date() }).where(eq(branches.id, sess.branch));
+      }
+    }
+
+    return { success: true, completedAt: completedAt ? completedAt.toISOString() : null };
   } catch (err: any) {
     console.error("toggleTaskWorkAction error:", err);
     return { success: false, error: err?.message || "เกิดข้อผิดพลาดในการบันทึกสถานะงาน" };

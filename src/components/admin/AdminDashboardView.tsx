@@ -16,14 +16,7 @@ interface MasterTask {
   active: boolean;
 }
 
-interface AuditLog {
-  id: string;
-  timestamp: string;
-  user: string;
-  action: string;
-  target: string;
-  severity: "info" | "success" | "warning";
-}
+
 
 // Removed INITIAL_BRANCHES
 
@@ -93,48 +86,7 @@ const INITIAL_MASTER_TASKS: MasterTask[] = [
   },
 ];
 
-const INITIAL_AUDIT_LOGS: AuditLog[] = [
-  {
-    id: "log-1",
-    timestamp: "14 ก.ย. 2026 13:29:51",
-    user: "สมศรี ใจดี (แคชเชียร์)",
-    action: "CHECKLIST_SUBMIT",
-    target: "ตรวจนับเงินทอน ก้นลิ้นชัก (BKK-001)",
-    severity: "success",
-  },
-  {
-    id: "log-2",
-    timestamp: "14 ก.ย. 2026 13:28:10",
-    user: "คุณวิภาดา สุขเจริญ (ผู้จัดการ)",
-    action: "SHIFT_APPROVE",
-    target: "รับรองผลกะเช้า แคชเชียร์ สาขาพญาไท",
-    severity: "success",
-  },
-  {
-    id: "log-3",
-    timestamp: "14 ก.ย. 2026 12:45:00",
-    user: "คุณสมเกียรติ บริหารกิจ (Admin)",
-    action: "ROLE_CHANGE",
-    target: "แต่งตั้ง คุณธนากร เป็น ผู้ช่วยผู้จัดการร้าน",
-    severity: "info",
-  },
-  {
-    id: "log-4",
-    timestamp: "14 ก.ย. 2026 11:30:15",
-    user: "System Watchdog",
-    action: "DB_BACKUP",
-    target: "Supabase PostgreSQL Automated Snapshot (Pooler Asia-0)",
-    severity: "info",
-  },
-  {
-    id: "log-5",
-    timestamp: "14 ก.ย. 2026 08:15:20",
-    user: "สมชาย มั่นคง (สต็อก)",
-    action: "CHECKLIST_ALERT",
-    target: "ตู้แช่เย็น 02 อุณหภูมิสูงกว่าเกณฑ์ (+4.8°C)",
-    severity: "warning",
-  },
-];
+
 
 export function AdminDashboardView({
   user,
@@ -143,10 +95,9 @@ export function AdminDashboardView({
   user: User;
   onLogout: () => void;
 }) {
-  const [activeTab, setActiveTab] = useState<"overview" | "branches" | "tasks" | "users" | "audit">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "branches" | "tasks" | "users">("overview");
   const [branches, setBranches] = useState<Branch[]>([]);
   const [tasks, setTasks] = useState<MasterTask[]>(INITIAL_MASTER_TASKS);
-  const [auditLogs, setAuditLogs] = useState<AuditLog[]>(INITIAL_AUDIT_LOGS);
   const [usersList, setUsersList] = useState<User[]>([]);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
 
@@ -398,7 +349,6 @@ export function AdminDashboardView({
               { id: "branches", label: `จัดการสาขา (${branches.length})` },
               { id: "tasks", label: `แม่แบบงานกลาง (${tasks.length})` },
               { id: "users", label: `จัดการผู้ใช้และสิทธิ์ (${usersList.length})` },
-              { id: "audit", label: "บันทึกประวัติ (Audit Logs)" },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -769,10 +719,11 @@ export function AdminDashboardView({
                             onChange={(e) => handlePromoteUser(u.id, e.target.value)}
                             className="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 cursor-pointer"
                           >
-                            <option value="employee">Staff (พนักงาน)</option>
-                            <option value="manager">Manager (ผู้จัดการ)</option>
-                            <option value="manager_assistant">Assistant (ผู้ช่วยผจก.)</option>
-                            <option value="admin">Admin (ผู้ดูแลระบบ)</option>
+                            <option value="employee">Staff (พนักงานทั่วไป)</option>
+                            <option value="manager_assistant">Assistant (ผู้ช่วยผู้จัดการร้าน)</option>
+                            <option value="manager">Store Manager (ผู้จัดการร้าน)</option>
+                            <option value="general_manager">General Manager (ผู้จัดการทั่วไป)</option>
+                            <option value="committee">Committee (กรรมการบริหาร)</option>
                           </select>
                         </td>
                       </tr>
@@ -784,52 +735,7 @@ export function AdminDashboardView({
           </div>
         )}
 
-        {/* TAB 5: AUDIT LOGS */}
-        {activeTab === "audit" && (
-          <div className="space-y-4 animate-fade-in">
-            <div className="bg-slate-950 border border-slate-800 rounded-2xl p-5">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h3 className="text-base font-bold text-white">บันทึกเหตุการณ์และความปลอดภัยระบบ (System Audit Log)</h3>
-                  <p className="text-xs text-slate-400">บันทึกทุกกิจกรรมการเช็คงาน การอนุมัติผล และการแก้ไขสิทธิ์โดยละเอียด</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => showToast("ดาวน์โหลด Audit Report (.CSV) เรียบร้อย")}
-                  className="bg-slate-900 hover:bg-slate-800 text-slate-300 text-xs font-semibold px-3 py-1.5 rounded-xl border border-slate-800 transition-all cursor-pointer"
-                >
-                  Export CSV ↓
-                </button>
-              </div>
 
-              <div className="space-y-2">
-                {auditLogs.map((log) => (
-                  <div
-                    key={log.id}
-                    className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs"
-                  >
-                    <div className="flex items-center gap-3">
-                      <span
-                        className={`w-2 h-2 rounded-full flex-shrink-0 ${log.severity === "success"
-                          ? "bg-emerald-500"
-                          : log.severity === "warning"
-                            ? "bg-amber-500"
-                            : "bg-indigo-500"
-                          }`}
-                      />
-                      <span className="font-mono text-slate-400 text-[11px]">{log.timestamp}</span>
-                      <span className="font-bold text-slate-200">{log.user}</span>
-                      <span className="font-mono text-indigo-400 bg-indigo-950/80 px-1.5 py-0.5 rounded text-[10px] border border-indigo-900">
-                        {log.action}
-                      </span>
-                    </div>
-                    <span className="text-slate-400 text-right">{log.target}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
         {/* MODALS */}
         {isNewBranchModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 animate-fade-in">

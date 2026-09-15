@@ -44,10 +44,10 @@ export function ShiftSelectPage({
     propSessions && propSessions.length > 0
       ? propSessions
       : internalSessions.length > 0
-      ? internalSessions
-      : typeof window !== "undefined"
-      ? getSessions()
-      : [];
+        ? internalSessions
+        : typeof window !== "undefined"
+          ? getSessions()
+          : [];
 
   const now = new Date();
   const hour = now.getHours();
@@ -60,31 +60,31 @@ export function ShiftSelectPage({
     tagline: string;
     isCurrent: boolean;
   }[] = [
-    {
-      id: "morning",
-      title: "เช้า",
-      subTitle: "กะเช้า",
-      time: "08:00 – 16:00",
-      tagline: "เปิดร้าน รับสินค้า ตรวจนับสต็อก และบริการลูกค้าช่วงเช้า",
-      isCurrent: hour >= 6 && hour < 14,
-    },
-    {
-      id: "afternoon",
-      title: "บ่าย",
-      subTitle: "กะบ่าย",
-      time: "16:00 – 00:00",
-      tagline: "ดูแลลูกค้าหน้าร้าน เติมสต็อก สรุปยอดเงิน และปิดร้าน",
-      isCurrent: hour >= 14 && hour < 22,
-    },
-    {
-      id: "both",
-      title: "ควบ",
-      subTitle: "ควบสองกะ",
-      time: "08:00 – 00:00",
-      tagline: "ควงกะปฏิบัติงานต่อเนื่องตลอดวัน ทั้งรอบเช้าและรอบบ่าย",
-      isCurrent: false,
-    },
-  ];
+      {
+        id: "morning",
+        title: "เช้า",
+        subTitle: "กะเช้า",
+        time: "08:00 – 16:00",
+        tagline: "เปิดร้าน รับสินค้า ตรวจนับสต็อก และบริการลูกค้าช่วงเช้า",
+        isCurrent: hour >= 6 && hour < 14,
+      },
+      {
+        id: "afternoon",
+        title: "บ่าย",
+        subTitle: "กะบ่าย",
+        time: "16:00 – 00:00",
+        tagline: "ดูแลลูกค้าหน้าร้าน เติมสต็อก สรุปยอดเงิน และปิดร้าน",
+        isCurrent: hour >= 14 && hour < 22,
+      },
+      {
+        id: "both",
+        title: "ควบ",
+        subTitle: "ควบสองกะ",
+        time: "08:00 – 00:00",
+        tagline: "ควงกะปฏิบัติงานต่อเนื่องตลอดวัน ทั้งรอบเช้าและรอบบ่าย",
+        isCurrent: false,
+      },
+    ];
 
   return (
     <div className="min-h-screen bg-slate-50/70 flex flex-col justify-between px-4 py-6 sm:py-10 relative overflow-hidden">
@@ -112,7 +112,12 @@ export function ShiftSelectPage({
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 text-right hidden sm:flex">
             <div>
-              <p className="text-xs font-bold text-slate-900">{user.name}</p>
+              {user.branchName && (
+                <p className="text-[10px] font-bold text-indigo-700 uppercase tracking-widest mb-0.5 leading-none">
+                  {user.branchName}
+                </p>
+              )}
+              <p className="text-xs font-bold text-slate-900 leading-tight">{user.name}</p>
               <p className="text-[11px] text-slate-500 font-medium">{user.position || "พนักงานสาขา"}</p>
             </div>
             <div className="w-9 h-9 rounded-xl bg-slate-950 text-white flex items-center justify-center font-bold text-xs shadow-xs">
@@ -187,26 +192,26 @@ export function ShiftSelectPage({
               hasDbData && dbStatus!.status !== "none"
                 ? dbStatus!.status
                 : !hasActivity
-                ? "none"
-                : isAllDone
-                ? "completed"
-                : "incomplete";
+                  ? "none"
+                  : isAllDone
+                    ? "completed"
+                    : "incomplete";
 
             const cardTheme = isMorn
               ? {
-                  hoverBorder: "hover:border-amber-400 hover:shadow-[0_12px_28px_-6px_rgba(245,158,11,0.15)]",
-                  iconBox: "bg-amber-50 border-amber-200/80 text-amber-700 group-hover:bg-amber-500 group-hover:text-white group-hover:border-amber-500",
-                  btnHover: "group-hover:bg-amber-600",
-                  badgeColor: "amber" as const,
-                }
+                hoverBorder: "hover:border-amber-400 hover:shadow-[0_12px_28px_-6px_rgba(245,158,11,0.15)]",
+                iconBox: "bg-amber-50 border-amber-200/80 text-amber-700 group-hover:bg-amber-500 group-hover:text-white group-hover:border-amber-500",
+                btnHover: "group-hover:bg-amber-600",
+                badgeColor: "amber" as const,
+              }
               : isAft
-              ? {
+                ? {
                   hoverBorder: "hover:border-sky-400 hover:shadow-[0_12px_28px_-6px_rgba(2,132,199,0.15)]",
                   iconBox: "bg-sky-50 border-sky-200/80 text-sky-700 group-hover:bg-sky-600 group-hover:text-white group-hover:border-sky-600",
                   btnHover: "group-hover:bg-sky-600",
                   badgeColor: "blue" as const,
                 }
-              : {
+                : {
                   hoverBorder: "hover:border-indigo-400 hover:shadow-[0_12px_28px_-6px_rgba(99,102,241,0.15)]",
                   iconBox: "bg-indigo-50 border-indigo-200/80 text-indigo-700 group-hover:bg-indigo-600 group-hover:text-white group-hover:border-indigo-600",
                   btnHover: "group-hover:bg-slate-900",
@@ -217,8 +222,8 @@ export function ShiftSelectPage({
               checkStatus === "completed"
                 ? "border-emerald-300 ring-1 ring-emerald-500/20 bg-emerald-50/15 hover:border-emerald-500 hover:shadow-[0_12px_28px_-6px_rgba(16,185,129,0.2)]"
                 : checkStatus === "incomplete"
-                ? "border-amber-300 ring-1 ring-amber-500/20 bg-amber-50/15 hover:border-amber-500 hover:shadow-[0_12px_28px_-6px_rgba(245,158,11,0.2)]"
-                : `bg-white border-slate-200/90 ${cardTheme.hoverBorder}`;
+                  ? "border-amber-300 ring-1 ring-amber-500/20 bg-amber-50/15 hover:border-amber-500 hover:shadow-[0_12px_28px_-6px_rgba(245,158,11,0.2)]"
+                  : `bg-white border-slate-200/90 ${cardTheme.hoverBorder}`;
 
             return (
               <div
@@ -334,20 +339,19 @@ export function ShiftSelectPage({
                 <div className="mt-6 pt-4 border-t border-slate-100">
                   <div
                     aria-hidden="true"
-                    className={`w-full py-2.5 px-4 rounded-xl ${
-                      checkStatus === "completed"
-                        ? "bg-emerald-700 group-hover:bg-emerald-800 active:bg-emerald-900"
-                        : checkStatus === "incomplete"
+                    className={`w-full py-2.5 px-4 rounded-xl ${checkStatus === "completed"
+                      ? "bg-emerald-700 group-hover:bg-emerald-800 active:bg-emerald-900"
+                      : checkStatus === "incomplete"
                         ? "bg-amber-700 group-hover:bg-amber-800 active:bg-amber-900"
                         : `bg-slate-900 ${cardTheme.btnHover} active:bg-black`
-                    } text-white text-xs sm:text-sm font-semibold shadow-[inset_0_1px_0_rgba(255,255,255,0.15),0_1px_2px_rgba(0,0,0,0.1)] transition-all flex items-center justify-center gap-2 select-none`}
+                      } text-white text-xs sm:text-sm font-semibold shadow-[inset_0_1px_0_rgba(255,255,255,0.15),0_1px_2px_rgba(0,0,0,0.1)] transition-all flex items-center justify-center gap-2 select-none`}
                   >
                     <span>
                       {checkStatus === "completed"
                         ? `ดูรายการที่เช็คแล้ว (${doneItems}/${totalItems})`
                         : checkStatus === "incomplete"
-                        ? `ทำรายการต่อ (เหลือ ${totalItems - doneItems} ข้อ)`
-                        : `เลือกกะ${s.title} → เริ่มตรวจงาน`}
+                          ? `ทำรายการต่อ (เหลือ ${totalItems - doneItems} ข้อ)`
+                          : `เลือกกะ${s.title} → เริ่มตรวจงาน`}
                     </span>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="group-hover:translate-x-1 transition-transform">
                       <path d="M5 12h14M12 5l7 7-7 7" />
@@ -399,7 +403,7 @@ export function ShiftSelectPage({
       </div>
 
       <footer className="text-center text-[11px] text-slate-500 font-medium py-2 relative z-10">
-        Eater Egg Fresh Mart • Checklist System
+        {user.branchName || "Eater Egg Fresh Mart"} • Checklist System
       </footer>
     </div>
   );

@@ -87,8 +87,13 @@ export function ChecklistPage({
                   </span>
                 )}
               </div>
-              <h1 className="text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight">{session.userName}</h1>
-              <p className="text-xs text-slate-500 font-mono mt-0.5">เริ่มงานเวลา {fmtTime(session.startedAt)}</p>
+              {session.branchName && (
+                <p className="text-[10px] sm:text-[11px] font-bold text-indigo-700 uppercase tracking-widest mb-1 leading-none">
+                  {session.branchName}
+                </p>
+              )}
+              <h1 className="text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight leading-none">{session.userName}</h1>
+              <p className="text-xs text-slate-500 font-mono mt-1.5">เริ่มงานเวลา {fmtTime(session.startedAt)}</p>
             </div>
 
             <div className="flex items-center gap-2">
@@ -99,8 +104,8 @@ export function ChecklistPage({
                   className="text-xs px-3 py-2 rounded-xl bg-slate-100 border border-slate-200 text-slate-800 hover:bg-slate-200 hover:text-slate-950 transition-colors font-semibold flex items-center gap-1.5 min-h-[36px] cursor-pointer shadow-2xs"
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-                    <polyline points="9 22 9 12 15 12 15 22"/>
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                    <polyline points="9 22 9 12 15 12 15 22" />
                   </svg>
                   แดชบอร์ด
                 </button>
@@ -125,9 +130,8 @@ export function ChecklistPage({
             </div>
             <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden border border-slate-200/60 p-0.5">
               <div
-                className={`h-full rounded-full transition-all duration-300 ease-out ${
-                  allDone ? "bg-emerald-600" : "bg-slate-900"
-                }`}
+                className={`h-full rounded-full transition-all duration-300 ease-out ${allDone ? "bg-emerald-600" : "bg-slate-900"
+                  }`}
                 style={{ width: `${progress}%` }}
               />
             </div>
@@ -160,9 +164,8 @@ export function ChecklistPage({
                 aria-selected={filter === t}
                 tabIndex={filter === t ? 0 : -1}
                 onClick={() => setFilter(t)}
-                className={`px-3 py-1.5 min-h-[32px] rounded-lg transition-all cursor-pointer ${
-                  filter === t ? "bg-white text-slate-900 shadow-xs font-bold" : "text-slate-600 hover:text-slate-900"
-                }`}
+                className={`px-3 py-1.5 min-h-[32px] rounded-lg transition-all cursor-pointer ${filter === t ? "bg-white text-slate-900 shadow-xs font-bold" : "text-slate-600 hover:text-slate-900"
+                  }`}
               >
                 {t === "all" ? `ทั้งหมด (${total})` : t === "pending" ? `ที่ต้องทำ (${total - done})` : `เสร็จแล้ว (${done})`}
               </button>
@@ -197,18 +200,16 @@ export function ChecklistPage({
                   role="checkbox"
                   aria-checked={isDone}
                   onClick={() => toggleItem(item.id)}
-                  className={`w-full flex items-start gap-3.5 p-4 rounded-2xl border text-left transition-all duration-150 focus-visible:outline-none focus:ring-3 focus:ring-slate-950/10 shadow-2xs cursor-pointer ${
-                    isDone
-                      ? "bg-emerald-50/30 border-emerald-200/80 hover:border-emerald-300"
-                      : "bg-white border-slate-200 hover:border-slate-400 hover:shadow-xs"
-                  }`}
+                  className={`w-full flex items-start gap-3.5 p-4 rounded-2xl border text-left transition-all duration-150 focus-visible:outline-none focus:ring-3 focus:ring-slate-950/10 shadow-2xs cursor-pointer ${isDone
+                    ? "bg-emerald-50/30 border-emerald-200/80 hover:border-emerald-300"
+                    : "bg-white border-slate-200 hover:border-slate-400 hover:shadow-xs"
+                    }`}
                 >
                   <div
-                    className={`mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all ${
-                      isDone
-                        ? "border-emerald-600 bg-emerald-600 text-white shadow-2xs"
-                        : "border-slate-400 bg-white hover:border-slate-800"
-                    }`}
+                    className={`mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all ${isDone
+                      ? "border-emerald-600 bg-emerald-600 text-white shadow-2xs"
+                      : "border-slate-400 bg-white hover:border-slate-800"
+                      }`}
                   >
                     {isDone && (
                       <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">

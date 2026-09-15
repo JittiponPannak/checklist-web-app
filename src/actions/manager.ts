@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "../db";
-import { tasks, taskWork, shiftSession, users } from "../db/schema";
+import { tasks, taskWork, shiftSession, users, branches } from "../db/schema";
 import { eq, and, gte, lte, desc, inArray } from "drizzle-orm";
 import { ShiftType } from "../types";
 
@@ -30,6 +30,7 @@ export interface ManagerShiftSummary {
     assistantApproved: boolean;
     managerApproved: boolean;
   }>;
+  branchName?: string;
 }
 
 function mapDbShiftToUi(dbShift: "morning" | "afternoon" | "morning_afternoon"): ShiftType {
@@ -50,6 +51,7 @@ function mapTaskRoleToTitle(role: "cashier" | "stock" | "manager_assistant"): st
 export async function getManagerShiftSessionsAction(filterDate?: string): Promise<{
   success: boolean;
   sessions?: ManagerShiftSummary[];
+  hasAssistantLoggedInToday?: boolean;
   error?: string;
 }> {
   try {
@@ -69,8 +71,23 @@ export async function getManagerShiftSessionsAction(filterDate?: string): Promis
       )
       .orderBy(desc(shiftSession.start));
 
+    // Check if any manager_assistant logged in today
+    const [assistantLoggedIn] = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(
+        and(
+          eq(users.role, "manager_assistant"),
+          gte(users.last_login, startOfDay),
+          lte(users.last_login, endOfDay)
+        )
+      )
+      .limit(1);
+
+    const hasAssistantLoggedInToday = !!assistantLoggedIn;
+
     if (dbSessions.length === 0) {
-      return { success: true, sessions: [] };
+      return { success: true, sessions: [], hasAssistantLoggedInToday };
     }
 
     const sessionIds = dbSessions.map((s) => s.id);
@@ -91,6 +108,12 @@ export async function getManagerShiftSessionsAction(filterDate?: string): Promis
     const taskIds = Array.from(new Set(dbWorks.map((w) => w.task)));
     const allTasks = taskIds.length > 0
       ? await db.select().from(tasks).where(inArray(tasks.id, taskIds))
+      : [];
+
+    // Fetch branch names
+    const branchIds = Array.from(new Set(dbSessions.map((s) => s.branch).filter(Boolean)));
+    const dbBranches = branchIds.length > 0
+      ? await db.select({ id: branches.id, name: branches.name }).from(branches).where(inArray(branches.id, branchIds))
       : [];
 
     const summaries: ManagerShiftSummary[] = dbSessions.map((sess) => {
@@ -150,10 +173,11 @@ export async function getManagerShiftSessionsAction(filterDate?: string): Promis
         assistantApproveTime: latestAsstTime ? latestAsstTime.toISOString() : null,
         managerApproveTime: latestMgrTime ? latestMgrTime.toISOString() : null,
         items,
+        branchName: dbBranches.find((b) => b.id === sess.branch)?.name,
       };
     });
 
-    return { success: true, sessions: summaries };
+    return { success: true, sessions: summaries, hasAssistantLoggedInToday };
   } catch (err: any) {
     console.error("getManagerShiftSessionsAction error:", err);
     return { success: false, error: err?.message || "เกิดข้อผิดพลาดในการดึงข้อมูลสำหรับผู้จัดการ" };
@@ -199,9 +223,25 @@ export async function approveShiftSessionAction(params: {
         .where(eq(taskWork.shift_session, shiftSessionId));
     }
 
+    // Update branch last_update
+    const [sess] = await db
+      .select({ branch: shiftSession.branch })
+      .from(shiftSession)
+      .where(eq(shiftSession.id, shiftSessionId))
+      .limit(1);
+
+    if (sess && sess.branch) {
+      const { branches } = await import("../db/schema");
+      await db
+        .update(branches)
+        .set({ last_update: new Date() })
+        .where(eq(branches.id, sess.branch));
+    }
+
     return { success: true };
   } catch (err: any) {
     console.error("approveShiftSessionAction error:", err);
     return { success: false, error: err?.message || "เกิดข้อผิดพลาดในการรับรองผลงาน" };
   }
 }
+

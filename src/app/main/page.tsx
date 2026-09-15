@@ -1,51 +1,41 @@
-import { useState, useEffect, useRef } from "react";
+"use client";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-type Role = "employee" | "manager";
-export type ShiftType = "morning" | "afternoon" | "both";
-
-interface Position {
-  id: string;
-  name: string;
+function uid() { return Math.random().toString(36).substring(2, 9); }
+function fmtDate(dStr: string) {
+  if (!dStr) return "";
+  const d = new Date(dStr);
+  return d.toLocaleDateString("th-TH", { year: "numeric", month: "short", day: "numeric" });
 }
 
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  password: string;
-  role: Role;
-  position?: string;
+function fmtTime(dStr: string) {
+  if (!dStr) return "";
+  const d = new Date(dStr);
+  return d.toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" }) + " น.";
 }
 
-interface ChecklistItem {
-  id: string;
-  label: string;
-  category?: string;
-  completedAt: string | null;
+function getChecklistTemplate(pos: string | undefined, shift: ShiftType) {
+   return Array.from({ length: 9 }, (_, i) => ({ id: `mock-${i}`, label: `Mock checklist item ${i+1}` }));
 }
 
-interface ShiftSession {
-  id: string;
-  userId: string;
-  userName: string;
-  userPosition?: string;
-  shift: ShiftType;
-  startedAt: string;
-  completedAt: string | null;
-  items: ChecklistItem[];
-  notified: boolean;
-}
+function getCustomNotifications() { return []; }
+function saveCustomNotifications(n: any) { }
 
-interface Notification {
+interface CustomNotification {
   id: string;
   shiftSessionId: string;
   userName: string;
   userPosition?: string;
-  shift: ShiftType;
+  shift: string;
   completedAt: string;
   read: boolean;
 }
+import { useState, useEffect, useRef } from "react";
+
+import { User, Role, ShiftType, ShiftSession, ChecklistItem } from "../../types";
+
+import { loginAction, registerAction, getAllUsersAction } from "../../actions/auth";
+import { getOrCreateShiftSessionAction, toggleTaskWorkAction, endShiftSessionAction, getPositionShiftsStatusAction } from "../../actions/checklist";
+
 
 // ─── Focus Trap Hook (SC 2.1.2 No Keyboard Trap & SC 2.4.3 Focus Order) ─────────
 function useModalFocusTrap(isOpen: boolean, onClose: () => void) {
@@ -106,157 +96,6 @@ function useModalFocusTrap(isOpen: boolean, onClose: () => void) {
   return { dialogRef, handleKeyDown };
 }
 
-// ─── Checklist Templates (Eater Egg Fresh Mart) ──────────────────────────────
-
-// 1. แคชเชียร์
-const CASHIER_MORNING_ITEMS: Omit<ChecklistItem, "completedAt">[] = [
-  { id: "c-m1", category: "ช่วงก่อนเปิดร้าน (เตรียมความพร้อม)", label: "สแกนนิ้วเข้างาน แต่งกายและติดป้ายชื่อเรียบร้อย" },
-  { id: "c-m2", category: "ช่วงก่อนเปิดร้าน (เตรียมความพร้อม)", label: "เปิดเครื่อง POS ล็อกอินด้วยรหัสของตนเอง และทดสอบอุปกรณ์ (เครื่องสแกนบาร์โค้ด, ลิ้นชักเก็บเงิน, เครื่องพิมพ์ใบเสร็จ)" },
-  { id: "c-m3", category: "ช่วงก่อนเปิดร้าน (เตรียมความพร้อม)", label: "ตรวจนับเงินทอน (Float) ก้นลิ้นชักให้ครบถ้วนและถูกต้องตรงตามระเบียบ" },
-  { id: "c-m4", category: "ช่วงก่อนเปิดร้าน (เตรียมความพร้อม)", label: "ตรวจเช็กและเติมอุปกรณ์อำนวยความสะดวกที่เคาน์เตอร์ (ถุงหูหิ้วสำหรับแยกของสด/เนื้อสัตว์, ม้วนกระดาษใบเสร็จ)" },
-  { id: "c-m5", category: "ช่วงระหว่างกะ (ให้บริการและดูแลความเรียบร้อย)", label: "ทักทายลูกค้า คิดเงิน และทอนเงินอย่างถูกต้องรวดเร็ว" },
-  { id: "c-m6", category: "ช่วงระหว่างกะ (ให้บริการและดูแลความเรียบร้อย)", label: "แจ้งลูกค้าอย่างสุภาพเรื่องข้อปฏิบัติของร้าน (เช่น การงดรับธนบัตร 1,000 บาท สำหรับยอดซื้อที่ต่ำกว่า 300 บาทในช่วงเช้า)" },
-  { id: "c-m7", category: "ช่วงระหว่างกะ (ให้บริการและดูแลความเรียบร้อย)", label: "คอยรักษาความสะอาดบริเวณเคาน์เตอร์คิดเงิน เครื่องสแกน และเครื่องชั่ง (ถ้ามี) ให้สะอาดอยู่เสมอ โดยเฉพาะเมื่อมีคราบน้ำจากสินค้ากลุ่มเนื้อสด" },
-  { id: "c-m8", category: "ช่วงระหว่างกะ (ให้บริการและดูแลความเรียบร้อย)", label: "จัดเรียงสินค้าบริเวณหน้าเคาน์เตอร์ให้เต็มและดูน่าซื้อเสมอ" },
-  { id: "c-m9", category: "ช่วงระหว่างกะ (ให้บริการและดูแลความเรียบร้อย)", label: "เปลี่ยนป้ายเปลี่ยนบาร์โค้ด กรณี ปรับราคาสินค้า" },
-  { id: "c-m10", category: "ช่วงก่อนส่งกะ (เคลียร์ยอดและส่งมอบงาน)", label: "เคลียร์บิล สรุปยอดขายส่วนตัวในกะเช้า และนับเงินสดส่งมอบตามระบบ" },
-  { id: "c-m11", category: "ช่วงก่อนส่งกะ (เคลียร์ยอดและส่งมอบงาน)", label: "ตรวจสอบและจัดเตรียมเงินทอนให้เพียงพอสำหรับกะบ่าย" },
-  { id: "c-m12", category: "ช่วงก่อนส่งกะ (เคลียร์ยอดและส่งมอบงาน)", label: "เก็บขยะบริเวณเคาน์เตอร์ไปทิ้ง" },
-  { id: "c-m13", category: "ช่วงก่อนส่งกะ (เคลียร์ยอดและส่งมอบงาน)", label: "ส่งมอบกะ (Handover) แจ้งข้อมูลสำคัญ โปรโมชันที่ต้องเน้น หรือปัญหาที่พบในช่วงเช้าให้แคชเชียร์กะบ่ายทราบ" },
-];
-
-const CASHIER_AFTERNOON_ITEMS: Omit<ChecklistItem, "completedAt">[] = [
-  { id: "c-a1", category: "ช่วงรับกะ (รับมอบงาน)", label: "สแกนนิ้วเข้างาน แต่งกายและติดป้ายชื่อเรียบร้อย" },
-  { id: "c-a2", category: "ช่วงรับกะ (รับมอบงาน)", label: "รับมอบลิ้นชักเงินทอนจากกะเช้า และตรวจนับยอดเงินทอนให้ถูกต้องก่อนเริ่มงาน" },
-  { id: "c-a3", category: "ช่วงรับกะ (รับมอบงาน)", label: "รับฟังสรุปงานจากกะเช้า (เช่น สินค้าตัวไหนจัดโปรโมชัน, สินค้ากลุ่มไข่ปลอดสารหรือเนื้อสัตว์รายการไหนที่ต้องเน้นขาย)" },
-  { id: "c-a4", category: "ช่วงรับกะ (รับมอบงาน)", label: "ตรวจสอบความเรียบร้อยของถุงพลาสติกและกระดาษใบเสร็จ หากพร่องให้เติมทันที" },
-  { id: "c-a5", category: "ช่วงระหว่างกะ (ให้บริการและดูแลความเรียบร้อย)", label: "ทักทายลูกค้า คิดเงิน และทอนเงินอย่างถูกต้องรวดเร็ว" },
-  { id: "c-a6", category: "ช่วงระหว่างกะ (ให้บริการและดูแลความเรียบร้อย)", label: "หมั่นเช็ดทำความสะอาดสายพานหรือโต๊ะเคาน์เตอร์หลังคิดเงินเสร็จ เพื่อสุขอนามัยที่ดีของสินค้าสด" },
-  { id: "c-a7", category: "ช่วงระหว่างกะ (ให้บริการและดูแลความเรียบร้อย)", label: "คัดแยกธนบัตรและเหรียญในลิ้นชักให้เป็นระเบียบ เพื่อป้องกันความผิดพลาดในช่วงเวลาที่ลูกค้าเยอะ (Peak Hours)" },
-  { id: "c-a8", category: "ช่วงปิดกะและปิดร้าน (สรุปยอดและทำความสะอาด)", label: "ปิดยอดขายประจำวัน ของเครื่อง POS ตนเอง" },
-  { id: "c-a9", category: "ช่วงปิดกะและปิดร้าน (สรุปยอดและทำความสะอาด)", label: "นับเงินสดทั้งหมด นำเงินรายได้ส่ง ผจก.ร้าน หรือเตรียมนำฝากตามระเบียบที่ร้านกำหนด" },
-  { id: "c-a10", category: "ช่วงปิดกะและปิดร้าน (สรุปยอดและทำความสะอาด)", label: "ทำความสะอาดเคาน์เตอร์คิดเงินทั้งหมด เช็ดเครื่อง POS และอุปกรณ์ต่างๆ ด้วยน้ำยาทำความสะอาด" },
-  { id: "c-a11", category: "ช่วงปิดกะและปิดร้าน (สรุปยอดและทำความสะอาด)", label: "ปิดเครื่อง POS และปิดสวิตช์อุปกรณ์ไฟฟ้าบริเวณเคาน์เตอร์" },
-  { id: "c-a12", category: "ช่วงปิดกะและปิดร้าน (สรุปยอดและทำความสะอาด)", label: "ตรวจสอบความเรียบร้อยรอบสุดท้ายก่อนสแกนนิ้วเลิกงาน" },
-];
-
-// 2. พนักงานสต็อก/จัดเรียง
-const STOCK_MORNING_ITEMS: Omit<ChecklistItem, "completedAt">[] = [
-  { id: "s-m1", category: "ช่วงก่อนเปิดร้าน / เตรียมการขาย", label: "สแกนนิ้วเข้างาน แต่งกายรัดกุม สวมผ้ากันเปื้อน หมวกคลุมผม และถุงมือให้เรียบร้อย (เน้นสุขอนามัยเนื่องจากต้องสัมผัสเนื้อสด)" },
-  { id: "s-m2", category: "ช่วงก่อนเปิดร้าน / เตรียมการขาย", label: "(หน้าที่หลัก) นำไก่สดและหมูสด ออกมาจัดเรียงใส่ถาดและนำเข้าตู้แช่แสดงสินค้าให้สวยงาม พร้อมสำหรับการขาย" },
-  { id: "s-m3", category: "ช่วงก่อนเปิดร้าน / เตรียมการขาย", label: "ตรวจสอบอุณหภูมิตู้แช่เนื้อสด ตู้แช่แข็ง และตู้แช่เย็นอื่นๆ ให้อยู่ในเกณฑ์มาตรฐาน" },
-  { id: "s-m4", category: "ช่วงก่อนเปิดร้าน / เตรียมการขาย", label: "จัดเรียงสินค้าอื่นๆ ให้เต็มชั้นวาง เช่น เติมสต็อกไข่ปลอดสาร และสินค้าแช่แข็งต่างๆ" },
-  { id: "s-m5", category: "ช่วงก่อนเปิดร้าน / เตรียมการขาย", label: "ติดป้ายราคาและตรวจสอบความถูกต้องของป้ายโปรโมชันบริเวณตู้แช่" },
-  { id: "s-m6", category: "ช่วงระหว่างกะ (ดูแลความเรียบร้อย)", label: "หมั่นตรวจสอบปริมาณหมูสดและไก่สดในตู้แช่ หากพร่องให้รีบเติมให้ดูเต็มและน่าซื้ออยู่เสมอ" },
-  { id: "s-m7", category: "ช่วงระหว่างกะ (ดูแลความเรียบร้อย)", label: "ดูแลความสะอาดบริเวณพื้นที่จัดเตรียมเนื้อสัตว์และอาหารสด" },
-  { id: "s-m8", category: "ช่วงระหว่างกะ (ดูแลความเรียบร้อย)", label: "คอยซับน้ำหรือเลือดที่อาจซึมออกมาจากถาดเนื้อสัตว์ในตู้โชว์ เพื่อความสะอาดสะอ้าน" },
-  { id: "s-m9", category: "ช่วงระหว่างกะ (ดูแลความเรียบร้อย)", label: "เช็ดทำความสะอาดกระจกตู้แช่ไม่ให้มีคราบรอยนิ้วมือหรือฝ้าฝุ่น" },
-  { id: "s-m10", category: "ช่วงส่งมอบกะ / สรุปงาน", label: "ก่อนกลับเติมของหรือเก็บของ ล้างวัสดุอุปกรณ์ที่ใช้ให้เรียบร้อยเสมอ" },
-];
-
-const STOCK_AFTERNOON_ITEMS: Omit<ChecklistItem, "completedAt">[] = [
-  { id: "s-a1", category: "ช่วงรับกะ / ระหว่างการขาย", label: "สแกนนิ้วเข้างาน แต่งกายรัดกุม สวมผ้ากันเปื้อน หมวกคลุมผม และถุงมือ" },
-  { id: "s-a2", category: "ช่วงรับกะ / ระหว่างการขาย", label: "รับช่วงต่อจากกะเช้า ตรวจสอบปริมาณสินค้าในตู้แช่และบนชั้นวาง หากใกล้หมดให้เติมสต็อก" },
-  { id: "s-a3", category: "ช่วงรับกะ / ระหว่างการขาย", label: "ดูแลความสะอาดบริเวณตู้แช่และพื้นที่ขายอย่างต่อเนื่อง" },
-  { id: "s-a4", category: "ช่วงก่อนปิดร้าน / เก็บสินค้า (หน้าที่หลัก)", label: "(หน้าที่หลัก) นำหมูสดและไก่สดที่เหลือจากการขายในถาด มาบรรจุใส่ถุงให้มิดชิด" },
-  { id: "s-a5", category: "ช่วงก่อนปิดร้าน / เก็บสินค้า (หน้าที่หลัก)", label: "(หน้าที่หลัก) นำถุงเนื้อสัตว์ที่แพ็คแล้ว ไปจัดเก็บในตู้แช่เย็น/ตู้สต็อกหลังร้าน โดยควบคุมอุณหภูมิให้เหมาะสมเพื่อรักษาความสด" },
-  { id: "s-a6", category: "ช่วงก่อนปิดร้าน / เก็บสินค้า (หน้าที่หลัก)", label: "(หน้าที่หลัก) นำถาดใส่เนื้อสัตว์ที่ว่างเปล่าทั้งหมดไปล้างทำความสะอาด ขัดคราบไขมัน และผึ่ง/เช็ดให้แห้งสนิท" },
-  { id: "s-a7", category: "ช่วงก่อนปิดร้าน / เก็บสินค้า (หน้าที่หลัก)", label: "(หน้าที่หลัก) ทำความสะอาดภายในตู้แช่เนื้อสด เช็ดคราบน้ำ คราบเลือด และฆ่าเชื้อบริเวณชั้นวางและกระจกตู้" },
-  { id: "s-a8", category: "ช่วงก่อนปิดร้าน / เก็บสินค้า (หน้าที่หลัก)", label: "ทำความสะอาดบริเวณห้องหั่น/เตรียมสินค้า ให้สะอาดตามมาตรฐานความปลอดภัยทางอาหาร" },
-  { id: "s-a9", category: "ช่วงก่อนปิดร้าน / เก็บสินค้า (หน้าที่หลัก)", label: "จัดเก็บอุปกรณ์ เครื่องชั่ง และเคลียร์ขยะ/กล่องเปล่าไปทิ้งหลังร้าน" },
-  { id: "s-a10", category: "ช่วงก่อนปิดร้าน / เก็บสินค้า (หน้าที่หลัก)", label: "ตรวจสอบความเรียบร้อยรอบสุดท้าย ปิดไฟตู้โชว์ (ถ้ามีระเบียบให้ปิด) ก่อนเลิกงาน" },
-];
-
-// 3. ผช.ผู้จัดการร้าน
-const ASST_MANAGER_MORNING_ITEMS: Omit<ChecklistItem, "completedAt">[] = [
-  { id: "am-m1", category: "ช่วงเปิดร้าน - สาย (05:30 - 10:00)", label: "ตรวจสอบการเข้างาน การแต่งกาย และความพร้อมของพนักงานแคชเชียร์และพนักงานสต็อก" },
-  { id: "am-m2", category: "ช่วงเปิดร้าน - สาย (05:30 - 10:00)", label: "เดินตรวจความเรียบร้อยของพื้นที่ขาย ตู้แช่หมูอนามัย ชิ้นส่วนไก่ อาหารแช่แข็ง และจุดวางไข่ปลอดสาร" },
-  { id: "am-m3", category: "ช่วงเปิดร้าน - สาย (05:30 - 10:00)", label: "ดูแลความเรียบร้อยหน้าเคาน์เตอร์แคชเชียร์ พร้อมกำชับเรื่องกฎการงดรับแบงก์ 1,000 บาทสำหรับยอดซื้อที่ต่ำกว่า 300 บาทในช่วงเช้า" },
-  { id: "am-m4", category: "ช่วงเปิดร้าน - สาย (05:30 - 10:00)", label: "ตรวจนับเงินสดค่าขายสินค้าของเมื่อวานในเซฟหรือจากระบบให้ถูกต้องตรงกับรายงานสรุปยอดขาย" },
-  { id: "am-m5", category: "ช่วงเปิดร้าน - สาย (05:30 - 10:00)", label: "รับเข้าสินค้า" },
-  { id: "am-m6", category: "ช่วงสาย - ก่อนเที่ยง (10:00 - 12:00)", label: "เตรียมเอกสาร ใบนำฝาก (Pay-in Slip) และจัดเก็บเงินสดใส่กระเป๋าให้ปลอดภัย" },
-  { id: "am-m7", category: "ช่วงสาย - ก่อนเที่ยง (10:00 - 12:00)", label: "(หน้าที่หลัก) เดินทางไปธนาคารเพื่อนำเงินค่าขายสินค้าของเมื่อวานเข้าบัญชีให้เสร็จสิ้นก่อน 12:00 น." },
-  { id: "am-m8", category: "ช่วงบ่าย - ส่งกะ (12:00 - 15:00)", label: "นำสลิปหรือหลักฐานการฝากเงินเข้าธนาคารมาจัดเก็บเข้าแฟ้มเอกสารของร้านให้เรียบร้อย" },
-  { id: "am-m9", category: "ช่วงบ่าย - ส่งกะ (12:00 - 15:00)", label: "สรุปสถานการณ์ช่วงเช้า ปัญหาที่พบ หรืออัปเดตงาน เพื่อส่งมอบกะ ให้ผู้จัดการกะบ่าย" },
-];
-
-const ASST_MANAGER_AFTERNOON_ITEMS: Omit<ChecklistItem, "completedAt">[] = [
-  { id: "am-a1", category: "ช่วงบ่าย - ช่วยดูแลภาพรวม", label: "รับช่วงมอบงานและตรวจสอบความพร้อมของหน้าร้าน" },
-  { id: "am-a2", category: "ช่วงบ่าย - ช่วยดูแลภาพรวม", label: "ช่วยตรวจตราความเรียบร้อยพื้นที่ขายและสต็อกสินค้า" },
-  { id: "am-a3", category: "ช่วงบ่าย - ช่วยดูแลภาพรวม", label: "สนับสนุนงานแคชเชียร์และงานจัดเรียงสินค้าในช่วงลูกค้าหนาแน่น" },
-  { id: "am-a4", category: "ช่วงบ่าย - ปิดกะ", label: "ตรวจสอบความเรียบร้อยก่อนส่งมอบงานให้ผู้จัดการร้าน" },
-];
-
-// 4. ผู้จัดการร้าน
-const MANAGER_MORNING_ITEMS: Omit<ChecklistItem, "completedAt">[] = [
-  { id: "mgr-m1", category: "ช่วงเช้า - ตรวจสอบความพร้อม", label: "ตรวจความพร้อมการเปิดร้านและบุคลากรทุกแผนก" },
-  { id: "mgr-m2", category: "ช่วงเช้า - ตรวจสอบความพร้อม", label: "ตรวจสอบสต็อกสินค้าสดและรายการรับเข้าสินค้าประจำวัน" },
-  { id: "mgr-m3", category: "ช่วงเช้า - ประสานงาน", label: "ติดตามยอดขายช่วงเช้าและประสานงานกับซัพพลายเออร์" },
-];
-
-const MANAGER_AFTERNOON_ITEMS: Omit<ChecklistItem, "completedAt">[] = [
-  { id: "mgr-a1", category: "ช่วงรับกะ - ระหว่างวัน (13:00 - 17:00)", label: "รับมอบงานจาก ผช.ผู้จัดการกะเช้า และตรวจสอบหลักฐานการนำเงินเข้าธนาคาร" },
-  { id: "mgr-a2", category: "ช่วงรับกะ - ระหว่างวัน (13:00 - 17:00)", label: "(หน้าที่หลัก: ดูภาพรวม) เดินตรวจตราความเรียบร้อยรอบร้าน Eater Egg Fresh Mart ทั้งในส่วนของพื้นที่ขาย สต็อกหลังร้าน และการให้บริการของพนักงาน" },
-  { id: "mgr-a3", category: "ช่วงรับกะ - ระหว่างวัน (13:00 - 17:00)", label: "(หน้าที่หลัก: จัดการของเสีย) ตรวจสอบสต็อกสินค้าอาหารสด เช่น เนื้อหมูและไก่สด ที่ใกล้หมดอายุการขาย" },
-  { id: "mgr-a4", category: "ช่วงรับกะ - ระหว่างวัน (13:00 - 17:00)", label: "นำเสนอแผนการจัดการของเสีย (Waste) เช่น การจัดโปรโมชั่นลดราคา (Clearance) สำหรับสินค้าสดในช่วงเย็น" },
-  { id: "mgr-a5", category: "ช่วงรับกะ - ระหว่างวัน (13:00 - 17:00)", label: "(หน้าที่หลัก: ช่องทางโปรโมท) คิดคอนเทนต์หรือวางแผนทำกราฟิกโปรโมชั่น เพื่อนำไปโพสต์โปรโมทร้านผ่านช่องทาง Facebook และ TikTok ฯลฯ" },
-  { id: "mgr-a6", category: "ช่วงรับกะ - ระหว่างวัน (13:00 - 17:00)", label: "รับเข้าสินค้า" },
-  { id: "mgr-a7", category: "ช่วงรับกะ - ระหว่างวัน (13:00 - 17:00)", label: "สั่งซื้อสินค้าเข้ามาจำหน่ายในร้าน" },
-  { id: "mgr-a8", category: "ช่วงปิดร้าน - สรุปงาน (17:00 - 21:00)", label: "ควบคุมการปิดกะแคชเชียร์ ตรวจสอบยอดเงินให้ตรงกับระบบ POS" },
-  { id: "mgr-a9", category: "ช่วงปิดร้าน - สรุปงาน (17:00 - 21:00)", label: "ควบคุมดูแลพนักงานสต็อกในการเก็บเนื้อสดเข้าตู้แช่หลังร้านและล้างทำความสะอาดอุปกรณ์ให้ถูกสุขลักษณะ" },
-  { id: "mgr-a10", category: "ช่วงปิดร้าน - สรุปงาน (17:00 - 21:00)", label: "(หน้าที่หลัก: สรุปยอดขาย) รวบรวมข้อมูลยอดขายจากเครื่อง POS ทั้งหมด ตรวจสอบความถูกต้องของบัญชีรายรับ-รายจ่าย" },
-  { id: "mgr-a11", category: "ช่วงปิดร้าน - สรุปงาน (17:00 - 21:00)", label: "จัดทำรายงานสรุปยอดขายประจำวัน (Daily Sales Report) พร้อมทั้งแนบข้อเสนอแนะเรื่องโปรโมชั่นหรือแผนจัดการของเสีย เพื่อส่งรายงานให้ผู้บริหาร" },
-];
-
-// Fallback Checklist หากเป็นตำแหน่งอื่น
-const DEFAULT_STORE_MORNING_ITEMS: Omit<ChecklistItem, "completedAt">[] = [
-  { id: "def-m1", category: "ช่วงก่อนเปิดร้าน", label: "สแกนนิ้วเข้างาน แต่งกายเรียบร้อยตามมาตรฐานร้าน" },
-  { id: "def-m2", category: "ช่วงก่อนเปิดร้าน", label: "ตรวจเช็กความพร้อมของพื้นที่ปฏิบัติงานและอุปกรณ์" },
-  { id: "def-m3", category: "ช่วงระหว่างกะ", label: "ดูแลการให้บริการลูกค้าและรักษาความสะอาดพื้นที่ขาย" },
-  { id: "def-m4", category: "ช่วงระหว่างกะ", label: "ตรวจสอบสต็อกสินค้าและเติมสินค้าที่พร่อง" },
-  { id: "def-m5", category: "ช่วงส่งมอบกะ", label: "ส่งมอบงานและรายงานปัญหาที่พบให้กะถัดไปทราบ" },
-];
-
-const DEFAULT_STORE_AFTERNOON_ITEMS: Omit<ChecklistItem, "completedAt">[] = [
-  { id: "def-a1", category: "ช่วงรับกะ", label: "สแกนนิ้วเข้างาน รับมอบงานและข้อมูลสำคัญจากกะเช้า" },
-  { id: "def-a2", category: "ช่วงระหว่างกะ", label: "ดูแลความเรียบร้อยของหน้าร้านและให้บริการลูกค้า" },
-  { id: "def-a3", category: "ช่วงปิดร้าน", label: "จัดเก็บสินค้าและทำความสะอาดอุปกรณ์ให้ถูกสุขอนามัย" },
-  { id: "def-a4", category: "ช่วงปิดร้าน", label: "ตรวจสอบความปลอดภัยและปิดระบบไฟฟ้าก่อนเลิกงาน" },
-];
-
-function getChecklistTemplate(position: string | undefined, shift: ShiftType): Omit<ChecklistItem, "completedAt">[] {
-  if (shift === "both") {
-    const morning = getChecklistTemplate(position, "morning").map((item) => ({
-      ...item,
-      id: `${item.id}-both-m`,
-      category: `กะเช้า • ${item.category || "หน้าที่ประจำกะ"}`,
-    }));
-    const afternoon = getChecklistTemplate(position, "afternoon").map((item) => ({
-      ...item,
-      id: `${item.id}-both-a`,
-      category: `กะบ่าย • ${item.category || "หน้าที่ประจำกะ"}`,
-    }));
-    return [...morning, ...afternoon];
-  }
-  const pos = (position || "").toLowerCase();
-  if (pos.includes("แคชเชียร์") || pos.includes("cashier")) {
-    return shift === "morning" ? CASHIER_MORNING_ITEMS : CASHIER_AFTERNOON_ITEMS;
-  }
-  if (pos.includes("สต็อก") || pos.includes("จัดเรียง") || pos.includes("stock")) {
-    return shift === "morning" ? STOCK_MORNING_ITEMS : STOCK_AFTERNOON_ITEMS;
-  }
-  if (pos.includes("ผช.") || pos.includes("ผู้ช่วย") || pos.includes("assistant")) {
-    return shift === "morning" ? ASST_MANAGER_MORNING_ITEMS : ASST_MANAGER_AFTERNOON_ITEMS;
-  }
-  if (pos.includes("ผู้จัดการ") || pos.includes("manager")) {
-    return shift === "morning" ? MANAGER_MORNING_ITEMS : MANAGER_AFTERNOON_ITEMS;
-  }
-  if (pos.includes("กรรมการ") || pos.includes("director") || pos.includes("executive")) {
-    return shift === "morning" ? MANAGER_MORNING_ITEMS : MANAGER_AFTERNOON_ITEMS;
-  }
-  return shift === "morning" ? DEFAULT_STORE_MORNING_ITEMS : DEFAULT_STORE_AFTERNOON_ITEMS;
-}
-
 // ─── Position Constants ───────────────────────────────────────────────────────
 const STAFF_POSITIONS = [
   "แคชเชียร์",
@@ -268,113 +107,6 @@ const MANAGEMENT_POSITIONS = [
   "ผู้จัดการร้าน",
   "กรรมการ",
 ];
-
-// ─── LocalStorage Helpers ─────────────────────────────────────────────────────
-const DEFAULT_POSITIONS: Position[] = [
-  { id: "pos-1", name: "แคชเชียร์" },
-  { id: "pos-2", name: "พนักงานสต็อก/จัดเรียง" },
-  { id: "pos-3", name: "ผู้ช่วยผู้จัดการร้าน" },
-  { id: "pos-4", name: "ผู้จัดการร้าน" },
-  { id: "pos-5", name: "กรรมการ" },
-];
-
-function getPositions(): Position[] {
-  try {
-    const raw = localStorage.getItem("app_positions_v3");
-    if (!raw) {
-      localStorage.setItem("app_positions_v3", JSON.stringify(DEFAULT_POSITIONS));
-      return DEFAULT_POSITIONS;
-    }
-    const current: Position[] = JSON.parse(raw);
-    let updated = false;
-    for (const def of DEFAULT_POSITIONS) {
-      if (!current.some((p) => p.name === def.name)) {
-        current.push(def);
-        updated = true;
-      }
-    }
-    if (updated) {
-      localStorage.setItem("app_positions_v3", JSON.stringify(current));
-    }
-    return current;
-  } catch {
-    return DEFAULT_POSITIONS;
-  }
-}
-
-function savePositions(positions: Position[]) {
-  localStorage.setItem("app_positions_v3", JSON.stringify(positions));
-}
-
-function getUsers(): User[] {
-  try {
-    return JSON.parse(localStorage.getItem("app_users") ?? "[]");
-  } catch {
-    return [];
-  }
-}
-function saveUsers(users: User[]) {
-  localStorage.setItem("app_users", JSON.stringify(users));
-}
-function getSessions(): ShiftSession[] {
-  try {
-    return JSON.parse(localStorage.getItem("app_sessions") ?? "[]");
-  } catch {
-    return [];
-  }
-}
-function saveSessions(sessions: ShiftSession[]) {
-  localStorage.setItem("app_sessions", JSON.stringify(sessions));
-}
-function getNotifications(): Notification[] {
-  try {
-    return JSON.parse(localStorage.getItem("app_notifications") ?? "[]");
-  } catch {
-    return [];
-  }
-}
-function saveNotifications(notifs: Notification[]) {
-  localStorage.setItem("app_notifications", JSON.stringify(notifs));
-}
-function uid() {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
-}
-function fmtTime(iso: string) {
-  return new Date(iso).toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
-}
-function fmtDate(iso: string) {
-  return new Date(iso).toLocaleDateString("th-TH", { day: "2-digit", month: "short", year: "numeric" });
-}
-
-// Seed default accounts for Eater Egg Fresh Mart
-function ensureDefaultManager() {
-  const users = getUsers();
-  let updated = false;
-  if (!users.find((u) => u.email === "director@factory.com")) {
-    users.push({ id: uid(), name: "ท่านกรรมการบริหาร", email: "director@factory.com", password: "director123", role: "manager", position: "กรรมการ" });
-    updated = true;
-  }
-  if (!users.find((u) => u.email === "manager@factory.com")) {
-    users.push({ id: uid(), name: "ผู้จัดการร้าน", email: "manager@factory.com", password: "manager123", role: "manager", position: "ผู้จัดการร้าน" });
-    updated = true;
-  }
-  if (!users.find((u) => u.email === "asst@factory.com")) {
-    users.push({ id: uid(), name: "ผู้ช่วยผู้จัดการ", email: "asst@factory.com", password: "123", role: "manager", position: "ผู้ช่วยผู้จัดการร้าน" });
-    updated = true;
-  }
-  if (!users.find((u) => u.email === "cashier@factory.com")) {
-    users.push({ id: uid(), name: "สมศรี ใจดี", email: "cashier@factory.com", password: "123", role: "employee", position: "แคชเชียร์" });
-    updated = true;
-  }
-  if (!users.find((u) => u.email === "stock@factory.com")) {
-    users.push({ id: uid(), name: "สมชาย มั่นคง", email: "stock@factory.com", password: "123", role: "employee", position: "พนักงานสต็อก/จัดเรียง" });
-    updated = true;
-  }
-  if (updated) {
-    saveUsers(users);
-  }
-  getPositions();
-}
 
 // ─── Components ───────────────────────────────────────────────────────────────
 
@@ -409,406 +141,237 @@ function Divider() {
   return <div className="h-px bg-slate-200 w-full" />;
 }
 
-// ─── Staff Portal (เข้าสู่ระบบพนักงานทั่วไป: URL / ) ─────────────────────────────
-function StaffAuthPage({ onLogin }: { onLogin: (user: User) => void }) {
+
+// ─── Auth Helper ──────────────────────────────────────────────────────────────
+async function handleAuthSubmit(action: any, data: any, setError: any, onLogin: any) {
+  setError("");
+  try {
+    const res = await action(data);
+    if (!res.success) {
+      setError(res.error || "Login failed");
+      return;
+    }
+    if (res.user) onLogin(res.user);
+  } catch (err: any) {
+    setError(err.message || "An unexpected error occurred");
+  }
+}
+
+// ─── Staff Portal (URL / ) ───────────────────────────────────────────────────
+function StaffAuthPage({ onLogin, onSwitchToExecutive, onSwitchToAdmin }: { onLogin: (user: User) => void; onSwitchToExecutive: () => void; onSwitchToAdmin: () => void; }) {
   const [tab, setTab] = useState<"login" | "register">("login");
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    password: "",
-  });
+  const [form, setForm] = useState({ name: "", email: "", password: "", position: STAFF_POSITIONS[0] });
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  function handleLogin() {
-    if (!form.email.trim() || !form.password.trim()) {
-      setError("กรุณากรอกอีเมลและรหัสผ่าน");
-      return;
-    }
-    const users = getUsers();
-    const user = users.find(
-      (u) => u.email.toLowerCase() === form.email.trim().toLowerCase() && u.password === form.password
-    );
-    if (!user) {
-      setError("อีเมลหรือรหัสผ่านไม่ถูกต้อง");
-      return;
-    }
+  const inp = "w-full bg-slate-50/60 hover:bg-slate-50 focus:bg-white border border-slate-400 focus:border-slate-900 rounded-xl px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-500 focus-visible:outline-2 focus-visible:outline-slate-900 focus:ring-4 focus:ring-slate-900/5 transition-all";
 
-    setError("");
-    onLogin(user);
+  async function handleLogin() {
+    setLoading(true);
+    await handleAuthSubmit((d: any) => loginAction(d.email, d.password), form, setError, onLogin);
+    setLoading(false);
   }
-
-  function handleRegister() {
-    if (!form.name.trim() || !form.email.trim() || !form.password.trim()) {
-      setError("กรุณากรอกข้อมูลให้ครบถ้วน");
-      return;
-    }
-    const users = getUsers();
-    if (users.find((u) => u.email.toLowerCase() === form.email.trim().toLowerCase())) {
-      setError("อีเมลนี้มีผู้ใช้งานแล้วในระบบ");
-      return;
-    }
-    const newUser: User = {
-      id: uid(),
-      name: form.name.trim(),
-      email: form.email.trim(),
-      password: form.password.trim(),
-      role: "employee",
-      position: STAFF_POSITIONS[0],
-    };
-    saveUsers([...users, newUser]);
-    setError("");
-    onLogin(newUser);
+  async function handleRegister() {
+    setLoading(true);
+    await handleAuthSubmit(registerAction, { ...form, role: form.position === "ผู้ช่วยผู้จัดการร้าน" ? "manager_assistant" : "employee" }, setError, onLogin);
+    setLoading(false);
   }
-
-  const inp =
-    "w-full bg-slate-50/60 hover:bg-slate-50 focus:bg-white border border-slate-400 focus:border-slate-900 rounded-xl px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-500 focus-visible:outline-2 focus-visible:outline-slate-900 focus:ring-4 focus:ring-slate-900/5 transition-all";
 
   return (
-    <div className="min-h-screen bg-slate-50/60 flex flex-col items-center justify-center px-4 py-8 sm:py-12">
-      <div className="w-full max-w-[390px] bg-white border border-slate-300 rounded-2xl p-6 sm:p-8 shadow-sm">
-        {/* Brand Header */}
+    <div className="min-h-screen bg-slate-50/60 flex flex-col items-center justify-center px-4 py-8">
+      <div className="w-full max-w-[390px] bg-white border border-slate-300 rounded-2xl p-6 shadow-sm">
         <header className="mb-6 text-center">
           <div className="inline-flex items-center justify-center w-11 h-11 rounded-xl bg-slate-900 text-white mb-3 shadow-xs">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-              <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
-            </svg>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
           </div>
-          <h1 className="text-xl font-bold text-slate-900 tracking-tight">Eater Egg Fresh Mart</h1>
-          <p className="text-xs text-slate-600 mt-1 font-medium">ระบบบันทึกและตรวจสอบเช็คลิสต์พนักงาน</p>
+          <h1 className="text-xl font-bold text-slate-900">Eater Egg Fresh Mart</h1>
+          <p className="text-xs text-slate-600 mt-1 font-medium">ระบบเช็คลิสต์พนักงานและผู้ช่วยฯ</p>
         </header>
 
-        {/* Login / Register Tabs */}
-        <div role="tablist" aria-label="ตัวเลือกการเข้าสู่ระบบ" className="flex bg-slate-100/80 p-1 rounded-xl mb-5">
-          {(["login", "register"] as const).map((t) => (
-            <button
-              key={t}
-              type="button"
-              role="tab"
-              id={`staff-${t}-tab`}
-              aria-selected={tab === t}
-              aria-controls={`staff-${t}-panel`}
-              onClick={() => {
-                setTab(t);
-                setError("");
-              }}
-              className={`flex-1 py-1.5 text-xs sm:text-sm font-semibold rounded-lg transition-all cursor-pointer ${tab === t ? "bg-white text-slate-900 shadow-xs" : "text-slate-600 hover:text-slate-900"
-                }`}
-            >
-              {t === "login" ? "เข้าสู่ระบบพนักงาน" : "สมัครสมาชิก"}
+        <div className="flex bg-slate-100/80 p-1 rounded-xl mb-5">
+          {["login", "register"].map((t) => (
+            <button key={t} type="button" onClick={() => { setTab(t as any); setError(""); }} className={`flex-1 py-1.5 text-sm font-semibold rounded-lg transition-all ${tab === t ? "bg-white text-slate-900 shadow-xs" : "text-slate-600 hover:text-slate-900"}`}> 
+              {t === "login" ? "เข้าสู่ระบบ" : "สมัครสมาชิก"}
             </button>
           ))}
         </div>
 
-        {/* Form Panel */}
-        <div role="tabpanel" id={`staff-${tab}-panel`} aria-labelledby={`staff-${tab}-tab`} className="space-y-4">
+        <div className="space-y-4">
           {tab === "register" && (
             <div>
-              <label htmlFor="staff-name" className="block text-xs font-semibold text-slate-800 mb-1.5">
-                ชื่อ-นามสกุล
-              </label>
-              <input
-                id="staff-name"
-                className={inp}
-                placeholder="ระบุชื่อ-นามสกุล"
-                autoComplete="name"
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-              />
+              <label className="block text-xs font-semibold text-slate-800 mb-1.5">ชื่อ-นามสกุล</label>
+              <input className={inp} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
             </div>
           )}
-
-          <div>
-            <label htmlFor="staff-email" className="block text-xs font-semibold text-slate-800 mb-1.5">
-              อีเมล
-            </label>
-            <input
-              id="staff-email"
-              className={inp}
-              placeholder="name@factory.com"
-              type="email"
-              autoComplete="email"
-              value={form.email}
-              onChange={(e) => setForm({ ...form, email: e.target.value })}
-            />
-          </div>
-
-          <div>
-            <label htmlFor="staff-password" className="block text-xs font-semibold text-slate-800 mb-1.5">
-              รหัสผ่าน
-            </label>
-            <input
-              id="staff-password"
-              className={inp}
-              placeholder="รหัสผ่าน"
-              type="password"
-              autoComplete={tab === "login" ? "current-password" : "new-password"}
-              value={form.password}
-              onChange={(e) => setForm({ ...form, password: e.target.value })}
-              onKeyDown={(e) => e.key === "Enter" && (tab === "login" ? handleLogin() : handleRegister())}
-            />
-          </div>
-
-          {error && (
-            <div role="alert" className="p-2.5 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700 text-center font-semibold my-2">
-              {error}
+          {tab === "register" && (
+            <div>
+              <label className="block text-xs font-semibold text-slate-800 mb-1.5">ตำแหน่ง</label>
+              <select className={inp} value={form.position} onChange={(e) => setForm({ ...form, position: e.target.value })}>
+                {STAFF_POSITIONS.map(p => <option key={p} value={p}>{p}</option>)}
+                <option value="ผู้ช่วยผู้จัดการร้าน">ผู้ช่วยผู้จัดการร้าน</option>
+              </select>
             </div>
           )}
-
-          {/* Submit Button */}
-          <button
-            type="button"
-            onClick={tab === "login" ? handleLogin : handleRegister}
-            className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 active:bg-black text-white text-sm font-semibold rounded-xl shadow-xs transition-all mt-3 cursor-pointer"
-          >
-            {tab === "login" ? "เข้าสู่ระบบ" : "ยืนยันการสมัครสมาชิก"}
+          <div>
+            <label className="block text-xs font-semibold text-slate-800 mb-1.5">อีเมล</label>
+            <input className={inp} type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-slate-800 mb-1.5">รหัสผ่าน</label>
+            <input className={inp} type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} onKeyDown={(e) => e.key === 'Enter' && (tab === 'login' ? handleLogin() : handleRegister())} />
+          </div>
+          {error && <div className="p-2.5 bg-red-50 text-xs text-red-700 text-center rounded-xl font-semibold border border-red-200">{error}</div>}
+          <button disabled={loading} type="button" onClick={tab === "login" ? handleLogin : handleRegister} className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 active:bg-black text-white rounded-xl shadow-xs font-semibold mt-3 transition-colors cursor-pointer">
+            {loading ? "กำลังโหลด..." : tab === "login" ? "เข้าสู่ระบบ" : "ยืนยันสมัครสมาชิก"}
           </button>
+        </div>
+
+        <div className="mt-6 pt-4 border-t border-slate-200 flex flex-col gap-2 relative">
+          <button type="button" onClick={onSwitchToExecutive} className="text-xs text-slate-500 hover:text-indigo-700 font-semibold cursor-pointer">สำหรับผู้บริหาร (Executive Portal)</button>
+          <button type="button" onClick={onSwitchToAdmin} className="text-[10px] text-slate-400 hover:text-slate-800 absolute right-0 top-4">Login Admin</button>
         </div>
       </div>
     </div>
   );
 }
 
-// ─── Admin / Management Portal (สำหรับฝ่ายบริหาร เข้าผ่าน URL: /admin ) ──────────
-function AdminAuthPage({ onLogin }: { onLogin: (user: User) => void }) {
+// ─── Executive Portal (URL /executive ) ─────────────────────────────────────
+function ExecutiveAuthPage({ onLogin, onSwitchToStaff }: { onLogin: (user: User) => void; onSwitchToStaff: () => void; }) {
   const [tab, setTab] = useState<"login" | "register">("login");
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    password: "",
-    position: MANAGEMENT_POSITIONS[1], // default "ผู้จัดการร้าน"
-  });
+  const [form, setForm] = useState({ name: "", email: "", password: "", role: "manager", position: "ผู้จัดการร้าน" });
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  function handleLogin() {
-    if (!form.email.trim() || !form.password.trim()) {
-      setError("กรุณากรอกอีเมลและรหัสผ่าน");
-      return;
-    }
-    const users = getUsers();
-    const user = users.find(
-      (u) => u.email.toLowerCase() === form.email.trim().toLowerCase() && u.password === form.password
-    );
-    if (!user) {
-      setError("อีเมลหรือรหัสผ่านไม่ถูกต้อง");
-      return;
-    }
+  const inp = "w-full bg-slate-50/60 hover:bg-slate-50 focus:bg-white border border-slate-400 focus:border-indigo-700 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus-visible:outline-2 focus:ring-4 focus:ring-indigo-600/10 transition-all";
 
-    // Set executive position chosen on login and ensure role is manager
-    const updatedUsers = users.map((u) =>
-      u.id === user.id ? { ...u, role: "manager" as Role, position: form.position } : u
-    );
-    saveUsers(updatedUsers);
-    const activeUser: User = { ...user, role: "manager", position: form.position };
-
-    setError("");
-    onLogin(activeUser);
+  async function handleLogin() {
+    setLoading(true);
+    await handleAuthSubmit((d: any) => loginAction(d.email, d.password), form, setError, onLogin);
+    setLoading(false);
   }
-
-  function handleRegister() {
-    if (!form.name.trim() || !form.email.trim() || !form.password.trim()) {
-      setError("กรุณากรอกข้อมูลให้ครบถ้วน");
-      return;
-    }
-    const users = getUsers();
-    if (users.find((u) => u.email.toLowerCase() === form.email.trim().toLowerCase())) {
-      setError("อีเมลนี้มีผู้ใช้งานแล้วในระบบ");
-      return;
-    }
-    const newUser: User = {
-      id: uid(),
-      name: form.name.trim(),
-      email: form.email.trim(),
-      password: form.password.trim(),
-      role: "manager",
-      position: form.position,
-    };
-    saveUsers([...users, newUser]);
-    setError("");
-    onLogin(newUser);
+  async function handleRegister() {
+    setLoading(true);
+    let dbRole = "manager";
+    if (form.position === "กรรมการ") dbRole = "committee";
+    if (form.position === "ผู้จัดการทั่วไป") dbRole = "general_manager";
+    await handleAuthSubmit(registerAction, { ...form, role: dbRole }, setError, onLogin);
+    setLoading(false);
   }
-
-  const inp =
-    "w-full bg-slate-50/60 hover:bg-slate-50 focus:bg-white border border-slate-400 focus:border-indigo-700 rounded-xl px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-500 focus-visible:outline-2 focus-visible:outline-indigo-700 focus:ring-4 focus:ring-indigo-600/10 transition-all";
 
   return (
-    <div className="min-h-screen bg-slate-50/60 flex flex-col items-center justify-center px-4 py-8 sm:py-12">
-      <div className="w-full max-w-[420px] bg-white border border-slate-300 rounded-2xl p-6 sm:p-8 shadow-sm">
-        {/* Executive Header */}
+    <div className="min-h-screen bg-slate-50/60 flex flex-col items-center justify-center px-4 py-8">
+      <div className="w-full max-w-[420px] bg-white border border-slate-300 rounded-2xl p-6 shadow-sm">
         <header className="mb-6 text-center">
-          <div className="inline-flex items-center justify-center w-11 h-11 rounded-xl bg-indigo-700 text-white mb-3 shadow-xs">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="M12 2l8 4-8 4-8-4 8-4z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              <path d="M4 10l8 4 8-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              <path d="M4 16l8 4 8-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </div>
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-800 text-[11px] font-bold mb-2 font-mono">
-            <span>/admin</span>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-800 text-xs font-bold mb-3 font-mono">
+            <span>/executive</span>
             <span>•</span>
-            <span>ฝ่ายบริหารและควบคุมสาขา</span>
+            <span>ฝ่ายบริหาร</span>
           </div>
-          <h1 className="text-xl font-bold text-slate-900 tracking-tight">Eater Egg Fresh Mart</h1>
-          <p className="text-xs text-slate-600 mt-1 font-medium">ระบบแดชบอร์ดสำหรับผู้จัดการและคณะกรรมการ</p>
+          <h1 className="text-xl font-bold text-slate-900 tracking-tight">Executive Dashboard</h1>
+          <p className="text-xs text-slate-500 mt-1">Eater Egg Fresh Mart</p>
         </header>
 
-        {/* Login / Register Tabs */}
-        <div role="tablist" aria-label="ตัวเลือกการเข้าสู่ระบบฝ่ายบริหาร" className="flex bg-slate-100/80 p-1 rounded-xl mb-5">
-          {(["login", "register"] as const).map((t) => (
-            <button
-              key={t}
-              type="button"
-              role="tab"
-              id={`admin-${t}-tab`}
-              aria-selected={tab === t}
-              aria-controls={`admin-${t}-panel`}
-              onClick={() => {
-                setTab(t);
-                setError("");
-              }}
-              className={`flex-1 py-1.5 text-xs sm:text-sm font-semibold rounded-lg transition-all cursor-pointer ${tab === t ? "bg-white text-slate-900 shadow-xs" : "text-slate-600 hover:text-slate-900"
-                }`}
-            >
-              {t === "login" ? "เข้าสู่ระบบฝ่ายบริหาร" : "ลงทะเบียนฝ่ายบริหาร"}
+        <div className="flex bg-slate-100/80 p-1 rounded-xl mb-5">
+          {["login", "register"].map((t) => (
+            <button key={t} type="button" onClick={() => { setTab(t as any); setError(""); }} className={`flex-1 py-1.5 text-sm font-semibold rounded-lg transition-all ${tab === t ? "bg-white text-slate-900 shadow-xs" : "text-slate-600 hover:text-slate-900"}`}> 
+              {t === "login" ? "เข้าสู่ระบบผู้บริหาร" : "ลงทะเบียนผู้บริหาร"}
             </button>
           ))}
         </div>
 
-        {/* Form Panel */}
-        <div role="tabpanel" id={`admin-${tab}-panel`} aria-labelledby={`admin-${tab}-tab`} className="space-y-4">
+        <div className="space-y-4">
           {tab === "register" && (
             <div>
-              <label htmlFor="admin-name" className="block text-xs font-semibold text-slate-800 mb-1.5">
-                ชื่อ-นามสกุล
-              </label>
-              <input
-                id="admin-name"
-                className={inp}
-                placeholder="ระบุชื่อ-นามสกุล"
-                autoComplete="name"
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-              />
+              <label className="block text-xs font-semibold text-slate-800 mb-1.5">ชื่อ-นามสกุล</label>
+              <input className={inp} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
             </div>
           )}
-
-          <div>
-            <label htmlFor="admin-email" className="block text-xs font-semibold text-slate-800 mb-1.5">
-              อีเมลฝ่ายบริหาร
-            </label>
-            <input
-              id="admin-email"
-              className={inp}
-              placeholder="manager@factory.com"
-              type="email"
-              autoComplete="email"
-              value={form.email}
-              onChange={(e) => setForm({ ...form, email: e.target.value })}
-            />
-          </div>
-
-          <div>
-            <label htmlFor="admin-password" className="block text-xs font-semibold text-slate-800 mb-1.5">
-              รหัสผ่าน
-            </label>
-            <input
-              id="admin-password"
-              className={inp}
-              placeholder="รหัสผ่าน"
-              type="password"
-              autoComplete={tab === "login" ? "current-password" : "new-password"}
-              value={form.password}
-              onChange={(e) => setForm({ ...form, password: e.target.value })}
-              onKeyDown={(e) => e.key === "Enter" && (tab === "login" ? handleLogin() : handleRegister())}
-            />
-          </div>
-
-          {/* Position Selector for Management (3 options) */}
-          <div>
-            <label htmlFor="admin-position" className="block text-xs font-semibold text-slate-800 mb-1.5 flex items-center justify-between">
-              <span>ตำแหน่งฝ่ายบริหาร</span>
-              <span className="text-[10px] text-indigo-800 font-semibold bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded">3 ตำแหน่ง</span>
-            </label>
-            <select
-              id="admin-position"
-              value={form.position}
-              onChange={(e) => setForm({ ...form, position: e.target.value })}
-              className="w-full bg-slate-50/60 hover:bg-slate-50 focus:bg-white border border-slate-400 focus:border-indigo-700 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-slate-900 cursor-pointer focus-visible:outline-2 focus-visible:outline-indigo-700 focus:ring-4 focus:ring-indigo-600/10 transition-all"
-            >
-              <option value="ผู้ช่วยผู้จัดการร้าน">ผู้ช่วยผู้จัดการร้าน</option>
-              <option value="ผู้จัดการร้าน">ผู้จัดการร้าน</option>
-              <option value="กรรมการ">กรรมการ</option>
-            </select>
-          </div>
-
-          {error && (
-            <div role="alert" className="p-2.5 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700 text-center font-semibold my-2">
-              {error}
+          {tab === "register" && (
+            <div>
+              <label className="block text-xs font-semibold text-slate-800 mb-1.5">ตำแหน่งบริหาร</label>
+              <select className={inp} value={form.position} onChange={(e) => setForm({ ...form, position: e.target.value })}>
+                <option value="ผู้จัดการร้าน">ผู้จัดการร้าน</option>
+                <option value="ผู้จัดการทั่วไป">ผู้จัดการทั่วไป</option>
+                <option value="กรรมการ">กรรมการ</option>
+              </select>
             </div>
           )}
-
-          {/* Submit Button */}
-          <button
-            type="button"
-            onClick={tab === "login" ? handleLogin : handleRegister}
-            className="w-full py-2.5 bg-indigo-700 hover:bg-indigo-800 active:bg-indigo-900 text-white text-sm font-semibold rounded-xl shadow-xs transition-all mt-3 cursor-pointer"
-          >
-            {tab === "login" ? "เข้าสู่ระบบฝ่ายบริหาร" : "บันทึกข้อมูลฝ่ายบริหาร"}
+          <div>
+            <label className="block text-xs font-semibold text-slate-800 mb-1.5">อีเมล</label>
+            <input className={inp} type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-slate-800 mb-1.5">รหัสผ่าน</label>
+            <input className={inp} type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} onKeyDown={(e) => e.key === 'Enter' && (tab === 'login' ? handleLogin() : handleRegister())} />
+          </div>
+          {error && <div className="p-2.5 bg-red-50 text-xs text-red-700 text-center rounded-xl font-semibold border border-red-200">{error}</div>}
+          <button disabled={loading} type="button" onClick={tab === "login" ? handleLogin : handleRegister} className="w-full py-2.5 bg-indigo-700 hover:bg-indigo-800 active:bg-indigo-900 text-white rounded-xl shadow-xs font-semibold mt-3 transition-colors cursor-pointer">
+            {loading ? "กำลังโหลด..." : tab === "login" ? "เข้าสู่ระบบผู้บริหาร" : "บันทึกข้อมูลผู้บริหาร"}
           </button>
         </div>
 
-        {/* Management Demo Accounts (Clickable Pills) */}
-        {tab === "login" && (
-          <div className="mt-6 pt-5 border-t border-slate-200">
-            <p className="text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-2.5">
-              คลิกเพื่อทดสอบระบบด่วน:
-            </p>
-            <div className="space-y-1.5">
-              <button
-                type="button"
-                onClick={() => {
-                  setForm({ ...form, email: "asst@factory.com", password: "123", position: "ผู้ช่วยผู้จัดการร้าน" });
-                  setError("");
-                }}
-                className="w-full flex items-center justify-between p-2.5 rounded-xl border border-slate-300 hover:border-slate-500 hover:bg-slate-50 transition-all group cursor-pointer text-left"
-              >
-                <div>
-                  <span className="block text-xs font-bold text-slate-900">ผู้ช่วยผู้จัดการ</span>
-                  <span className="block text-[11px] text-slate-600 font-mono font-medium">asst@factory.com</span>
-                </div>
-                <span className="text-[11px] text-indigo-800 font-bold bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-md">เลือก</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setForm({ ...form, email: "manager@factory.com", password: "manager123", position: "ผู้จัดการร้าน" });
-                  setError("");
-                }}
-                className="w-full flex items-center justify-between p-2.5 rounded-xl border border-slate-300 hover:border-slate-500 hover:bg-slate-50 transition-all group cursor-pointer text-left"
-              >
-                <div>
-                  <span className="block text-xs font-bold text-slate-900">ผู้จัดการร้าน</span>
-                  <span className="block text-[11px] text-slate-600 font-mono font-medium">manager@factory.com</span>
-                </div>
-                <span className="text-[11px] text-indigo-800 font-bold bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-md">เลือก</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setForm({ ...form, email: "director@factory.com", password: "director123", position: "กรรมการ" });
-                  setError("");
-                }}
-                className="w-full flex items-center justify-between p-2.5 rounded-xl border border-slate-300 hover:border-slate-500 hover:bg-slate-50 transition-all group cursor-pointer text-left"
-              >
-                <div>
-                  <span className="block text-xs font-bold text-slate-900">ท่านกรรมการบริหาร</span>
-                  <span className="block text-[11px] text-slate-600 font-mono font-medium">director@factory.com</span>
-                </div>
-                <span className="text-[11px] text-indigo-800 font-bold bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-md">เลือก</span>
-              </button>
-            </div>
+        <div className="mt-6 pt-4 border-t border-slate-200 text-center">
+          <button type="button" onClick={onSwitchToStaff} className="text-xs text-slate-500 hover:text-slate-800 font-semibold cursor-pointer">กลับไปยังหน้าพนักงาน (Staff Portal)</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── System Admin Portal (URL /admin ) ──────────────────────────────────────
+function SystemAdminAuthPage({ onLogin, onSwitchToStaff }: { onLogin: (user: User) => void; onSwitchToStaff: () => void; }) {
+  const [form, setForm] = useState({ email: "", password: "" });
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const inp = "w-full bg-slate-900 focus:bg-slate-800 border border-slate-700 focus:border-red-500 rounded-xl px-4 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus-visible:outline-2 focus:ring-4 focus:ring-red-500/20 transition-all";
+
+  async function handleLogin() {
+    setLoading(true);
+    await handleAuthSubmit((d: any) => loginAction(d.email, d.password), form, setError, (user: User) => {
+       if (user.role === "admin" || user.email === "admin@factory.com") onLogin(user);
+       else setError("บัญชีนี้ไม่มีสิทธิ์การเข้าถึงระดับ System Admin");
+    });
+    setLoading(false);
+  }
+
+  return (
+    <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center px-4 py-8 relative">
+      {/* Cool background effect */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-red-900/20 via-slate-950 to-slate-950 pointer-events-none"></div>
+
+      <div className="w-full max-w-[390px] bg-slate-900/80 backdrop-blur-xl border border-slate-800 rounded-2xl p-6 shadow-2xl relative z-10">
+        <header className="mb-8 text-center text-white">
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-red-500 to-red-700 text-white shadow-lg mb-4">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
           </div>
-        )}
+          <h1 className="text-xl font-bold tracking-tight">System Admin</h1>
+          <p className="text-xs text-slate-400 mt-1">Eater Egg Fresh Mart Data Control</p>
+        </header>
+
+        <div className="space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-slate-400 mb-1.5 uppercase tracking-wider">Admin Email</label>
+            <input className={inp} type="email" placeholder="admin@domain.com" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-slate-400 mb-1.5 uppercase tracking-wider">Passkey</label>
+            <input className={inp} type="password" placeholder="••••••••" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} onKeyDown={(e) => e.key === 'Enter' && handleLogin()} />
+          </div>
+          {error && <div className="p-2.5 bg-red-950 border border-red-900 text-xs text-red-400 text-center rounded-xl font-semibold">{error}</div>}
+          <button disabled={loading} type="button" onClick={handleLogin} className="w-full py-2.5 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white rounded-xl shadow-[0_0_15px_rgba(220,38,38,0.3)] font-semibold mt-4 transition-all cursor-pointer">
+            {loading ? "Authenticating..." : "Authorize Access"}
+          </button>
+        </div>
+
+        <div className="mt-8 pt-4 border-t border-slate-800 text-center">
+          <button type="button" onClick={onSwitchToStaff} className="text-xs text-slate-500 hover:text-white transition-colors cursor-pointer flex items-center justify-center gap-1 mx-auto">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            Return to Core App
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -872,7 +435,14 @@ function ShiftSelectPage({
           </div>
           <div>
             <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="text-sm sm:text-base font-bold text-slate-900">{user.name}</h1>
+              <div>
+                {user.branchName && (
+                  <p className="text-[10px] uppercase tracking-widest font-bold text-indigo-700 leading-none mb-0.5">
+                    {user.branchName}
+                  </p>
+                )}
+                <h1 className="text-sm sm:text-base font-bold text-slate-900 leading-tight">{user.name}</h1>
+              </div>
               <span className="text-[11px] font-semibold bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full border border-slate-200">
                 {user.position || "พนักงาน"}
               </span>
@@ -985,7 +555,7 @@ function ShiftSelectPage({
       </div>
 
       <footer className="text-center text-[11px] text-slate-600 font-medium py-2">
-        Eater Egg Fresh Mart • Checklist System
+        {user.branchName || "Eater Egg Fresh Mart"} • Checklist System
       </footer>
     </div>
   );
@@ -1028,7 +598,12 @@ function PositionSelectPage({
             </svg>
           </button>
           <div>
-            <h1 className="text-sm sm:text-base font-bold text-slate-900">{user.name}</h1>
+            {user.branchName && (
+              <p className="text-[10px] font-bold text-indigo-700 uppercase tracking-widest mb-0.5 leading-none">
+                {user.branchName}
+              </p>
+            )}
+            <h1 className="text-sm sm:text-base font-bold text-slate-900 leading-tight mb-1">{user.name}</h1>
             <p className="text-[11px] text-slate-600 font-medium">
               กะที่เลือก: <span className="font-bold text-slate-900">{shiftTitle} ({shiftHours})</span>
             </p>
@@ -1063,7 +638,7 @@ function PositionSelectPage({
         <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
           {availablePositions.map((pos) => {
             const isCashier = pos === "แคชเชียร์";
-            const itemCount = getChecklistTemplate(pos, shift).length;
+            
 
             return (
               <div
@@ -1092,7 +667,7 @@ function PositionSelectPage({
                     </div>
 
                     <span className="text-xs font-bold font-mono text-slate-700 bg-slate-50 border border-slate-300 px-3 py-1 rounded-full">
-                      {itemCount} รายการเช็คลิสต์
+                      เข้าใช้งาน
                     </span>
                   </div>
 
@@ -1170,7 +745,7 @@ function PositionSelectPage({
       </div>
 
       <footer className="text-center text-[11px] text-slate-600 font-medium py-2">
-        Eater Egg Fresh Mart • Checklist System
+        {user.branchName || "Eater Egg Fresh Mart"} • Checklist System
       </footer>
     </div>
   );
@@ -1197,39 +772,41 @@ function ChecklistPage({
   const allDone = done === total;
   const progress = total > 0 ? Math.round((done / total) * 100) : 0;
 
-  const filteredItems = session.items.filter((i) => {
+  const filteredItems = session.items.filter((i: any) => {
     if (filter === "pending") return !i.completedAt;
     if (filter === "done") return !!i.completedAt;
     return true;
   });
 
-  function toggleItem(id: string) {
+    async function toggleItem(id: string) {
     if (session.completedAt) return;
-    const updated = session.items.map((item) =>
-      item.id === id ? { ...item, completedAt: item.completedAt ? null : new Date().toISOString() } : item
+    const item = session.items.find(i => i.id === id);
+    if (!item) return;
+    const completed = !item.completedAt;
+    
+    // optimistically update state
+    const updated = session.items.map((i) =>
+      i.id === id ? { ...i, completedAt: completed ? new Date().toISOString() : null } : i
     );
     const allComplete = updated.every((i) => i.completedAt);
-    let updatedSession = { ...session, items: updated };
-    if (allComplete && !session.notified) {
-      const completedAt = new Date().toISOString();
-      updatedSession = { ...updatedSession, completedAt, notified: true };
-      const notifs = getNotifications();
-      notifs.push({
-        id: uid(),
-        shiftSessionId: session.id,
-        userName: session.userName,
-        userPosition: session.userPosition,
-        shift: session.shift,
-        completedAt,
-        read: false,
-      });
-      saveNotifications(notifs);
-    }
+    let updatedSession = { ...session, items: updated, notified: session.notified || allComplete };
+    if (allComplete && !session.notified) updatedSession.completedAt = new Date().toISOString();
+    
     onUpdate(updatedSession);
+
+    // Call server action
+    await toggleTaskWorkAction({
+      taskWorkId: item.taskWorkId,
+      shiftSessionId: session.id,
+      taskId: id,
+      userId: session.userId,
+      completed
+    });
   }
 
-  function endShift() {
+    async function endShift() {
     setShowConfirm(false);
+    await endShiftSessionAction(session.id);
     onEndShift();
   }
 
@@ -1258,8 +835,13 @@ function ChecklistPage({
                   </span>
                 )}
               </div>
-              <h1 className="text-lg sm:text-xl font-bold text-slate-900">{session.userName}</h1>
-              <p className="text-xs text-slate-600 font-mono mt-0.5">เริ่มงานเวลา {fmtTime(session.startedAt)}</p>
+              {session.branchName && (
+                <p className="text-[10px] sm:text-[11px] font-bold text-indigo-700 uppercase tracking-widest mb-1 leading-none">
+                  {session.branchName}
+                </p>
+              )}
+              <h1 className="text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight leading-none">{session.userName}</h1>
+              <p className="text-xs text-slate-500 font-mono mt-1.5">เริ่มงานเวลา {fmtTime(session.startedAt)}</p>
             </div>
 
             <div className="flex items-center gap-2">
@@ -1341,7 +923,7 @@ function ChecklistPage({
 
         {/* Checklist Items */}
         <div className="space-y-2.5" role="group" aria-label="รายการตรวจสอบประจำกะ">
-          {filteredItems.map((item, idx) => {
+          {filteredItems.map((item: any, idx: number) => {
             const isDone = !!item.completedAt;
             const originalIndex = session.items.findIndex((i) => i.id === item.id);
             const prevItem = idx > 0 ? filteredItems[idx - 1] : null;
@@ -1477,10 +1059,13 @@ function ManagerDashboard({
   onEndShift: () => void;
   onOpenChecklistPage: () => void;
 }) {
-  const [notifications, setNotifications] = useState<Notification[]>(getNotifications);
-  const [sessions, setSessions] = useState<ShiftSession[]>(getSessions);
-  const [positions, setPositions] = useState<Position[]>(getPositions);
-  const [usersList, setUsersList] = useState<User[]>(getUsers);
+  
+  const [notifications, setCustomNotifications] = useState<CustomNotification[]>([]);
+  const [sessions, setSessions] = useState<ShiftSession[]>([]);
+  const [positions, setPositions] = useState<{id:string; name:string}[]>([]);
+  const [usersList, setUsersList] = useState<User[]>([]);
+  const [shiftsStatus, setShiftsStatus] = useState<any>(null);
+
   const [newPositionName, setNewPositionName] = useState("");
   const [positionMsg, setPositionMsg] = useState<{ text: string; type: "success" | "error" } | null>(null);
   const [staffMsg, setStaffMsg] = useState<{ text: string; type: "success" | "error" } | null>(null);
@@ -1504,42 +1089,30 @@ function ManagerDashboard({
   const employees = usersList.filter((u) => u.role === "employee");
   const unassignedEmployees = employees.filter((u) => !u.position);
 
+  
   useEffect(() => {
-    const interval = setInterval(() => {
-      const latestNotifs = getNotifications();
-      setNotifications((prev) => {
-        if (JSON.stringify(prev) !== JSON.stringify(latestNotifs)) return latestNotifs;
-        return prev;
-      });
-      const latestSessions = getSessions();
-      setSessions((prev) => {
-        if (JSON.stringify(prev) !== JSON.stringify(latestSessions)) return latestSessions;
-        return prev;
-      });
-      const latestPositions = getPositions();
-      setPositions((prev) => {
-        if (JSON.stringify(prev) !== JSON.stringify(latestPositions)) return latestPositions;
-        return prev;
-      });
-      const latestUsers = getUsers();
-      setUsersList((prev) => {
-        if (JSON.stringify(prev) !== JSON.stringify(latestUsers)) return latestUsers;
-        return prev;
-      });
-    }, 3000);
+    async function loadData() {
+       getAllUsersAction().then((res: any) => { if (res.users) setUsersList(res.users); });
+       getPositionShiftsStatusAction(user.position || "ผู้จัดการร้าน").then(res => {
+         if (res.success) setShiftsStatus(res.statuses);
+       });
+    }
+    loadData();
+    const interval = setInterval(loadData, 5000);
     return () => clearInterval(interval);
   }, []);
 
+
   function markRead(id: string) {
     const updated = notifications.map((n) => n.id === id ? { ...n, read: true } : n);
-    saveNotifications(updated);
-    setNotifications(updated);
+    saveCustomNotifications(updated);
+    setCustomNotifications(updated);
   }
 
   function markAllRead() {
     const updated = notifications.map((n) => ({ ...n, read: true }));
-    saveNotifications(updated);
-    setNotifications(updated);
+    saveCustomNotifications(updated);
+    setCustomNotifications(updated);
   }
 
   function handleUpdateUserPosition(userId: string, newPos: string) {
@@ -1550,9 +1123,9 @@ function ManagerDashboard({
       });
       return;
     }
-    const users = getUsers();
+    const users = usersList;
     const updated = users.map((u) => (u.id === userId ? { ...u, position: newPos || undefined } : u));
-    saveUsers(updated);
+    // call assign user action - not fully implemented in prototype
     setUsersList(updated);
     const target = users.find((u) => u.id === userId);
     setStaffMsg({
@@ -1567,7 +1140,7 @@ function ManagerDashboard({
       setStaffMsg({ text: "ผู้ช่วยผู้จัดการร้านไม่มีสิทธิ์ลบบัญชีพนักงาน", type: "error" });
       return;
     }
-    const users = getUsers();
+    const users = usersList;
     const target = users.find((u) => u.id === userId);
     if (!target) return;
     if (target.id === user.id) {
@@ -1576,7 +1149,7 @@ function ManagerDashboard({
     }
     if (!confirm(`ยืนยันการลบบัญชีของ "${target.name}" หรือไม่?`)) return;
     const updated = users.filter((u) => u.id !== userId);
-    saveUsers(updated);
+    // call assign user action - not fully implemented in prototype
     setUsersList(updated);
     setStaffMsg({ text: `ลบบัญชีพนักงาน "${target.name}" เรียบร้อยแล้ว`, type: "success" });
     setTimeout(() => setStaffMsg(null), 3000);
@@ -1587,7 +1160,7 @@ function ManagerDashboard({
       setStaffMsg({ text: "กรุณากรอกข้อมูลพนักงานให้ครบถ้วน", type: "error" });
       return;
     }
-    const users = getUsers();
+    const users = usersList;
     if (users.some((u) => u.email.toLowerCase() === newStaffForm.email.trim().toLowerCase())) {
       setStaffMsg({ text: "อีเมลนี้มีอยู่ในระบบแล้ว", type: "error" });
       return;
@@ -1601,7 +1174,7 @@ function ManagerDashboard({
       position: canManagePositions ? (newStaffForm.position || undefined) : undefined,
     };
     const updated = [...users, newUser];
-    saveUsers(updated);
+    // call assign user action - not fully implemented in prototype
     setUsersList(updated);
     setNewStaffForm({ name: "", email: "", password: "", position: "" });
     setShowAddStaffModal(false);
@@ -1618,7 +1191,7 @@ function ManagerDashboard({
       return;
     }
     const updated = [...positions, { id: uid(), name: trimmed }];
-    savePositions(updated);
+    
     setPositions(updated);
     setNewPositionName("");
     setPositionMsg({ text: `เพิ่มตำแหน่ง "${trimmed}" เรียบร้อยแล้ว`, type: "success" });
@@ -1629,7 +1202,7 @@ function ManagerDashboard({
     if (!canManagePositions) return;
     const pos = positions.find((p) => p.id === posId);
     if (!pos) return;
-    const users = getUsers();
+    const users = usersList;
     const assignedCount = users.filter((u) => u.position === pos.name).length;
     if (assignedCount > 0) {
       if (!confirm(`มีพนักงาน ${assignedCount} คนอยู่ในตำแหน่ง "${pos.name}" คุณแน่ใจหรือไม่ว่าต้องการลบตำแหน่งนี้?`)) {
@@ -1637,7 +1210,7 @@ function ManagerDashboard({
       }
     }
     const updated = positions.filter((p) => p.id !== posId);
-    savePositions(updated);
+    
     setPositions(updated);
     setPositionMsg({ text: `ลบตำแหน่ง "${pos.name}" เรียบร้อยแล้ว`, type: "success" });
     setTimeout(() => setPositionMsg(null), 3000);
@@ -1840,16 +1413,16 @@ function ManagerDashboard({
                             กะเช้า (05:30 - 15:00)
                           </span>
                           <span className="text-xs font-mono font-bold text-slate-600">
-                            {getChecklistTemplate(user.position, "morning").length} รายการ
+                            {getChecklistTemplate(user.position, "morning" as ShiftType).length} รายการ
                           </span>
                         </div>
                         <p className="text-xs text-slate-700 font-semibold mb-1.5">หน้าที่หลักในกะเช้า:</p>
                         <ul className="text-[11px] text-slate-600 space-y-1 list-disc list-inside">
-                          {getChecklistTemplate(user.position, "morning").slice(0, 4).map((item) => (
+                          {getChecklistTemplate(user.position, "morning" as ShiftType).slice(0, 4).map((item) => (
                             <li key={item.id} className="line-clamp-1">{item.label}</li>
                           ))}
-                          {getChecklistTemplate(user.position, "morning").length > 4 && (
-                            <li className="text-slate-500 italic">และอีก {getChecklistTemplate(user.position, "morning").length - 4} รายการ...</li>
+                          {getChecklistTemplate(user.position, "morning" as ShiftType).length > 4 && (
+                            <li className="text-slate-500 italic">และอีก {getChecklistTemplate(user.position, "morning" as ShiftType).length - 4} รายการ...</li>
                           )}
                         </ul>
                       </div>
@@ -1870,16 +1443,16 @@ function ManagerDashboard({
                             กะบ่าย (13:00 - 21:00)
                           </span>
                           <span className="text-xs font-mono font-bold text-slate-600">
-                            {getChecklistTemplate(user.position, "afternoon").length} รายการ
+                            {getChecklistTemplate(user.position, "afternoon" as ShiftType).length} รายการ
                           </span>
                         </div>
                         <p className="text-xs text-slate-700 font-semibold mb-1.5">หน้าที่หลักในกะบ่าย:</p>
                         <ul className="text-[11px] text-slate-600 space-y-1 list-disc list-inside">
-                          {getChecklistTemplate(user.position, "afternoon").slice(0, 4).map((item) => (
+                          {getChecklistTemplate(user.position, "afternoon" as ShiftType).slice(0, 4).map((item) => (
                             <li key={item.id} className="line-clamp-1">{item.label}</li>
                           ))}
-                          {getChecklistTemplate(user.position, "afternoon").length > 4 && (
-                            <li className="text-slate-500 italic">และอีก {getChecklistTemplate(user.position, "afternoon").length - 4} รายการ...</li>
+                          {getChecklistTemplate(user.position, "afternoon" as ShiftType).length > 4 && (
+                            <li className="text-slate-500 italic">และอีก {getChecklistTemplate(user.position, "afternoon" as ShiftType).length - 4} รายการ...</li>
                           )}
                         </ul>
                       </div>
@@ -1968,7 +1541,7 @@ function ManagerDashboard({
 
                   {/* Checklist Item Cards */}
                   <div className="space-y-2.5">
-                    {activeSession.items.map((item, idx) => {
+                    {activeSession.items.map((item: any, idx: number) => {
                       const isDone = !!item.completedAt;
                       const prevItem = idx > 0 ? activeSession.items[idx - 1] : null;
                       const showCat = item.category && (!prevItem || prevItem.category !== item.category);
@@ -1976,14 +1549,14 @@ function ManagerDashboard({
                       function toggleDashboardItem(id: string) {
                         if (!activeSession) return;
                         const currentSession = activeSession;
-                        const updatedItems = currentSession.items.map((it) => {
+                        const updatedItems = currentSession.items.map((it: any) => {
                           if (it.id !== id) return it;
                           return { ...it, completedAt: it.completedAt ? null : new Date().toISOString() };
                         });
                         const updatedSession: ShiftSession = { ...currentSession, items: updatedItems };
-                        if (updatedItems.every((it) => it.completedAt) && !currentSession.notified) {
+                        if (updatedItems.every((it: any) => it.completedAt) && !currentSession.notified) {
                           updatedSession.notified = true;
-                          const notif: Notification = {
+                          const notif: CustomNotification = {
                             id: uid(),
                             shiftSessionId: currentSession.id,
                             userName: currentSession.userName,
@@ -1992,7 +1565,7 @@ function ManagerDashboard({
                             completedAt: new Date().toISOString(),
                             read: false,
                           };
-                          saveNotifications([...getNotifications(), notif]);
+                          saveCustomNotifications([...getCustomNotifications(), notif]);
                         }
                         onUpdateSession(updatedSession);
                       }
@@ -2249,7 +1822,7 @@ function ManagerDashboard({
                               )}
                               <p className="text-sm font-bold text-slate-900">{notif.userName}</p>
                               {notif.userPosition && <Badge color="muted">{notif.userPosition}</Badge>}
-                              {getShiftBadge(notif.shift)}
+                              {getShiftBadge(notif.shift as ShiftType)}
                             </div>
                             <p className="text-xs text-slate-600">ตรวจสอบงานครบทุกรายการแล้ว</p>
                             <p className="text-[10px] font-mono text-slate-500 mt-1">{fmtDate(notif.completedAt)} {fmtTime(notif.completedAt)}</p>
@@ -2358,7 +1931,7 @@ function ManagerDashboard({
                 ) : (
                   <div className="space-y-2.5">
                     {positions.map((pos) => {
-                      const users = getUsers();
+                      const users = usersList;
                       const count = users.filter((u) => u.position === pos.name).length;
                       const morningItems = getChecklistTemplate(pos.name, "morning").length;
                       const afternoonItems = getChecklistTemplate(pos.name, "afternoon").length;
@@ -2541,7 +2114,7 @@ function ManagerDashboard({
               </div>
               <Divider />
               <div className="mt-4 space-y-2.5">
-                {selectedSession.items.map((item, idx) => {
+                {selectedSession.items.map((item: any, idx: number) => {
                   const prevItem = idx > 0 ? selectedSession.items[idx - 1] : null;
                   const showCat = item.category && (!prevItem || prevItem.category !== item.category);
                   return (
@@ -2576,63 +2149,33 @@ function ManagerDashboard({
 }
 
 // Helper to detect if current URL is /admin or #admin
-function isAdminRoute(): boolean {
-  if (typeof window === "undefined") return false;
-  const path = window.location.pathname.toLowerCase();
-  const hash = window.location.hash.toLowerCase();
-  return path.includes("/admin") || hash.includes("admin");
-}
-
 // ─── App Root ─────────────────────────────────────────────────────────────────
 type Page = "auth" | "shift-select" | "position-select" | "checklist" | "manager";
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [page, setPage] = useState<Page>("auth");
+  const [page, setPage] = useState<"auth" | "shift-select" | "position-select" | "checklist" | "manager">("auth");
+  const [authView, setAuthView] = useState<'staff' | 'executive' | 'admin'>('staff');
   const [selectedShift, setSelectedShift] = useState<ShiftType | null>(null);
   const [activeSession, setActiveSession] = useState<ShiftSession | null>(null);
-  const [isAdminPath, setIsAdminPath] = useState<boolean>(() => isAdminRoute());
 
   useEffect(() => {
-    ensureDefaultManager();
     document.documentElement.lang = "th";
-
-    function checkRoute() {
-      setIsAdminPath(isAdminRoute());
+    function checkUrlRouting() {
+      if (typeof window === "undefined") return;
+      const p = window.location.pathname.toLowerCase() + window.location.hash.toLowerCase();
+      if (p.includes("admin")) setAuthView("admin");
+      else if (p.includes("executive") || p.includes("manager")) setAuthView("executive");
+      else setAuthView("staff");
     }
-
-    window.addEventListener("popstate", checkRoute);
-    window.addEventListener("hashchange", checkRoute);
-    return () => {
-      window.removeEventListener("popstate", checkRoute);
-      window.removeEventListener("hashchange", checkRoute);
-    };
+    checkUrlRouting();
+    window.addEventListener("hashchange", checkUrlRouting);
+    return () => window.removeEventListener("hashchange", checkUrlRouting);
   }, []);
-
-  // Keep currentUser synced with storage updates in case Manager reassigns position
-  useEffect(() => {
-    if (!currentUser) return;
-    const interval = setInterval(() => {
-      const users = getUsers();
-      const fresh = users.find((u) => u.id === currentUser.id);
-      if (fresh && fresh.position !== currentUser.position) {
-        setCurrentUser(fresh);
-      }
-    }, 2000);
-    return () => clearInterval(interval);
-  }, [currentUser]);
 
   function handleLogin(user: User, shift?: ShiftType) {
     setCurrentUser(user);
-    if (user.role === "manager") {
-      if (!isAdminRoute()) {
-        try {
-          window.history.pushState(null, "", "/admin");
-        } catch {
-          window.location.hash = "admin";
-        }
-        setIsAdminPath(true);
-      }
+    if (user.role === "manager" || user.role === "committee" || user.role === "general_manager" || user.role === "admin") {
       setPage("manager");
     } else {
       if (shift) {
@@ -2649,31 +2192,25 @@ export default function App() {
     setPage("position-select");
   }
 
-  function handlePositionSelect(position: string) {
+  async function handlePositionSelect(position: string) {
     if (!currentUser || !selectedShift) return;
     let activeUser = currentUser;
     if (position !== activeUser.position) {
       activeUser = { ...activeUser, position };
       setCurrentUser(activeUser);
-      const users = getUsers().map((u) => (u.id === activeUser.id ? { ...u, position } : u));
-      saveUsers(users);
     }
-    const template = getChecklistTemplate(position, selectedShift);
-    const session: ShiftSession = {
-      id: uid(),
+    const res = await getOrCreateShiftSessionAction({
       userId: activeUser.id,
       userName: activeUser.name,
-      userPosition: position,
-      shift: selectedShift,
-      startedAt: new Date().toISOString(),
-      completedAt: null,
-      items: template.map((i) => ({ ...i, completedAt: null })),
-      notified: false,
-    };
-    const sessions = getSessions();
-    saveSessions([...sessions, session]);
-    setActiveSession(session);
-    setPage(activeUser.role === "manager" ? "manager" : "checklist");
+      position: position,
+      shift: selectedShift
+    });
+    if (res.success && res.session) {
+      setActiveSession(res.session);
+      setPage(activeUser.role === "manager_assistant" || activeUser.role === "employee" ? "checklist" : "manager");
+    } else {
+      console.error(res.error);
+    }
   }
 
   function handleBackToShiftSelect() {
@@ -2682,8 +2219,6 @@ export default function App() {
   }
 
   function handleSessionUpdate(updated: ShiftSession) {
-    const sessions = getSessions().map((s) => s.id === updated.id ? updated : s);
-    saveSessions(sessions);
     setActiveSession(updated);
   }
 
@@ -2694,82 +2229,38 @@ export default function App() {
   }
 
   function handleLogout() {
-    const wasManager = currentUser?.role === "manager";
     setCurrentUser(null);
     setActiveSession(null);
     setSelectedShift(null);
     setPage("auth");
-
-    if (wasManager) {
-      if (!isAdminRoute()) {
-        try {
-          window.history.pushState(null, "", "/admin");
-        } catch {
-          window.location.hash = "admin";
-        }
-      }
-      setIsAdminPath(true);
-    } else {
-      if (isAdminRoute()) {
-        try {
-          window.history.pushState(null, "", "/");
-        } catch {
-          window.location.hash = "";
-        }
-      }
-      setIsAdminPath(false);
-    }
   }
 
   return (
     <>
-      {/* Skip link */}
-      <a
-        href="#main-content"
-        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:px-4 focus:py-2 focus:bg-emerald-700 focus:text-white focus:font-bold focus:rounded-lg focus:shadow-lg focus-visible:outline-2 focus-visible:outline-emerald-950 focus:ring-2 focus:ring-emerald-700"
-      >
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:px-4 focus:py-2 focus:bg-emerald-700 focus:text-white focus:font-bold focus:rounded-lg focus:shadow-lg focus-visible:outline-2 focus-visible:outline-emerald-950 focus:ring-2 focus:ring-emerald-700">
         ข้ามไปยังเนื้อหาหลัก
       </a>
-
-      {/* Semantic main landmark with white background */}
       <main id="main-content" tabIndex={-1} className="min-h-screen bg-white text-slate-900 focus-visible:outline-none">
         {page === "auth" && (
-          isAdminPath ? (
-            <AdminAuthPage onLogin={handleLogin} />
+          authView === "admin" ? (
+            <SystemAdminAuthPage onLogin={handleLogin} onSwitchToStaff={() => setAuthView("staff")} />
+          ) : authView === "executive" ? (
+            <ExecutiveAuthPage onLogin={handleLogin} onSwitchToStaff={() => setAuthView("staff")} />
           ) : (
-            <StaffAuthPage onLogin={handleLogin} />
+             <StaffAuthPage onLogin={handleLogin} onSwitchToExecutive={() => setAuthView("executive")} onSwitchToAdmin={() => setAuthView("admin")} />
           )
         )}
         {page === "shift-select" && currentUser && (
           <ShiftSelectPage user={currentUser} onSelect={handleShiftSelect} onLogout={handleLogout} />
         )}
         {page === "position-select" && currentUser && selectedShift && (
-          <PositionSelectPage
-            user={currentUser}
-            shift={selectedShift}
-            onSelectPosition={handlePositionSelect}
-            onBack={handleBackToShiftSelect}
-            onLogout={handleLogout}
-          />
+          <PositionSelectPage user={currentUser} shift={selectedShift} onSelectPosition={handlePositionSelect} onBack={handleBackToShiftSelect} onLogout={handleLogout} />
         )}
         {page === "checklist" && activeSession && (
-          <ChecklistPage
-            session={activeSession}
-            onUpdate={handleSessionUpdate}
-            onEndShift={handleEndShift}
-            onOpenDashboard={currentUser?.role === "manager" ? () => setPage("manager") : undefined}
-          />
+          <ChecklistPage session={activeSession} onUpdate={handleSessionUpdate} onEndShift={handleEndShift} onOpenDashboard={currentUser?.role === "manager" ? () => setPage("manager") : undefined} />
         )}
         {page === "manager" && currentUser && (
-          <ManagerDashboard
-            user={currentUser}
-            onLogout={handleLogout}
-            activeSession={activeSession}
-            onStartChecklist={handleShiftSelect}
-            onUpdateSession={handleSessionUpdate}
-            onEndShift={handleEndShift}
-            onOpenChecklistPage={() => setPage("checklist")}
-          />
+          <ManagerDashboard user={currentUser} onLogout={handleLogout} activeSession={activeSession} onStartChecklist={handleShiftSelect} onUpdateSession={handleSessionUpdate} onEndShift={handleEndShift} onOpenChecklistPage={() => setPage("checklist")} />
         )}
       </main>
     </>

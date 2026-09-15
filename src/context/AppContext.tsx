@@ -74,8 +74,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const users = getUsers();
       const fresh = users.find((u) => u.id === currentUser.id);
       if (fresh && fresh.position !== currentUser.position) {
-        setCurrentUserState(fresh);
-        saveCurrentUser(fresh);
+        const updatedUser = { ...fresh, branchName: currentUser.branchName };
+        setCurrentUserState(updatedUser);
+        saveCurrentUser(updatedUser);
       }
     }, 2000);
     return () => clearInterval(interval);

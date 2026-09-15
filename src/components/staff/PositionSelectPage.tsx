@@ -28,7 +28,12 @@ export function PositionSelectPage({
       <header className="w-full max-w-4xl mx-auto mb-6 flex items-center justify-between gap-4 p-4 bg-white border border-slate-200/90 rounded-2xl shadow-xs">
         <div className="flex items-center gap-3">
           <div>
-            <h1 className="text-sm sm:text-base font-bold text-slate-900">{user.name}</h1>
+            {user.branchName && (
+              <p className="text-[10px] sm:text-[11px] font-bold text-indigo-700 uppercase tracking-widest mb-0.5">
+                {user.branchName}
+              </p>
+            )}
+            <h1 className="text-sm sm:text-base font-extrabold text-slate-900 leading-none mb-1">{user.name}</h1>
             <p className="text-[11px] text-slate-600 font-medium">
               {shiftTitle ? (
                 <>กะที่เลือก: <span className="font-bold text-slate-900">{shiftTitle} ({shiftHours})</span></>
@@ -70,17 +75,17 @@ export function PositionSelectPage({
             const itemCount = getChecklistTemplate(pos, shift || "morning").length;
             const cardTheme = isCashier
               ? {
-                  hoverBorder: "hover:border-emerald-300 hover:shadow-[0_12px_28px_-6px_rgba(16,185,129,0.15)]",
-                  iconBox: "bg-emerald-50 border-emerald-200/80 text-emerald-700 group-hover:bg-emerald-600 group-hover:text-white group-hover:border-emerald-600",
-                  btnHover: "group-hover:bg-emerald-600",
-                  badgeColor: "green" as const,
-                }
+                hoverBorder: "hover:border-emerald-300 hover:shadow-[0_12px_28px_-6px_rgba(16,185,129,0.15)]",
+                iconBox: "bg-emerald-50 border-emerald-200/80 text-emerald-700 group-hover:bg-emerald-600 group-hover:text-white group-hover:border-emerald-600",
+                btnHover: "group-hover:bg-emerald-600",
+                badgeColor: "green" as const,
+              }
               : {
-                  hoverBorder: "hover:border-sky-300 hover:shadow-[0_12px_28px_-6px_rgba(2,132,199,0.15)]",
-                  iconBox: "bg-sky-50 border-sky-200/80 text-sky-700 group-hover:bg-sky-600 group-hover:text-white group-hover:border-sky-600",
-                  btnHover: "group-hover:bg-sky-600",
-                  badgeColor: "blue" as const,
-                };
+                hoverBorder: "hover:border-sky-300 hover:shadow-[0_12px_28px_-6px_rgba(2,132,199,0.15)]",
+                iconBox: "bg-sky-50 border-sky-200/80 text-sky-700 group-hover:bg-sky-600 group-hover:text-white group-hover:border-sky-600",
+                btnHover: "group-hover:bg-sky-600",
+                badgeColor: "blue" as const,
+              };
 
             return (
               <div
@@ -194,7 +199,7 @@ export function PositionSelectPage({
       </div>
 
       <footer className="text-center text-[11px] text-slate-500 font-medium py-2">
-        Eater Egg Fresh Mart • Checklist System
+        {user.branchName || "Eater Egg Fresh Mart"} • Checklist System
       </footer>
     </div>
   );

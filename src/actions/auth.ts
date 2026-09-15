@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "../db";
-import { users } from "../db/schema";
+import { users, branches } from "../db/schema";
 import { eq, sql } from "drizzle-orm";
 import { User, Role } from "../types";
 
@@ -96,12 +96,22 @@ export async function loginAction(email: string, password: string): Promise<Auth
     else if (foundUser.role === "committee") defaultPosition = "กรรมการ";
     else if (foundUser.role === "manager_assistant") defaultPosition = "ผู้ช่วยผู้จัดการร้าน";
 
+    // Find user's branch
+    const branchQuery = await db
+      .select({ name: branches.name })
+      .from(branches)
+      .where(sql`${foundUser.id} = ANY(${branches.members})`)
+      .limit(1);
+
+    const branchName = branchQuery.length > 0 ? branchQuery[0].name : undefined;
+
     const userObj: User = {
       id: foundUser.id,
       name: foundUser.name,
       email: foundUser.email,
       role: (foundUser.role as Role),
       position: defaultPosition,
+      branchName: branchName,
     };
 
     return {

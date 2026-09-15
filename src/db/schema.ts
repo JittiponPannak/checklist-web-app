@@ -55,3 +55,13 @@ export const branches = pgTable("branches", {
     tasks: uuid("task_ids").array().notNull().default([]),
     last_update: timestamp().default(new Date()),
 });
+
+/*
+export const notifications = pgTable("notifications", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    text: text("name").notNull(),
+    to_roles: roleEnum("to_roles").array().notNull().default([]),
+    seen: uuid("seen_ids").array().notNull().default([]),
+    branch: uuid("id").references(() => branches.id)
+});
+*/
