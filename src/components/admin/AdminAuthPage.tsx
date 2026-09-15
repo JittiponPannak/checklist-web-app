@@ -78,29 +78,29 @@ export function AdminAuthPage({ onLogin }: { onLogin: (user: User) => void }) {
   }
 
   const inputStyle =
-    "w-full bg-slate-50/80 hover:bg-slate-50 focus:bg-white border border-slate-300 focus:border-slate-900 rounded-xl px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus-visible:outline-none focus:ring-3 focus:ring-slate-950/10 transition-all";
+    "w-full bg-slate-950 hover:bg-slate-900 focus:bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-xl px-4 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus-visible:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all";
 
   return (
-    <div className="min-h-screen bg-slate-50/70 flex flex-col items-center justify-center px-4 py-8 sm:py-12 relative overflow-hidden">
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-center px-4 py-8 sm:py-12 relative overflow-hidden">
       {/* Subtle Ambient Brand Glow */}
-      <div className="absolute top-1/4 -right-20 w-72 h-72 bg-amber-200/20 rounded-full blur-3xl pointer-events-none" aria-hidden="true" />
-      <div className="absolute bottom-1/4 -left-20 w-72 h-72 bg-indigo-200/20 rounded-full blur-3xl pointer-events-none" aria-hidden="true" />
+      <div className="absolute top-1/4 -right-20 w-72 h-72 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none" aria-hidden="true" />
+      <div className="absolute bottom-1/4 -left-20 w-72 h-72 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" aria-hidden="true" />
 
-      <div className="w-full max-w-[440px] bg-white/95 backdrop-blur-sm border border-slate-200/90 rounded-2xl p-7 sm:p-8 shadow-[0_4px_24px_-4px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] ring-1 ring-slate-900/[0.03] space-y-5 relative z-10">
+      <div className="w-full max-w-[440px] bg-slate-900/90 backdrop-blur-md border border-slate-800 rounded-2xl p-7 sm:p-8 shadow-2xl space-y-5 relative z-10">
         {/* Brand Header */}
         <header className="text-center space-y-2 flex flex-col items-center">
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 text-[11px] font-semibold border border-slate-200 mb-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-slate-900" aria-hidden="true" />
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-950/80 text-indigo-300 text-[11px] font-semibold border border-indigo-800/60 mb-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-indigo-400" aria-hidden="true" />
             <span>Admin Portal • ระบบฝ่ายบริหาร</span>
           </div>
-          <BrandLogo size={48} showText={true} subtitle="ระบบควบคุมและตรวจสอบเช็คลิสต์การปฏิบัติงานสาขา" />
+          <BrandLogo size={48} showText={true} isDark={true} subtitle="ระบบควบคุมและตรวจสอบเช็คลิสต์การปฏิบัติงานสาขา" />
         </header>
 
         {/* Form */}
-        <div className="space-y-3.5 pt-4 border-t border-slate-100 focus-visible:outline-none">
+        <div className="space-y-3.5 pt-4 border-t border-slate-800/80 focus-visible:outline-none">
 
           <div>
-            <label htmlFor="admin-email" className="block text-xs font-semibold text-slate-700 mb-1">
+            <label htmlFor="admin-email" className="block text-xs font-semibold text-slate-300 mb-1">
               อีเมลฝ่ายบริหาร
             </label>
             <input
@@ -117,7 +117,7 @@ export function AdminAuthPage({ onLogin }: { onLogin: (user: User) => void }) {
           </div>
 
           <div>
-            <label htmlFor="admin-password" className="block text-xs font-semibold text-slate-700 mb-1">
+            <label htmlFor="admin-password" className="block text-xs font-semibold text-slate-300 mb-1">
               รหัสผ่าน
             </label>
             <input
@@ -135,7 +135,7 @@ export function AdminAuthPage({ onLogin }: { onLogin: (user: User) => void }) {
           </div>
 
           {error && (
-            <div id="admin-auth-error" role="alert" className="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-900 text-center font-semibold flex items-center justify-center gap-1.5">
+            <div id="admin-auth-error" role="alert" className="p-3 rounded-xl bg-rose-950/80 border border-rose-800/80 text-xs text-rose-200 text-center font-semibold flex items-center justify-center gap-1.5">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <circle cx="12" cy="12" r="10" />
                 <line x1="12" y1="8" x2="12" y2="12" />
@@ -149,7 +149,7 @@ export function AdminAuthPage({ onLogin }: { onLogin: (user: User) => void }) {
             type="button"
             disabled={loading}
             onClick={handleLogin}
-            className={`w-full py-2.5 bg-slate-900 hover:bg-slate-800 active:bg-black text-white text-sm font-semibold rounded-xl shadow-sm transition-all cursor-pointer mt-1 flex items-center justify-center gap-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 ${loading ? "opacity-70 cursor-not-allowed" : ""
+            className={`w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white text-sm font-semibold rounded-xl shadow-lg transition-all cursor-pointer mt-1 flex items-center justify-center gap-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 shadow-indigo-950/50 ${loading ? "opacity-70 cursor-not-allowed" : ""
               }`}
           >
             <span>{loading ? "กำลังเข้าสู่ระบบ..." : "เข้าสู่ระบบผู้ดูแลระบบ (Admin)"}</span>
@@ -162,12 +162,12 @@ export function AdminAuthPage({ onLogin }: { onLogin: (user: User) => void }) {
         </div>
 
         {/* 1-Click Sample Accounts */}
-        <div className="pt-4 border-t border-slate-100">
+        <div className="pt-4 border-t border-slate-800/80">
           <div className="flex items-center justify-between mb-2.5">
-            <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
               คลิกทดสอบด่วน (Admin Sample Account):
             </span>
-            <span className="text-[10px] text-indigo-900 bg-indigo-50 border border-indigo-200/80 px-2 py-0.5 rounded-md font-semibold">
+            <span className="text-[10px] text-indigo-300 bg-indigo-950/80 border border-indigo-800/60 px-2 py-0.5 rounded-md font-semibold">
               1-Click Login
             </span>
           </div>
@@ -175,23 +175,23 @@ export function AdminAuthPage({ onLogin }: { onLogin: (user: User) => void }) {
             <button
               type="button"
               onClick={() => directLogin("admin@factory.com", "admin123", "ผู้ดูแลระบบส่วนกลาง")}
-              className="w-full flex items-center justify-between p-3 rounded-xl border border-slate-200 hover:border-indigo-400 hover:bg-indigo-50/20 transition-all group cursor-pointer text-left shadow-2xs"
+              className="w-full flex items-center justify-between p-3 rounded-xl border border-slate-800 hover:border-indigo-500 bg-slate-950 hover:bg-slate-900 transition-all group cursor-pointer text-left shadow-xs"
             >
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-slate-900 text-white flex items-center justify-center text-xs font-bold shadow-xs">
+                <div className="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-xs font-bold shadow-xs">
                   AD
                 </div>
                 <div>
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="text-xs font-bold text-slate-900">คุณสมเกียรติ บริหารกิจ</span>
-                    <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-indigo-50 text-indigo-900 border border-indigo-200">
+                    <span className="text-xs font-bold text-slate-100">คุณสมเกียรติ บริหารกิจ</span>
+                    <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-indigo-950/80 text-indigo-300 border border-indigo-800">
                       System Admin
                     </span>
                   </div>
-                  <span className="text-[11px] text-slate-500 font-mono">admin@factory.com</span>
+                  <span className="text-[11px] text-slate-400 font-mono">admin@factory.com</span>
                 </div>
               </div>
-              <span className="text-xs text-indigo-600 font-bold group-hover:translate-x-0.5 transition-transform flex items-center gap-1 flex-shrink-0">
+              <span className="text-xs text-indigo-400 font-bold group-hover:translate-x-0.5 transition-transform flex items-center gap-1 flex-shrink-0">
                 เข้าสู่ระบบ →
               </span>
             </button>

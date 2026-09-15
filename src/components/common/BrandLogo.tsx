@@ -2,10 +2,12 @@ export function BrandLogo({
   size = 36,
   showText = false,
   subtitle = "",
+  isDark = true,
 }: {
   size?: number;
   showText?: boolean;
   subtitle?: string;
+  isDark?: boolean;
 }) {
   return (
     <div className="inline-flex items-center gap-2.5 select-none">
@@ -42,17 +44,17 @@ export function BrandLogo({
       {showText && (
         <div className="text-left">
           <div className="flex items-center gap-1.5">
-            <span className="font-extrabold tracking-tight text-slate-900 text-sm sm:text-base">
+            <span className={`font-extrabold tracking-tight text-sm sm:text-base ${isDark ? "text-white" : "text-slate-900"}`}>
               Eater Egg
             </span>
-            <span className="text-xs font-bold text-amber-600 tracking-wide uppercase px-1.5 py-0.5 rounded-md bg-amber-50 border border-amber-200/80">
+            <span className="text-xs font-bold text-amber-400 tracking-wide uppercase px-1.5 py-0.5 rounded-md bg-amber-950/80 border border-amber-800">
               Fresh Mart
             </span>
           </div>
           {subtitle ? (
-            <p className="text-[11px] text-slate-500 font-medium">{subtitle}</p>
+            <p className={`text-[11px] font-medium ${isDark ? "text-slate-400" : "text-slate-500"}`}>{subtitle}</p>
           ) : (
-            <p className="text-[11px] text-slate-500 font-medium">
+            <p className={`text-[11px] font-medium ${isDark ? "text-slate-400" : "text-slate-500"}`}>
               ระบบบริหารและบันทึกการปฏิบัติงานประจำกะ
             </p>
           )}

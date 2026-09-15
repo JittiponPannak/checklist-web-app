@@ -115,29 +115,29 @@ export function ManagerAuthPage({ onLogin }: { onLogin: (user: User) => void }) 
   }
 
   const inputStyle =
-    "w-full bg-slate-50/80 hover:bg-slate-50 focus:bg-white border border-slate-300 focus:border-slate-900 rounded-xl px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus-visible:outline-none focus:ring-3 focus:ring-slate-950/10 transition-all";
+    "w-full bg-slate-950 hover:bg-slate-900 focus:bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-xl px-4 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus-visible:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all";
 
   return (
-    <div className="min-h-screen bg-slate-50/70 flex flex-col items-center justify-center px-4 py-8 sm:py-12 relative overflow-hidden">
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-center px-4 py-8 sm:py-12 relative overflow-hidden">
       {/* Subtle Ambient Brand Glow */}
-      <div className="absolute top-1/4 -right-20 w-72 h-72 bg-amber-200/20 rounded-full blur-3xl pointer-events-none" aria-hidden="true" />
-      <div className="absolute bottom-1/4 -left-20 w-72 h-72 bg-indigo-200/20 rounded-full blur-3xl pointer-events-none" aria-hidden="true" />
+      <div className="absolute top-1/4 -right-20 w-72 h-72 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" aria-hidden="true" />
+      <div className="absolute bottom-1/4 -left-20 w-72 h-72 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" aria-hidden="true" />
 
-      <div className="w-full max-w-[440px] bg-white/95 backdrop-blur-sm border border-slate-200/90 rounded-2xl p-7 sm:p-8 shadow-[0_4px_24px_-4px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] ring-1 ring-slate-900/[0.03] space-y-5 relative z-10">
+      <div className="w-full max-w-[440px] bg-slate-900/90 backdrop-blur-md border border-slate-800 rounded-2xl p-7 sm:p-8 shadow-2xl space-y-5 relative z-10">
         {/* Brand Header */}
         <header className="text-center space-y-2 flex flex-col items-center">
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-900 text-[11px] font-bold border border-indigo-200 mb-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-indigo-600" aria-hidden="true" />
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-950/80 text-indigo-300 text-[11px] font-bold border border-indigo-800/60 mb-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-indigo-400" aria-hidden="true" />
             <span>Manager Portal • ระบบฝ่ายบริหารและตรวจสอบสาขา</span>
           </div>
-          <BrandLogo size={48} showText={true} subtitle="ระบบตรวจรับรองกะงานและกำกับดูแลมาตรฐานร้าน" />
+          <BrandLogo size={48} showText={true} isDark={true} subtitle="ระบบตรวจรับรองกะงานและกำกับดูแลมาตรฐานร้าน" />
         </header>
 
         {/* Tab switcher */}
         <div
           role="tablist"
           aria-label="ตัวเลือกเข้าสู่ระบบฝ่ายบริหาร"
-          className="flex bg-slate-100 p-1 rounded-xl border border-slate-200"
+          className="flex bg-slate-950 p-1 rounded-xl border border-slate-800"
         >
           {(["login", "register"] as const).map((t) => (
             <button
@@ -149,8 +149,8 @@ export function ManagerAuthPage({ onLogin }: { onLogin: (user: User) => void }) 
                 setTab(t);
                 setError("");
               }}
-              className={`flex-1 py-1.5 text-xs sm:text-sm font-semibold rounded-lg transition-all cursor-pointer ${
-                tab === t ? "bg-white text-slate-900 shadow-xs" : "text-slate-600 hover:text-slate-900"
+              className={`flex-1 py-2 text-xs sm:text-sm font-semibold rounded-lg transition-all cursor-pointer ${
+                tab === t ? "bg-indigo-600 text-white shadow-md font-bold" : "text-slate-400 hover:text-slate-200"
               }`}
             >
               {t === "login" ? "เข้าสู่ระบบฝ่ายบริหาร" : "ลงทะเบียนใหม่"}
@@ -162,10 +162,11 @@ export function ManagerAuthPage({ onLogin }: { onLogin: (user: User) => void }) 
         <div className="space-y-3.5">
           {tab === "register" && (
             <div>
-              <label className="block text-xs font-semibold text-slate-800 mb-1">
+              <label htmlFor="mgr-name" className="block text-xs font-semibold text-slate-300 mb-1">
                 ชื่อ-นามสกุล
               </label>
               <input
+                id="mgr-name"
                 className={inputStyle}
                 placeholder="เช่น คุณอนุรักษ์ วงศ์สวัสดิ์"
                 value={form.name}
@@ -175,10 +176,11 @@ export function ManagerAuthPage({ onLogin }: { onLogin: (user: User) => void }) 
           )}
 
           <div>
-            <label className="block text-xs font-semibold text-slate-800 mb-1">
+            <label htmlFor="mgr-email" className="block text-xs font-semibold text-slate-300 mb-1">
               อีเมลฝ่ายบริหาร
             </label>
             <input
+              id="mgr-email"
               className={inputStyle}
               placeholder="manager@factory.com"
               type="email"
@@ -188,10 +190,11 @@ export function ManagerAuthPage({ onLogin }: { onLogin: (user: User) => void }) 
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-800 mb-1">
+            <label htmlFor="mgr-password" className="block text-xs font-semibold text-slate-300 mb-1">
               รหัสผ่าน
             </label>
             <input
+              id="mgr-password"
               className={inputStyle}
               placeholder="••••••••"
               type="password"
@@ -203,23 +206,24 @@ export function ManagerAuthPage({ onLogin }: { onLogin: (user: User) => void }) 
 
           {tab === "register" && (
             <div>
-              <label className="block text-xs font-semibold text-slate-800 mb-1">
+              <label htmlFor="mgr-pos" className="block text-xs font-semibold text-slate-300 mb-1">
                 ตำแหน่งฝ่ายบริหาร
               </label>
               <select
+                id="mgr-pos"
                 value={form.position}
                 onChange={(e) => setForm({ ...form, position: e.target.value })}
                 className={inputStyle}
               >
-                <option value="ผู้ช่วยผู้จัดการร้าน">ผู้ช่วยผู้จัดการร้าน (Assistant Manager)</option>
-                <option value="ผู้จัดการร้าน">ผู้จัดการร้าน (Store Manager)</option>
-                <option value="กรรมการ">กรรมการบริหาร (Executive Committee)</option>
+                <option value="ผู้ช่วยผู้จัดการร้าน" className="bg-slate-900 text-white">ผู้ช่วยผู้จัดการร้าน (Assistant Manager)</option>
+                <option value="ผู้จัดการร้าน" className="bg-slate-900 text-white">ผู้จัดการร้าน (Store Manager)</option>
+                <option value="กรรมการ" className="bg-slate-900 text-white">กรรมการบริหาร (Executive Committee)</option>
               </select>
             </div>
           )}
 
           {error && (
-            <div className="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-900 text-center font-semibold flex items-center justify-center gap-1.5">
+            <div role="alert" className="p-3 rounded-xl bg-rose-950/80 border border-rose-800/80 text-xs text-rose-200 text-center font-semibold flex items-center justify-center gap-1.5">
               <span>{error}</span>
             </div>
           )}
@@ -228,7 +232,7 @@ export function ManagerAuthPage({ onLogin }: { onLogin: (user: User) => void }) 
             type="button"
             disabled={loading}
             onClick={tab === "login" ? handleLogin : handleRegister}
-            className={`w-full py-2.5 bg-slate-900 hover:bg-slate-800 active:bg-black text-white text-sm font-semibold rounded-xl shadow-sm transition-all cursor-pointer mt-1 flex items-center justify-center gap-2 ${
+            className={`w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white text-sm font-semibold rounded-xl shadow-lg transition-all cursor-pointer mt-1 flex items-center justify-center gap-2 shadow-indigo-950/50 ${
               loading ? "opacity-70 cursor-not-allowed" : ""
             }`}
           >
@@ -238,12 +242,12 @@ export function ManagerAuthPage({ onLogin }: { onLogin: (user: User) => void }) 
 
         {/* 1-Click Sample Accounts */}
         {tab === "login" && (
-          <div className="pt-4 border-t border-slate-100">
+          <div className="pt-4 border-t border-slate-800/80">
             <div className="flex items-center justify-between mb-2.5">
-              <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
                 คลิกทดสอบด่วน (1-Click Accounts):
               </span>
-              <span className="text-[10px] text-indigo-900 bg-indigo-50 border border-indigo-200/80 px-2 py-0.5 rounded-md font-semibold">
+              <span className="text-[10px] text-indigo-300 bg-indigo-950/80 border border-indigo-800/60 px-2 py-0.5 rounded-md font-semibold">
                 เข้าสู่ Manager Dashboard
               </span>
             </div>
@@ -255,7 +259,7 @@ export function ManagerAuthPage({ onLogin }: { onLogin: (user: User) => void }) 
                   email: "manager@factory.com",
                   pass: "manager123",
                   pos: "ผู้จัดการร้าน",
-                  badge: "bg-slate-900 text-white border-slate-900",
+                  badge: "bg-indigo-950/80 text-indigo-300 border-indigo-800",
                 },
                 {
                   role: "ผู้ช่วยผู้จัดการ",
@@ -263,7 +267,7 @@ export function ManagerAuthPage({ onLogin }: { onLogin: (user: User) => void }) 
                   email: "assistant@factory.com",
                   pass: "123",
                   pos: "ผู้ช่วยผู้จัดการร้าน",
-                  badge: "bg-indigo-50 text-indigo-900 border-indigo-200",
+                  badge: "bg-slate-800 text-slate-300 border-slate-700",
                 },
                 {
                   role: "กรรมการบริหาร",
@@ -271,30 +275,30 @@ export function ManagerAuthPage({ onLogin }: { onLogin: (user: User) => void }) 
                   email: "director@factory.com",
                   pass: "director123",
                   pos: "กรรมการ",
-                  badge: "bg-amber-100 text-amber-950 border-amber-300 font-bold",
+                  badge: "bg-amber-950/80 text-amber-300 border-amber-800 font-bold",
                 },
               ].map((acc) => (
                 <button
                   key={acc.email}
                   type="button"
                   onClick={() => directLogin(acc.email, acc.pass, acc.pos)}
-                  className="w-full flex items-center justify-between p-2.5 rounded-xl border border-slate-200 hover:border-indigo-400 hover:bg-indigo-50/30 transition-all group cursor-pointer text-left shadow-2xs"
+                  className="w-full flex items-center justify-between p-2.5 rounded-xl border border-slate-800 hover:border-indigo-500 bg-slate-950 hover:bg-slate-900 transition-all group cursor-pointer text-left shadow-xs"
                 >
                   <div className="flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-lg bg-slate-100 group-hover:bg-indigo-600 group-hover:text-white flex items-center justify-center text-xs font-bold text-slate-700 border border-slate-200 transition-colors">
+                    <div className="w-7 h-7 rounded-lg bg-slate-800 group-hover:bg-indigo-600 group-hover:text-white flex items-center justify-center text-xs font-bold text-slate-200 border border-slate-700 transition-colors">
                       {acc.role.charAt(0)}
                     </div>
                     <div>
                       <div className="flex items-center gap-1.5">
-                        <span className="text-xs font-bold text-slate-900">{acc.name}</span>
+                        <span className="text-xs font-bold text-slate-100">{acc.name}</span>
                         <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-md border ${acc.badge}`}>
                           {acc.role}
                         </span>
                       </div>
-                      <span className="text-[11px] text-slate-500 font-mono">{acc.email}</span>
+                      <span className="text-[11px] text-slate-400 font-mono">{acc.email}</span>
                     </div>
                   </div>
-                  <span className="text-[11px] text-indigo-700 font-bold group-hover:translate-x-0.5 transition-transform flex items-center gap-0.5">
+                  <span className="text-[11px] text-indigo-400 font-bold group-hover:translate-x-0.5 transition-transform flex items-center gap-0.5">
                     เข้าสู่ระบบ →
                   </span>
                 </button>
@@ -304,16 +308,16 @@ export function ManagerAuthPage({ onLogin }: { onLogin: (user: User) => void }) 
         )}
 
         {/* Portal Switching Links */}
-        <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+        <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
           <Link
             href="/"
-            className="hover:text-slate-900 font-medium transition-colors inline-flex items-center gap-1 cursor-pointer"
+            className="hover:text-slate-200 font-medium transition-colors inline-flex items-center gap-1 cursor-pointer"
           >
             <span>← สำหรับพนักงานทั่วไป (/)</span>
           </Link>
           <Link
             href="/admin"
-            className="hover:text-slate-900 font-medium transition-colors inline-flex items-center gap-1 cursor-pointer"
+            className="hover:text-indigo-400 font-medium transition-colors inline-flex items-center gap-1 cursor-pointer"
           >
             <span>Admin Portal (/admin) →</span>
           </Link>

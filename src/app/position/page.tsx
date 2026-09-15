@@ -18,8 +18,8 @@ export default function PositionRoutePage() {
 
   if (!isReady || !currentUser) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50/70">
-        <div className="h-8 w-8 animate-spin rounded-full border-3 border-slate-900 border-t-transparent" />
+      <div className="min-h-screen flex items-center justify-center bg-slate-950">
+        <div className="h-8 w-8 animate-spin rounded-full border-3 border-indigo-500 border-t-transparent" />
       </div>
     );
   }

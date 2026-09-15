@@ -96,38 +96,39 @@ export function EmployeeAuthPage({
     }
 
     const inp =
-        "w-full bg-slate-50/80 hover:bg-slate-50 focus:bg-white border border-emerald-300 focus:border-emerald-700 rounded-xl px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus-visible:outline-none focus:ring-3 focus:ring-emerald-900/10 transition-all";
+        "w-full bg-slate-950 hover:bg-slate-900 focus:bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-xl px-4 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus-visible:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all";
 
     return (
-        <div className="min-h-screen bg-slate-50/70 flex flex-col items-center justify-center px-4 py-8 sm:py-12 relative overflow-hidden">
-            <div className="absolute top-1/4 -left-20 w-72 h-72 bg-emerald-200/20 rounded-full blur-3xl pointer-events-none" aria-hidden="true" />
-            <div className="absolute bottom-1/4 -right-20 w-72 h-72 bg-emerald-200/20 rounded-full blur-3xl pointer-events-none" aria-hidden="true" />
+        <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-center px-4 py-8 sm:py-12 relative overflow-hidden">
+            <div className="absolute top-1/4 -left-20 w-72 h-72 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none" aria-hidden="true" />
+            <div className="absolute bottom-1/4 -right-20 w-72 h-72 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" aria-hidden="true" />
 
-            <div className="w-full max-w-[400px] bg-white/95 backdrop-blur-sm border border-emerald-200/60 rounded-2xl p-7 sm:p-8 shadow-[0_4px_24px_-4px_rgba(16,185,129,0.1),0_1px_2px_rgba(0,0,0,0.04)] ring-1 ring-emerald-900/[0.03] space-y-5 relative z-10">
+            <div className="w-full max-w-[400px] bg-slate-900/90 backdrop-blur-md border border-slate-800 rounded-2xl p-7 sm:p-8 shadow-2xl space-y-5 relative z-10">
                 <header className="mb-2 text-center flex flex-col items-center">
-                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-semibold border border-emerald-200 mb-2">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" aria-hidden="true" />
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-950/80 text-indigo-300 text-[11px] font-semibold border border-indigo-800/60 mb-3">
+                        <span className="w-1.5 h-1.5 rounded-full bg-indigo-400" aria-hidden="true" />
                         <span>ระบบพนักงานและผู้ช่วยผู้จัดการร้าน</span>
                     </div>
-                    <BrandLogo size={48} showText={true} />
+                    <BrandLogo size={48} showText={true} isDark={true} />
                 </header>
 
                 <div
                     role="tablist"
-                    className="flex bg-slate-100 p-1 rounded-xl mb-5 border border-slate-200/70 gap-1"
+                    className="flex bg-slate-950 p-1 rounded-xl mb-5 border border-slate-800 gap-1"
                 >
                     {(["login", "register"] as const).map((t) => (
                         <button
                             key={t}
                             type="button"
                             role="tab"
+                            aria-selected={tab === t}
                             onClick={() => {
                                 setTab(t);
                                 setError("");
                             }}
-                            className={`flex-1 py-1.5 min-h-[34px] text-xs font-semibold rounded-lg transition-all cursor-pointer text-center ${tab === t
-                                ? "bg-white text-emerald-900 shadow-xs font-bold"
-                                : "text-slate-600 hover:text-emerald-700"
+                            className={`flex-1 py-2 min-h-[36px] text-xs font-semibold rounded-lg transition-all cursor-pointer text-center ${tab === t
+                                ? "bg-indigo-600 text-white shadow-md font-bold"
+                                : "text-slate-400 hover:text-slate-200"
                                 }`}
                         >
                             {t === "login" ? "เข้าสู่ระบบพนักงาน" : "ลงทะเบียนพนักงานใหม่"}
@@ -138,10 +139,11 @@ export function EmployeeAuthPage({
                 <div role="tabpanel" className="space-y-4 focus-visible:outline-none">
                     {tab === "register" && (
                         <div>
-                            <label className="block text-xs font-semibold text-slate-800 mb-1.5">
+                            <label htmlFor="reg-name" className="block text-xs font-semibold text-slate-300 mb-1.5">
                                 ชื่อ-นามสกุล
                             </label>
                             <input
+                                id="reg-name"
                                 className={inp}
                                 placeholder="ระบุชื่อ-นามสกุล"
                                 value={form.name}
@@ -151,10 +153,11 @@ export function EmployeeAuthPage({
                     )}
 
                     <div>
-                        <label className="block text-xs font-semibold text-slate-800 mb-1.5">
+                        <label htmlFor="emp-email" className="block text-xs font-semibold text-slate-300 mb-1.5">
                             อีเมลพนักงาน
                         </label>
                         <input
+                            id="emp-email"
                             className={inp}
                             placeholder="cashier@factory.com"
                             type="email"
@@ -164,10 +167,11 @@ export function EmployeeAuthPage({
                     </div>
 
                     <div>
-                        <label className="block text-xs font-semibold text-slate-800 mb-1.5">
+                        <label htmlFor="emp-password" className="block text-xs font-semibold text-slate-300 mb-1.5">
                             รหัสผ่าน
                         </label>
                         <input
+                            id="emp-password"
                             className={inp}
                             placeholder="••••••••"
                             type="password"
@@ -177,12 +181,8 @@ export function EmployeeAuthPage({
                         />
                     </div>
 
-                    <div className="hidden">
-                        {/* Role is strictly employee */}
-                    </div>
-
                     {error && (
-                        <div className="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-900 text-center font-semibold">
+                        <div role="alert" className="p-3 rounded-xl bg-rose-950/80 border border-rose-800/80 text-xs text-rose-200 text-center font-semibold">
                             {error}
                         </div>
                     )}
@@ -191,22 +191,22 @@ export function EmployeeAuthPage({
                         type="button"
                         disabled={loading}
                         onClick={tab === "register" ? handleRegister : handleLogin}
-                        className={`w-full py-2.5 text-white text-sm font-semibold rounded-xl shadow-sm transition-all mt-3 cursor-pointer flex items-center justify-center gap-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-900 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 ${loading ? "opacity-70 cursor-not-allowed" : ""
+                        className={`w-full py-2.5 text-white text-sm font-semibold rounded-xl shadow-lg transition-all mt-3 cursor-pointer flex items-center justify-center gap-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 shadow-indigo-950/50 ${loading ? "opacity-70 cursor-not-allowed" : ""
                             }`}
                     >
                         <span>{loading ? "กำลังตรวจสอบข้อมูล..." : tab === "login" ? "เข้าสู่ระบบพนักงาน →" : "ยืนยันการสมัครสมาชิก"}</span>
                     </button>
 
                     {tab === "login" && (
-                        <div className="pt-3.5 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-                            <span className="text-[11px] font-medium text-slate-500">ทดสอบด่วน:</span>
+                        <div className="pt-3.5 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
+                            <span className="text-[11px] font-medium text-slate-400">ทดสอบด่วน:</span>
                             <button
                                 type="button"
                                 onClick={() => {
                                     setForm({ ...form, email: "cashier@factory.com", password: "123" });
                                     setError("");
                                 }}
-                                className="inline-flex items-center gap-1.5 font-mono text-emerald-900 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/80 px-2.5 py-1 rounded-lg text-xs font-semibold cursor-pointer transition-colors"
+                                className="inline-flex items-center gap-1.5 font-mono text-indigo-300 bg-indigo-950/60 hover:bg-indigo-900/80 border border-indigo-800/60 px-2.5 py-1 rounded-lg text-xs font-semibold cursor-pointer transition-colors"
                             >
                                 <span>cashier@factory.com</span>
                             </button>
@@ -214,11 +214,11 @@ export function EmployeeAuthPage({
                     )}
                 </div>
 
-                <div className="mt-5 pt-4 border-t border-slate-100 text-center flex flex-col gap-2">
-                    <Link href="/login/executive" className="text-[11px] text-slate-500 hover:text-indigo-600 font-medium transition-colors">
+                <div className="mt-5 pt-4 border-t border-slate-800/80 text-center flex flex-col gap-2">
+                    <Link href="/login/executive" className="text-[11px] text-slate-400 hover:text-indigo-400 font-medium transition-colors">
                         สำหรับระดับผู้จัดการ / กรรมการ →
                     </Link>
-                    <Link href="/" className="text-[11px] text-slate-400 hover:text-slate-800 font-medium transition-colors">
+                    <Link href="/" className="text-[11px] text-slate-500 hover:text-slate-300 font-medium transition-colors">
                         ← กลับไปหน้าเลือกประเภทผู้ใช้งาน
                     </Link>
                 </div>
