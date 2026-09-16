@@ -2,7 +2,7 @@
 
 import { db } from "../db";
 import { tasks, taskWork, shiftSession, users, branches } from "../db/schema";
-import { eq, and, gte, lte, desc, inArray, sql } from "drizzle-orm";
+import { eq, and, gte, lte, desc, asc, inArray, sql } from "drizzle-orm";
 import { ShiftSession, ShiftType, ChecklistItem } from "../types";
 
 // Helper functions (internal to this file, not exported)
@@ -99,7 +99,8 @@ export async function getOrCreateShiftSessionAction(params: {
           inArray(tasks.shift, allowedShifts),
           eq(tasks.disabled, false)
         )
-      );
+      )
+      .orderBy(asc(tasks.start));
 
     // Apply branch task filter
     if (branchTaskIds.length > 0) {
