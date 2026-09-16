@@ -14,7 +14,7 @@ export function ShiftSelectPage({
 }: {
   user: User;
   sessions?: ShiftSession[];
-  onSelect: (shift: ShiftType) => void;
+  onSelect: (shift: ShiftType, chosenShifts?: ShiftType[]) => void;
   onBack?: () => void;
   onLogout: () => void;
 }) {
@@ -23,6 +23,10 @@ export function ShiftSelectPage({
     ShiftType,
     { status: "completed" | "incomplete" | "none"; total: number; done: number }
   > | null>(null);
+
+  // Multi-select state for Morning and Afternoon shifts
+  const [selectedMorning, setSelectedMorning] = useState<boolean>(true);
+  const [selectedAfternoon, setSelectedAfternoon] = useState<boolean>(false);
 
   useEffect(() => {
     setInternalSessions(getSessions());
@@ -60,31 +64,49 @@ export function ShiftSelectPage({
     tagline: string;
     isCurrent: boolean;
   }[] = [
-      {
-        id: "morning",
-        title: "เช้า",
-        subTitle: "กะเช้า",
-        time: "08:00 – 16:00",
-        tagline: "เปิดร้าน รับสินค้า ตรวจนับสต็อก และบริการลูกค้าช่วงเช้า",
-        isCurrent: hour >= 6 && hour < 14,
-      },
-      {
-        id: "afternoon",
-        title: "บ่าย",
-        subTitle: "กะบ่าย",
-        time: "16:00 – 00:00",
-        tagline: "ดูแลลูกค้าหน้าร้าน เติมสต็อก สรุปยอดเงิน และปิดร้าน",
-        isCurrent: hour >= 14 && hour < 22,
-      },
-      {
-        id: "both",
-        title: "ควบ",
-        subTitle: "ควบสองกะ",
-        time: "08:00 – 00:00",
-        tagline: "ควงกะปฏิบัติงานต่อเนื่องตลอดวัน ทั้งรอบเช้าและรอบบ่าย",
-        isCurrent: false,
-      },
-    ];
+    {
+      id: "morning",
+      title: "กะเช้า",
+      subTitle: "งานประจำกะเช้า",
+      time: "08:00 - 16:00",
+      tagline: "เปิดร้าน รับสินค้า ตรวจนับสต็อก และบริการลูกค้าช่วงเช้า",
+      isCurrent: hour >= 6 && hour < 14,
+    },
+    {
+      id: "afternoon",
+      title: "กะบ่าย",
+      subTitle: "งานประจำกะบ่าย",
+      time: "16:00 - 00:00",
+      tagline: "ดูแลลูกค้าหน้าร้าน เติมสต็อก สรุปยอดเงิน และปิดร้าน",
+      isCurrent: hour >= 14 && hour < 22,
+    },
+  ];
+
+  const handleStartWork = () => {
+    const chosenShifts: ShiftType[] = [];
+    if (selectedMorning) chosenShifts.push("morning");
+    if (selectedAfternoon) chosenShifts.push("afternoon");
+
+    if (typeof window !== "undefined") {
+      localStorage.setItem("app_selected_shifts", JSON.stringify(chosenShifts));
+    }
+
+    if (selectedMorning) {
+      if (selectedAfternoon && typeof window !== "undefined") {
+        localStorage.setItem("app_queue_afternoon", "true");
+      } else if (typeof window !== "undefined") {
+        localStorage.removeItem("app_queue_afternoon");
+      }
+      onSelect("morning", chosenShifts);
+    } else if (selectedAfternoon) {
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("app_queue_afternoon");
+      }
+      onSelect("afternoon", chosenShifts);
+    }
+  };
+
+  const hasSelection = selectedMorning || selectedAfternoon;
 
   return (
     <main className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between px-4 py-6 sm:py-10 relative overflow-hidden">
@@ -135,8 +157,8 @@ export function ShiftSelectPage({
         </div>
       </header>
 
-      {/* Main Area: Clean Header & 3 Shift Cards */}
-      <div className="w-full max-w-4xl mx-auto flex-1 flex flex-col items-center justify-center py-4 relative z-10">
+      {/* Main Area: Clean Header & 2 Shift Cards */}
+      <div className="w-full max-w-3xl mx-auto flex-1 flex flex-col items-center justify-center py-4 relative z-10">
         {/* Step Indicator & Title */}
         <div className="text-center mb-8">
           <span className="inline-block text-[11px] font-bold text-indigo-400 tracking-wider uppercase bg-indigo-950/80 border border-indigo-800/80 px-3 py-1 rounded-full mb-3 shadow-2xs">
@@ -146,15 +168,19 @@ export function ShiftSelectPage({
             เลือกกะการทำงาน
           </h2>
           <p className="text-xs sm:text-sm text-slate-400 mt-1 max-w-md mx-auto">
-            เลือกช่วงเวลาปฏิบัติงานสำหรับตำแหน่ง <span className="font-bold text-white">{user.position || "พนักงาน"}</span> เพื่อเริ่มบันทึกรายการ
+            ติ๊กเลือกกะที่ต้องการปฏิบัติงานสำหรับตำแหน่ง <span className="font-bold text-white">{user.position || "พนักงาน"}</span> (สามารถเลือกทั้ง 2 กะได้)
           </p>
         </div>
 
-        {/* 3 Shift Cards */}
-        <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-5">
+        {/* 2 Shift Cards with Multi-select Checkboxes */}
+        <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-5 mb-6">
           {shifts.map((s) => {
             const isMorn = s.id === "morning";
-            const isAft = s.id === "afternoon";
+            const isChecked = isMorn ? selectedMorning : selectedAfternoon;
+            const toggleSelect = () => {
+              if (isMorn) setSelectedMorning(!selectedMorning);
+              else setSelectedAfternoon(!selectedAfternoon);
+            };
 
             // Find session specifically for this user's currently selected position
             const todayStr = new Date().toDateString();
@@ -197,67 +223,46 @@ export function ShiftSelectPage({
                     ? "completed"
                     : "incomplete";
 
-            const cardTheme = isMorn
-              ? {
-                hoverBorder: "hover:border-amber-500/60 hover:shadow-[0_12px_28px_-6px_rgba(245,158,11,0.2)]",
-                iconBox: "bg-slate-950 border-slate-800 text-amber-400 group-hover:bg-amber-500 group-hover:text-white group-hover:border-amber-500",
-                btnHover: "group-hover:bg-amber-600",
-                badgeColor: "amber" as const,
-              }
-              : isAft
-                ? {
-                  hoverBorder: "hover:border-sky-500/60 hover:shadow-[0_12px_28px_-6px_rgba(2,132,199,0.2)]",
-                  iconBox: "bg-slate-950 border-slate-800 text-sky-400 group-hover:bg-sky-600 group-hover:text-white group-hover:border-sky-600",
-                  btnHover: "group-hover:bg-sky-600",
-                  badgeColor: "blue" as const,
-                }
-                : {
-                  hoverBorder: "hover:border-indigo-500/60 hover:shadow-[0_12px_28px_-6px_rgba(99,102,241,0.2)]",
-                  iconBox: "bg-slate-950 border-slate-800 text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white group-hover:border-indigo-600",
-                  btnHover: "group-hover:bg-indigo-600",
-                  badgeColor: "muted" as const,
-                };
-
-            const containerBorder =
-              checkStatus === "completed"
-                ? "border-emerald-800 bg-emerald-950/20 hover:border-emerald-500 hover:shadow-[0_12px_28px_-6px_rgba(16,185,129,0.2)]"
-                : checkStatus === "incomplete"
-                  ? "border-amber-800 bg-amber-950/20 hover:border-amber-500 hover:shadow-[0_12px_28px_-6px_rgba(245,158,11,0.2)]"
-                  : `bg-slate-900/90 border-slate-800 ${cardTheme.hoverBorder}`;
+            const containerTheme = isChecked
+              ? "border-indigo-500 bg-indigo-950/30 ring-2 ring-indigo-500/50 shadow-[0_12px_28px_-6px_rgba(99,102,241,0.3)]"
+              : "border-slate-800 bg-slate-900/90 hover:border-slate-700 hover:bg-slate-900/95";
 
             return (
               <div
                 key={s.id}
-                role="button"
+                role="checkbox"
+                aria-checked={isChecked}
                 tabIndex={0}
-                aria-label={`เลือกกะ${s.title} ช่วงเวลา ${s.time}`}
-                onClick={() => onSelect(s.id)}
+                onClick={toggleSelect}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") {
                     e.preventDefault();
-                    onSelect(s.id);
+                    toggleSelect();
                   }
                 }}
-                className={`group border rounded-2xl p-6 shadow-xl ${containerBorder} focus-visible:outline-none focus:ring-2 focus:ring-indigo-500 hover:-translate-y-1 transition-all duration-200 flex flex-col justify-between cursor-pointer`}
+                className={`group border rounded-2xl p-6 shadow-xl ${containerTheme} focus-visible:outline-none focus:ring-2 focus:ring-indigo-500 hover:-translate-y-1 transition-all duration-200 flex flex-col justify-between cursor-pointer relative overflow-hidden`}
               >
                 <div>
-                  {/* Top Bar inside Card */}
-                  <div className="flex items-center justify-between gap-2 mb-4">
-                    <div className={`w-12 h-12 rounded-2xl border flex items-center justify-center transition-all ${cardTheme.iconBox}`}>
-                      {isMorn ? (
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                          <circle cx="12" cy="12" r="4" />
-                          <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
-                        </svg>
-                      ) : isAft ? (
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-                        </svg>
-                      ) : (
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                          <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
-                        </svg>
-                      )}
+                  {/* Top Header inside Card: Checkbox & Shift Icon / Badges */}
+                  <div className="flex items-center justify-between gap-3 mb-5">
+                    {/* Checkbox indicator */}
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all duration-200 ${
+                          isChecked
+                            ? "bg-indigo-600 border-indigo-500 text-white shadow-md shadow-indigo-900/50 scale-105"
+                            : "bg-slate-950 border-slate-600 group-hover:border-slate-400"
+                        }`}
+                      >
+                        {isChecked && (
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                            <polyline points="20 6 9 17 4 12" />
+                          </svg>
+                        )}
+                      </div>
+                      <span className={`text-sm font-bold transition-colors ${isChecked ? "text-indigo-300" : "text-slate-400"}`}>
+                        {isChecked ? "เลือกแล้ว" : "แตะเพื่อเลือก"}
+                      </span>
                     </div>
 
                     <div className="flex items-center gap-1.5 flex-wrap justify-end">
@@ -266,16 +271,11 @@ export function ShiftSelectPage({
                           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
                             <polyline points="20 6 9 17 4 12" />
                           </svg>
-                          <span>เช็คหมดแล้ว</span>
+                          <span>เสร็จสมบูรณ์</span>
                         </span>
                       ) : checkStatus === "incomplete" ? (
                         <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-950 text-amber-400 border border-amber-800 flex items-center gap-1">
-                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                            <circle cx="12" cy="12" r="10" />
-                            <line x1="12" y1="8" x2="12" y2="12" />
-                            <line x1="12" y1="16" x2="12.01" y2="16" />
-                          </svg>
-                          <span>งานยังไม่เสร็จ</span>
+                          <span>ค้าง {totalItems - doneItems} ข้อ</span>
                         </span>
                       ) : null}
 
@@ -285,86 +285,104 @@ export function ShiftSelectPage({
                           เวลานี้
                         </span>
                       )}
-                      <Badge color={cardTheme.badgeColor}>
-                        {s.subTitle}
-                      </Badge>
                     </div>
                   </div>
 
-                  {/* Big Clean Title */}
-                  <div className="my-2">
-                    <h3 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-                      {s.title}
-                    </h3>
-                    <p className="text-xs font-semibold text-slate-400 mt-1 font-mono flex items-center gap-1.5">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                        <circle cx="12" cy="12" r="10" />
-                        <polyline points="12 6 12 12 16 14" />
-                      </svg>
-                      <span>{s.time}</span>
-                    </p>
+                  {/* Title & Icon Header */}
+                  <div className="flex items-start gap-3.5 mb-2">
+                    <div className={`w-12 h-12 rounded-2xl border flex items-center justify-center shrink-0 transition-all ${
+                      isMorn 
+                        ? (isChecked ? "bg-amber-500/20 border-amber-500/50 text-amber-400" : "bg-slate-950 border-slate-800 text-amber-400")
+                        : (isChecked ? "bg-sky-500/20 border-sky-500/50 text-sky-400" : "bg-slate-950 border-slate-800 text-sky-400")
+                    }`}>
+                      {isMorn ? (
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                          <circle cx="12" cy="12" r="4" />
+                          <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+                        </svg>
+                      ) : (
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                        </svg>
+                      )}
+                    </div>
+
+                    <div>
+                      <h3 className="text-2xl font-extrabold text-white tracking-tight flex items-center gap-2">
+                        {s.title}
+                      </h3>
+                      <p className="text-xs font-semibold text-slate-400 mt-0.5 font-mono flex items-center gap-1.5">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                          <circle cx="12" cy="12" r="10" />
+                          <polyline points="12 6 12 12 16 14" />
+                        </svg>
+                        <span>{s.time}</span>
+                      </p>
+                    </div>
                   </div>
 
                   <p className="text-xs text-slate-400 mt-3 leading-relaxed">
                     {s.tagline}
                   </p>
-
-                  {/* Dynamic Shift Status Notification */}
-                  {checkStatus === "completed" && (
-                    <div className="mt-4 p-2.5 rounded-xl bg-emerald-950/80 border border-emerald-800 text-emerald-300 text-xs font-semibold flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-emerald-400" aria-hidden="true" />
-                        <span>กะนี้มีการเช็คหมดแล้ว</span>
-                      </div>
-                      <span className="text-[10px] font-bold text-emerald-400 bg-slate-950 px-2 py-0.5 rounded-md border border-emerald-800 font-mono">
-                        {doneItems}/{totalItems}
-                      </span>
-                    </div>
-                  )}
-
-                  {checkStatus === "incomplete" && (
-                    <div className="mt-4 p-2.5 rounded-xl bg-amber-950/80 border border-amber-800 text-amber-300 text-xs font-semibold flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-amber-400" aria-hidden="true" />
-                        <span>กะนี้ยังคงมีงานที่ยังทำไม่เสร็จ</span>
-                      </div>
-                      <span className="text-[10px] font-bold text-amber-400 bg-slate-950 px-2 py-0.5 rounded-md border border-amber-800 font-mono">
-                        ค้าง {totalItems - doneItems} ข้อ
-                      </span>
-                    </div>
-                  )}
                 </div>
 
-                {/* Bottom Action Indicator */}
-                <div className="mt-6 pt-4 border-t border-slate-800">
-                  <div
-                    aria-hidden="true"
-                    className={`w-full py-2.5 px-4 rounded-xl ${checkStatus === "completed"
-                      ? "bg-emerald-600 group-hover:bg-emerald-500"
-                      : checkStatus === "incomplete"
-                        ? "bg-amber-600 group-hover:bg-amber-500"
-                        : `bg-indigo-600 ${cardTheme.btnHover}`
-                      } text-white text-xs sm:text-sm font-semibold shadow-lg shadow-indigo-950/40 transition-all flex items-center justify-center gap-2 select-none`}
-                  >
-                    <span>
-                      {checkStatus === "completed"
-                        ? `ดูรายการที่เช็คแล้ว (${doneItems}/${totalItems})`
-                        : checkStatus === "incomplete"
-                          ? `ทำรายการต่อ (เหลือ ${totalItems - doneItems} ข้อ)`
-                          : `เลือกกะ${s.title} → เริ่มตรวจงาน`}
-                    </span>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="group-hover:translate-x-1 transition-transform">
-                      <path d="M5 12h14M12 5l7 7-7 7" />
-                    </svg>
-                  </div>
+                <div className="mt-5 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400 font-medium">
+                  <span>{s.subTitle}</span>
+                  {checkStatus === "completed" && (
+                    <span className="text-emerald-400 font-mono text-[11px] font-bold">เช็คแล้ว ({doneItems}/{totalItems})</span>
+                  )}
+                  {checkStatus === "incomplete" && (
+                    <span className="text-amber-400 font-mono text-[11px] font-bold">ค้าง ({totalItems - doneItems})</span>
+                  )}
                 </div>
               </div>
             );
           })}
         </div>
 
+        {/* Selected Shifts Summary Text */}
+        <div className="w-full text-center mb-6 min-h-[32px] flex items-center justify-center">
+          {selectedMorning && selectedAfternoon ? (
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-950/90 border border-indigo-700/60 text-indigo-200 text-xs sm:text-sm font-semibold shadow-md animate-fade-in">
+              <span className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse" />
+              <span>เลือก 2 กะ • เช้า → บ่าย</span>
+            </div>
+          ) : selectedMorning ? (
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-900 border border-slate-800 text-slate-300 text-xs sm:text-sm font-medium">
+              <span>เลือกเฉพาะ: กะเช้า (08:00 - 16:00)</span>
+            </div>
+          ) : selectedAfternoon ? (
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-900 border border-slate-800 text-slate-300 text-xs sm:text-sm font-medium">
+              <span>เลือกเฉพาะ: กะบ่าย (16:00 - 00:00)</span>
+            </div>
+          ) : (
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-rose-950/50 border border-rose-900/50 text-rose-300 text-xs font-medium">
+              <span>กรุณาติ๊กเลือกอย่างน้อย 1 กะการทำงาน</span>
+            </div>
+          )}
+        </div>
+
+        {/* Big Main Action Button */}
+        <div className="w-full max-w-sm">
+          <button
+            type="button"
+            disabled={!hasSelection}
+            onClick={handleStartWork}
+            className={`w-full py-3.5 px-6 rounded-xl font-bold text-sm sm:text-base shadow-xl transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer ${
+              hasSelection
+                ? "bg-indigo-600 hover:bg-indigo-500 text-white shadow-indigo-950/60 hover:shadow-indigo-900/80 hover:-translate-y-0.5 active:translate-y-0"
+                : "bg-slate-800 text-slate-500 border border-slate-700/50 cursor-not-allowed opacity-60"
+            }`}
+          >
+            <span>เริ่มตรวจงาน</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M5 12h14M12 5l7 7-7 7" />
+            </svg>
+          </button>
+        </div>
+
         {/* Bottom Actions */}
-        <div className="mt-6 flex flex-wrap items-center justify-center gap-3 text-center">
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-3 text-center">
           {onBack && (
             <button
               type="button"
@@ -387,6 +405,7 @@ export function ShiftSelectPage({
                 await resetTodayChecklistDataAction(user.position);
                 localStorage.setItem("app_sessions", "[]");
                 localStorage.removeItem("app_active_session");
+                localStorage.removeItem("app_queue_afternoon");
                 window.location.reload();
               }
             }}
@@ -408,3 +427,4 @@ export function ShiftSelectPage({
     </main>
   );
 }
+

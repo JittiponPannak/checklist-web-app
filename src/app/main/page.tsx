@@ -862,13 +862,16 @@ function ChecklistPage({
   onUpdate,
   onEndShift,
   onOpenDashboard,
+  onExit,
 }: {
   session: ShiftSession;
   onUpdate: (s: ShiftSession) => void;
   onEndShift: () => void;
   onOpenDashboard?: () => void;
+  onExit?: () => void;
 }) {
   const [showConfirm, setShowConfirm] = useState(false);
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
   const [filter, setFilter] = useState<"all" | "pending" | "done">("all");
   const { dialogRef: confirmDialogRef, handleKeyDown: handleConfirmKeyDown } = useModalFocusTrap(showConfirm, () => setShowConfirm(false));
 
@@ -895,7 +898,6 @@ function ChecklistPage({
     );
     const allComplete = updated.every((i) => i.completedAt);
     let updatedSession = { ...session, items: updated, notified: session.notified || allComplete };
-    if (allComplete && !session.notified) updatedSession.completedAt = new Date().toISOString();
     
     onUpdate(updatedSession);
 
@@ -963,13 +965,85 @@ function ChecklistPage({
                   แดชบอร์ด
                 </button>
               )}
-              <button
-                type="button"
-                onClick={() => setShowConfirm(true)}
-                className="text-xs px-3.5 py-2 rounded-xl border border-slate-800 text-slate-300 hover:border-rose-900 hover:text-rose-400 hover:bg-rose-950/40 transition-colors min-h-[36px] inline-flex items-center font-semibold cursor-pointer"
-              >
-                จบกะงาน
-              </button>
+              {/* ปุ่ม “ต่อกะ” - กดได้เฉพาะเมื่อเลือก 2 กะ และ Checklist ครบ 100% */}
+              {(() => {
+                const activeSelectedShifts = typeof window !== "undefined" ? (JSON.parse(localStorage.getItem("app_selected_shifts") || "[]") as string[]) : [];
+                const hasNextShift = activeSelectedShifts.length === 2 && session.shift === "morning";
+                const canContinueShift = hasNextShift && allDone && !Boolean(session.completedAt);
+                const canFinishShift = allDone && !Boolean(session.completedAt);
+
+                return (
+                  <>
+                    <button
+                      type="button"
+                      disabled={!canContinueShift}
+                      onClick={() => {
+                        if (!canContinueShift) return;
+                        const nextVal = typeof window !== "undefined" && localStorage.getItem("app_queue_afternoon") === "true" ? false : true;
+                        if (typeof window !== "undefined") {
+                          if (nextVal) localStorage.setItem("app_queue_afternoon", "true");
+                          else localStorage.removeItem("app_queue_afternoon");
+                        }
+                      }}
+                      className={`text-xs px-3.5 py-2 rounded-xl border font-semibold flex items-center gap-1.5 min-h-[36px] transition-all ${
+                        !canContinueShift
+                          ? "bg-slate-900/60 border-slate-800 text-slate-500 cursor-not-allowed opacity-60"
+                          : typeof window !== "undefined" && localStorage.getItem("app_queue_afternoon") === "true"
+                            ? "bg-indigo-600 border-indigo-500 text-white shadow-md cursor-pointer"
+                            : "bg-slate-800/90 border-slate-700 text-slate-200 hover:border-indigo-500 cursor-pointer"
+                      }`}
+                      title={
+                        !hasNextShift
+                          ? "เลือกเพียง 1 กะ หรือไม่มีกะถัดไปที่เลือกไว้"
+                          : !canContinueShift
+                            ? "ต้องทำ Checklist ครบ 100% ก่อนจึงจะเลือกต่อกะได้"
+                            : "ต่อกะ"
+                      }
+                    >
+                      {!canContinueShift && (
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                          <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                          <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                        </svg>
+                      )}
+                      <span>ต่อกะ</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      disabled={!canFinishShift}
+                      onClick={() => setShowConfirm(true)}
+                      className={`text-xs px-4 py-2 rounded-xl border font-semibold flex items-center gap-1.5 min-h-[36px] transition-all ${
+                        !canFinishShift
+                          ? "bg-slate-900/60 border-slate-800 text-slate-500 cursor-not-allowed opacity-60"
+                          : "bg-rose-950/80 border-rose-800 text-rose-200 hover:bg-rose-900 hover:border-rose-600 hover:text-white cursor-pointer shadow-lg shadow-rose-950/50"
+                      }`}
+                    >
+                      {!canFinishShift && (
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                          <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                          <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                        </svg>
+                      )}
+                      <span>จบกะงาน</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setShowExitConfirm(true)}
+                      className="text-xs px-3.5 py-2 rounded-xl border border-slate-800 bg-slate-900/90 text-slate-400 hover:text-rose-300 hover:border-rose-900/80 hover:bg-rose-950/30 transition-all font-semibold flex items-center gap-1.5 min-h-[36px] cursor-pointer shadow-xs"
+                      title="ออกจากหน้านี้"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                        <polyline points="16 17 21 12 16 7" />
+                        <line x1="21" y1="12" x2="9" y2="12" />
+                      </svg>
+                      <span>ออก</span>
+                    </button>
+                  </>
+                );
+              })()}
             </div>
           </div>
 
@@ -1137,6 +1211,56 @@ function ChecklistPage({
                 className="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs sm:text-sm font-semibold transition-colors shadow-lg shadow-indigo-950/50 cursor-pointer"
               >
                 จบกะงาน
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Exit Confirmation Modal */}
+      {showExitConfirm && (
+        <div
+          className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center z-50 px-4"
+          onClick={() => setShowExitConfirm(false)}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="exit-modal-main-title"
+            tabIndex={-1}
+            className="bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-7 w-full max-w-sm focus-visible:outline-2 focus-visible:outline-indigo-500 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="w-10 h-10 rounded-xl bg-rose-950 border border-rose-800 text-rose-400 flex items-center justify-center mb-3">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" y1="12" x2="9" y2="12" />
+              </svg>
+            </div>
+            <h2 id="exit-modal-main-title" className="text-base font-bold text-white mb-2">
+              ต้องการออกจากหน้า Checklist หรือไม่?
+            </h2>
+            <p className="text-sm text-slate-300 mb-6 leading-relaxed">
+              คุณต้องการกลับไปยังหน้าเลือกกะการทำงานหรือไม่? (รายการที่บันทึกแล้วจะยังคงถูกบันทึกไว้ในระบบ)
+            </p>
+            <div className="flex gap-2.5">
+              <button
+                type="button"
+                onClick={() => setShowExitConfirm(false)}
+                className="flex-1 py-2.5 rounded-xl border border-slate-800 text-xs sm:text-sm font-semibold text-slate-300 hover:bg-slate-800 transition-colors cursor-pointer"
+              >
+                ยกเลิก
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowExitConfirm(false);
+                  if (onExit) onExit();
+                }}
+                className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs sm:text-sm font-semibold transition-colors shadow-lg shadow-rose-950/50 cursor-pointer"
+              >
+                ออกจากหน้านี้
               </button>
             </div>
           </div>
@@ -2362,7 +2486,13 @@ export default function App() {
           <PositionSelectPage user={currentUser} shift={selectedShift} onSelectPosition={handlePositionSelect} onBack={handleBackToShiftSelect} onLogout={handleLogout} />
         )}
         {page === "checklist" && activeSession && (
-          <ChecklistPage session={activeSession} onUpdate={handleSessionUpdate} onEndShift={handleEndShift} onOpenDashboard={currentUser?.role === "manager" ? () => setPage("manager") : undefined} />
+          <ChecklistPage
+            session={activeSession}
+            onUpdate={handleSessionUpdate}
+            onEndShift={handleEndShift}
+            onOpenDashboard={currentUser?.role === "manager" ? () => setPage("manager") : undefined}
+            onExit={() => setPage("shift-select")}
+          />
         )}
         {page === "manager" && currentUser && (
           <ManagerDashboard user={currentUser} onLogout={handleLogout} activeSession={activeSession} onStartChecklist={handleShiftSelect} onUpdateSession={handleSessionUpdate} onEndShift={handleEndShift} onOpenChecklistPage={() => setPage("checklist")} />

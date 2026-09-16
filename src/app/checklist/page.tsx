@@ -7,7 +7,7 @@ import { useApp } from "../../context/AppContext";
 
 export default function ChecklistRoutePage() {
   const router = useRouter();
-  const { currentUser, activeSession, isReady, updateSession, endShift } = useApp();
+  const { currentUser, activeSession, selectedShifts, isReady, updateSession, endShift } = useApp();
 
   useEffect(() => {
     if (!isReady) return;
@@ -31,6 +31,7 @@ export default function ChecklistRoutePage() {
   return (
     <ChecklistPage
       session={activeSession}
+      selectedShifts={selectedShifts}
       onUpdate={updateSession}
       onEndShift={endShift}
       onOpenDashboard={
@@ -38,6 +39,7 @@ export default function ChecklistRoutePage() {
           ? () => router.push("/admin/dashboard")
           : undefined
       }
+      onExit={() => router.push("/shift")}
     />
   );
 }

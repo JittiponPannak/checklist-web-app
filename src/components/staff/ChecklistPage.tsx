@@ -1,28 +1,65 @@
 import { useState } from "react";
-import { ShiftSession } from "../../types";
-import { fmtTime, getNotifications, saveNotifications, uid } from "../../data/storage";
+import { ShiftSession, ShiftType } from "../../types";
+import { fmtTime, getNotifications, getSelectedShifts, saveNotifications, uid } from "../../data/storage";
 import { getShiftBadge } from "../common/Badge";
 import { useModalFocusTrap } from "../common/ModalFocusTrap";
 
 export function ChecklistPage({
   session,
+  selectedShifts: propSelectedShifts,
   onUpdate,
   onEndShift,
   onOpenDashboard,
+  onExit,
 }: {
   session: ShiftSession;
+  selectedShifts?: ShiftType[];
   onUpdate: (s: ShiftSession) => void;
-  onEndShift: () => void;
+  onEndShift: (continueNextShift?: boolean) => void;
   onOpenDashboard?: () => void;
+  onExit?: () => void;
 }) {
   const [showConfirm, setShowConfirm] = useState(false);
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
   const [filter, setFilter] = useState<"all" | "pending" | "done">("all");
+
+  const activeSelectedShifts =
+    propSelectedShifts && propSelectedShifts.length > 0
+      ? propSelectedShifts
+      : typeof window !== "undefined"
+        ? getSelectedShifts()
+        : [];
+
+  // Rules:
+  // 1. If user selected only 1 shift (e.g. morning only or afternoon only) => 'ต่อกะ' disabled always
+  // 2. If user selected 2 shifts (morning + afternoon) => can continue shift only when in morning and progress === 100
+  // 3. In afternoon shift => no next shift, 'ต่อกะ' disabled
+  const hasNextShift = activeSelectedShifts.length === 2 && session.shift === "morning";
+
+  const [continueShift, setContinueShift] = useState<boolean>(() => {
+    if (!hasNextShift) return false;
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("app_queue_afternoon") === "true";
+    }
+    return false;
+  });
+
   const { dialogRef: confirmDialogRef, handleKeyDown: handleConfirmKeyDown } = useModalFocusTrap(showConfirm, () => setShowConfirm(false));
+
+  const [shiftCompleted, setShiftCompleted] = useState<boolean>(Boolean(session.completedAt));
 
   const total = session.items.length;
   const done = session.items.filter((i) => i.completedAt).length;
-  const allDone = done === total;
   const progress = total > 0 ? Math.round((done / total) * 100) : 0;
+  const allDone = progress === 100;
+
+  // STATE LOGIC:
+  // selectedShifts.length === 1 -> ต่อกะ = disabled
+  // selectedShifts.length === 2 && progress < 100 -> ต่อกะ = disabled
+  // selectedShifts.length === 2 && progress === 100 && shiftCompleted === false -> ต่อกะ = enabled
+  // shiftCompleted === true -> ต่อกะ = disabled
+  const canContinueShift = hasNextShift && progress === 100 && !shiftCompleted;
+  const canFinishShift = progress === 100 && !shiftCompleted;
 
   const filteredItems = session.items.filter((i) => {
     if (filter === "pending") return !i.completedAt;
@@ -31,14 +68,14 @@ export function ChecklistPage({
   });
 
   function toggleItem(id: string) {
+    if (shiftCompleted) return;
     const updated = session.items.map((item) =>
       item.id === id ? { ...item, completedAt: item.completedAt ? null : new Date().toISOString() } : item
     );
     const allComplete = updated.every((i) => i.completedAt);
-    let updatedSession = { ...session, items: updated, completedAt: allComplete ? (session.completedAt || new Date().toISOString()) : null };
+    let updatedSession = { ...session, items: updated };
     if (allComplete && !session.notified) {
-      const completedAt = updatedSession.completedAt || new Date().toISOString();
-      updatedSession = { ...updatedSession, completedAt, notified: true };
+      updatedSession = { ...updatedSession, notified: true };
       const notifs = getNotifications();
       notifs.push({
         id: uid(),
@@ -46,7 +83,7 @@ export function ChecklistPage({
         userName: session.userName,
         userPosition: session.userPosition,
         shift: session.shift,
-        completedAt,
+        completedAt: new Date().toISOString(),
         read: false,
       });
       saveNotifications(notifs);
@@ -54,9 +91,23 @@ export function ChecklistPage({
     onUpdate(updatedSession);
   }
 
+  function handleToggleContinue() {
+    if (!canContinueShift) return;
+    const nextVal = !continueShift;
+    setContinueShift(nextVal);
+    if (typeof window !== "undefined") {
+      if (nextVal) {
+        localStorage.setItem("app_queue_afternoon", "true");
+      } else {
+        localStorage.removeItem("app_queue_afternoon");
+      }
+    }
+  }
+
   function endShift() {
     setShowConfirm(false);
-    onEndShift();
+    setShiftCompleted(true);
+    onEndShift(continueShift);
   }
 
   return (
@@ -78,7 +129,7 @@ export function ChecklistPage({
                     {session.userPosition}
                   </span>
                 )}
-                {allDone && (
+                {progress === 100 && (
                   <span className="text-xs font-bold font-mono text-emerald-300 bg-emerald-950/80 px-2.5 py-0.5 rounded-full border border-emerald-800/80 shadow-xs flex items-center gap-1.5">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                       <polyline points="20 6 9 17 4 12" />
@@ -96,7 +147,7 @@ export function ChecklistPage({
               <p className="text-xs text-slate-400 font-mono mt-1.5">เริ่มงานเวลา {fmtTime(session.startedAt)}</p>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap justify-end">
               {onOpenDashboard && (
                 <button
                   type="button"
@@ -110,12 +161,91 @@ export function ChecklistPage({
                   แดชบอร์ด
                 </button>
               )}
+
+              {/* ปุ่ม “ต่อกะ” - กดได้เฉพาะเมื่อ Checklist ครบ 100% และยังไม่จบกะ */}
               <button
                 type="button"
-                onClick={() => setShowConfirm(true)}
-                className="text-xs px-3.5 py-2 rounded-xl border border-slate-800 text-slate-300 hover:border-rose-700 hover:text-rose-300 hover:bg-rose-950/40 transition-colors min-h-[36px] inline-flex items-center font-semibold cursor-pointer shadow-xs"
+                disabled={!canContinueShift}
+                onClick={handleToggleContinue}
+                className={`text-xs px-3.5 py-2 rounded-xl border font-semibold flex items-center gap-1.5 min-h-[36px] transition-all ${
+                  !canContinueShift
+                    ? "bg-slate-900/60 border-slate-800 text-slate-500 cursor-not-allowed opacity-60"
+                    : continueShift
+                      ? "bg-indigo-600 border-indigo-500 text-white shadow-md shadow-indigo-950/50 cursor-pointer hover:bg-indigo-500"
+                      : "bg-slate-800/90 border-slate-700 text-slate-200 hover:border-indigo-500 hover:text-indigo-300 cursor-pointer"
+                }`}
+                title={
+                  !hasNextShift
+                    ? "เลือกเพียง 1 กะ หรือไม่มีกะถัดไปที่เลือกไว้"
+                    : shiftCompleted
+                      ? "จบกะงานแล้ว ไม่สามารถแก้ไขได้"
+                      : progress < 100
+                        ? "ต้องทำ Checklist ครบ 100% ก่อนจึงจะเลือกต่อกะได้"
+                        : continueShift
+                          ? "เลือกต่อกะแล้ว (กดเพื่อยกเลิก)"
+                          : "กดเพื่อเลือกต่อกะถัดไป"
+                }
               >
-                จบกะงาน
+                {!canContinueShift ? (
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                  </svg>
+                ) : (
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    {continueShift ? (
+                      <polyline points="20 6 9 17 4 12" />
+                    ) : (
+                      <path d="M5 12h14M12 5l7 7-7 7" />
+                    )}
+                  </svg>
+                )}
+                <span>ต่อกะ</span>
+                {continueShift && canContinueShift && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                )}
+              </button>
+
+              {/* ปุ่ม “จบกะ” - ENABLED เมื่อ Checklist ครบ 100% (progress === 100) */}
+              <button
+                type="button"
+                disabled={!canFinishShift}
+                onClick={() => setShowConfirm(true)}
+                className={`text-xs px-4 py-2 rounded-xl border font-semibold flex items-center gap-1.5 min-h-[36px] transition-all ${
+                  !canFinishShift
+                    ? "bg-slate-900/60 border-slate-800 text-slate-500 cursor-not-allowed opacity-60"
+                    : "bg-rose-950/80 border-rose-800 text-rose-200 hover:bg-rose-900 hover:border-rose-600 hover:text-white cursor-pointer shadow-lg shadow-rose-950/50"
+                }`}
+                title={
+                  shiftCompleted
+                    ? "จบกะงานเรียบร้อยแล้ว"
+                    : progress < 100
+                      ? "ต้องทำ Checklist ครบ 100% ก่อนจึงจะจบกะได้"
+                      : "จบกะงาน"
+                }
+              >
+                {!canFinishShift && (
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                  </svg>
+                )}
+                <span>จบกะงาน</span>
+              </button>
+
+              {/* ปุ่ม “ออก” */}
+              <button
+                type="button"
+                onClick={() => setShowExitConfirm(true)}
+                className="text-xs px-3.5 py-2 rounded-xl border border-slate-800 bg-slate-900/90 text-slate-400 hover:text-rose-300 hover:border-rose-900/80 hover:bg-rose-950/30 transition-all font-semibold flex items-center gap-1.5 min-h-[36px] cursor-pointer shadow-xs"
+                title="ออกจากหน้านี้ / สลับกะหรือออกจากระบบ"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                  <polyline points="16 17 21 12 16 7" />
+                  <line x1="21" y1="12" x2="9" y2="12" />
+                </svg>
+                <span>ออก</span>
               </button>
             </div>
           </div>
@@ -271,11 +401,17 @@ export function ChecklistPage({
             <h2 id="confirm-shift-title" className="text-base font-bold text-white mb-2">
               ยืนยันการจบกะงาน?
             </h2>
-            <p className="text-sm text-slate-300 mb-6 leading-relaxed">
-              {allDone
-                ? "คุณได้ทำการตรวจสอบครบถ้วนทั้ง 100% แล้ว ต้องการบันทึกและจบกะงานใช่หรือไม่?"
-                : `ยังมีรายการที่ยังไม่เสร็จอีก ${total - done} รายการ คุณต้องการจบกะงานตอนนี้เลยหรือไม่?`}
+            <p className="text-sm text-slate-300 mb-4 leading-relaxed">
+              คุณได้ตรวจสอบครบถ้วนทั้ง 100% แล้ว ต้องการบันทึกและจบกะนี้ใช่หรือไม่?
             </p>
+            {continueShift && (
+              <div className="mb-5 p-3 rounded-xl bg-indigo-950/70 border border-indigo-700/60 text-indigo-300 text-xs font-semibold flex items-center gap-2">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                <span>เลือกต่อกะไว้: ระบบจะพาไปยัง Checklist ของกะถัดไปทันที</span>
+              </div>
+            )}
             <div className="flex gap-2.5">
               <button
                 type="button"
@@ -290,6 +426,60 @@ export function ChecklistPage({
                 className="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs sm:text-sm font-semibold transition-colors shadow-lg shadow-indigo-950/50 cursor-pointer"
               >
                 จบกะงาน
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Exit Confirmation Modal */}
+      {showExitConfirm && (
+        <div
+          className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center z-50 px-4"
+          onClick={() => setShowExitConfirm(false)}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="exit-modal-title"
+            tabIndex={-1}
+            className="bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-7 w-full max-w-sm focus-visible:outline-2 focus-visible:outline-indigo-500 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="w-10 h-10 rounded-xl bg-rose-950 border border-rose-800 text-rose-400 flex items-center justify-center mb-3">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" y1="12" x2="9" y2="12" />
+              </svg>
+            </div>
+            <h2 id="exit-modal-title" className="text-base font-bold text-white mb-2">
+              ต้องการออกจากหน้า Checklist หรือไม่?
+            </h2>
+            <p className="text-sm text-slate-300 mb-6 leading-relaxed">
+              คุณต้องการกลับไปยังหน้าเลือกกะการทำงานหรือไม่? (รายการที่บันทึกแล้วจะยังคงถูกบันทึกไว้ในระบบ)
+            </p>
+            <div className="flex gap-2.5">
+              <button
+                type="button"
+                onClick={() => setShowExitConfirm(false)}
+                className="flex-1 py-2.5 rounded-xl border border-slate-800 text-xs sm:text-sm font-semibold text-slate-300 hover:bg-slate-800 transition-colors cursor-pointer"
+              >
+                ยกเลิก
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowExitConfirm(false);
+                  if (onExit) {
+                    onExit();
+                  } else if (typeof window !== "undefined") {
+                    window.location.href = "/shift";
+                  }
+                }}
+                className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs sm:text-sm font-semibold transition-colors shadow-lg shadow-rose-950/50 cursor-pointer"
+              >
+                ออกจากหน้านี้
               </button>
             </div>
           </div>

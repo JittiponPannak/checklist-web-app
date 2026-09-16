@@ -192,11 +192,7 @@ export async function getOrCreateShiftSessionAction(params: {
       userPosition: position,
       shift: shift,
       startedAt: new Date(activeDbSession.start).toISOString(),
-      completedAt: activeDbSession.end
-        ? new Date(activeDbSession.end).toISOString()
-        : isAllComplete
-          ? new Date().toISOString()
-          : null,
+      completedAt: activeDbSession.end ? new Date(activeDbSession.end).toISOString() : null,
       items,
       notified: isAllComplete,
       branchName: branchNameForSession,

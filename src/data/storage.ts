@@ -258,6 +258,21 @@ export function saveSelectedShift(shift: ShiftType | null) {
   }
 }
 
+export function getSelectedShifts(): ShiftType[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem("app_selected_shifts");
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveSelectedShifts(shifts: ShiftType[]) {
+  if (typeof window === "undefined") return;
+  localStorage.setItem("app_selected_shifts", JSON.stringify(shifts));
+}
+
 export function getActiveSession(): ShiftSession | null {
   if (typeof window === "undefined") return null;
   try {

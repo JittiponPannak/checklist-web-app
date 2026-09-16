@@ -27,17 +27,19 @@ import {
 interface AppContextType {
   currentUser: User | null;
   selectedShift: ShiftType | null;
+  selectedShifts: ShiftType[];
   activeSession: ShiftSession | null;
   sessions: ShiftSession[];
   isReady: boolean;
   login: (user: User, shift?: ShiftType, redirectPath?: string) => void;
   logout: (redirectTo?: string) => void;
-  selectShift: (shift: ShiftType) => void;
+  selectShift: (shift: ShiftType, chosenShifts?: ShiftType[]) => void;
   selectPosition: (position: string) => void;
   updateSession: (updated: ShiftSession) => void;
-  endShift: () => void;
+  endShift: (continueNextShift?: boolean) => void;
   setCurrentUser: (user: User | null) => void;
   setSelectedShift: (shift: ShiftType | null) => void;
+  setSelectedShifts: (shifts: ShiftType[]) => void;
   setActiveSession: (session: ShiftSession | null) => void;
 }
 
@@ -49,6 +51,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [isReady, setIsReady] = useState(false);
   const [currentUser, setCurrentUserState] = useState<User | null>(null);
   const [selectedShift, setSelectedShiftState] = useState<ShiftType | null>(null);
+  const [selectedShifts, setSelectedShiftsState] = useState<ShiftType[]>([]);
   const [activeSession, setActiveSessionState] = useState<ShiftSession | null>(null);
   const [sessions, setSessionsState] = useState<ShiftSession[]>([]);
 
@@ -56,11 +59,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     ensureDefaultManager();
     const storedUser = getCurrentUser();
     const storedShift = getSelectedShift();
+    const storedShifts = typeof window !== "undefined" ? (JSON.parse(localStorage.getItem("app_selected_shifts") || "[]") as ShiftType[]) : [];
     const storedSession = getActiveSession();
     const storedSessions = getSessions();
 
     if (storedUser) setCurrentUserState(storedUser);
     if (storedShift) setSelectedShiftState(storedShift);
+    setSelectedShiftsState(storedShifts);
     if (storedSession) setActiveSessionState(storedSession);
     setSessionsState(storedSessions);
 
@@ -90,6 +95,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   function setSelectedShift(shift: ShiftType | null) {
     setSelectedShiftState(shift);
     saveSelectedShift(shift);
+  }
+
+  function setSelectedShifts(shifts: ShiftType[]) {
+    setSelectedShiftsState(shifts);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("app_selected_shifts", JSON.stringify(shifts));
+    }
   }
 
   function setActiveSession(session: ShiftSession | null) {
@@ -161,9 +173,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     });
   }
 
-  async function selectShift(shift: ShiftType) {
+  async function selectShift(shift: ShiftType, chosenShifts?: ShiftType[]) {
     if (!currentUser) return;
     setSelectedShift(shift);
+    if (chosenShifts && chosenShifts.length > 0) {
+      setSelectedShifts(chosenShifts);
+    }
 
     const position = currentUser.position || STAFF_POSITIONS[0];
 
@@ -270,7 +285,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setActiveSession(updated);
   }
 
-  function endShift() {
+  function endShift(continueNextShift?: boolean) {
     if (activeSession) {
       const endedAt = new Date().toISOString();
       const updated: ShiftSession = {
@@ -291,8 +306,23 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       );
     }
     const wasManager = currentUser?.role === "manager";
+    const currentShift = activeSession?.shift || selectedShift;
+    const nextShiftToRun = currentShift === "morning" ? "afternoon" : null;
+
+    const hadAfternoonQueue =
+      continueNextShift ||
+      (typeof window !== "undefined" && localStorage.getItem("app_queue_afternoon") === "true");
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("app_queue_afternoon");
+    }
+
     setActiveSession(null);
     setSelectedShift(null);
+
+    if (hadAfternoonQueue && !wasManager && nextShiftToRun) {
+      selectShift(nextShiftToRun);
+      return;
+    }
 
     startTransition(() => {
       if (wasManager) {
@@ -308,6 +338,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       value={{
         currentUser,
         selectedShift,
+        selectedShifts,
         activeSession,
         sessions,
         isReady,
@@ -319,6 +350,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         endShift,
         setCurrentUser,
         setSelectedShift,
+        setSelectedShifts,
         setActiveSession,
       }}
     >
