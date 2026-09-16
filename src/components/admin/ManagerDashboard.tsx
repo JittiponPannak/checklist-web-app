@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Notification, Position, ShiftSession, ShiftType, User } from "../../types";
-import { getChecklistTemplate } from "../../data/checklists";
+
 import {
   fmtDate,
   fmtTime,
@@ -220,7 +220,7 @@ export function ManagerDashboard({
               className="text-xs px-2.5 sm:px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium transition-all flex items-center gap-1.5 shadow-xs cursor-pointer"
             >
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400">
-                <path d="M12 3v3m0 12v3M3 12h3m12 0h3M5.6 5.6l2.1 2.1m8.6 8.6l2.1 2.1M5.6 18.4l2.1-2.1m8.6-8.6l2.1-2.1"/>
+                <path d="M12 3v3m0 12v3M3 12h3m12 0h3M5.6 5.6l2.1 2.1m8.6 8.6l2.1 2.1M5.6 18.4l2.1-2.1m8.6-8.6l2.1-2.1" />
               </svg>
               <span className="hidden md:inline">รีเซ็ตข้อมูลตัวอย่าง</span>
               <span className="md:hidden">รีเซ็ต</span>
@@ -243,7 +243,7 @@ export function ManagerDashboard({
           <div role="status" className="p-3 bg-emerald-950/80 border border-emerald-800 rounded-xl text-xs font-semibold text-emerald-200 flex items-center justify-between shadow-lg">
             <span className="flex items-center gap-1.5">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-400">
-                <polyline points="20 6 9 17 4 12"/>
+                <polyline points="20 6 9 17 4 12" />
               </svg>
               <span>{resetFeedback}</span>
             </span>
@@ -254,8 +254,8 @@ export function ManagerDashboard({
               className="min-w-[28px] min-h-[28px] flex items-center justify-center rounded-lg text-emerald-300 hover:text-white hover:bg-emerald-900/60 font-bold cursor-pointer transition-colors"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <line x1="18" y1="6" x2="6" y2="18"/>
-                <line x1="6" y1="6" x2="18" y2="18"/>
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
               </svg>
             </button>
           </div>
@@ -307,8 +307,8 @@ export function ManagerDashboard({
                 className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white text-xs font-semibold rounded-xl shadow-lg transition-all flex items-center gap-2 cursor-pointer focus-visible:outline-2 focus-visible:outline-indigo-500 shadow-indigo-950/50"
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M9 11l3 3L22 4"/>
-                  <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                  <path d="M9 11l3 3L22 4" />
+                  <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
                 </svg>
                 <span>เริ่มตรวจกะผู้จัดการ →</span>
               </button>
@@ -324,10 +324,10 @@ export function ManagerDashboard({
               <span className="text-xs font-medium text-slate-400">พนักงานสาขา</span>
               <div className="w-7 h-7 rounded-lg bg-slate-800 flex items-center justify-center text-slate-300">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                  <circle cx="9" cy="7" r="4"/>
-                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
                 </svg>
               </div>
             </div>
@@ -349,8 +349,8 @@ export function ManagerDashboard({
               <span className="text-xs font-medium text-slate-400">กะงานวันนี้</span>
               <div className="w-7 h-7 rounded-lg bg-sky-950/80 text-sky-300 border border-sky-800/80 flex items-center justify-center">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="10"/>
-                  <polyline points="12 6 12 12 16 14"/>
+                  <circle cx="12" cy="12" r="10" />
+                  <polyline points="12 6 12 12 16 14" />
                 </svg>
               </div>
             </div>
@@ -368,8 +368,8 @@ export function ManagerDashboard({
               <span className="text-xs font-medium text-slate-400">ความสมบูรณ์เช็คลิสต์</span>
               <div className="w-7 h-7 rounded-lg bg-emerald-950/80 text-emerald-300 border border-emerald-800/80 flex items-center justify-center">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                  <polyline points="22 4 12 14.01 9 11.01"/>
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                  <polyline points="22 4 12 14.01 9 11.01" />
                 </svg>
               </div>
             </div>
@@ -387,8 +387,8 @@ export function ManagerDashboard({
               <span className="text-xs font-medium text-slate-400">การแจ้งเตือน</span>
               <div className="w-7 h-7 rounded-lg bg-amber-950/80 text-amber-300 border border-amber-800/80 flex items-center justify-center">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-                  <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0" />
                 </svg>
               </div>
             </div>
@@ -430,8 +430,8 @@ export function ManagerDashboard({
                 label: "ภาพรวมวันนี้",
                 icon: (
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
-                    <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+                    <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" />
+                    <rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" />
                   </svg>
                 ),
               },
@@ -440,8 +440,8 @@ export function ManagerDashboard({
                 label: "เช็คลิสต์กะผู้จัดการ",
                 icon: (
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
-                    <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
+                    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+                    <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
                   </svg>
                 ),
                 pulse: !!activeSession,
@@ -451,7 +451,7 @@ export function ManagerDashboard({
                 label: isAssistant ? "ทีมงาน & ตำแหน่ง" : "จัดการทีม & ตำแหน่ง",
                 icon: (
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" />
                   </svg>
                 ),
                 badge: unassignedEmployees.length > 0 && canManagePositions ? unassignedEmployees.length : undefined,
@@ -461,7 +461,7 @@ export function ManagerDashboard({
                 label: "ประวัติและรายงาน",
                 icon: (
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                    <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
                   </svg>
                 ),
                 badge: unread > 0 ? unread : undefined,
@@ -478,11 +478,10 @@ export function ManagerDashboard({
                   aria-controls={`${tab.id}-panel`}
                   tabIndex={isSelected ? 0 : -1}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`px-3 py-2 min-h-[36px] rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer select-none ${
-                    isSelected
-                      ? "bg-indigo-600 text-white shadow-lg shadow-indigo-950/50 font-bold"
-                      : "text-slate-400 hover:text-white hover:bg-slate-800/60"
-                  }`}
+                  className={`px-3 py-2 min-h-[36px] rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer select-none ${isSelected
+                    ? "bg-indigo-600 text-white shadow-lg shadow-indigo-950/50 font-bold"
+                    : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                    }`}
                 >
                   <span className={isSelected ? "text-white" : "text-slate-400"}>{tab.icon}</span>
                   <span className="truncate">{tab.label}</span>
@@ -543,7 +542,7 @@ export function ManagerDashboard({
                             {isDone ? (
                               <Badge color="green">
                                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                                  <polyline points="20 6 9 17 4 12"/>
+                                  <polyline points="20 6 9 17 4 12" />
                                 </svg>
                                 <span>ตรวจเสร็จสิ้น</span>
                               </Badge>
@@ -724,7 +723,7 @@ export function ManagerDashboard({
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full border border-emerald-800/80 bg-emerald-950/80 text-emerald-300 flex items-center justify-center flex-shrink-0">
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                            <polyline points="20 6 9 17 4 12"/>
+                            <polyline points="20 6 9 17 4 12" />
                           </svg>
                         </div>
                         <div>
@@ -839,11 +838,10 @@ export function ManagerDashboard({
                               saveSessions(all);
                               setSessions(all);
                             }}
-                            className={`flex items-center justify-between p-3 rounded-xl border text-xs transition-all cursor-pointer select-none ${
-                              isDone
-                                ? "bg-slate-100/70 border-slate-300 hover:bg-slate-100"
-                                : "bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50/50"
-                            }`}
+                            className={`flex items-center justify-between p-3 rounded-xl border text-xs transition-all cursor-pointer select-none ${isDone
+                              ? "bg-slate-100/70 border-slate-300 hover:bg-slate-100"
+                              : "bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50/50"
+                              }`}
                           >
                             <div className="flex items-center gap-3">
                               <button
@@ -851,15 +849,14 @@ export function ManagerDashboard({
                                 role="checkbox"
                                 aria-checked={isDone}
                                 aria-label={`สถานะ: ${item.label}`}
-                                className={`w-5 h-5 rounded-md border flex items-center justify-center transition-colors flex-shrink-0 ${
-                                  isDone
-                                    ? "bg-emerald-600 border-emerald-600 text-white shadow-2xs"
-                                    : "border-slate-300 bg-white hover:border-slate-900"
-                                }`}
+                                className={`w-5 h-5 rounded-md border flex items-center justify-center transition-colors flex-shrink-0 ${isDone
+                                  ? "bg-emerald-600 border-emerald-600 text-white shadow-2xs"
+                                  : "border-slate-300 bg-white hover:border-slate-900"
+                                  }`}
                               >
                                 {isDone && (
                                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                                    <polyline points="20 6 9 17 4 12"/>
+                                    <polyline points="20 6 9 17 4 12" />
                                   </svg>
                                 )}
                               </button>
@@ -881,7 +878,7 @@ export function ManagerDashboard({
                             {isDone ? (
                               <span className="text-[11px] font-mono font-semibold text-emerald-900 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded flex-shrink-0 flex items-center gap-1">
                                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                                  <polyline points="20 6 9 17 4 12"/>
+                                  <polyline points="20 6 9 17 4 12" />
                                 </svg>
                                 <span>{fmtTime(item.completedAt!)}</span>
                               </span>
@@ -905,7 +902,7 @@ export function ManagerDashboard({
                         {
                           shift: "morning" as ShiftType,
                           name: "กะเช้า (Morning)",
-                          time: "08:00 - 16:00",
+                          time: "06:00 - 16:30",
                           desc: "เปิดร้าน ตรวจนับเงินสดรอบแรก และเช็คสต็อกรับเข้า",
                           icon: (
                             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -917,7 +914,7 @@ export function ManagerDashboard({
                         {
                           shift: "afternoon" as ShiftType,
                           name: "กะบ่าย (Afternoon)",
-                          time: "14:00 - 22:00",
+                          time: "10:00 - 20:30",
                           desc: "ดูแลลูกค้าหน้าร้าน ตรวจเติมสินค้า และเตรียมส่งกะ",
                           icon: (
                             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -958,7 +955,7 @@ export function ManagerDashboard({
                           <span className="inline-flex items-center gap-1 mt-4 text-xs font-bold text-slate-900 group-hover:underline">
                             <span>เริ่มกะนี้</span>
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                              <path d="M5 12h14M12 5l7 7-7 7"/>
+                              <path d="M5 12h14M12 5l7 7-7 7" />
                             </svg>
                           </span>
                         </button>
@@ -1054,9 +1051,8 @@ export function ManagerDashboard({
                     return (
                       <div
                         key={emp.id}
-                        className={`p-4 rounded-2xl border transition-all bg-white shadow-2xs ${
-                          !emp.position ? "border-slate-300 bg-slate-50/40" : "border-slate-200/90 hover:border-slate-300"
-                        }`}
+                        className={`p-4 rounded-2xl border transition-all bg-white shadow-2xs ${!emp.position ? "border-slate-300 bg-slate-50/40" : "border-slate-200/90 hover:border-slate-300"
+                          }`}
                       >
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex items-center gap-3">
@@ -1118,7 +1114,7 @@ export function ManagerDashboard({
                                 className="text-xs px-2.5 py-1.5 rounded-lg border border-slate-200 text-slate-500 hover:text-red-600 hover:border-red-300 hover:bg-red-50 transition-colors min-h-[32px] inline-flex items-center gap-1 font-medium cursor-pointer"
                               >
                                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                  <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                  <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                                 </svg>
                                 ลบ
                               </button>
@@ -1162,7 +1158,7 @@ export function ManagerDashboard({
                         className="px-4 py-2 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-semibold rounded-xl shadow-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap"
                       >
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                          <path d="M12 5v14M5 12h14"/>
+                          <path d="M12 5v14M5 12h14" />
                         </svg>
                         <span>เพิ่มตำแหน่ง</span>
                       </button>
@@ -1178,8 +1174,7 @@ export function ManagerDashboard({
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                   {positions.map((pos) => {
                     const count = employees.filter((u) => u.position === pos.name).length;
-                    const morningItems = getChecklistTemplate(pos.name, "morning").length;
-                    const afternoonItems = getChecklistTemplate(pos.name, "afternoon").length;
+
 
                     return (
                       <div
@@ -1189,28 +1184,30 @@ export function ManagerDashboard({
                         <div className="flex items-center gap-2.5">
                           <div className="w-8 h-8 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-700 flex-shrink-0">
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                              <circle cx="12" cy="7" r="4"/>
+                              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                              <circle cx="12" cy="7" r="4" />
                             </svg>
                           </div>
                           <div>
                             <p className="text-xs font-bold text-slate-900">{pos.name}</p>
                             <p className="text-[11px] text-slate-500 mt-0.5">
-                              พนักงาน <strong className="text-slate-800">{count} คน</strong> • เช็คลิสต์ {morningItems + afternoonItems} ข้อ
+                              พนักงาน <strong className="text-slate-800">{count} คน</strong>
                             </p>
                           </div>
                         </div>
 
-                        {canManagePositions && (
-                          <button
-                            type="button"
-                            onClick={() => handleDeletePosition(pos.id)}
-                            aria-label={`ลบตำแหน่ง ${pos.name}`}
-                            className="text-xs px-2.5 py-1 rounded-lg border border-slate-200 text-slate-500 hover:text-red-600 hover:border-red-300 hover:bg-red-50 transition-colors cursor-pointer"
-                          >
-                            ลบ
-                          </button>
-                        )}
+                        {
+                          canManagePositions && (
+                            <button
+                              type="button"
+                              onClick={() => handleDeletePosition(pos.id)}
+                              aria-label={`ลบตำแหน่ง ${pos.name}`}
+                              className="text-xs px-2.5 py-1 rounded-lg border border-slate-200 text-slate-500 hover:text-red-600 hover:border-red-300 hover:bg-red-50 transition-colors cursor-pointer"
+                            >
+                              ลบ
+                            </button>
+                          )
+                        }
                       </div>
                     );
                   })}
@@ -1280,7 +1277,7 @@ export function ManagerDashboard({
                           <span className="text-xs text-slate-800 font-semibold flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
                             <span>ดูผลตรวจ</span>
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M9 18l6-6-6-6"/>
+                              <path d="M9 18l6-6-6-6" />
                             </svg>
                           </span>
                         </div>

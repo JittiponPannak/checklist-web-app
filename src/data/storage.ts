@@ -1,12 +1,13 @@
 import { Notification, Position, ShiftSession, ShiftType, User } from "../types";
-import { DEFAULT_POSITIONS, getChecklistTemplate } from "./checklists";
+import { DEFAULT_POSITIONS } from "../types";
+import { secureGetItem, secureSetItem, secureRemoveItem } from "../utils/crypto";
 
 export function getPositions(): Position[] {
   if (typeof window === "undefined") return DEFAULT_POSITIONS;
   try {
-    const raw = localStorage.getItem("app_positions_v3");
+    const raw = secureGetItem("app_positions_v3");
     if (!raw) {
-      localStorage.setItem("app_positions_v3", JSON.stringify(DEFAULT_POSITIONS));
+      secureSetItem("app_positions_v3", JSON.stringify(DEFAULT_POSITIONS));
       return DEFAULT_POSITIONS;
     }
     const current: Position[] = JSON.parse(raw);
@@ -18,7 +19,7 @@ export function getPositions(): Position[] {
       }
     }
     if (updated) {
-      localStorage.setItem("app_positions_v3", JSON.stringify(current));
+      secureSetItem("app_positions_v3", JSON.stringify(current));
     }
     return current;
   } catch {
@@ -28,13 +29,13 @@ export function getPositions(): Position[] {
 
 export function savePositions(positions: Position[]) {
   if (typeof window === "undefined") return;
-  localStorage.setItem("app_positions_v3", JSON.stringify(positions));
+  secureSetItem("app_positions_v3", JSON.stringify(positions));
 }
 
 export function getUsers(): User[] {
   if (typeof window === "undefined") return [];
   try {
-    return JSON.parse(localStorage.getItem("app_users") ?? "[]");
+    return JSON.parse(secureGetItem("app_users") ?? "[]");
   } catch {
     return [];
   }
@@ -42,13 +43,13 @@ export function getUsers(): User[] {
 
 export function saveUsers(users: User[]) {
   if (typeof window === "undefined") return;
-  localStorage.setItem("app_users", JSON.stringify(users));
+  secureSetItem("app_users", JSON.stringify(users));
 }
 
 export function getSessions(): ShiftSession[] {
   if (typeof window === "undefined") return [];
   try {
-    return JSON.parse(localStorage.getItem("app_sessions") ?? "[]");
+    return JSON.parse(secureGetItem("app_sessions") ?? "[]");
   } catch {
     return [];
   }
@@ -56,13 +57,13 @@ export function getSessions(): ShiftSession[] {
 
 export function saveSessions(sessions: ShiftSession[]) {
   if (typeof window === "undefined") return;
-  localStorage.setItem("app_sessions", JSON.stringify(sessions));
+  secureSetItem("app_sessions", JSON.stringify(sessions));
 }
 
 export function getNotifications(): Notification[] {
   if (typeof window === "undefined") return [];
   try {
-    return JSON.parse(localStorage.getItem("app_notifications") ?? "[]");
+    return JSON.parse(secureGetItem("app_notifications") ?? "[]");
   } catch {
     return [];
   }
@@ -70,7 +71,7 @@ export function getNotifications(): Notification[] {
 
 export function saveNotifications(notifs: Notification[]) {
   if (typeof window === "undefined") return;
-  localStorage.setItem("app_notifications", JSON.stringify(notifs));
+  secureSetItem("app_notifications", JSON.stringify(notifs));
 }
 
 export function uid(): string {
@@ -94,7 +95,7 @@ export function fmtDate(iso: string): string {
 }
 
 export function seedSampleData(force = false) {
-  if (typeof window === "undefined") return;
+  return;
   let users = getUsers();
   let sessions = getSessions();
   let notifs = getNotifications();
@@ -116,7 +117,7 @@ export function seedSampleData(force = false) {
     saveUsers(users);
   }
 
-  const hasSessionsKey = localStorage.getItem("app_sessions") !== null;
+  const hasSessionsKey = secureGetItem("app_sessions") !== null;
   const needsSessions = force || !hasSessionsKey;
 
   if (needsSessions) {
@@ -134,23 +135,7 @@ export function seedSampleData(force = false) {
     const yesterdayEnd = new Date(now.getTime() - 86400000);
     yesterdayEnd.setHours(16, 0, 0, 0);
 
-    const cashierTemplate = getChecklistTemplate("แคชเชียร์", "morning");
-    const cashierItems = cashierTemplate.map((item, idx) => ({
-      ...item,
-      completedAt: new Date(morningStart.getTime() + (idx + 1) * 25 * 60000).toISOString(),
-    }));
 
-    const stockTemplate = getChecklistTemplate("พนักงานสต็อก/จัดเรียง", "afternoon");
-    const stockItems = stockTemplate.map((item, idx) => ({
-      ...item,
-      completedAt: idx < 6 ? new Date(afternoonStart.getTime() + (idx + 1) * 20 * 60000).toISOString() : null,
-    }));
-
-    const asstTemplate = getChecklistTemplate("ผู้ช่วยผู้จัดการร้าน", "morning");
-    const asstItems = asstTemplate.map((item, idx) => ({
-      ...item,
-      completedAt: new Date(yesterdayStart.getTime() + (idx + 1) * 30 * 60000).toISOString(),
-    }));
 
     sessions = [
       {
@@ -161,7 +146,7 @@ export function seedSampleData(force = false) {
         shift: "morning",
         startedAt: morningStart.toISOString(),
         completedAt: morningEnd.toISOString(),
-        items: cashierItems,
+        items: [],
         notified: true,
       },
       {
@@ -172,7 +157,7 @@ export function seedSampleData(force = false) {
         shift: "afternoon",
         startedAt: afternoonStart.toISOString(),
         completedAt: null,
-        items: stockItems,
+        items: [],
         notified: false,
       },
       {
@@ -183,7 +168,7 @@ export function seedSampleData(force = false) {
         shift: "morning",
         startedAt: yesterdayStart.toISOString(),
         completedAt: yesterdayEnd.toISOString(),
-        items: asstItems,
+        items: [],
         notified: true,
       },
     ];
@@ -228,7 +213,7 @@ export function ensureDefaultManager() {
 export function getCurrentUser(): User | null {
   if (typeof window === "undefined") return null;
   try {
-    const raw = localStorage.getItem("app_current_user");
+    const raw = secureGetItem("app_current_user");
     return raw ? JSON.parse(raw) : null;
   } catch {
     return null;
@@ -238,45 +223,32 @@ export function getCurrentUser(): User | null {
 export function saveCurrentUser(user: User | null) {
   if (typeof window === "undefined") return;
   if (user) {
-    localStorage.setItem("app_current_user", JSON.stringify(user));
+    secureSetItem("app_current_user", JSON.stringify(user));
   } else {
-    localStorage.removeItem("app_current_user");
+    secureRemoveItem("app_current_user");
   }
 }
 
 export function getSelectedShift(): ShiftType | null {
   if (typeof window === "undefined") return null;
-  return (localStorage.getItem("app_selected_shift") as ShiftType) || null;
+  return (secureGetItem("app_selected_shift") as ShiftType) || null;
 }
 
 export function saveSelectedShift(shift: ShiftType | null) {
   if (typeof window === "undefined") return;
   if (shift) {
-    localStorage.setItem("app_selected_shift", shift);
+    secureSetItem("app_selected_shift", shift);
   } else {
-    localStorage.removeItem("app_selected_shift");
+    secureRemoveItem("app_selected_shift");
   }
 }
 
-export function getSelectedShifts(): ShiftType[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = localStorage.getItem("app_selected_shifts");
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-}
 
-export function saveSelectedShifts(shifts: ShiftType[]) {
-  if (typeof window === "undefined") return;
-  localStorage.setItem("app_selected_shifts", JSON.stringify(shifts));
-}
 
 export function getActiveSession(): ShiftSession | null {
   if (typeof window === "undefined") return null;
   try {
-    const raw = localStorage.getItem("app_active_session");
+    const raw = secureGetItem("app_active_session");
     return raw ? JSON.parse(raw) : null;
   } catch {
     return null;
@@ -286,8 +258,8 @@ export function getActiveSession(): ShiftSession | null {
 export function saveActiveSession(session: ShiftSession | null) {
   if (typeof window === "undefined") return;
   if (session) {
-    localStorage.setItem("app_active_session", JSON.stringify(session));
+    secureSetItem("app_active_session", JSON.stringify(session));
   } else {
-    localStorage.removeItem("app_active_session");
+    secureRemoveItem("app_active_session");
   }
 }

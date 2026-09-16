@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { User } from "../../types";
-import { STAFF_POSITIONS } from "../../data/checklists";
+import { STAFF_POSITIONS } from "../../types";
 import { getUsers, saveUsers } from "../../data/storage";
 import { BrandLogo } from "../common/BrandLogo";
 import { loginAction, registerAction } from "../../actions/auth";
@@ -132,11 +132,10 @@ export function StaffAuthPage({
                 setTab(t.id);
                 setError("");
               }}
-              className={`flex-1 py-2 min-h-[36px] text-xs font-semibold rounded-lg transition-all cursor-pointer text-center ${
-                tab === t.id
+              className={`flex-1 py-2 min-h-[36px] text-xs font-semibold rounded-lg transition-all cursor-pointer text-center ${tab === t.id
                   ? "bg-indigo-600 text-white shadow-md font-bold"
                   : "text-slate-400 hover:text-slate-200"
-              }`}
+                }`}
             >
               {t.label}
             </button>
@@ -247,10 +246,10 @@ export function StaffAuthPage({
               {loading
                 ? "กำลังตรวจสอบข้อมูล..."
                 : tab === "manager"
-                ? "เข้าสู่ระบบฝ่ายบริหาร (Manager) →"
-                : tab === "register"
-                ? "ยืนยันการสมัครสมาชิก"
-                : "เข้าสู่ระบบพนักงาน →"}
+                  ? "เข้าสู่ระบบฝ่ายบริหาร (Manager) →"
+                  : tab === "register"
+                    ? "ยืนยันการสมัครสมาชิก"
+                    : "เข้าสู่ระบบพนักงาน →"}
             </span>
             {!loading && (
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">

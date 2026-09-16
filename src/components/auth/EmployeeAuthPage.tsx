@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { User } from "../../types";
-import { STAFF_POSITIONS } from "../../data/checklists";
+import { STAFF_POSITIONS } from "../../types";
 import { getUsers, saveUsers } from "../../data/storage";
 import { BrandLogo } from "../common/BrandLogo";
 import { loginAction, registerAction } from "../../actions/auth";

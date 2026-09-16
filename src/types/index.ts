@@ -47,3 +47,22 @@ export interface Notification {
   completedAt: string;
   read: boolean;
 }
+
+export const STAFF_POSITIONS = [
+  "แคชเชียร์",
+  "พนักงานสต็อก/จัดเรียง",
+];
+
+export const MANAGEMENT_POSITIONS = [
+  "ผู้ช่วยผู้จัดการร้าน",
+  "ผู้จัดการร้าน",
+  "กรรมการ",
+];
+
+export const DEFAULT_POSITIONS: Position[] = [
+  { id: "pos-1", name: "แคชเชียร์" },
+  { id: "pos-2", name: "พนักงานสต็อก/จัดเรียง" },
+  { id: "pos-3", name: "ผู้ช่วยผู้จัดการร้าน" },
+  { id: "pos-4", name: "ผู้จัดการร้าน" },
+  { id: "pos-5", name: "กรรมการ" },
+];

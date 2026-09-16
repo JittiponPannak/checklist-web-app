@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { User } from "../../types";
-import { MANAGEMENT_POSITIONS } from "../../data/checklists";
+import { MANAGEMENT_POSITIONS } from "../../types";
 import { getUsers, saveUsers } from "../../data/storage";
 import { BrandLogo } from "../common/BrandLogo";
 import { loginAction, registerAction } from "../../actions/auth";
@@ -61,8 +61,8 @@ export function ManagerAuthPage({ onLogin }: { onLogin: (user: User) => void }) 
         res.user.role === "committee" || res.user.position?.includes("กรรมการ")
           ? "committee"
           : res.user.role === "manager_assistant" || res.user.position?.includes("ผู้ช่วย")
-          ? "manager_assistant"
-          : "manager";
+            ? "manager_assistant"
+            : "manager";
 
       const activeUser: User = {
         ...res.user,
@@ -149,9 +149,8 @@ export function ManagerAuthPage({ onLogin }: { onLogin: (user: User) => void }) 
                 setTab(t);
                 setError("");
               }}
-              className={`flex-1 py-2 text-xs sm:text-sm font-semibold rounded-lg transition-all cursor-pointer ${
-                tab === t ? "bg-indigo-600 text-white shadow-md font-bold" : "text-slate-400 hover:text-slate-200"
-              }`}
+              className={`flex-1 py-2 text-xs sm:text-sm font-semibold rounded-lg transition-all cursor-pointer ${tab === t ? "bg-indigo-600 text-white shadow-md font-bold" : "text-slate-400 hover:text-slate-200"
+                }`}
             >
               {t === "login" ? "เข้าสู่ระบบฝ่ายบริหาร" : "ลงทะเบียนใหม่"}
             </button>
@@ -232,9 +231,8 @@ export function ManagerAuthPage({ onLogin }: { onLogin: (user: User) => void }) 
             type="button"
             disabled={loading}
             onClick={tab === "login" ? handleLogin : handleRegister}
-            className={`w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white text-sm font-semibold rounded-xl shadow-lg transition-all cursor-pointer mt-1 flex items-center justify-center gap-2 shadow-indigo-950/50 ${
-              loading ? "opacity-70 cursor-not-allowed" : ""
-            }`}
+            className={`w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white text-sm font-semibold rounded-xl shadow-lg transition-all cursor-pointer mt-1 flex items-center justify-center gap-2 shadow-indigo-950/50 ${loading ? "opacity-70 cursor-not-allowed" : ""
+              }`}
           >
             <span>{loading ? "กำลังตรวจสอบข้อมูล..." : (tab === "login" ? "เข้าสู่ระบบฝ่ายบริหาร →" : "ยืนยันการลงทะเบียน")}</span>
           </button>

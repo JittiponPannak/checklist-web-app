@@ -4,6 +4,8 @@ import { Badge } from "../common/Badge";
 import { BrandLogo } from "../common/BrandLogo";
 import { getSessions } from "../../data/storage";
 import { getPositionShiftsStatusAction, resetTodayChecklistDataAction } from "../../actions/checklist";
+import { secureSetItem, secureRemoveItem } from "../../utils/crypto";
+import { Confetti } from "../common/Confetti";
 
 export function ShiftSelectPage({
   user,
@@ -14,7 +16,7 @@ export function ShiftSelectPage({
 }: {
   user: User;
   sessions?: ShiftSession[];
-  onSelect: (shift: ShiftType, chosenShifts?: ShiftType[]) => void;
+  onSelect: (shift: ShiftType) => void;
   onBack?: () => void;
   onLogout: () => void;
 }) {
@@ -24,9 +26,9 @@ export function ShiftSelectPage({
     { status: "completed" | "incomplete" | "none"; total: number; done: number }
   > | null>(null);
 
-  // Multi-select state for Morning and Afternoon shifts
-  const [selectedMorning, setSelectedMorning] = useState<boolean>(true);
-  const [selectedAfternoon, setSelectedAfternoon] = useState<boolean>(false);
+  // Single shift selection state
+  const [chosenShift, setChosenShift] = useState<ShiftType | null>(null);
+  const [showConfetti, setShowConfetti] = useState(false);
 
   useEffect(() => {
     setInternalSessions(getSessions());
@@ -38,6 +40,20 @@ export function ShiftSelectPage({
         .then((res) => {
           if (res.success && res.statuses) {
             setDbStatuses(res.statuses);
+
+            // Auto-select next available shift once validated
+            const mornDone = res.statuses['morning'].status === "completed";
+            const aftDone = res.statuses['afternoon'].status === "completed";
+
+            if (mornDone || aftDone) {
+              setShowConfetti(true);
+            }
+
+            if (!mornDone) {
+              setChosenShift("morning");
+            } else if (!aftDone) {
+              setChosenShift("afternoon");
+            }
           }
         })
         .catch(console.error);
@@ -64,54 +80,40 @@ export function ShiftSelectPage({
     tagline: string;
     isCurrent: boolean;
   }[] = [
-    {
-      id: "morning",
-      title: "กะเช้า",
-      subTitle: "งานประจำกะเช้า",
-      time: "08:00 - 16:00",
-      tagline: "เปิดร้าน รับสินค้า ตรวจนับสต็อก และบริการลูกค้าช่วงเช้า",
-      isCurrent: hour >= 6 && hour < 14,
-    },
-    {
-      id: "afternoon",
-      title: "กะบ่าย",
-      subTitle: "งานประจำกะบ่าย",
-      time: "16:00 - 00:00",
-      tagline: "ดูแลลูกค้าหน้าร้าน เติมสต็อก สรุปยอดเงิน และปิดร้าน",
-      isCurrent: hour >= 14 && hour < 22,
-    },
-  ];
+      {
+        id: "morning",
+        title: "กะเช้า",
+        subTitle: "งานประจำกะเช้า",
+        time: "06:00 - 16:30",
+        tagline: "เปิดร้าน รับสินค้า ตรวจนับสต็อก และบริการลูกค้าช่วงเช้า",
+        isCurrent: hour >= 6 && hour < 16,
+      },
+      {
+        id: "afternoon",
+        title: "กะบ่าย",
+        subTitle: "งานประจำกะบ่าย",
+        time: "10:00 - 20:30",
+        tagline: "ดูแลลูกค้าหน้าร้าน เติมสต็อก สรุปยอดเงิน และปิดร้าน",
+        isCurrent: hour >= 10 && hour < 21,
+      },
+    ];
 
   const handleStartWork = () => {
-    const chosenShifts: ShiftType[] = [];
-    if (selectedMorning) chosenShifts.push("morning");
-    if (selectedAfternoon) chosenShifts.push("afternoon");
-
-    if (typeof window !== "undefined") {
-      localStorage.setItem("app_selected_shifts", JSON.stringify(chosenShifts));
-    }
-
-    if (selectedMorning) {
-      if (selectedAfternoon && typeof window !== "undefined") {
-        localStorage.setItem("app_queue_afternoon", "true");
-      } else if (typeof window !== "undefined") {
-        localStorage.removeItem("app_queue_afternoon");
-      }
-      onSelect("morning", chosenShifts);
-    } else if (selectedAfternoon) {
+    if (chosenShift) {
       if (typeof window !== "undefined") {
-        localStorage.removeItem("app_queue_afternoon");
+        secureRemoveItem("app_selected_shifts");
       }
-      onSelect("afternoon", chosenShifts);
+      onSelect(chosenShift);
     }
   };
 
-  const hasSelection = selectedMorning || selectedAfternoon;
+  const hasSelection = chosenShift !== null;
 
   return (
     <main className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between px-4 py-6 sm:py-10 relative overflow-hidden">
       {/* Ambient Brand Glow */}
       <div className="absolute top-10 left-1/2 -translate-x-1/2 w-96 h-96 bg-indigo-900/20 rounded-full blur-3xl pointer-events-none" aria-hidden="true" />
+      {showConfetti && <Confetti />}
 
       {/* Clean Top Profile Bar */}
       <header className="w-full max-w-4xl mx-auto mb-6 flex items-center justify-between gap-4 p-4 bg-slate-900/90 backdrop-blur-sm border border-slate-800 rounded-2xl shadow-xl relative z-10">
@@ -168,7 +170,7 @@ export function ShiftSelectPage({
             เลือกกะการทำงาน
           </h2>
           <p className="text-xs sm:text-sm text-slate-400 mt-1 max-w-md mx-auto">
-            ติ๊กเลือกกะที่ต้องการปฏิบัติงานสำหรับตำแหน่ง <span className="font-bold text-white">{user.position || "พนักงาน"}</span> (สามารถเลือกทั้ง 2 กะได้)
+            ติ๊กเลือกกะที่ต้องการปฏิบัติงานสำหรับตำแหน่ง <span className="font-bold text-white">{user.position || "พนักงาน"}</span>
           </p>
         </div>
 
@@ -176,12 +178,6 @@ export function ShiftSelectPage({
         <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-5 mb-6">
           {shifts.map((s) => {
             const isMorn = s.id === "morning";
-            const isChecked = isMorn ? selectedMorning : selectedAfternoon;
-            const toggleSelect = () => {
-              if (isMorn) setSelectedMorning(!selectedMorning);
-              else setSelectedAfternoon(!selectedAfternoon);
-            };
-
             // Find session specifically for this user's currently selected position
             const todayStr = new Date().toDateString();
             const positionSessions = sessions.filter(
@@ -223,24 +219,38 @@ export function ShiftSelectPage({
                     ? "completed"
                     : "incomplete";
 
-            const containerTheme = isChecked
-              ? "border-indigo-500 bg-indigo-950/30 ring-2 ring-indigo-500/50 shadow-[0_12px_28px_-6px_rgba(99,102,241,0.3)]"
-              : "border-slate-800 bg-slate-900/90 hover:border-slate-700 hover:bg-slate-900/95";
+            const isLoading = dbStatuses === null;
+            const isDisabled = isLoading || checkStatus === "completed";
+            const isChecked = isDisabled ? false : chosenShift === s.id;
+
+            const toggleSelect = () => {
+              if (isDisabled) return;
+              setChosenShift(s.id as ShiftType);
+            };
+
+            const containerTheme = isDisabled
+              ? checkStatus === "completed"
+                ? "border-emerald-900/40 bg-emerald-950/20 opacity-75"
+                : "border-slate-800 bg-slate-900/50 opacity-50"
+              : isChecked
+                ? "border-indigo-500 bg-indigo-950/30 ring-2 ring-indigo-500/50 shadow-[0_12px_28px_-6px_rgba(99,102,241,0.3)]"
+                : "border-slate-800 bg-slate-900/90 hover:border-slate-700 hover:bg-slate-900/95";
 
             return (
               <div
                 key={s.id}
                 role="checkbox"
                 aria-checked={isChecked}
-                tabIndex={0}
+                tabIndex={isDisabled ? -1 : 0}
                 onClick={toggleSelect}
                 onKeyDown={(e) => {
+                  if (isDisabled) return;
                   if (e.key === "Enter" || e.key === " ") {
                     e.preventDefault();
                     toggleSelect();
                   }
                 }}
-                className={`group border rounded-2xl p-6 shadow-xl ${containerTheme} focus-visible:outline-none focus:ring-2 focus:ring-indigo-500 hover:-translate-y-1 transition-all duration-200 flex flex-col justify-between cursor-pointer relative overflow-hidden`}
+                className={`group border rounded-2xl p-6 shadow-xl ${containerTheme} focus-visible:outline-none focus:ring-2 focus:ring-indigo-500 ${isDisabled ? "cursor-not-allowed" : "hover:-translate-y-1 cursor-pointer"} transition-all duration-200 flex flex-col justify-between relative overflow-hidden`}
               >
                 <div>
                   {/* Top Header inside Card: Checkbox & Shift Icon / Badges */}
@@ -248,20 +258,21 @@ export function ShiftSelectPage({
                     {/* Checkbox indicator */}
                     <div className="flex items-center gap-3">
                       <div
-                        className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all duration-200 ${
-                          isChecked
-                            ? "bg-indigo-600 border-indigo-500 text-white shadow-md shadow-indigo-900/50 scale-105"
+                        className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all duration-200 ${isChecked
+                          ? "bg-indigo-600 border-indigo-500 text-white shadow-md shadow-indigo-900/50 scale-105"
+                          : isDisabled && checkStatus === "completed"
+                            ? "bg-emerald-900/50 border-emerald-800 text-emerald-400"
                             : "bg-slate-950 border-slate-600 group-hover:border-slate-400"
-                        }`}
+                          }`}
                       >
-                        {isChecked && (
+                        {(isChecked || (isDisabled && checkStatus === "completed")) && (
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                             <polyline points="20 6 9 17 4 12" />
                           </svg>
                         )}
                       </div>
-                      <span className={`text-sm font-bold transition-colors ${isChecked ? "text-indigo-300" : "text-slate-400"}`}>
-                        {isChecked ? "เลือกแล้ว" : "แตะเพื่อเลือก"}
+                      <span className={`text-sm font-bold transition-colors ${isChecked ? "text-indigo-300" : isDisabled ? (checkStatus === "completed" ? "text-emerald-500" : "text-slate-500") : "text-slate-400"}`}>
+                        {isChecked ? "เลือกแล้ว" : isDisabled ? (checkStatus === "completed" ? "ทำเสร็จแล้ว" : isLoading ? "กำลังโหลด..." : "ไม่สามารถเลือกได้") : "แตะเพื่อเลือก"}
                       </span>
                     </div>
 
@@ -290,11 +301,10 @@ export function ShiftSelectPage({
 
                   {/* Title & Icon Header */}
                   <div className="flex items-start gap-3.5 mb-2">
-                    <div className={`w-12 h-12 rounded-2xl border flex items-center justify-center shrink-0 transition-all ${
-                      isMorn 
-                        ? (isChecked ? "bg-amber-500/20 border-amber-500/50 text-amber-400" : "bg-slate-950 border-slate-800 text-amber-400")
-                        : (isChecked ? "bg-sky-500/20 border-sky-500/50 text-sky-400" : "bg-slate-950 border-slate-800 text-sky-400")
-                    }`}>
+                    <div className={`w-12 h-12 rounded-2xl border flex items-center justify-center shrink-0 transition-all ${isMorn
+                      ? (isChecked ? "bg-amber-500/20 border-amber-500/50 text-amber-400" : "bg-slate-950 border-slate-800 text-amber-400")
+                      : (isChecked ? "bg-sky-500/20 border-sky-500/50 text-sky-400" : "bg-slate-950 border-slate-800 text-sky-400")
+                      }`}>
                       {isMorn ? (
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                           <circle cx="12" cy="12" r="4" />
@@ -342,22 +352,17 @@ export function ShiftSelectPage({
 
         {/* Selected Shifts Summary Text */}
         <div className="w-full text-center mb-6 min-h-[32px] flex items-center justify-center">
-          {selectedMorning && selectedAfternoon ? (
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-950/90 border border-indigo-700/60 text-indigo-200 text-xs sm:text-sm font-semibold shadow-md animate-fade-in">
-              <span className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse" />
-              <span>เลือก 2 กะ • เช้า → บ่าย</span>
-            </div>
-          ) : selectedMorning ? (
+          {chosenShift === "morning" ? (
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-900 border border-slate-800 text-slate-300 text-xs sm:text-sm font-medium">
-              <span>เลือกเฉพาะ: กะเช้า (08:00 - 16:00)</span>
+              <span>เลือกเฉพาะ: กะเช้า (06:00 - 16:30)</span>
             </div>
-          ) : selectedAfternoon ? (
+          ) : chosenShift === "afternoon" ? (
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-900 border border-slate-800 text-slate-300 text-xs sm:text-sm font-medium">
-              <span>เลือกเฉพาะ: กะบ่าย (16:00 - 00:00)</span>
+              <span>เลือกเฉพาะ: กะบ่าย (10:00 - 20:30)</span>
             </div>
           ) : (
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-rose-950/50 border border-rose-900/50 text-rose-300 text-xs font-medium">
-              <span>กรุณาติ๊กเลือกอย่างน้อย 1 กะการทำงาน</span>
+              <span>กรุณาติ๊กเลือก 1 กะการทำงาน</span>
             </div>
           )}
         </div>
@@ -368,11 +373,10 @@ export function ShiftSelectPage({
             type="button"
             disabled={!hasSelection}
             onClick={handleStartWork}
-            className={`w-full py-3.5 px-6 rounded-xl font-bold text-sm sm:text-base shadow-xl transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer ${
-              hasSelection
-                ? "bg-indigo-600 hover:bg-indigo-500 text-white shadow-indigo-950/60 hover:shadow-indigo-900/80 hover:-translate-y-0.5 active:translate-y-0"
-                : "bg-slate-800 text-slate-500 border border-slate-700/50 cursor-not-allowed opacity-60"
-            }`}
+            className={`w-full py-3.5 px-6 rounded-xl font-bold text-sm sm:text-base shadow-xl transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer ${hasSelection
+              ? "bg-indigo-600 hover:bg-indigo-500 text-white shadow-indigo-950/60 hover:shadow-indigo-900/80 hover:-translate-y-0.5 active:translate-y-0"
+              : "bg-slate-800 text-slate-500 border border-slate-700/50 cursor-not-allowed opacity-60"
+              }`}
           >
             <span>เริ่มตรวจงาน</span>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -403,9 +407,9 @@ export function ShiftSelectPage({
             onClick={async () => {
               if (confirm("ต้องการรีเซ็ตข้อมูลประวัติเช็คลิสต์ทั้งหมดเป็นค่าว่างใช่หรือไม่?")) {
                 await resetTodayChecklistDataAction(user.position);
-                localStorage.setItem("app_sessions", "[]");
-                localStorage.removeItem("app_active_session");
-                localStorage.removeItem("app_queue_afternoon");
+                secureSetItem("app_sessions", "[]");
+                secureRemoveItem("app_active_session");
+                secureRemoveItem("app_queue_afternoon");
                 window.location.reload();
               }
             }}

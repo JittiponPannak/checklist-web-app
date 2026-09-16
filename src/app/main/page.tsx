@@ -14,7 +14,7 @@ function fmtTime(dStr: string) {
 }
 
 function getChecklistTemplate(pos: string | undefined, shift: ShiftType) {
-   return Array.from({ length: 9 }, (_, i) => ({ id: `mock-${i}`, label: `Mock checklist item ${i+1}` }));
+  return Array.from({ length: 9 }, (_, i) => ({ id: `mock-${i}`, label: `Mock checklist item ${i + 1}` }));
 }
 
 function getCustomNotifications() { return []; }
@@ -35,6 +35,7 @@ import { User, Role, ShiftType, ShiftSession, ChecklistItem } from "../../types"
 
 import { loginAction, registerAction, getAllUsersAction } from "../../actions/auth";
 import { getOrCreateShiftSessionAction, toggleTaskWorkAction, endShiftSessionAction, getPositionShiftsStatusAction } from "../../actions/checklist";
+import { secureGetItem, secureSetItem, secureRemoveItem } from "../../utils/crypto";
 
 
 // ─── Focus Trap Hook (SC 2.1.2 No Keyboard Trap & SC 2.4.3 Focus Order) ─────────
@@ -206,7 +207,7 @@ function StaffAuthPage({ onLogin, onSwitchToExecutive, onSwitchToAdmin }: { onLo
               id={`staff-${t}-tab`}
               onClick={() => { setTab(t as any); setError(""); }}
               className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all focus-visible:outline-2 focus-visible:outline-indigo-500 ${tab === t ? "bg-indigo-600 text-white shadow-md font-bold" : "text-slate-400 hover:text-slate-200"}`}
-            > 
+            >
               {t === "login" ? "เข้าสู่ระบบ" : "สมัครสมาชิก"}
             </button>
           ))}
@@ -330,7 +331,7 @@ function ExecutiveAuthPage({ onLogin, onSwitchToStaff }: { onLogin: (user: User)
               id={`exec-${t}-tab`}
               onClick={() => { setTab(t as any); setError(""); }}
               className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all focus-visible:outline-2 focus-visible:outline-indigo-500 ${tab === t ? "bg-indigo-600 text-white shadow-md font-bold" : "text-slate-400 hover:text-slate-200"}`}
-            > 
+            >
               {t === "login" ? "เข้าสู่ระบบผู้บริหาร" : "ลงทะเบียนผู้บริหาร"}
             </button>
           ))}
@@ -412,8 +413,8 @@ function SystemAdminAuthPage({ onLogin, onSwitchToStaff }: { onLogin: (user: Use
   async function handleLogin() {
     setLoading(true);
     await handleAuthSubmit((d: any) => loginAction(d.email, d.password), form, setError, (user: User) => {
-       if (user.role === "admin" || user.email === "admin@factory.com") onLogin(user);
-       else setError("บัญชีนี้ไม่มีสิทธิ์การเข้าถึงระดับ System Admin");
+      if (user.role === "admin" || user.email === "admin@factory.com") onLogin(user);
+      else setError("บัญชีนี้ไม่มีสิทธิ์การเข้าถึงระดับ System Admin");
     });
     setLoading(false);
   }
@@ -432,7 +433,7 @@ function SystemAdminAuthPage({ onLogin, onSwitchToStaff }: { onLogin: (user: Use
         <header className="mb-8 text-center text-white">
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-red-500 to-red-700 text-white shadow-lg mb-4">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
             </svg>
           </div>
           <h1 className="text-xl font-bold tracking-tight">System Admin</h1>
@@ -482,7 +483,7 @@ function SystemAdminAuthPage({ onLogin, onSwitchToStaff }: { onLogin: (user: Use
 
         <div className="mt-8 pt-4 border-t border-slate-800 text-center">
           <button type="button" onClick={onSwitchToStaff} className="text-xs text-slate-400 hover:text-white transition-colors cursor-pointer flex items-center justify-center gap-1 mx-auto py-2 px-3 rounded-lg focus-visible:outline-2 focus-visible:outline-red-500 min-h-[36px]">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
             Return to Core App
           </button>
         </div>
@@ -517,23 +518,23 @@ function ShiftSelectPage({
         id: "morning",
         title: "เช้า",
         subTitle: "กะเช้า",
-        time: "08:00 – 16:00",
+        time: "06:00 – 16:30",
         tagline: "เปิดร้าน รับสินค้า ตรวจนับสต็อก และบริการลูกค้าช่วงเช้า",
-        isCurrent: hour >= 6 && hour < 14,
+        isCurrent: hour >= 6 && hour < 16,
       },
       {
         id: "afternoon",
         title: "บ่าย",
         subTitle: "กะบ่าย",
-        time: "16:00 – 00:00",
+        time: "10:00 – 20:30",
         tagline: "ดูแลลูกค้าหน้าร้าน เติมสต็อก สรุปยอดเงิน และปิดร้าน",
-        isCurrent: hour >= 14 && hour < 22,
+        isCurrent: hour >= 10 && hour < 21,
       },
       {
         id: "both",
         title: "ควบ",
         subTitle: "ควบสองกะ",
-        time: "08:00 – 00:00",
+        time: "06:00 – 20:30",
         tagline: "ควงกะปฏิบัติงานต่อเนื่องตลอดวัน ทั้งรอบเช้าและรอบบ่าย",
         isCurrent: false,
       },
@@ -688,7 +689,7 @@ function PositionSelectPage({
   const isMorning = shift === "morning";
   const isAfternoon = shift === "afternoon";
   const shiftTitle = isMorning ? "กะเช้า" : isAfternoon ? "กะบ่าย" : "กะควบ (2 กะ)";
-  const shiftHours = isMorning ? "08:00 – 16:00" : isAfternoon ? "16:00 – 00:00" : "08:00 – 00:00";
+  const shiftHours = isMorning ? "06:00 – 16:30" : isAfternoon ? "10:00 – 20:30" : "06:00 – 20:30";
 
   const availablePositions = user.role === "manager" ? MANAGEMENT_POSITIONS : STAFF_POSITIONS;
 
@@ -886,19 +887,19 @@ function ChecklistPage({
     return true;
   });
 
-    async function toggleItem(id: string) {
+  async function toggleItem(id: string) {
     if (session.completedAt) return;
     const item = session.items.find(i => i.id === id);
     if (!item) return;
     const completed = !item.completedAt;
-    
+
     // optimistically update state
     const updated = session.items.map((i) =>
       i.id === id ? { ...i, completedAt: completed ? new Date().toISOString() : null } : i
     );
     const allComplete = updated.every((i) => i.completedAt);
     let updatedSession = { ...session, items: updated, notified: session.notified || allComplete };
-    
+
     onUpdate(updatedSession);
 
     // Call server action
@@ -911,7 +912,7 @@ function ChecklistPage({
     });
   }
 
-    async function endShift() {
+  async function endShift() {
     setShowConfirm(false);
     await endShiftSessionAction(session.id);
     onEndShift();
@@ -967,7 +968,7 @@ function ChecklistPage({
               )}
               {/* ปุ่ม “ต่อกะ” - กดได้เฉพาะเมื่อเลือก 2 กะ และ Checklist ครบ 100% */}
               {(() => {
-                const activeSelectedShifts = typeof window !== "undefined" ? (JSON.parse(localStorage.getItem("app_selected_shifts") || "[]") as string[]) : [];
+                const activeSelectedShifts = typeof window !== "undefined" ? (JSON.parse(secureGetItem("app_selected_shifts") || "[]") as string[]) : [];
                 const hasNextShift = activeSelectedShifts.length === 2 && session.shift === "morning";
                 const canContinueShift = hasNextShift && allDone && !Boolean(session.completedAt);
                 const canFinishShift = allDone && !Boolean(session.completedAt);
@@ -979,19 +980,18 @@ function ChecklistPage({
                       disabled={!canContinueShift}
                       onClick={() => {
                         if (!canContinueShift) return;
-                        const nextVal = typeof window !== "undefined" && localStorage.getItem("app_queue_afternoon") === "true" ? false : true;
+                        const nextVal = typeof window !== "undefined" && secureGetItem("app_queue_afternoon") === "true" ? false : true;
                         if (typeof window !== "undefined") {
-                          if (nextVal) localStorage.setItem("app_queue_afternoon", "true");
-                          else localStorage.removeItem("app_queue_afternoon");
+                          if (nextVal) secureSetItem("app_queue_afternoon", "true");
+                          else secureRemoveItem("app_queue_afternoon");
                         }
                       }}
-                      className={`text-xs px-3.5 py-2 rounded-xl border font-semibold flex items-center gap-1.5 min-h-[36px] transition-all ${
-                        !canContinueShift
-                          ? "bg-slate-900/60 border-slate-800 text-slate-500 cursor-not-allowed opacity-60"
-                          : typeof window !== "undefined" && localStorage.getItem("app_queue_afternoon") === "true"
-                            ? "bg-indigo-600 border-indigo-500 text-white shadow-md cursor-pointer"
-                            : "bg-slate-800/90 border-slate-700 text-slate-200 hover:border-indigo-500 cursor-pointer"
-                      }`}
+                      className={`text-xs px-3.5 py-2 rounded-xl border font-semibold flex items-center gap-1.5 min-h-[36px] transition-all ${!canContinueShift
+                        ? "bg-slate-900/60 border-slate-800 text-slate-500 cursor-not-allowed opacity-60"
+                        : typeof window !== "undefined" && secureGetItem("app_queue_afternoon") === "true"
+                          ? "bg-indigo-600 border-indigo-500 text-white shadow-md cursor-pointer"
+                          : "bg-slate-800/90 border-slate-700 text-slate-200 hover:border-indigo-500 cursor-pointer"
+                        }`}
                       title={
                         !hasNextShift
                           ? "เลือกเพียง 1 กะ หรือไม่มีกะถัดไปที่เลือกไว้"
@@ -1013,11 +1013,10 @@ function ChecklistPage({
                       type="button"
                       disabled={!canFinishShift}
                       onClick={() => setShowConfirm(true)}
-                      className={`text-xs px-4 py-2 rounded-xl border font-semibold flex items-center gap-1.5 min-h-[36px] transition-all ${
-                        !canFinishShift
-                          ? "bg-slate-900/60 border-slate-800 text-slate-500 cursor-not-allowed opacity-60"
-                          : "bg-rose-950/80 border-rose-800 text-rose-200 hover:bg-rose-900 hover:border-rose-600 hover:text-white cursor-pointer shadow-lg shadow-rose-950/50"
-                      }`}
+                      className={`text-xs px-4 py-2 rounded-xl border font-semibold flex items-center gap-1.5 min-h-[36px] transition-all ${!canFinishShift
+                        ? "bg-slate-900/60 border-slate-800 text-slate-500 cursor-not-allowed opacity-60"
+                        : "bg-rose-950/80 border-rose-800 text-rose-200 hover:bg-rose-900 hover:border-rose-600 hover:text-white cursor-pointer shadow-lg shadow-rose-950/50"
+                        }`}
                     >
                       {!canFinishShift && (
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -1288,10 +1287,10 @@ function ManagerDashboard({
   onEndShift: () => void;
   onOpenChecklistPage: () => void;
 }) {
-  
+
   const [notifications, setCustomNotifications] = useState<CustomNotification[]>([]);
   const [sessions, setSessions] = useState<ShiftSession[]>([]);
-  const [positions, setPositions] = useState<{id:string; name:string}[]>([]);
+  const [positions, setPositions] = useState<{ id: string; name: string }[]>([]);
   const [usersList, setUsersList] = useState<User[]>([]);
   const [shiftsStatus, setShiftsStatus] = useState<any>(null);
 
@@ -1318,13 +1317,13 @@ function ManagerDashboard({
   const employees = usersList.filter((u) => u.role === "employee");
   const unassignedEmployees = employees.filter((u) => !u.position);
 
-  
+
   useEffect(() => {
     async function loadData() {
-       getAllUsersAction().then((res: any) => { if (res.users) setUsersList(res.users); });
-       getPositionShiftsStatusAction(user.position || "ผู้จัดการร้าน").then(res => {
-         if (res.success) setShiftsStatus(res.statuses);
-       });
+      getAllUsersAction().then((res: any) => { if (res.users) setUsersList(res.users); });
+      getPositionShiftsStatusAction(user.position || "ผู้จัดการร้าน").then(res => {
+        if (res.success) setShiftsStatus(res.statuses);
+      });
     }
     loadData();
     const interval = setInterval(loadData, 5000);
@@ -1420,7 +1419,7 @@ function ManagerDashboard({
       return;
     }
     const updated = [...positions, { id: uid(), name: trimmed }];
-    
+
     setPositions(updated);
     setNewPositionName("");
     setPositionMsg({ text: `เพิ่มตำแหน่ง "${trimmed}" เรียบร้อยแล้ว`, type: "success" });
@@ -1439,7 +1438,7 @@ function ManagerDashboard({
       }
     }
     const updated = positions.filter((p) => p.id !== posId);
-    
+
     setPositions(updated);
     setPositionMsg({ text: `ลบตำแหน่ง "${pos.name}" เรียบร้อยแล้ว`, type: "success" });
     setTimeout(() => setPositionMsg(null), 3000);
@@ -2476,7 +2475,7 @@ export default function App() {
           ) : authView === "executive" ? (
             <ExecutiveAuthPage onLogin={handleLogin} onSwitchToStaff={() => setAuthView("staff")} />
           ) : (
-             <StaffAuthPage onLogin={handleLogin} onSwitchToExecutive={() => setAuthView("executive")} onSwitchToAdmin={() => setAuthView("admin")} />
+            <StaffAuthPage onLogin={handleLogin} onSwitchToExecutive={() => setAuthView("executive")} onSwitchToAdmin={() => setAuthView("admin")} />
           )
         )}
         {page === "shift-select" && currentUser && (

@@ -1,19 +1,20 @@
 import { useState } from "react";
 import { ShiftSession, ShiftType } from "../../types";
-import { fmtTime, getNotifications, getSelectedShifts, saveNotifications, uid } from "../../data/storage";
+import { fmtTime, getNotifications, getSelectedShift, saveNotifications, uid } from "../../data/storage";
+import { secureGetItem, secureSetItem, secureRemoveItem } from "../../utils/crypto";
 import { getShiftBadge } from "../common/Badge";
 import { useModalFocusTrap } from "../common/ModalFocusTrap";
 
 export function ChecklistPage({
   session,
-  selectedShifts: propSelectedShifts,
+  selectedShift: propSelectedShift,
   onUpdate,
   onEndShift,
   onOpenDashboard,
   onExit,
 }: {
   session: ShiftSession;
-  selectedShifts?: ShiftType[];
+  selectedShift?: ShiftType | null;
   onUpdate: (s: ShiftSession) => void;
   onEndShift: (continueNextShift?: boolean) => void;
   onOpenDashboard?: () => void;
@@ -23,23 +24,16 @@ export function ChecklistPage({
   const [showExitConfirm, setShowExitConfirm] = useState(false);
   const [filter, setFilter] = useState<"all" | "pending" | "done">("all");
 
-  const activeSelectedShifts =
-    propSelectedShifts && propSelectedShifts.length > 0
-      ? propSelectedShifts
-      : typeof window !== "undefined"
-        ? getSelectedShifts()
-        : [];
+  const activeSelectedShift = propSelectedShift || (typeof window !== "undefined"
+    ? getSelectedShift()
+    : null);
 
-  // Rules:
-  // 1. If user selected only 1 shift (e.g. morning only or afternoon only) => 'ต่อกะ' disabled always
-  // 2. If user selected 2 shifts (morning + afternoon) => can continue shift only when in morning and progress === 100
-  // 3. In afternoon shift => no next shift, 'ต่อกะ' disabled
-  const hasNextShift = activeSelectedShifts.length === 2 && session.shift === "morning";
+  const hasNextShift = session.shift === "morning";
 
   const [continueShift, setContinueShift] = useState<boolean>(() => {
     if (!hasNextShift) return false;
     if (typeof window !== "undefined") {
-      return localStorage.getItem("app_queue_afternoon") === "true";
+      return secureGetItem("app_queue_afternoon") === "true";
     }
     return false;
   });
@@ -97,9 +91,9 @@ export function ChecklistPage({
     setContinueShift(nextVal);
     if (typeof window !== "undefined") {
       if (nextVal) {
-        localStorage.setItem("app_queue_afternoon", "true");
+        secureSetItem("app_queue_afternoon", "true");
       } else {
-        localStorage.removeItem("app_queue_afternoon");
+        secureRemoveItem("app_queue_afternoon");
       }
     }
   }
@@ -167,13 +161,12 @@ export function ChecklistPage({
                 type="button"
                 disabled={!canContinueShift}
                 onClick={handleToggleContinue}
-                className={`text-xs px-3.5 py-2 rounded-xl border font-semibold flex items-center gap-1.5 min-h-[36px] transition-all ${
-                  !canContinueShift
-                    ? "bg-slate-900/60 border-slate-800 text-slate-500 cursor-not-allowed opacity-60"
-                    : continueShift
-                      ? "bg-indigo-600 border-indigo-500 text-white shadow-md shadow-indigo-950/50 cursor-pointer hover:bg-indigo-500"
-                      : "bg-slate-800/90 border-slate-700 text-slate-200 hover:border-indigo-500 hover:text-indigo-300 cursor-pointer"
-                }`}
+                className={`text-xs px-3.5 py-2 rounded-xl border font-semibold flex items-center gap-1.5 min-h-[36px] transition-all ${!canContinueShift
+                  ? "bg-slate-900/60 border-slate-800 text-slate-500 cursor-not-allowed opacity-60"
+                  : continueShift
+                    ? "bg-indigo-600 border-indigo-500 text-white shadow-md shadow-indigo-950/50 cursor-pointer hover:bg-indigo-500"
+                    : "bg-slate-800/90 border-slate-700 text-slate-200 hover:border-indigo-500 hover:text-indigo-300 cursor-pointer"
+                  }`}
                 title={
                   !hasNextShift
                     ? "เลือกเพียง 1 กะ หรือไม่มีกะถัดไปที่เลือกไว้"
@@ -211,11 +204,10 @@ export function ChecklistPage({
                 type="button"
                 disabled={!canFinishShift}
                 onClick={() => setShowConfirm(true)}
-                className={`text-xs px-4 py-2 rounded-xl border font-semibold flex items-center gap-1.5 min-h-[36px] transition-all ${
-                  !canFinishShift
-                    ? "bg-slate-900/60 border-slate-800 text-slate-500 cursor-not-allowed opacity-60"
-                    : "bg-rose-950/80 border-rose-800 text-rose-200 hover:bg-rose-900 hover:border-rose-600 hover:text-white cursor-pointer shadow-lg shadow-rose-950/50"
-                }`}
+                className={`text-xs px-4 py-2 rounded-xl border font-semibold flex items-center gap-1.5 min-h-[36px] transition-all ${!canFinishShift
+                  ? "bg-slate-900/60 border-slate-800 text-slate-500 cursor-not-allowed opacity-60"
+                  : "bg-rose-950/80 border-rose-800 text-rose-200 hover:bg-rose-900 hover:border-rose-600 hover:text-white cursor-pointer shadow-lg shadow-rose-950/50"
+                  }`}
                 title={
                   shiftCompleted
                     ? "จบกะงานเรียบร้อยแล้ว"

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { Notification, ShiftSession, ShiftType, User, ChecklistItem } from "../../types";
-import { getChecklistTemplate } from "../../data/checklists";
+
 import {
   fmtDate,
   fmtTime,
@@ -10,6 +10,7 @@ import {
   saveSessions,
   seedSampleData,
 } from "../../data/storage";
+import { secureGetItem, secureSetItem, secureRemoveItem } from "../../utils/crypto";
 import { Badge, getShiftBadge, getShiftName } from "../common/Badge";
 import { BrandLogo } from "../common/BrandLogo";
 import { SessionDetailModal } from "../admin/SessionDetailModal";
@@ -118,7 +119,7 @@ export function ExecutiveDashboard({
         // Read notification IDs stored locally
         const readIds: string[] = (() => {
           try {
-            return JSON.parse(localStorage.getItem("app_manager_read_notifs") ?? "[]");
+            return JSON.parse(secureGetItem("app_manager_read_notifs") ?? "[]");
           } catch {
             return [];
           }
@@ -344,9 +345,9 @@ export function ExecutiveDashboard({
       try {
         setIsResetting(true);
         await resetTodayChecklistDataAction();
-        localStorage.setItem("app_sessions", "[]");
-        localStorage.removeItem("app_active_session");
-        localStorage.removeItem("app_manager_read_notifs");
+        secureSetItem("app_sessions", "[]");
+        secureRemoveItem("app_active_session");
+        secureRemoveItem("app_manager_read_notifs");
         showToast("รีเซ็ตข้อมูลเช็คลิสต์ประจำวันเรียบร้อยแล้ว ✓");
         await loadDbSessions(true);
         if (currentRole === "manager_assistant") {
@@ -364,7 +365,7 @@ export function ExecutiveDashboard({
   function handleMarkAllNotifsRead() {
     const allIds = notifications.map((n) => n.shiftSessionId);
     try {
-      localStorage.setItem("app_manager_read_notifs", JSON.stringify(allIds));
+      secureSetItem("app_manager_read_notifs", JSON.stringify(allIds));
     } catch { }
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
     showToast("ทำเครื่องหมายว่าอ่านแล้วทั้งหมดเรียบร้อย");

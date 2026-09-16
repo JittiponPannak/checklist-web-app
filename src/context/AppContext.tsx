@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Notification, Position, ShiftSession, ShiftType, User } from "../types";
-import { getChecklistTemplate, STAFF_POSITIONS } from "../data/checklists";
+import { STAFF_POSITIONS } from "../types";
 import {
   ensureDefaultManager,
   getActiveSession,
@@ -23,23 +23,24 @@ import {
   toggleTaskWorkAction,
   endShiftSessionAction,
 } from "../actions/checklist";
+import { secureGetItem, secureSetItem, secureRemoveItem } from "../utils/crypto";
 
 interface AppContextType {
   currentUser: User | null;
   selectedShift: ShiftType | null;
-  selectedShifts: ShiftType[];
+
   activeSession: ShiftSession | null;
   sessions: ShiftSession[];
   isReady: boolean;
   login: (user: User, shift?: ShiftType, redirectPath?: string) => void;
   logout: (redirectTo?: string) => void;
-  selectShift: (shift: ShiftType, chosenShifts?: ShiftType[]) => void;
+  selectShift: (shift: ShiftType) => void;
   selectPosition: (position: string) => void;
   updateSession: (updated: ShiftSession) => void;
   endShift: (continueNextShift?: boolean) => void;
   setCurrentUser: (user: User | null) => void;
   setSelectedShift: (shift: ShiftType | null) => void;
-  setSelectedShifts: (shifts: ShiftType[]) => void;
+
   setActiveSession: (session: ShiftSession | null) => void;
 }
 
@@ -51,7 +52,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [isReady, setIsReady] = useState(false);
   const [currentUser, setCurrentUserState] = useState<User | null>(null);
   const [selectedShift, setSelectedShiftState] = useState<ShiftType | null>(null);
-  const [selectedShifts, setSelectedShiftsState] = useState<ShiftType[]>([]);
+
   const [activeSession, setActiveSessionState] = useState<ShiftSession | null>(null);
   const [sessions, setSessionsState] = useState<ShiftSession[]>([]);
 
@@ -59,13 +60,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     ensureDefaultManager();
     const storedUser = getCurrentUser();
     const storedShift = getSelectedShift();
-    const storedShifts = typeof window !== "undefined" ? (JSON.parse(localStorage.getItem("app_selected_shifts") || "[]") as ShiftType[]) : [];
+
     const storedSession = getActiveSession();
     const storedSessions = getSessions();
 
     if (storedUser) setCurrentUserState(storedUser);
     if (storedShift) setSelectedShiftState(storedShift);
-    setSelectedShiftsState(storedShifts);
+
     if (storedSession) setActiveSessionState(storedSession);
     setSessionsState(storedSessions);
 
@@ -97,12 +98,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     saveSelectedShift(shift);
   }
 
-  function setSelectedShifts(shifts: ShiftType[]) {
-    setSelectedShiftsState(shifts);
-    if (typeof window !== "undefined") {
-      localStorage.setItem("app_selected_shifts", JSON.stringify(shifts));
-    }
-  }
+
 
   function setActiveSession(session: ShiftSession | null) {
     setActiveSessionState(session);
@@ -173,12 +169,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     });
   }
 
-  async function selectShift(shift: ShiftType, chosenShifts?: ShiftType[]) {
+  async function selectShift(shift: ShiftType) {
     if (!currentUser) return;
     setSelectedShift(shift);
-    if (chosenShifts && chosenShifts.length > 0) {
-      setSelectedShifts(chosenShifts);
-    }
 
     const position = currentUser.position || STAFF_POSITIONS[0];
 
@@ -207,54 +200,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           router.push(currentUser.role === "manager" ? "/admin/dashboard" : "/checklist");
         });
         return;
+        return;
+      } else {
+        alert("ดึงข้อมูลจากฐานข้อมูลไม่สำเร็จ: " + (res.error || ""));
       }
     } catch (err) {
-      console.warn("Could not sync shift session from DB, fallback to local:", err);
+      console.warn("Could not sync shift session from DB:", err);
+      alert("เกิดข้อผิดพลาดในการดึงข้อมูลจากระบบ กรุณาลองใหม่อีกครั้ง");
     }
-
-    // Local fallback
-    const allSessions = getSessions();
-    const todayStr = new Date().toDateString();
-
-    const existingIndex = allSessions.findIndex(
-      (s) =>
-        s.shift === shift &&
-        s.userPosition?.trim() === position.trim() &&
-        (new Date(s.startedAt).toDateString() === todayStr ||
-          (s.completedAt ? new Date(s.completedAt).toDateString() === todayStr : false))
-    );
-
-    let session: ShiftSession;
-    if (existingIndex >= 0) {
-      session = {
-        ...allSessions[existingIndex],
-        completedAt: allSessions[existingIndex].items.every((i) => i.completedAt !== null)
-          ? allSessions[existingIndex].completedAt
-          : null,
-      };
-      setActiveSession(session);
-    } else {
-      const template = getChecklistTemplate(position, shift);
-      session = {
-        id: uid(),
-        userId: currentUser.id,
-        userName: currentUser.name,
-        userPosition: position,
-        shift: shift,
-        startedAt: new Date().toISOString(),
-        completedAt: null,
-        items: template.map((i) => ({ ...i, completedAt: null })),
-        notified: false,
-      };
-      const next = [...allSessions, session];
-      saveSessions(next);
-      setSessionsState(next);
-      setActiveSession(session);
-    }
-
-    startTransition(() => {
-      router.push(currentUser.role === "manager" ? "/admin/dashboard" : "/checklist");
-    });
   }
 
   function updateSession(updated: ShiftSession) {
@@ -311,9 +264,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     const hadAfternoonQueue =
       continueNextShift ||
-      (typeof window !== "undefined" && localStorage.getItem("app_queue_afternoon") === "true");
+      (typeof window !== "undefined" && secureGetItem("app_queue_afternoon") === "true");
     if (typeof window !== "undefined") {
-      localStorage.removeItem("app_queue_afternoon");
+      secureRemoveItem("app_queue_afternoon");
     }
 
     setActiveSession(null);
@@ -338,7 +291,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       value={{
         currentUser,
         selectedShift,
-        selectedShifts,
+
         activeSession,
         sessions,
         isReady,
@@ -350,7 +303,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         endShift,
         setCurrentUser,
         setSelectedShift,
-        setSelectedShifts,
         setActiveSession,
       }}
     >

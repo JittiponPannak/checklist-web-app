@@ -1,19 +1,21 @@
+import { secureGetItem, secureSetItem, secureRemoveItem } from "./crypto";
+
 function login(userID: string, branchID: string) {
-    localStorage.setItem("user_id", userID)
-    localStorage.setItem("branch_id", branchID)
+    secureSetItem("user_id", userID)
+    secureSetItem("branch_id", branchID)
 }
 function startSession(shift_session: string) {
-    localStorage.setItem("shift_session", shift_session)
+    secureSetItem("shift_session", shift_session)
 }
 function endSession(shift_session: string) {
-    localStorage.removeItem("shift_session")
+    secureRemoveItem("shift_session")
 }
 
 function updateBranchLastUpdate(timestamp: Date) {
-    localStorage.setItem("branch_last_update", timestamp.toString())
+    secureSetItem("branch_last_update", timestamp.toString())
 }
 function getBranchLastUpdate(): Date | null {
-    const data = localStorage.getItem("branch_last_update");
+    const data = secureGetItem("branch_last_update");
 
     return typeof (data) == "string" ? new Date(data) : null;
 }

@@ -36,7 +36,9 @@ html {
   background-color: #ffffff;
 }
 
-html, body, #root {
+html,
+body,
+#root {
   min-height: 100%;
   font-family: var(--font-sans);
   background-color: #ffffff;
@@ -47,17 +49,29 @@ html, body, #root {
   scrollbar-width: thin;
   scrollbar-color: var(--color-border) transparent;
 }
-*::-webkit-scrollbar { width: 4px; }
-*::-webkit-scrollbar-track { background: transparent; }
-*::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 2px; }
+
+*::-webkit-scrollbar {
+  width: 4px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 2px;
+}
 
 :focus-visible {
   outline: 2px solid #047857;
   outline-offset: 2px;
 }
+
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
@@ -75,3 +89,18 @@ html, body, #root {
   border-width: 0;
 }
 
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(-100px) rotate(0deg);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateY(100vh) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+.animate-confetti-fall {
+  animation: confetti-fall forwards cubic-bezier(.37, 0, .63, 1);
+}

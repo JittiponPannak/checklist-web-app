@@ -1,5 +1,5 @@
 import { ShiftType, User } from "../../types";
-import { MANAGEMENT_POSITIONS, STAFF_POSITIONS, getChecklistTemplate } from "../../data/checklists";
+import { MANAGEMENT_POSITIONS, STAFF_POSITIONS } from "../../types";
 import { Badge } from "../common/Badge";
 
 export function PositionSelectPage({
@@ -18,7 +18,7 @@ export function PositionSelectPage({
   const isMorning = shift === "morning";
   const isAfternoon = shift === "afternoon";
   const shiftTitle = shift ? (isMorning ? "กะเช้า" : isAfternoon ? "กะบ่าย" : "กะควบ (2 กะ)") : null;
-  const shiftHours = shift ? (isMorning ? "08:00 – 16:00" : isAfternoon ? "16:00 – 00:00" : "08:00 – 00:00") : null;
+  const shiftHours = shift ? (isMorning ? "06:00 – 16:30" : isAfternoon ? "10:00 – 20:30" : "06:00 – 20:30") : null;
 
   const availablePositions = user.role === "manager" ? MANAGEMENT_POSITIONS : STAFF_POSITIONS;
 
@@ -72,7 +72,6 @@ export function PositionSelectPage({
         <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
           {availablePositions.map((pos) => {
             const isCashier = pos === "แคชเชียร์";
-            const itemCount = getChecklistTemplate(pos, shift || "morning").length;
             const cardTheme = isCashier
               ? {
                 hoverBorder: "hover:border-emerald-500/60 hover:shadow-[0_12px_28px_-6px_rgba(16,185,129,0.2)]",
@@ -92,7 +91,7 @@ export function PositionSelectPage({
                 key={pos}
                 role="button"
                 tabIndex={0}
-                aria-label={`เลือกหน้าที่ ${pos} (${itemCount} รายการเช็คลิสต์)`}
+                aria-label={`เลือกหน้าที่ ${pos}`}
                 onClick={() => onSelectPosition(pos)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") {
@@ -122,9 +121,7 @@ export function PositionSelectPage({
                       )}
                     </div>
 
-                    <Badge color={cardTheme.badgeColor}>
-                      {itemCount} รายการเช็คลิสต์
-                    </Badge>
+
                   </div>
 
                   <h3 className="text-xl sm:text-2xl font-bold text-white tracking-tight mb-2">

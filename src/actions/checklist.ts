@@ -85,14 +85,18 @@ export async function getOrCreateShiftSessionAction(params: {
       }
     }
 
-    // Fetch tasks for this role & shift from DB
+    const allowedShifts: ("morning" | "afternoon" | "morning_afternoon")[] =
+      dbShift === "morning_afternoon"
+        ? ["morning", "afternoon", "morning_afternoon"]
+        : [dbShift, "morning_afternoon"];
+
     let dbTasks = await db
       .select()
       .from(tasks)
       .where(
         and(
           eq(tasks.task_role, taskRole),
-          eq(tasks.shift, dbShift),
+          inArray(tasks.shift, allowedShifts),
           eq(tasks.disabled, false)
         )
       );
