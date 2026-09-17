@@ -107,6 +107,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   function login(user: User, shift?: ShiftType, redirectPath?: unknown) {
     const targetPath = typeof redirectPath === "string" ? redirectPath : null;
+
+    // Role verification for branch association
+    const requiresBranch = user.role === "employee" || user.role === "manager_assistant" || user.role === "manager";
+    if (requiresBranch && !user.branchName) {
+      setCurrentUser(user);
+      startTransition(() => {
+        router.push("/awaiting-assignment");
+      });
+      return;
+    }
+
     if (targetPath) {
       setCurrentUser(user);
       startTransition(() => {
@@ -114,6 +125,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       });
       return;
     }
+
     if (user.role === "admin" || user.role === "committee" || user.role === "general_manager") {
       setCurrentUser(user);
       startTransition(() => {
@@ -146,9 +158,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       } else if (prevRole === "admin" || prevRole === "committee" || prevRole === "general_manager") {
         router.push("/admin");
       } else if (prevRole === "manager" || prevRole === "manager_assistant") {
-        router.push("/manager");
+        router.push("/login/executive");
       } else {
-        router.push("/");
+        router.push("/login/staff");
       }
     });
   }

@@ -2377,12 +2377,38 @@ function ManagerDashboard({
 }
 
 // Helper to detect if current URL is /admin or #admin
+// ─── Awaiting Assignment Page ─────────────────────────────────────────────────────
+function AwaitingAssignmentPage({ onLogout }: { onLogout: () => void }) {
+  return (
+    <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4">
+      <div className="w-full max-w-sm bg-slate-900 border border-slate-800 rounded-2xl p-8 sm:p-10 shadow-2xl text-center">
+        <div className="w-16 h-16 rounded-full bg-amber-950 border border-amber-800 text-amber-400 mx-auto flex items-center justify-center mb-6">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+          </svg>
+        </div>
+        <h2 className="text-lg font-bold text-white mb-3">รอการกำหนดสาขา</h2>
+        <p className="text-sm text-slate-400 mb-8 leading-relaxed">
+          บัญชีของคุณยังไม่ได้ถูกกำหนดให้อยู่ในสาขาใด ๆ กรุณาติดต่อผู้ดูแลระบบ (Admin) เพื่อทำการกำหนดสาขาก่อนเข้าใช้งาน
+        </p>
+        <button
+          type="button"
+          onClick={onLogout}
+          className="w-full py-3 px-4 rounded-xl font-bold bg-slate-800 text-white hover:bg-slate-700 transition-colors shadow-lg cursor-pointer focus-visible:outline-2 focus-visible:outline-indigo-500"
+        >
+          กลับสู่หน้าล็อกอิน
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ─── App Root ─────────────────────────────────────────────────────────────────
-type Page = "auth" | "shift-select" | "position-select" | "checklist" | "manager";
+type Page = "auth" | "shift-select" | "position-select" | "checklist" | "manager" | "awaiting-assignment";
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [page, setPage] = useState<"auth" | "shift-select" | "position-select" | "checklist" | "manager">("auth");
+  const [page, setPage] = useState<Page>("auth");
   const [authView, setAuthView] = useState<'staff' | 'executive' | 'admin'>('staff');
   const [selectedShift, setSelectedShift] = useState<ShiftType | null>(null);
   const [activeSession, setActiveSession] = useState<ShiftSession | null>(null);
@@ -2403,6 +2429,13 @@ export default function App() {
 
   function handleLogin(user: User, shift?: ShiftType) {
     setCurrentUser(user);
+
+    // Block users that have not been assigned to a branch yet (unless they are admin)
+    if (!user.branchName && user.role !== "admin") {
+      setPage("awaiting-assignment");
+      return;
+    }
+
     if (user.role === "manager" || user.role === "committee" || user.role === "general_manager" || user.role === "admin") {
       setPage("manager");
     } else {
@@ -2495,6 +2528,9 @@ export default function App() {
         )}
         {page === "manager" && currentUser && (
           <ManagerDashboard user={currentUser} onLogout={handleLogout} activeSession={activeSession} onStartChecklist={handleShiftSelect} onUpdateSession={handleSessionUpdate} onEndShift={handleEndShift} onOpenChecklistPage={() => setPage("checklist")} />
+        )}
+        {page === "awaiting-assignment" && currentUser && (
+          <AwaitingAssignmentPage onLogout={handleLogout} />
         )}
       </main>
     </>

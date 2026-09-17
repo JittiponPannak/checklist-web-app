@@ -17,31 +17,7 @@ export function ManagerAuthPage({ onLogin }: { onLogin: (user: User) => void }) 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  async function directLogin(email: string, pass: string, position: string) {
-    setLoading(true);
-    setError("");
-    try {
-      const res = await loginAction(email, pass);
-      if (!res.success || !res.user) {
-        setError(res.error || "อีเมลหรือรหัสผ่านไม่ถูกต้อง");
-        setLoading(false);
-        return;
-      }
-      const activeUser: User = {
-        ...res.user,
-        role: position.includes("กรรมการ") ? "committee" : position.includes("ผู้ช่วย") ? "manager_assistant" : "manager",
-        position: position || res.user.position,
-      };
-      const localUsers = getUsers();
-      if (!localUsers.some((u) => u.id === activeUser.id)) {
-        saveUsers([...localUsers, activeUser]);
-      }
-      onLogin(activeUser);
-    } catch {
-      setError("เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่อีกครั้ง");
-      setLoading(false);
-    }
-  }
+
 
   async function handleLogin() {
     if (!form.email.trim() || !form.password.trim()) {
@@ -238,72 +214,7 @@ export function ManagerAuthPage({ onLogin }: { onLogin: (user: User) => void }) 
           </button>
         </div>
 
-        {/* 1-Click Sample Accounts */}
-        {tab === "login" && (
-          <div className="pt-4 border-t border-slate-800/80">
-            <div className="flex items-center justify-between mb-2.5">
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                คลิกทดสอบด่วน (1-Click Accounts):
-              </span>
-              <span className="text-[10px] text-indigo-300 bg-indigo-950/80 border border-indigo-800/60 px-2 py-0.5 rounded-md font-semibold">
-                เข้าสู่ Manager Dashboard
-              </span>
-            </div>
-            <div className="space-y-2">
-              {[
-                {
-                  role: "ผู้จัดการร้าน",
-                  name: "คุณวิภาดา สุขเจริญ",
-                  email: "manager@factory.com",
-                  pass: "manager123",
-                  pos: "ผู้จัดการร้าน",
-                  badge: "bg-indigo-950/80 text-indigo-300 border-indigo-800",
-                },
-                {
-                  role: "ผู้ช่วยผู้จัดการ",
-                  name: "คุณธนากร เกียรติไพบูลย์",
-                  email: "assistant@factory.com",
-                  pass: "123",
-                  pos: "ผู้ช่วยผู้จัดการร้าน",
-                  badge: "bg-slate-800 text-slate-300 border-slate-700",
-                },
-                {
-                  role: "กรรมการบริหาร",
-                  name: "คุณกิตติศักดิ์ พัฒนกิจ",
-                  email: "director@factory.com",
-                  pass: "director123",
-                  pos: "กรรมการ",
-                  badge: "bg-amber-950/80 text-amber-300 border-amber-800 font-bold",
-                },
-              ].map((acc) => (
-                <button
-                  key={acc.email}
-                  type="button"
-                  onClick={() => directLogin(acc.email, acc.pass, acc.pos)}
-                  className="w-full flex items-center justify-between p-2.5 rounded-xl border border-slate-800 hover:border-indigo-500 bg-slate-950 hover:bg-slate-900 transition-all group cursor-pointer text-left shadow-xs"
-                >
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-lg bg-slate-800 group-hover:bg-indigo-600 group-hover:text-white flex items-center justify-center text-xs font-bold text-slate-200 border border-slate-700 transition-colors">
-                      {acc.role.charAt(0)}
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-xs font-bold text-slate-100">{acc.name}</span>
-                        <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-md border ${acc.badge}`}>
-                          {acc.role}
-                        </span>
-                      </div>
-                      <span className="text-[11px] text-slate-400 font-mono">{acc.email}</span>
-                    </div>
-                  </div>
-                  <span className="text-[11px] text-indigo-400 font-bold group-hover:translate-x-0.5 transition-transform flex items-center gap-0.5">
-                    เข้าสู่ระบบ →
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
+
 
         {/* Portal Switching Links */}
         <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">

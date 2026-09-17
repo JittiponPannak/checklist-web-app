@@ -12,7 +12,10 @@ export default function ExecutiveLoginPage() {
     useEffect(() => {
         if (!isReady) return;
         if (currentUser) {
-            if (currentUser.role === "manager" || currentUser.role === "general_manager" || currentUser.role === "committee") {
+            const requiresBranch = currentUser.role === "employee" || currentUser.role === "manager_assistant" || currentUser.role === "manager";
+            if (requiresBranch && !currentUser.branchName) {
+                router.replace("/awaiting-assignment");
+            } else if (currentUser.role === "manager" || currentUser.role === "general_manager" || currentUser.role === "committee") {
                 router.replace("/manager/dashboard");
             } else if (currentUser.role === "admin") {
                 router.replace("/admin/dashboard");

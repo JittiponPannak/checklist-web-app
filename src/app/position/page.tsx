@@ -13,6 +13,11 @@ export default function PositionRoutePage() {
     if (!isReady) return;
     if (!currentUser) {
       router.replace("/");
+    } else {
+      const requiresBranch = currentUser.role === "employee" || currentUser.role === "manager_assistant" || currentUser.role === "manager";
+      if (requiresBranch && !currentUser.branchName) {
+        router.replace("/awaiting-assignment");
+      }
     }
   }, [currentUser, isReady, router]);
 

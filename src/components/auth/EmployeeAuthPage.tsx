@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { User } from "../../types";
 import { STAFF_POSITIONS } from "../../types";
 import { getUsers, saveUsers } from "../../data/storage";
 import { BrandLogo } from "../common/BrandLogo";
 import { loginAction, registerAction } from "../../actions/auth";
+import { getBranchesAction, DashboardBranch } from "../../actions/branch";
 import Link from "next/link";
 
 export function EmployeeAuthPage({
@@ -12,15 +13,27 @@ export function EmployeeAuthPage({
     onLogin: (user: User, shift?: any, redirectPath?: string) => void;
 }) {
     const [tab, setTab] = useState<"login" | "register">("login");
+    const [branches, setBranches] = useState<DashboardBranch[]>([]);
     const [form, setForm] = useState({
         name: "",
         email: "",
         password: "",
         role: "employee" as "employee" | "manager_assistant",
         position: STAFF_POSITIONS[0],
+        branchId: "",
     });
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        if (tab === "register") {
+            getBranchesAction().then((res) => {
+                if (res.success && res.branches) {
+                    setBranches(res.branches);
+                }
+            }).catch(console.error);
+        }
+    }, [tab]);
 
     async function handleLogin() {
         if (!form.email.trim() || !form.password.trim()) {
@@ -74,6 +87,7 @@ export function EmployeeAuthPage({
                 password: form.password,
                 role: form.role,
                 position: form.position,
+                branchId: form.branchId || undefined,
             });
             if (!res.success || !res.user) {
                 setError(res.error || "ไม่สามารถสมัครสมาชิกได้");
@@ -138,18 +152,38 @@ export function EmployeeAuthPage({
 
                 <div role="tabpanel" className="space-y-4 focus-visible:outline-none">
                     {tab === "register" && (
-                        <div>
-                            <label htmlFor="reg-name" className="block text-xs font-semibold text-slate-300 mb-1.5">
-                                ชื่อ-นามสกุล
-                            </label>
-                            <input
-                                id="reg-name"
-                                className={inp}
-                                placeholder="ระบุชื่อ-นามสกุล"
-                                value={form.name}
-                                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                            />
-                        </div>
+                        <>
+                            <div>
+                                <label htmlFor="reg-name" className="block text-xs font-semibold text-slate-300 mb-1.5">
+                                    ชื่อ-นามสกุล
+                                </label>
+                                <input
+                                    id="reg-name"
+                                    className={inp}
+                                    placeholder="ระบุชื่อ-นามสกุล"
+                                    value={form.name}
+                                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                                />
+                            </div>
+                            <div>
+                                <label htmlFor="reg-branch" className="block text-xs font-semibold text-slate-300 mb-1.5">
+                                    สาขาที่สังกัด (ถ้ามี)
+                                </label>
+                                <select
+                                    id="reg-branch"
+                                    className={inp}
+                                    value={form.branchId}
+                                    onChange={(e) => setForm({ ...form, branchId: e.target.value })}
+                                >
+                                    <option value="">-- ไม่ระบุ (รอดำเนินการ) --</option>
+                                    {branches.map((b) => (
+                                        <option key={b.id} value={b.id}>
+                                            {b.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        </>
                     )}
 
                     <div>
@@ -197,21 +231,7 @@ export function EmployeeAuthPage({
                         <span>{loading ? "กำลังตรวจสอบข้อมูล..." : tab === "login" ? "เข้าสู่ระบบพนักงาน →" : "ยืนยันการสมัครสมาชิก"}</span>
                     </button>
 
-                    {tab === "login" && (
-                        <div className="pt-3.5 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
-                            <span className="text-[11px] font-medium text-slate-400">ทดสอบด่วน:</span>
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    setForm({ ...form, email: "cashier@factory.com", password: "123" });
-                                    setError("");
-                                }}
-                                className="inline-flex items-center gap-1.5 font-mono text-indigo-300 bg-indigo-950/60 hover:bg-indigo-900/80 border border-indigo-800/60 px-2.5 py-1 rounded-lg text-xs font-semibold cursor-pointer transition-colors"
-                            >
-                                <span>cashier@factory.com</span>
-                            </button>
-                        </div>
-                    )}
+
                 </div>
 
                 <div className="mt-5 pt-4 border-t border-slate-800/80 text-center flex flex-col gap-2">

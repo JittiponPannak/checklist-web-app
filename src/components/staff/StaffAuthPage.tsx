@@ -133,8 +133,8 @@ export function StaffAuthPage({
                 setError("");
               }}
               className={`flex-1 py-2 min-h-[36px] text-xs font-semibold rounded-lg transition-all cursor-pointer text-center ${tab === t.id
-                  ? "bg-indigo-600 text-white shadow-md font-bold"
-                  : "text-slate-400 hover:text-slate-200"
+                ? "bg-indigo-600 text-white shadow-md font-bold"
+                : "text-slate-400 hover:text-slate-200"
                 }`}
             >
               {t.label}
@@ -258,53 +258,7 @@ export function StaffAuthPage({
             )}
           </button>
 
-          {/* Quick 1-click credential helper for employee */}
-          {tab === "staff" && (
-            <div className="pt-3.5 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
-              <span className="text-[11px] font-medium text-slate-400">บัญชีทดสอบพนักงาน:</span>
-              <button
-                type="button"
-                onClick={() => {
-                  setForm({ ...form, email: "cashier@factory.com", password: "123" });
-                  setError("");
-                }}
-                className="inline-flex items-center gap-1.5 font-mono text-amber-300 bg-amber-950/60 hover:bg-amber-900/80 border border-amber-800/60 px-2.5 py-1 rounded-lg text-xs font-semibold cursor-pointer transition-colors"
-                title="คลิกเพื่อกรอกข้อมูลทดสอบอัตโนมัติ"
-              >
-                <span>cashier@factory.com</span>
-                <span className="text-[10px] text-amber-300 bg-amber-900/80 px-1 py-0.2 rounded font-sans">กรอกด่วน</span>
-              </button>
-            </div>
-          )}
 
-          {/* Quick 1-click credentials for manager */}
-          {tab === "manager" && (
-            <div className="pt-3.5 border-t border-slate-800/80 space-y-2">
-              <span className="text-[11px] font-bold text-slate-400 block">
-                คลิกทดสอบด่วน (เข้าสู่ Manager Dashboard ทันที):
-              </span>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-1.5">
-                {[
-                  { role: "ผู้จัดการร้าน", email: "manager@factory.com", pass: "manager123" },
-                  { role: "ผู้ช่วยฯ", email: "assistant@factory.com", pass: "123" },
-                  { role: "กรรมการ", email: "director@factory.com", pass: "director123" },
-                ].map((acc) => (
-                  <button
-                    key={acc.email}
-                    type="button"
-                    onClick={() => {
-                      setForm({ ...form, email: acc.email, password: acc.pass });
-                      setError("");
-                    }}
-                    className="p-2 rounded-xl border border-slate-800 hover:border-indigo-500 bg-slate-950 hover:bg-slate-900 text-left transition-all cursor-pointer shadow-xs"
-                  >
-                    <span className="block text-xs font-bold text-slate-200">{acc.role}</span>
-                    <span className="block text-[10px] font-mono text-slate-400 truncate">{acc.email}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Link to Admin Portal */}

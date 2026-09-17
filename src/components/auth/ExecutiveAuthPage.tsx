@@ -115,30 +115,7 @@ export function ExecutiveAuthPage({
                     </button>
                 </form>
 
-                <div className="pt-3.5 border-t border-slate-800/80 space-y-2">
-                    <span className="text-[11px] font-bold text-slate-400 block">
-                        ทดสอบด่วน:
-                    </span>
-                    <div className="flex gap-1.5 flex-wrap">
-                        {[
-                            { role: "ผู้จัดการ", email: "manager@factory.com", pass: "manager123" },
-                            { role: "กรรมการ", email: "director@factory.com", pass: "director123" },
-                        ].map((acc) => (
-                            <button
-                                key={acc.email}
-                                type="button"
-                                onClick={() => {
-                                    setForm({ ...form, email: acc.email, password: acc.pass });
-                                    setError("");
-                                }}
-                                className="flex-1 p-2.5 rounded-xl border border-slate-800 hover:border-indigo-500 bg-slate-950 hover:bg-slate-900 text-left transition-all cursor-pointer shadow-xs"
-                            >
-                                <span className="block text-xs font-bold text-indigo-300">{acc.role}</span>
-                                <span className="block text-[10px] font-mono text-slate-400 truncate">{acc.email}</span>
-                            </button>
-                        ))}
-                    </div>
-                </div>
+
 
                 <div className="mt-5 pt-4 border-t border-slate-800/80 text-center flex flex-col gap-2">
                     <Link href="/login/staff" className="text-[11px] text-slate-400 hover:text-indigo-400 font-medium transition-colors">

@@ -1,6 +1,6 @@
 import { boolean, date, integer, pgEnum, pgTable, timestamp, varchar, time, uuid, text } from "drizzle-orm/pg-core";
 
-export const roleEnum = pgEnum('role', ['committee', 'general_manager', 'manager', 'manager_assistant', 'employee']);
+export const roleEnum = pgEnum('role', ['admin', 'committee', 'general_manager', 'manager', 'manager_assistant', 'employee']);
 export const taskRoleEnum = pgEnum('task_role', ['manager_assistant', 'cashier', 'stock']);
 export const shiftEnum = pgEnum('shift', ['morning', 'afternoon', 'morning_afternoon']);
 

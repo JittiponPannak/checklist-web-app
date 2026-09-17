@@ -15,7 +15,7 @@ const INITIAL_USERS: Array<{
   name: string;
   email: string;
   password: string;
-  role: 'committee' | 'general_manager' | 'manager' | 'manager_assistant' | 'employee';
+  role: 'admin' | 'committee' | 'general_manager' | 'manager' | 'manager_assistant' | 'employee';
   position?: string;
 }> = [
     { name: "คุณวิภาดา สุขเจริญ", email: "manager@factory.com", password: "manager123", role: "manager", position: "ผู้จัดการร้าน" },
@@ -27,6 +27,7 @@ const INITIAL_USERS: Array<{
     { name: "สมชาย มั่นคง", email: "stock@factory.com", password: "123", role: "employee", position: "พนักงานสต็อก/จัดเรียง" },
     { name: "กัญญาภัทร พิมพา", email: "kanya@factory.com", password: "123", role: "employee", position: "แคชเชียร์" },
     { name: "ศุภชัย มีสุข", email: "suphachai@factory.com", password: "123", role: "employee", position: "พนักงานทั่วไป" },
+    { name: "คุณสมเกียรติ บริหารกิจ", email: "admin@factory.com", password: "admin123", role: "admin", position: "ผู้ดูแลระบบส่วนกลาง" },
   ];
 
 /**
@@ -88,13 +89,14 @@ export async function loginAction(email: string, password: string): Promise<Auth
       .set({ last_login: new Date() })
       .where(eq(users.id, foundUser.id));
 
-    const isManagement = ['committee', 'general_manager', 'manager', 'manager_assistant'].includes(foundUser.role);
+    const isManagement = ['admin', 'committee', 'general_manager', 'manager', 'manager_assistant'].includes(foundUser.role);
 
     // Map DB role to UI position
     let defaultPosition: string | undefined = undefined;
     if (foundUser.role === "manager") defaultPosition = "ผู้จัดการร้าน";
     else if (foundUser.role === "committee") defaultPosition = "กรรมการ";
     else if (foundUser.role === "manager_assistant") defaultPosition = "ผู้ช่วยผู้จัดการร้าน";
+    else if (foundUser.role === "admin") defaultPosition = "ผู้ดูแลระบบส่วนกลาง";
 
     // Find user's branch
     const branchQuery = await db
@@ -131,14 +133,15 @@ export async function registerAction(data: {
   name: string;
   email: string;
   password: string;
-  role?: 'employee' | 'manager' | 'committee' | 'general_manager' | 'manager_assistant';
+  role?: 'employee' | 'manager' | 'committee' | 'general_manager' | 'manager_assistant' | 'admin';
   position?: string;
+  branchId?: string;
 }): Promise<AuthResponse> {
   const cleanName = data.name.trim();
   const cleanEmail = data.email.trim().toLowerCase();
   const cleanPassword = data.password.trim();
 
-  let dbRole: 'committee' | 'general_manager' | 'manager' | 'manager_assistant' | 'employee' = 'employee';
+  let dbRole: 'admin' | 'committee' | 'general_manager' | 'manager' | 'manager_assistant' | 'employee' = 'employee';
   if (data.role === 'manager') {
     if (data.position?.includes("กรรมการ")) dbRole = 'committee';
     else if (data.position?.includes("ผู้ช่วย")) dbRole = 'manager_assistant';
@@ -174,7 +177,24 @@ export async function registerAction(data: {
       })
       .returning();
 
-    const isManagement = ['committee', 'general_manager', 'manager', 'manager_assistant'].includes(created.role);
+    if (data.branchId) {
+      const targetBranch = await db
+        .select()
+        .from(branches)
+        .where(eq(branches.id, data.branchId))
+        .limit(1);
+
+      if (targetBranch.length > 0) {
+        await db
+          .update(branches)
+          .set({
+            members: [...targetBranch[0].members, created.id]
+          })
+          .where(eq(branches.id, data.branchId));
+      }
+    }
+
+    const isManagement = ['admin', 'committee', 'general_manager', 'manager', 'manager_assistant'].includes(created.role);
 
     const userObj: User = {
       id: created.id,
@@ -205,11 +225,13 @@ export async function getAllUsersAction(): Promise<{ success: boolean; users?: U
       if (u.role === "manager") defaultPosition = "ผู้จัดการร้าน";
       else if (u.role === "committee") defaultPosition = "กรรมการ";
       else if (u.role === "manager_assistant") defaultPosition = "ผู้ช่วยผู้จัดการร้าน";
+      else if (u.role === "admin") defaultPosition = "ผู้ดูแลระบบส่วนกลาง";
 
       return {
         id: u.id,
         name: u.name,
         email: u.email,
+        password: u.password,
         role: u.role as Role,
         position: defaultPosition,
       };
@@ -217,6 +239,60 @@ export async function getAllUsersAction(): Promise<{ success: boolean; users?: U
     return { success: true, users: formatted };
   } catch (err) {
     console.error("getAllUsersAction error:", err);
+    return { success: false, error: "เกิดข้อผิดพลาดในการดึงข้อมูลผู้ใช้งาน" };
+  }
+}
+
+/**
+ * Get user by id to refresh session (e.g., checking branch assignment point)
+ */
+export async function getUserByIdAction(id: string): Promise<AuthResponse> {
+  if (!id) return { success: false, error: "ไม่มีรหัสผู้ใช้งาน" };
+
+  try {
+    const result = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, id))
+      .limit(1);
+
+    if (result.length === 0) {
+      return { success: false, error: "ไม่พบผู้ใช้งาน" };
+    }
+
+    const foundUser = result[0];
+
+    // Map DB role to UI position
+    let defaultPosition: string | undefined = undefined;
+    if (foundUser.role === "manager") defaultPosition = "ผู้จัดการร้าน";
+    else if (foundUser.role === "committee") defaultPosition = "กรรมการ";
+    else if (foundUser.role === "manager_assistant") defaultPosition = "ผู้ช่วยผู้จัดการร้าน";
+    else if (foundUser.role === "admin") defaultPosition = "ผู้ดูแลระบบส่วนกลาง";
+
+    // Find user's branch
+    const branchQuery = await db
+      .select({ name: branches.name })
+      .from(branches)
+      .where(sql`${foundUser.id} = ANY(${branches.members})`)
+      .limit(1);
+
+    const branchName = branchQuery.length > 0 ? branchQuery[0].name : undefined;
+
+    const userObj: User = {
+      id: foundUser.id,
+      name: foundUser.name,
+      email: foundUser.email,
+      role: (foundUser.role as Role),
+      position: defaultPosition,
+      branchName: branchName,
+    };
+
+    return {
+      success: true,
+      user: userObj,
+    };
+  } catch (err) {
+    console.error("getUserByIdAction error:", err);
     return { success: false, error: "เกิดข้อผิดพลาดในการดึงข้อมูลผู้ใช้งาน" };
   }
 }

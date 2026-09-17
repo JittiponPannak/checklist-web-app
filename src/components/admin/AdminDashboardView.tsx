@@ -131,6 +131,16 @@ export function AdminDashboardView({
   const [branchSearch, setBranchSearch] = useState("");
   const [taskRoleFilter, setTaskRoleFilter] = useState<"all" | "cashier" | "stock" | "manager_assistant">("all");
   const [userSearch, setUserSearch] = useState("");
+  const [visiblePasswords, setVisiblePasswords] = useState<Set<string>>(new Set());
+
+  function togglePassword(userId: string) {
+    setVisiblePasswords(prev => {
+      const next = new Set(prev);
+      if (next.has(userId)) next.delete(userId);
+      else next.add(userId);
+      return next;
+    });
+  }
 
   const loadBranches = async () => {
     const res = await getBranchesAction();
@@ -685,6 +695,7 @@ export function AdminDashboardView({
                     <tr>
                       <th className="py-3.5 px-4">ชื่อ-นามสกุล</th>
                       <th className="py-3.5 px-3">อีเมล</th>
+                      <th className="py-3.5 px-3">รหัสผ่าน</th>
                       <th className="py-3.5 px-3">บทบาทระบบ (Role)</th>
                       <th className="py-3.5 px-3">ตำแหน่งที่กำหนด</th>
                       <th className="py-3.5 px-3 text-right">ปรับเปลี่ยนสิทธิ์</th>
@@ -700,6 +711,25 @@ export function AdminDashboardView({
                           <span>{u.name}</span>
                         </td>
                         <td className="py-3.5 px-3 font-mono text-slate-400">{u.email}</td>
+                        <td className="py-3.5 px-3 font-mono text-slate-400">
+                          <div className="flex items-center gap-2">
+                            <span>
+                              {visiblePasswords.has(u.id) ? (u.password || "ไม่มีรหัสผ่าน") : "••••••••"}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => togglePassword(u.id)}
+                              className="text-slate-500 hover:text-indigo-400 cursor-pointer"
+                              title={visiblePasswords.has(u.id) ? "ซ่อนรหัสผ่าน" : "แสดงรหัสผ่าน"}
+                            >
+                              {visiblePasswords.has(u.id) ? (
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24M1 1l22 22" /></svg>
+                              ) : (
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
+                              )}
+                            </button>
+                          </div>
+                        </td>
                         <td className="py-3.5 px-3">
                           <span
                             className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${u.role === "admin" || u.role === "committee"
@@ -716,8 +746,9 @@ export function AdminDashboardView({
                         <td className="py-3.5 px-3 text-right">
                           <select
                             value={u.role}
+                            disabled={u.role === "admin"}
                             onChange={(e) => handlePromoteUser(u.id, e.target.value)}
-                            className="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 cursor-pointer"
+                            className="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             <option value="employee">Staff (พนักงานทั่วไป)</option>
                             <option value="manager_assistant">Assistant (ผู้ช่วยผู้จัดการร้าน)</option>

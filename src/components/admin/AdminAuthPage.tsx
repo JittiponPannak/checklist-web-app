@@ -1,36 +1,17 @@
 import { useState } from "react";
 import { User } from "../../types";
-import { getUsers, saveUsers } from "../../data/storage";
+import { loginAction } from "../../actions/auth";
 import { BrandLogo } from "../common/BrandLogo";
 
 export function AdminAuthPage({ onLogin }: { onLogin: (user: User) => void }) {
   const [form, setForm] = useState({
-    email: "admin@factory.com",
+    email: "",
     password: "",
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  function directLogin(email: string, pass: string, position: string) {
-    setLoading(true);
-    setError("");
-    const localUsers = getUsers();
-    let found = localUsers.find((u) => u.email.toLowerCase() === email.toLowerCase());
-    if (!found) {
-      found = {
-        id: "u-admin",
-        name: "คุณสมเกียรติ บริหารกิจ",
-        email: email,
-        password: pass,
-        role: "admin",
-        position: position || "ผู้ดูแลระบบส่วนกลาง",
-      };
-      saveUsers([...localUsers, found]);
-    }
-    onLogin(found);
-  }
-
-  function handleLogin() {
+  async function handleLogin() {
     if (!form.email.trim() || !form.password.trim()) {
       setError("กรุณากรอกอีเมลและรหัสผ่าน");
       return;
@@ -38,43 +19,23 @@ export function AdminAuthPage({ onLogin }: { onLogin: (user: User) => void }) {
     setLoading(true);
     setError("");
 
-    const localUsers = getUsers();
-    const found = localUsers.find(
-      (u) =>
-        u.email.trim().toLowerCase() === form.email.trim().toLowerCase() &&
-        u.password === form.password.trim()
-    );
+    try {
+      const res = await loginAction(form.email, form.password);
 
-    // Fallback support for default admin credentials
-    if (form.email.trim().toLowerCase() === "admin@factory.com" && form.password.trim() === "admin123") {
-      const adminUser: User = found || {
-        id: "u-admin",
-        name: "คุณสมเกียรติ บริหารกิจ",
-        email: "admin@factory.com",
-        password: "admin123",
-        role: "admin",
-        position: "ผู้ดูแลระบบส่วนกลาง",
-      };
-      if (!localUsers.some((u) => u.id === adminUser.id)) {
-        saveUsers([...localUsers, adminUser]);
+      if (res.success && res.user) {
+        if (res.user.role !== "admin") {
+          setError("บัญชีนี้ไม่มีสิทธิ์ผู้ดูแลระบบส่วนกลาง (Admin)");
+        } else {
+          onLogin(res.user);
+        }
+      } else {
+        setError(res.error || "อีเมลหรือรหัสผ่านไม่ถูกต้อง (เฉพาะผู้ดูแลระบบ)");
       }
-      onLogin(adminUser);
-      return;
-    }
-
-    if (!found) {
-      setError("อีเมลหรือรหัสผ่านไม่ถูกต้อง (เฉพาะผู้ดูแลระบบ)");
+    } catch (err) {
+      setError("เกิดข้อผิดพลาดในการเชื่อมต่อฐานข้อมูล");
+    } finally {
       setLoading(false);
-      return;
     }
-
-    if (found.role !== "admin") {
-      setError("บัญชีนี้ไม่มีสิทธิ์ผู้ดูแลระบบส่วนกลาง (Admin)");
-      setLoading(false);
-      return;
-    }
-
-    onLogin(found);
   }
 
   const inputStyle =
@@ -161,42 +122,7 @@ export function AdminAuthPage({ onLogin }: { onLogin: (user: User) => void }) {
           </button>
         </div>
 
-        {/* 1-Click Sample Accounts */}
-        <div className="pt-4 border-t border-slate-800/80">
-          <div className="flex items-center justify-between mb-2.5">
-            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-              คลิกทดสอบด่วน (Admin Sample Account):
-            </span>
-            <span className="text-[10px] text-indigo-300 bg-indigo-950/80 border border-indigo-800/60 px-2 py-0.5 rounded-md font-semibold">
-              1-Click Login
-            </span>
-          </div>
-          <div>
-            <button
-              type="button"
-              onClick={() => directLogin("admin@factory.com", "admin123", "ผู้ดูแลระบบส่วนกลาง")}
-              className="w-full flex items-center justify-between p-3 rounded-xl border border-slate-800 hover:border-indigo-500 bg-slate-950 hover:bg-slate-900 transition-all group cursor-pointer text-left shadow-xs"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-xs font-bold shadow-xs">
-                  AD
-                </div>
-                <div>
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="text-xs font-bold text-slate-100">คุณสมเกียรติ บริหารกิจ</span>
-                    <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-indigo-950/80 text-indigo-300 border border-indigo-800">
-                      System Admin
-                    </span>
-                  </div>
-                  <span className="text-[11px] text-slate-400 font-mono">admin@factory.com</span>
-                </div>
-              </div>
-              <span className="text-xs text-indigo-400 font-bold group-hover:translate-x-0.5 transition-transform flex items-center gap-1 flex-shrink-0">
-                เข้าสู่ระบบ →
-              </span>
-            </button>
-          </div>
-        </div>
+
 
         {/* Portal Links */}
         <div className="pt-2 border-t border-slate-100 text-center text-xs text-slate-500">
