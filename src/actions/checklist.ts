@@ -23,6 +23,20 @@ function isValidUuid(id: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 }
 
+function getThaiStartAndEndOfDay(baseDate = new Date()) {
+  const yElement = new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Bangkok", year: "numeric" }).format(baseDate);
+  const mElement = new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Bangkok", month: "2-digit" }).format(baseDate);
+  const dElement = new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Bangkok", day: "2-digit" }).format(baseDate);
+
+  const startStr = `${yElement}-${mElement}-${dElement}T00:00:00+07:00`;
+  const endStr = `${yElement}-${mElement}-${dElement}T23:59:59.999+07:00`;
+
+  return {
+    startOfDay: new Date(startStr),
+    endOfDay: new Date(endStr)
+  };
+}
+
 /**
  * Get or create a shift session in Supabase PostgreSQL
  */
@@ -55,9 +69,7 @@ export async function getOrCreateShiftSessionAction(params: {
       }
     }
 
-    const today = new Date();
-    const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0);
-    const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
+    const { startOfDay, endOfDay } = getThaiStartAndEndOfDay();
 
     // Find branch and its authorized tasks for this user
     const branchForUser = await db

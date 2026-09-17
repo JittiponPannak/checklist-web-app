@@ -16,6 +16,7 @@ import { BrandLogo } from "../common/BrandLogo";
 import { SessionDetailModal } from "../admin/SessionDetailModal";
 import {
   getManagerShiftSessionsAction,
+  getHistoryShiftSessionsAction,
   approveShiftSessionAction,
   ManagerShiftSummary,
 } from "../../actions/manager";
@@ -54,6 +55,10 @@ export function ExecutiveDashboard({
 
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [sessions, setSessions] = useState<ShiftSession[]>([]);
+  const [historySessions, setHistorySessions] = useState<ShiftSession[]>([]);
+  const [specificDaySessions, setSpecificDaySessions] = useState<ShiftSession[] | null>(null);
+  const [selectedHistoryDate, setSelectedHistoryDate] = useState<string>("");
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [selectedSession, setSelectedSession] = useState<ShiftSession | null>(null);
   const [historySearch, setHistorySearch] = useState("");
   const [historyShiftFilter, setHistoryShiftFilter] = useState<"all" | ShiftType>("all");
@@ -168,6 +173,91 @@ export function ExecutiveDashboard({
 
     return () => clearInterval(interval);
   }, [loadDbSessions]);
+
+  // Load history metadata
+  const loadHistorySessions = useCallback(async () => {
+    try {
+      setIsLoadingHistory(true);
+      const res = await getHistoryShiftSessionsAction(14);
+      if (res.success && res.sessions) {
+        const mappedSessions: ShiftSession[] = res.sessions.map((s) => ({
+          id: s.id,
+          userId: s.userId,
+          userName: s.userName,
+          userPosition: s.userPosition,
+          taskRole: s.taskRole,
+          shift: s.shift,
+          startedAt: s.startedAt,
+          completedAt: s.completedAt,
+          items: s.items.map((it) => ({
+            id: it.id,
+            label: it.label,
+            category: it.category,
+            completedAt: it.completedAt,
+            taskWorkId: it.taskWorkId,
+          })),
+          notified: true,
+          branchName: s.branchName,
+        }));
+        setHistorySessions(mappedSessions);
+      }
+    } catch (err) {
+      console.error("Failed to fetch history sessions:", err);
+    } finally {
+      setIsLoadingHistory(false);
+    }
+  }, []);
+
+  // Fetch history when tab becomes active
+  useEffect(() => {
+    if (activeTab === "history" && historySessions.length === 0) {
+      loadHistorySessions();
+    }
+  }, [activeTab, loadHistorySessions, historySessions.length]);
+
+  const fetchSpecificHistoryDate = async (dateStr: string) => {
+    if (!dateStr) {
+      setSpecificDaySessions(null);
+      return;
+    }
+
+    try {
+      setIsLoadingHistory(true);
+      const res = await getHistoryShiftSessionsAction(14, dateStr);
+      if (res.success && res.sessions) {
+        const mappedSessions: ShiftSession[] = res.sessions.map((s) => ({
+          id: s.id,
+          userId: s.userId,
+          userName: s.userName,
+          userPosition: s.userPosition,
+          taskRole: s.taskRole,
+          shift: s.shift,
+          startedAt: s.startedAt,
+          completedAt: s.completedAt,
+          items: s.items.map((it) => ({
+            id: it.id,
+            label: it.label,
+            category: it.category,
+            completedAt: it.completedAt,
+            taskWorkId: it.taskWorkId,
+          })),
+          notified: true,
+          branchName: s.branchName,
+        }));
+        setSpecificDaySessions(mappedSessions);
+      }
+    } catch (err) {
+      console.error("Failed to fetch specific date history:", err);
+    } finally {
+      setIsLoadingHistory(false);
+    }
+  };
+
+  const handleDateSelection = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setSelectedHistoryDate(val);
+    fetchSpecificHistoryDate(val);
+  };
 
   // Load assistant manager checklist directly from Supabase DB
   const loadAssistantChecklist = useCallback(async (shift: ShiftType) => {
@@ -371,7 +461,8 @@ export function ExecutiveDashboard({
     showToast("ทำเครื่องหมายว่าอ่านแล้วทั้งหมดเรียบร้อย");
   }
 
-  const filteredHistory = sessions.filter((s) => {
+  const activeHistorySource = specificDaySessions !== null ? specificDaySessions : historySessions;
+  const filteredHistory = activeHistorySource.filter((s) => {
     const matchesSearch =
       s.userName.toLowerCase().includes(historySearch.toLowerCase()) ||
       (s.userPosition || "").toLowerCase().includes(historySearch.toLowerCase());
@@ -986,13 +1077,38 @@ export function ExecutiveDashboard({
                   <span>🕒</span>
                   <span>ประวัติและรายงานการตรวจสอบย้อนหลัง (Audit Inspection History)</span>
                 </h3>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  ค้นหาและเรียกดูรายละเอียดของแต่ละกะที่ปฏิบัติงานแล้ว
+                <p className="text-xs text-slate-400 mt-0.5 flex flex-wrap items-center gap-1.5">
+                  <span>ค้นหาและเรียกดูรายละเอียดของแต่ละกะที่ปฏิบัติงานแล้ว</span>
+                  <span className="inline-flex items-center text-[10px] bg-indigo-950/50 text-indigo-300 font-semibold px-2 py-0.5 rounded border border-indigo-800/50">
+                    <svg className="w-3 h-3 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 8v4l3 3M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    แสดงข้อมูลย้อนหลัง 14 วัน (2 สัปดาห์)
+                  </span>
                 </p>
               </div>
 
               {/* Filter controls */}
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
+
+                {/* Specific Date Fetcher */}
+                <div className="flex items-center gap-1.5 bg-slate-950 border border-slate-800 rounded-xl px-2 py-1">
+                  <input
+                    type="date"
+                    value={selectedHistoryDate}
+                    onChange={handleDateSelection}
+                    className="bg-transparent text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none cursor-pointer"
+                  />
+                  {selectedHistoryDate && (
+                    <button
+                      type="button"
+                      onClick={() => handleDateSelection({ target: { value: "" } } as React.ChangeEvent<HTMLInputElement>)}
+                      className="text-xs text-rose-400 hover:text-rose-300 font-bold px-2 py-0.5 rounded hover:bg-slate-900 transition-colors"
+                      title="Clear specific date and restore 14-days history"
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+
                 <input
                   type="text"
                   placeholder="ค้นหาชื่อ หรือตำแหน่ง..."

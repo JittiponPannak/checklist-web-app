@@ -54,6 +54,7 @@ export function ManagerDashboard({
   type AdminTab = "overview" | "checklist" | "staff" | "history";
   const [activeTab, setActiveTab] = useState<AdminTab>("overview");
   const [selectedSession, setSelectedSession] = useState<ShiftSession | null>(null);
+  const [selectedHistoryDate, setSelectedHistoryDate] = useState<string>("");
 
   const unread = notifications.filter((n) => !n.read).length;
   const employees = usersList.filter((u) => u.role === "employee");
@@ -171,7 +172,17 @@ export function ManagerDashboard({
   }
 
   const completedSessions = sessions
-    .filter((s) => s.completedAt)
+    .filter((s) => {
+      if (!s.completedAt) return false;
+      if (selectedHistoryDate) {
+        // Only specific day
+        return new Date(s.startedAt).toDateString() === new Date(selectedHistoryDate).toDateString();
+      }
+      // 14 days logic
+      const limitDate = new Date();
+      limitDate.setDate(limitDate.getDate() - 14);
+      return new Date(s.startedAt) >= limitDate;
+    })
     .sort((a, b) => new Date(b.completedAt!).getTime() - new Date(a.completedAt!).getTime());
 
   const todayDate = new Date().toDateString();
@@ -1270,10 +1281,36 @@ export function ManagerDashboard({
               )}
 
               <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-2xs space-y-4">
-                <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-slate-100">
                   <div>
                     <h2 className="text-base font-bold text-slate-900">ประวัติการตรวจกะและบันทึกการปฏิบัติงาน ({completedSessions.length})</h2>
-                    <p className="text-xs text-slate-500 mt-0.5">คลิกที่แต่ละรายการเพื่อตรวจสอบรายละเอียดผลตรวจและเวลาที่เสร็จสิ้น</p>
+                    <p className="text-xs text-slate-500 mt-0.5 flex flex-wrap items-center gap-1.5">
+                      <span>คลิกที่แต่ละรายการเพื่อตรวจสอบรายละเอียดผลตรวจและเวลาที่เสร็จสิ้น</span>
+                      <span className="inline-flex items-center text-[10px] bg-slate-100 text-slate-600 font-semibold px-2 py-0.5 rounded border border-slate-200">
+                        <svg className="w-3 h-3 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 8v4l3 3M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        แสดงข้อมูลย้อนหลัง 14 วัน (2 สัปดาห์)
+                      </span>
+                    </p>
+                  </div>
+
+                  {/* Specific Date Fetcher */}
+                  <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2 py-1">
+                    <input
+                      type="date"
+                      value={selectedHistoryDate}
+                      onChange={(e) => setSelectedHistoryDate(e.target.value)}
+                      className="bg-transparent text-xs text-slate-700 placeholder:text-slate-500 focus:outline-none cursor-pointer"
+                    />
+                    {selectedHistoryDate && (
+                      <button
+                        type="button"
+                        onClick={() => setSelectedHistoryDate("")}
+                        className="text-xs text-red-500 hover:text-red-700 font-bold px-2 py-0.5 rounded hover:bg-slate-200 transition-colors"
+                        title="Clear specific date and restore 14-days history"
+                      >
+                        ×
+                      </button>
+                    )}
                   </div>
                 </div>
 
