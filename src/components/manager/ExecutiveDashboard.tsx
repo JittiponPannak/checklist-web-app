@@ -420,7 +420,6 @@ export function ExecutiveDashboard({
         shiftSessionId: assistantSession?.id,
         taskId: itemId,
         taskWorkId: item.taskWorkId,
-        userId: user.id,
         completed: willBeDone,
       });
       // Refresh live shift sessions in background

@@ -907,7 +907,6 @@ function ChecklistPage({
       taskWorkId: item.taskWorkId,
       shiftSessionId: session.id,
       taskId: id,
-      userId: session.userId,
       completed
     });
   }

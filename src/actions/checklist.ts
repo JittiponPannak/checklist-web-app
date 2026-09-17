@@ -159,7 +159,6 @@ export async function getOrCreateShiftSessionAction(params: {
       if (dbTasks.length > 0) {
         const inserts = dbTasks.map((t) => ({
           task: t.id,
-          user: validUserId,
           shift_session: newSession.id,
           timestamp: null,
         }));
@@ -178,7 +177,6 @@ export async function getOrCreateShiftSessionAction(params: {
       if (missingTasks.length > 0) {
         const missingInserts = missingTasks.map((t) => ({
           task: t.id,
-          user: validUserId,
           shift_session: activeDbSession.id,
           timestamp: null,
         }));
@@ -241,11 +239,10 @@ export async function toggleTaskWorkAction(params: {
   taskWorkId?: string;
   shiftSessionId?: string;
   taskId?: string;
-  userId?: string;
   completed: boolean;
 }): Promise<{ success: boolean; completedAt?: string | null; error?: string }> {
   try {
-    const { taskWorkId, shiftSessionId, taskId, userId, completed } = params;
+    const { taskWorkId, shiftSessionId, taskId, completed } = params;
     const completedAt = completed ? new Date() : null;
 
     let targetShiftSessionId = shiftSessionId;
@@ -279,11 +276,10 @@ export async function toggleTaskWorkAction(params: {
           .update(taskWork)
           .set({ timestamp: completedAt })
           .where(eq(taskWork.id, existing.id));
-      } else if (userId && isValidUuid(userId)) {
+      } else {
         await db.insert(taskWork).values({
           shift_session: shiftSessionId,
           task: taskId,
-          user: userId,
           timestamp: completedAt,
         });
       }
