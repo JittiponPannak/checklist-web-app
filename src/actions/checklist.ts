@@ -130,7 +130,9 @@ export async function getOrCreateShiftSessionAction(params: {
           eq(shiftSession.task_role, taskRole),
           eq(shiftSession.shift, dbShift),
           gte(shiftSession.start, startOfDay),
-          lte(shiftSession.start, endOfDay)
+          lte(shiftSession.start, endOfDay),
+          eq(shiftSession.branch, branchId),
+          eq(shiftSession.user, validUserId)
         )
       )
       .orderBy(desc(shiftSession.start))

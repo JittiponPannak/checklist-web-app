@@ -207,7 +207,7 @@ export function ManagerDashboard({
   const userDisplayName = user.name === "ผู้จัดการร้าน" ? "คุณวิภาดา สุขเจริญ" : user.name;
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans pb-16 relative overflow-hidden">
+    <div className="min-h-screen bg-[var(--color-surface)] text-slate-100 flex flex-col font-sans pb-16 relative overflow-hidden">
       {/* Subtle Ambient Brand Glow */}
       <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none" aria-hidden="true" />
       <div className="absolute bottom-10 left-0 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" aria-hidden="true" />
@@ -262,7 +262,7 @@ export function ManagerDashboard({
               type="button"
               onClick={() => setResetFeedback(null)}
               aria-label="ปิดการแจ้งเตือน"
-              className="min-w-[28px] min-h-[28px] flex items-center justify-center rounded-lg text-emerald-300 hover:text-white hover:bg-emerald-900/60 font-bold cursor-pointer transition-colors"
+              className="min-w-[28px] min-h-[28px] flex items-center justify-center rounded-lg text-emerald-300 hover:text-[var(--color-brown)] hover:bg-emerald-900/60 font-bold cursor-pointer transition-colors"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <line x1="18" y1="6" x2="6" y2="18" />
@@ -285,7 +285,7 @@ export function ManagerDashboard({
                 {new Date().toLocaleDateString("th-TH", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
               </span>
             </div>
-            <h1 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight">
+            <h1 className="text-xl sm:text-2xl font-extrabold text-[var(--color-brown)] tracking-tight">
               ยินดีต้อนรับ, {userDisplayName}
             </h1>
             <p className="text-xs sm:text-sm text-slate-400 mt-1">
@@ -296,7 +296,7 @@ export function ManagerDashboard({
           </div>
 
           <div className="flex items-center gap-3 self-start sm:self-center flex-wrap">
-            <div className="bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-right hidden md:block">
+            <div className="bg-[var(--color-surface)] border border-slate-800 rounded-xl px-3.5 py-2 text-right hidden md:block">
               <span className="text-[11px] text-slate-400 block font-medium">รอบตรวจวันนี้</span>
               <span className="text-xs font-bold text-slate-200 font-mono">
                 {todayCompleted.length}/{todaySessions.length || 2} กะเสร็จสิ้น
@@ -306,7 +306,7 @@ export function ManagerDashboard({
               <button
                 type="button"
                 onClick={() => setActiveTab("checklist")}
-                className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white text-xs font-semibold rounded-xl shadow-lg transition-all flex items-center gap-2 cursor-pointer focus-visible:outline-2 focus-visible:outline-indigo-500 shadow-indigo-950/50"
+                className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-[var(--color-brown)] text-xs font-semibold rounded-xl shadow-lg transition-all flex items-center gap-2 cursor-pointer focus-visible:outline-2 focus-visible:outline-indigo-500 shadow-indigo-950/50"
               >
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
                 <span>ทำเช็คลิสต์ต่อ ({activeSession.items.filter((i) => i.completedAt).length}/{activeSession.items.length}) →</span>
@@ -315,7 +315,7 @@ export function ManagerDashboard({
               <button
                 type="button"
                 onClick={() => setActiveTab("checklist")}
-                className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white text-xs font-semibold rounded-xl shadow-lg transition-all flex items-center gap-2 cursor-pointer focus-visible:outline-2 focus-visible:outline-indigo-500 shadow-indigo-950/50"
+                className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-[var(--color-brown)] text-xs font-semibold rounded-xl shadow-lg transition-all flex items-center gap-2 cursor-pointer focus-visible:outline-2 focus-visible:outline-indigo-500 shadow-indigo-950/50"
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M9 11l3 3L22 4" />
@@ -342,7 +342,7 @@ export function ManagerDashboard({
                 </svg>
               </div>
             </div>
-            <p className="text-2xl font-extrabold text-white tracking-tight tabular-nums font-mono">
+            <p className="text-2xl font-extrabold text-[var(--color-brown)] tracking-tight tabular-nums font-mono">
               {employees.length} <span className="text-xs font-normal text-slate-400 font-sans">คน</span>
             </p>
             <p className="text-[11px] text-slate-400 truncate">
@@ -365,7 +365,7 @@ export function ManagerDashboard({
                 </svg>
               </div>
             </div>
-            <p className="text-2xl font-extrabold text-white tracking-tight tabular-nums font-mono">
+            <p className="text-2xl font-extrabold text-[var(--color-brown)] tracking-tight tabular-nums font-mono">
               {todaySessions.length} <span className="text-xs font-normal text-slate-400 font-sans">กะ</span>
             </p>
             <p className="text-[11px] text-slate-400 truncate font-mono">
@@ -403,7 +403,7 @@ export function ManagerDashboard({
                 </svg>
               </div>
             </div>
-            <p className={`text-2xl font-extrabold tracking-tight tabular-nums font-mono ${unread > 0 ? "text-amber-400" : "text-white"}`}>
+            <p className={`text-2xl font-extrabold tracking-tight tabular-nums font-mono ${unread > 0 ? "text-amber-400" : "text-[var(--color-brown)]"}`}>
               {unread} <span className="text-xs font-normal text-slate-400 font-sans">รายการ</span>
             </p>
             <p className="text-[11px] text-slate-400 truncate">
@@ -490,11 +490,11 @@ export function ManagerDashboard({
                   tabIndex={isSelected ? 0 : -1}
                   onClick={() => setActiveTab(tab.id)}
                   className={`px-3 py-2 min-h-[36px] rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer select-none ${isSelected
-                    ? "bg-indigo-600 text-white shadow-lg shadow-indigo-950/50 font-bold"
-                    : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                    ? "bg-indigo-600 text-[var(--color-brown)] shadow-lg shadow-indigo-950/50 font-bold"
+                    : "text-slate-400 hover:text-[var(--color-brown)] hover:bg-slate-800/60"
                     }`}
                 >
-                  <span className={isSelected ? "text-white" : "text-slate-400"}>{tab.icon}</span>
+                  <span className={isSelected ? "text-[var(--color-brown)]" : "text-slate-400"}>{tab.icon}</span>
                   <span className="truncate">{tab.label}</span>
                   {tab.pulse && (
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" aria-hidden="true" />
@@ -525,7 +525,7 @@ export function ManagerDashboard({
               <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 sm:p-6 shadow-2xl space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h2 className="text-base font-bold text-white tracking-tight">สถานะกะการทำงานวันนี้ (Today's Shifts)</h2>
+                    <h2 className="text-base font-bold text-[var(--color-brown)] tracking-tight">สถานะกะการทำงานวันนี้ (Today's Shifts)</h2>
                     <p className="text-xs text-slate-400 mt-0.5">ติดตามความคืบหน้าของพนักงานแต่ละกะแบบเรียลไทม์</p>
                   </div>
                   <button
@@ -550,7 +550,7 @@ export function ManagerDashboard({
                     const isDone = morningSess ? doneCount === totalCount : true;
 
                     return (
-                      <div className="border border-slate-800 rounded-2xl p-4 bg-slate-950/60 hover:border-amber-700/60 transition-all flex flex-col justify-between space-y-3">
+                      <div className="border border-slate-800 rounded-2xl p-4 bg-[var(--color-surface)]/60 hover:border-amber-700/60 transition-all flex flex-col justify-between space-y-3">
                         <div className="space-y-3">
                           <div className="flex items-center justify-between gap-2">
                             <Badge color="amber">กะเช้า</Badge>
@@ -571,7 +571,7 @@ export function ManagerDashboard({
                               ส
                             </div>
                             <div>
-                              <p className="text-sm font-bold text-white">
+                              <p className="text-sm font-bold text-[var(--color-brown)]">
                                 {morningSess ? morningSess.userName : "สมศรี ใจดี"}
                               </p>
                               <p className="text-xs text-slate-400">
@@ -619,7 +619,7 @@ export function ManagerDashboard({
                     const pct = Math.round((doneCount / totalCount) * 100);
 
                     return (
-                      <div className="border border-slate-800 rounded-2xl p-4 bg-slate-950/60 hover:border-sky-700/60 transition-all flex flex-col justify-between space-y-3">
+                      <div className="border border-slate-800 rounded-2xl p-4 bg-[var(--color-surface)]/60 hover:border-sky-700/60 transition-all flex flex-col justify-between space-y-3">
                         <div className="space-y-3">
                           <div className="flex items-center justify-between gap-2">
                             <Badge color="blue">กะบ่าย</Badge>
@@ -633,7 +633,7 @@ export function ManagerDashboard({
                               ส
                             </div>
                             <div>
-                              <p className="text-sm font-bold text-white">
+                              <p className="text-sm font-bold text-[var(--color-brown)]">
                                 {afternoonSess ? afternoonSess.userName : "สมชาย มั่นคง"}
                               </p>
                               <p className="text-xs text-slate-400">
@@ -670,7 +670,7 @@ export function ManagerDashboard({
                   })()}
 
                   {/* Card 3: Manager Shift */}
-                  <div className="border border-slate-800 rounded-2xl p-4 bg-slate-950/60 hover:border-slate-700 transition-all flex flex-col justify-between space-y-3">
+                  <div className="border border-slate-800 rounded-2xl p-4 bg-[var(--color-surface)]/60 hover:border-slate-700 transition-all flex flex-col justify-between space-y-3">
                     <div className="space-y-3">
                       <div className="flex items-center justify-between gap-2">
                         <Badge color="muted">กะของผู้บริหาร</Badge>
@@ -686,7 +686,7 @@ export function ManagerDashboard({
                           {userDisplayName.charAt(0)}
                         </div>
                         <div>
-                          <p className="text-sm font-bold text-white">{userDisplayName}</p>
+                          <p className="text-sm font-bold text-[var(--color-brown)]">{userDisplayName}</p>
                           <p className="text-xs text-slate-400">{user.position || "ผู้จัดการร้าน"}</p>
                         </div>
                       </div>
@@ -701,7 +701,7 @@ export function ManagerDashboard({
                     <button
                       type="button"
                       onClick={() => setActiveTab("checklist")}
-                      className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white text-xs font-semibold rounded-xl shadow-lg transition-colors cursor-pointer text-center focus-visible:outline-2 focus-visible:outline-indigo-500 shadow-indigo-950/50"
+                      className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-[var(--color-brown)] text-xs font-semibold rounded-xl shadow-lg transition-colors cursor-pointer text-center focus-visible:outline-2 focus-visible:outline-indigo-500 shadow-indigo-950/50"
                     >
                       {activeSession ? "ทำเช็คลิสต์ต่อ →" : "เริ่มทำเช็คลิสต์ประจำกะ →"}
                     </button>
@@ -713,7 +713,7 @@ export function ManagerDashboard({
               <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 sm:p-6 shadow-2xl space-y-3">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h2 className="text-base font-bold text-white tracking-tight">แจ้งเตือนและกิจกรรมล่าสุด (Recent Activity)</h2>
+                    <h2 className="text-base font-bold text-[var(--color-brown)] tracking-tight">แจ้งเตือนและกิจกรรมล่าสุด (Recent Activity)</h2>
                     <p className="text-xs text-slate-400 mt-0.5">รายงานการปฏิบัติงานที่ส่งเข้ามาจากพนักงานประจำกะ</p>
                   </div>
                   <div className="flex items-center gap-3">
@@ -721,7 +721,7 @@ export function ManagerDashboard({
                       <button
                         type="button"
                         onClick={markAllRead}
-                        className="text-xs px-2.5 py-1 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 text-white font-medium cursor-pointer transition-colors"
+                        className="text-xs px-2.5 py-1 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 text-[var(--color-brown)] font-medium cursor-pointer transition-colors"
                       >
                         อ่านทั้งหมด ({unread})
                       </button>
@@ -755,11 +755,11 @@ export function ManagerDashboard({
                             {!notif.read && (
                               <Badge color="amber">ใหม่</Badge>
                             )}
-                            <p className="text-xs font-bold text-white">
+                            <p className="text-xs font-bold text-[var(--color-brown)]">
                               {notif.userName}
                             </p>
                             {notif.userPosition && (
-                              <span className="text-[10px] font-medium bg-slate-950 text-slate-300 border border-slate-800 px-1.5 py-0.2 rounded font-mono">
+                              <span className="text-[10px] font-medium bg-[var(--color-surface)] text-slate-300 border border-slate-800 px-1.5 py-0.2 rounded font-mono">
                                 {notif.userPosition}
                               </span>
                             )}
@@ -779,7 +779,7 @@ export function ManagerDashboard({
                           if (s) setSelectedSession(s);
                           markRead(notif.id);
                         }}
-                        className="text-xs text-slate-200 hover:text-white px-3 py-1.5 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 font-medium whitespace-nowrap cursor-pointer transition-all"
+                        className="text-xs text-slate-200 hover:text-[var(--color-brown)] px-3 py-1.5 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 font-medium whitespace-nowrap cursor-pointer transition-all"
                       >
                         ดูผลตรวจ →
                       </button>
@@ -796,7 +796,7 @@ export function ManagerDashboard({
           {/* TAB 2: CHECKLIST (MANAGER'S SHIFT CHECKLIST) */}
           {activeTab === "checklist" && (
             <div className="space-y-4">
-              <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-2xs space-y-4">
+              <div className="bg-[var(--color-surface)] border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-2xs space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
                   <div>
                     <h2 className="text-base font-bold text-slate-900">เช็คลิสต์ประจำกะของผู้บริหาร / ผู้จัดการ</h2>
@@ -832,7 +832,7 @@ export function ManagerDashboard({
                         <span className="text-xs font-bold text-slate-900">
                           กะที่กำลังทำงาน: {getShiftName(activeSession.shift)}
                         </span>
-                        <span className="text-xs font-bold bg-white text-slate-800 border border-slate-300 px-2.5 py-0.5 rounded-full font-mono">
+                        <span className="text-xs font-bold bg-[var(--color-surface)] text-slate-800 border border-slate-300 px-2.5 py-0.5 rounded-full font-mono">
                           {activeSession.items.filter((i) => i.completedAt).length} / {activeSession.items.length} ข้อ
                         </span>
                       </div>
@@ -864,7 +864,7 @@ export function ManagerDashboard({
                             }}
                             className={`flex items-center justify-between p-3 rounded-xl border text-xs transition-all cursor-pointer select-none ${isDone
                               ? "bg-slate-100/70 border-slate-300 hover:bg-slate-100"
-                              : "bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50/50"
+                              : "bg-[var(--color-surface)] border-slate-200 hover:border-slate-300 hover:bg-slate-50/50"
                               }`}
                           >
                             <div className="flex items-center gap-3">
@@ -874,8 +874,8 @@ export function ManagerDashboard({
                                 aria-checked={isDone}
                                 aria-label={`สถานะ: ${item.label}`}
                                 className={`w-5 h-5 rounded-md border flex items-center justify-center transition-colors flex-shrink-0 ${isDone
-                                  ? "bg-emerald-600 border-emerald-600 text-white shadow-2xs"
-                                  : "border-slate-300 bg-white hover:border-slate-900"
+                                  ? "bg-emerald-600 border-emerald-600 text-[var(--color-brown)] shadow-2xs"
+                                  : "border-slate-300 bg-[var(--color-surface)] hover:border-slate-900"
                                   }`}
                               >
                                 {isDone && (
@@ -981,10 +981,10 @@ export function ManagerDashboard({
                           key={s.shift}
                           type="button"
                           onClick={() => onStartChecklist(s.shift)}
-                          className="text-left p-5 rounded-2xl border border-slate-300 hover:border-slate-500 bg-white hover:shadow-md transition-all group cursor-pointer shadow-xs flex flex-col justify-between"
+                          className="text-left p-5 rounded-2xl border border-slate-300 hover:border-slate-500 bg-[var(--color-surface)] hover:shadow-md transition-all group cursor-pointer shadow-xs flex flex-col justify-between"
                         >
                           <div>
-                            <div className="w-11 h-11 rounded-2xl bg-slate-100 group-hover:bg-slate-900 group-hover:text-white text-slate-700 flex items-center justify-center transition-colors mb-4">
+                            <div className="w-11 h-11 rounded-2xl bg-slate-100 group-hover:bg-slate-900 group-hover:text-[var(--color-brown)] text-slate-700 flex items-center justify-center transition-colors mb-4">
                               {s.icon}
                             </div>
                             <h3 className="text-base font-bold text-slate-900 transition-colors">
@@ -1029,14 +1029,14 @@ export function ManagerDashboard({
               )}
 
               {/* Staff Toolbar */}
-              <div className="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-2xs flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+              <div className="bg-[var(--color-surface)] border border-slate-200/90 rounded-2xl p-4 shadow-2xs flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
                 <div className="flex flex-1 gap-2 flex-wrap sm:flex-nowrap">
                   <input
                     type="text"
                     placeholder="ค้นหาพนักงานด้วยชื่อ, อีเมล หรือตำแหน่ง..."
                     value={staffSearch}
                     onChange={(e) => setStaffSearch(e.target.value)}
-                    className="flex-1 bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-xs text-slate-900 placeholder:text-slate-500 focus:border-slate-900 focus:bg-white focus-visible:outline-2 focus-visible:outline-slate-900 transition-colors"
+                    className="flex-1 bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-xs text-slate-900 placeholder:text-slate-500 focus:border-slate-900 focus:bg-[var(--color-surface)] focus-visible:outline-2 focus-visible:outline-slate-900 transition-colors"
                   />
                   <div role="tablist" aria-label="ตัวกรองพนักงาน" className="flex bg-slate-100 p-1 rounded-xl text-xs gap-1">
                     <button
@@ -1044,7 +1044,7 @@ export function ManagerDashboard({
                       role="tab"
                       aria-selected={staffFilter === "all"}
                       onClick={() => setStaffFilter("all")}
-                      className={`px-3 py-1.5 min-h-[32px] rounded-lg font-medium transition-all cursor-pointer ${staffFilter === "all" ? "bg-white text-slate-900 shadow-2xs font-bold border border-slate-200/80" : "text-slate-600 hover:text-slate-900"}`}
+                      className={`px-3 py-1.5 min-h-[32px] rounded-lg font-medium transition-all cursor-pointer ${staffFilter === "all" ? "bg-[var(--color-surface)] text-slate-900 shadow-2xs font-bold border border-slate-200/80" : "text-slate-600 hover:text-slate-900"}`}
                     >
                       ทั้งหมด ({employees.length})
                     </button>
@@ -1053,7 +1053,7 @@ export function ManagerDashboard({
                       role="tab"
                       aria-selected={staffFilter === "unassigned"}
                       onClick={() => setStaffFilter("unassigned")}
-                      className={`px-3 py-1.5 min-h-[32px] rounded-lg font-medium transition-all cursor-pointer ${staffFilter === "unassigned" ? "bg-white text-slate-900 shadow-2xs font-bold border border-slate-200/80" : "text-slate-600 hover:text-slate-900"}`}
+                      className={`px-3 py-1.5 min-h-[32px] rounded-lg font-medium transition-all cursor-pointer ${staffFilter === "unassigned" ? "bg-[var(--color-surface)] text-slate-900 shadow-2xs font-bold border border-slate-200/80" : "text-slate-600 hover:text-slate-900"}`}
                     >
                       รอกำหนด ({unassignedEmployees.length})
                     </button>
@@ -1062,7 +1062,7 @@ export function ManagerDashboard({
                       role="tab"
                       aria-selected={staffFilter === "assigned"}
                       onClick={() => setStaffFilter("assigned")}
-                      className={`px-3 py-1.5 min-h-[32px] rounded-lg font-medium transition-all cursor-pointer ${staffFilter === "assigned" ? "bg-white text-slate-900 shadow-2xs font-bold border border-slate-200/80" : "text-slate-600 hover:text-slate-900"}`}
+                      className={`px-3 py-1.5 min-h-[32px] rounded-lg font-medium transition-all cursor-pointer ${staffFilter === "assigned" ? "bg-[var(--color-surface)] text-slate-900 shadow-2xs font-bold border border-slate-200/80" : "text-slate-600 hover:text-slate-900"}`}
                     >
                       มีตำแหน่งแล้ว ({employees.length - unassignedEmployees.length})
                     </button>
@@ -1073,7 +1073,7 @@ export function ManagerDashboard({
                   <button
                     type="button"
                     onClick={() => setShowAddStaffModal(true)}
-                    className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-xl shadow-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap"
+                    className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-[var(--color-brown)] text-xs font-semibold rounded-xl shadow-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap"
                   >
                     <span>+ เพิ่มพนักงานใหม่</span>
                   </button>
@@ -1082,7 +1082,7 @@ export function ManagerDashboard({
 
               {/* Staff Cards Grid */}
               {filteredEmployees.length === 0 ? (
-                <div className="text-center py-12 text-slate-500 text-sm bg-white border border-slate-200/90 rounded-2xl">
+                <div className="text-center py-12 text-slate-500 text-sm bg-[var(--color-surface)] border border-slate-200/90 rounded-2xl">
                   {staffSearch ? "ไม่พบพนักงานที่ตรงกับคำค้นหา" : "ยังไม่มีพนักงานในระบบ"}
                 </div>
               ) : (
@@ -1094,7 +1094,7 @@ export function ManagerDashboard({
                     return (
                       <div
                         key={emp.id}
-                        className={`p-4 rounded-2xl border transition-all bg-white shadow-2xs ${!emp.position ? "border-slate-300 bg-slate-50/40" : "border-slate-200/90 hover:border-slate-300"
+                        className={`p-4 rounded-2xl border transition-all bg-[var(--color-surface)] shadow-2xs ${!emp.position ? "border-slate-300 bg-slate-50/40" : "border-slate-200/90 hover:border-slate-300"
                           }`}
                       >
                         <div className="flex items-start justify-between gap-3">
@@ -1171,7 +1171,7 @@ export function ManagerDashboard({
               )}
 
               {/* Roles and Checklist Standards Section */}
-              <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-2xs space-y-4">
+              <div className="bg-[var(--color-surface)] border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-2xs space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
                   <div>
                     <h2 className="text-base font-bold text-slate-900">ตำแหน่งและเกณฑ์เช็คลิสต์ประจำสาขา ({positions.length})</h2>
@@ -1192,13 +1192,13 @@ export function ManagerDashboard({
                         value={newPositionName}
                         onChange={(e) => setNewPositionName(e.target.value)}
                         onKeyDown={(e) => e.key === "Enter" && handleAddPosition()}
-                        className="flex-1 bg-white border border-slate-300 rounded-xl px-3.5 py-2 text-xs text-slate-900 placeholder:text-slate-500 focus:border-slate-900 focus-visible:outline-2 focus-visible:outline-slate-900 transition-colors"
+                        className="flex-1 bg-[var(--color-surface)] border border-slate-300 rounded-xl px-3.5 py-2 text-xs text-slate-900 placeholder:text-slate-500 focus:border-slate-900 focus-visible:outline-2 focus-visible:outline-slate-900 transition-colors"
                       />
                       <button
                         type="button"
                         onClick={handleAddPosition}
                         disabled={!newPositionName.trim()}
-                        className="px-4 py-2 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-semibold rounded-xl shadow-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap"
+                        className="px-4 py-2 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed text-[var(--color-brown)] text-xs font-semibold rounded-xl shadow-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap"
                       >
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                           <path d="M12 5v14M5 12h14" />
@@ -1222,7 +1222,7 @@ export function ManagerDashboard({
                     return (
                       <div
                         key={pos.id}
-                        className="flex items-center justify-between p-3.5 rounded-xl border border-slate-200 bg-slate-50/40 hover:bg-white hover:shadow-2xs transition-all"
+                        className="flex items-center justify-between p-3.5 rounded-xl border border-slate-200 bg-slate-50/40 hover:bg-[var(--color-surface)] hover:shadow-2xs transition-all"
                       >
                         <div className="flex items-center gap-2.5">
                           <div className="w-8 h-8 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-700 flex-shrink-0">
@@ -1273,14 +1273,14 @@ export function ManagerDashboard({
                   <button
                     type="button"
                     onClick={markAllRead}
-                    className="text-xs px-3 py-1.5 rounded-xl bg-slate-900 text-white hover:bg-slate-800 font-semibold cursor-pointer transition-colors shadow-2xs"
+                    className="text-xs px-3 py-1.5 rounded-xl bg-slate-900 text-[var(--color-brown)] hover:bg-slate-800 font-semibold cursor-pointer transition-colors shadow-2xs"
                   >
                     ทำเครื่องหมายอ่านทั้งหมด
                   </button>
                 </div>
               )}
 
-              <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-2xs space-y-4">
+              <div className="bg-[var(--color-surface)] border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-2xs space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-slate-100">
                   <div>
                     <h2 className="text-base font-bold text-slate-900">ประวัติการตรวจกะและบันทึกการปฏิบัติงาน ({completedSessions.length})</h2>
@@ -1330,7 +1330,7 @@ export function ManagerDashboard({
                         type="button"
                         key={sess.id}
                         onClick={() => setSelectedSession(sess)}
-                        className="w-full text-left p-4 rounded-xl border border-slate-200/80 bg-slate-50/40 hover:bg-white hover:border-slate-400 transition-all focus-visible:outline-2 focus-visible:outline-slate-900 shadow-2xs cursor-pointer group"
+                        className="w-full text-left p-4 rounded-xl border border-slate-200/80 bg-slate-50/40 hover:bg-[var(--color-surface)] hover:border-slate-400 transition-all focus-visible:outline-2 focus-visible:outline-slate-900 shadow-2xs cursor-pointer group"
                       >
                         <div className="flex items-center justify-between">
                           <div className="space-y-1">

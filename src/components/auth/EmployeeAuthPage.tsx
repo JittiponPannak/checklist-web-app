@@ -110,17 +110,17 @@ export function EmployeeAuthPage({
     }
 
     const inp =
-        "w-full bg-[#FAF4EC] hover:bg-[#F5EDE2] focus:bg-white border border-[#EADBCE] focus:border-amber-400 rounded-xl px-4 py-2.5 text-sm text-[#2B1413] placeholder:text-[#A88B77] focus-visible:outline-none focus:ring-2 focus:ring-amber-400/40 transition-all";
+        "w-full bg-[var(--color-surface-2)] hover:bg-[var(--color-surface-2)] focus:bg-[var(--color-surface)] border border-[var(--color-border)] focus:border-amber-400 rounded-xl px-4 py-2.5 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-subtle)] focus-visible:outline-none focus:ring-2 focus:ring-amber-400/40 transition-all";
 
     return (
-        <div className="min-h-screen bg-[#FFFDF9] text-[#2B1413] flex flex-col items-center justify-center px-4 py-8 sm:py-12 relative overflow-hidden">
-            <div className="absolute top-1/4 -left-20 w-72 h-72 bg-amber-200/30 rounded-full blur-3xl pointer-events-none" aria-hidden="true" />
-            <div className="absolute bottom-1/4 -right-20 w-72 h-72 bg-amber-100/40 rounded-full blur-3xl pointer-events-none" aria-hidden="true" />
+        <div className="min-h-screen bg-[var(--color-background)] text-[var(--color-text)] flex flex-col items-center justify-center px-4 py-8 sm:py-12 relative overflow-hidden">
+            <div className="absolute top-1/4 -left-20 w-72 h-72 bg-[var(--color-amber-glow)]/30 rounded-full blur-3xl pointer-events-none" aria-hidden="true" />
+            <div className="absolute bottom-1/4 -right-20 w-72 h-72 bg-[var(--color-amber-glow)]/40 rounded-full blur-3xl pointer-events-none" aria-hidden="true" />
 
-            <div className="w-full max-w-[400px] bg-white border border-[#EADBCE] rounded-2xl p-7 sm:p-8 shadow-xl shadow-amber-900/5 space-y-5 relative z-10">
+            <div className="w-full max-w-[400px] bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-7 sm:p-8 shadow-xl shadow-amber-900/5 space-y-5 relative z-10">
                 <header className="mb-2 text-center flex flex-col items-center">
-                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 text-[#2B1413] text-[11px] font-semibold border border-amber-300 mb-3">
-                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500" aria-hidden="true" />
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--color-amber-glow)] text-[var(--color-text)] text-[11px] font-semibold border border-[var(--color-amber)] mb-3">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-amber-glow)]0" aria-hidden="true" />
                         <span>ระบบพนักงานและผู้ช่วยผู้จัดการร้าน</span>
                     </div>
                     <BrandLogo size={48} showText={true} isDark={false} />
@@ -128,7 +128,7 @@ export function EmployeeAuthPage({
 
                 <div
                     role="tablist"
-                    className="flex bg-[#FAF4EC] p-1 rounded-xl mb-5 border border-[#EADBCE] gap-1"
+                    className="flex bg-[var(--color-surface-2)] p-1 rounded-xl mb-5 border border-[var(--color-border)] gap-1"
                 >
                     {(["login", "register"] as const).map((t) => (
                         <button
@@ -141,8 +141,8 @@ export function EmployeeAuthPage({
                                 setError("");
                             }}
                             className={`flex-1 py-2 min-h-[36px] text-xs font-semibold rounded-lg transition-all cursor-pointer text-center ${tab === t
-                                ? "bg-[#2B1413] text-amber-300 shadow-sm font-bold"
-                                : "text-[#78483B] hover:text-[#2B1413]"
+                                ? "bg-[var(--color-brown)] text-amber-300 shadow-sm font-bold"
+                                : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
                                 }`}
                         >
                             {t === "login" ? "เข้าสู่ระบบพนักงาน" : "ลงทะเบียนพนักงานใหม่"}
@@ -154,7 +154,7 @@ export function EmployeeAuthPage({
                     {tab === "register" && (
                         <>
                             <div>
-                                <label htmlFor="reg-name" className="block text-xs font-semibold text-[#78483B] mb-1.5">
+                                <label htmlFor="reg-name" className="block text-xs font-semibold text-[var(--color-text-muted)] mb-1.5">
                                     ชื่อ-นามสกุล
                                 </label>
                                 <input
@@ -166,7 +166,7 @@ export function EmployeeAuthPage({
                                 />
                             </div>
                             <div>
-                                <label htmlFor="reg-branch" className="block text-xs font-semibold text-[#78483B] mb-1.5">
+                                <label htmlFor="reg-branch" className="block text-xs font-semibold text-[var(--color-text-muted)] mb-1.5">
                                     สาขาที่สังกัด (ถ้ามี)
                                 </label>
                                 <select
@@ -187,7 +187,7 @@ export function EmployeeAuthPage({
                     )}
 
                     <div>
-                        <label htmlFor="emp-email" className="block text-xs font-semibold text-[#78483B] mb-1.5">
+                        <label htmlFor="emp-email" className="block text-xs font-semibold text-[var(--color-text-muted)] mb-1.5">
                             อีเมลพนักงาน
                         </label>
                         <input
@@ -201,7 +201,7 @@ export function EmployeeAuthPage({
                     </div>
 
                     <div>
-                        <label htmlFor="emp-password" className="block text-xs font-semibold text-[#78483B] mb-1.5">
+                        <label htmlFor="emp-password" className="block text-xs font-semibold text-[var(--color-text-muted)] mb-1.5">
                             รหัสผ่าน
                         </label>
                         <input
@@ -225,7 +225,7 @@ export function EmployeeAuthPage({
                         type="button"
                         disabled={loading}
                         onClick={tab === "register" ? handleRegister : handleLogin}
-                        className={`w-full py-2.5 text-amber-300 text-sm font-semibold rounded-xl shadow-md transition-all mt-3 cursor-pointer flex items-center justify-center gap-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500 bg-[#2B1413] hover:bg-[#442220] active:bg-[#1f0d0c] shadow-amber-950/20 ${loading ? "opacity-70 cursor-not-allowed" : ""
+                        className={`w-full py-2.5 text-amber-300 text-sm font-semibold rounded-xl shadow-md transition-all mt-3 cursor-pointer flex items-center justify-center gap-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500 bg-[var(--color-brown)] hover:bg-[var(--color-brown-light)] active:bg-[#1f0d0c] shadow-amber-950/20 ${loading ? "opacity-70 cursor-not-allowed" : ""
                             }`}
                     >
                         <span>{loading ? "กำลังตรวจสอบข้อมูล..." : tab === "login" ? "เข้าสู่ระบบพนักงาน →" : "ยืนยันการสมัครสมาชิก"}</span>
@@ -234,11 +234,11 @@ export function EmployeeAuthPage({
 
                 </div>
 
-                <div className="mt-5 pt-4 border-t border-[#EADBCE] text-center flex flex-col gap-2">
-                    <Link href="/login/executive" className="text-[11px] text-[#78483B] hover:text-[#2B1413] font-medium transition-colors">
+                <div className="mt-5 pt-4 border-t border-[var(--color-border)] text-center flex flex-col gap-2">
+                    <Link href="/login/executive" className="text-[11px] text-[var(--color-text-muted)] hover:text-[var(--color-text)] font-medium transition-colors">
                         สำหรับระดับผู้จัดการ / กรรมการ →
                     </Link>
-                    <Link href="/" className="text-[11px] text-[#A88B77] hover:text-[#78483B] font-medium transition-colors">
+                    <Link href="/" className="text-[11px] text-[var(--color-text-subtle)] hover:text-[var(--color-text-muted)] font-medium transition-colors">
                         ← กลับไปหน้าเลือกประเภทผู้ใช้งาน
                     </Link>
                 </div>

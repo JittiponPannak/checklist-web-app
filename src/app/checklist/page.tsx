@@ -22,7 +22,7 @@ export default function ChecklistRoutePage() {
 
   if (!isReady || !currentUser || !activeSession) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#FFFDF9] text-[#2B1413]">
+      <div className="min-h-screen flex items-center justify-center bg-[var(--color-background)] text-[var(--color-text)]">
         <div className="h-8 w-8 animate-spin rounded-full border-3 border-amber-500 border-t-transparent" />
       </div>
     );

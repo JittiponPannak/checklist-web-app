@@ -13,7 +13,7 @@ export function BrandLogo({
     <div className="inline-flex items-center gap-3 select-none">
       <div
         style={{ width: size, height: size }}
-        className="rounded-full shrink-0 relative overflow-hidden shadow-md ring-2 ring-amber-400/60 bg-[#2B1413] flex items-center justify-center"
+        className="rounded-full shrink-0 relative overflow-hidden shadow-md ring-2 ring-amber-400/60 bg-[var(--color-brown)] flex items-center justify-center"
       >
         <img
           src="/logo.png"
@@ -25,22 +25,21 @@ export function BrandLogo({
         <div className="text-left">
           <div className="flex items-center gap-2">
             <span
-              className={`font-extrabold tracking-tight text-base sm:text-lg ${
-                isDark ? "text-white" : "text-[#2B1413]"
-              }`}
+              className={`font-extrabold tracking-tight text-base sm:text-lg ${isDark ? "text-[var(--color-brown)]" : "text-[var(--color-text)]"
+                }`}
             >
               Eater Egg
             </span>
-            <span className="text-[10px] sm:text-[11px] font-extrabold text-[#2B1413] tracking-wide uppercase px-2 py-0.5 rounded-full bg-amber-300 border border-amber-400 shadow-2xs">
+            <span className="text-[10px] sm:text-[11px] font-extrabold text-[var(--color-background)] tracking-wide uppercase px-2 py-0.5 rounded-full bg-[var(--color-amber)] border border-[var(--color-amber-dim)] shadow-2xs">
               Fresh Mart
             </span>
           </div>
           {subtitle ? (
-            <p className={`text-[11px] font-medium ${isDark ? "text-amber-200/80" : "text-[#78483B]"}`}>
+            <p className={`text-[11px] font-medium ${isDark ? "text-amber-200/80" : "text-[var(--color-text-muted)]"}`}>
               {subtitle}
             </p>
           ) : (
-            <p className={`text-[11px] font-medium ${isDark ? "text-amber-200/80" : "text-[#78483B]"}`}>
+            <p className={`text-[11px] font-medium ${isDark ? "text-amber-200/80" : "text-[var(--color-text-muted)]"}`}>
               ระบบบริหารและบันทึกการปฏิบัติงานประจำกะ
             </p>
           )}

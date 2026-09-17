@@ -11,24 +11,24 @@ export function Badge({
 }) {
   const styles = {
     green: {
-      wrap: "bg-amber-100 text-[#2B1413] border-amber-300 font-semibold",
-      dot: "bg-amber-600",
+      wrap: "bg-[var(--color-primary-glow)] text-[var(--color-text)] border-[var(--color-primary-dim)] font-semibold",
+      dot: "bg-[var(--color-primary)]",
     },
     amber: {
-      wrap: "bg-amber-100 text-[#2B1413] border-amber-300 font-semibold",
-      dot: "bg-amber-500",
+      wrap: "bg-[var(--color-amber-glow)] text-[var(--color-text)] border-[var(--color-amber)] font-semibold",
+      dot: "bg-[var(--color-amber)]",
     },
     blue: {
-      wrap: "bg-[#F7EFE9] text-[#78483B] border-[#EADBCE] font-semibold",
-      dot: "bg-[#78483B]",
+      wrap: "bg-[#F7EFE9] text-[var(--color-text-muted)] border-[var(--color-border)] font-semibold",
+      dot: "bg-[var(--color-text-muted)]",
     },
     muted: {
-      wrap: "bg-[#FAF4EC] text-[#78483B] border-[#EADBCE] font-medium",
-      dot: "bg-[#9C6C60]",
+      wrap: "bg-[var(--color-surface-2)] text-[var(--color-text-muted)] border-[var(--color-border)] font-medium",
+      dot: "bg-[var(--color-text-subtle)]",
     },
     red: {
-      wrap: "bg-rose-50 text-rose-900 border-rose-200 font-semibold",
-      dot: "bg-rose-600",
+      wrap: "bg-[var(--color-danger-glow)] text-[var(--color-danger)] border-[var(--color-danger)] font-semibold",
+      dot: "bg-[var(--color-danger)]",
     },
   }[color];
 
@@ -55,5 +55,5 @@ export function getShiftName(shift: ShiftType) {
 }
 
 export function Divider() {
-  return <div className="h-px bg-slate-200/80 w-full" />;
+  return <div className="h-px bg-[var(--color-border)] w-full" />;
 }

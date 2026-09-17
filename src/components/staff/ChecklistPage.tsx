@@ -100,7 +100,7 @@ export function ChecklistPage({
   }
 
   return (
-    <div className="min-h-screen bg-[#FFFDF9] text-[#2B1413] flex flex-col items-center px-4 py-6 sm:py-10">
+    <div className="min-h-screen bg-[var(--color-background)] text-[var(--color-text)] flex flex-col items-center px-4 py-6 sm:py-10">
       {/* Off-screen live status update for assistive tech (SC 4.1.3) */}
       <div aria-live="polite" className="sr-only">
         ความคืบหน้างาน {done} จาก {total} รายการ ({progress}%)
@@ -108,13 +108,13 @@ export function ChecklistPage({
 
       <div className="w-full max-w-2xl space-y-4">
         {/* Header Card */}
-        <header className="bg-white border border-[#EADBCE] rounded-2xl p-5 sm:p-6 shadow-sm">
-          <div className="flex items-start justify-between gap-4 pb-4 border-b border-[#EADBCE]">
+        <header className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-5 sm:p-6 shadow-sm">
+          <div className="flex items-start justify-between gap-4 pb-4 border-b border-[var(--color-border)]">
             <div>
               <div className="flex items-center gap-2 mb-2 flex-wrap">
                 {getShiftBadge(session.shift)}
                 {session.userPosition && (
-                  <span className="text-xs font-semibold text-[#78483B] bg-[#FAF4EC] px-2.5 py-0.5 rounded-full border border-[#EADBCE]">
+                  <span className="text-xs font-semibold text-[var(--color-text-muted)] bg-[var(--color-surface-2)] px-2.5 py-0.5 rounded-full border border-[var(--color-border)]">
                     {session.userPosition}
                   </span>
                 )}
@@ -132,8 +132,8 @@ export function ChecklistPage({
                   {session.branchName}
                 </p>
               )}
-              <h1 className="text-lg sm:text-xl font-extrabold text-[#2B1413] tracking-tight leading-none">{session.userName}</h1>
-              <p className="text-xs text-[#78483B] font-mono mt-1.5">เริ่มงานเวลา {fmtTime(session.startedAt)}</p>
+              <h1 className="text-lg sm:text-xl font-extrabold text-[var(--color-text)] tracking-tight leading-none">{session.userName}</h1>
+              <p className="text-xs text-[var(--color-text-muted)] font-mono mt-1.5">เริ่มงานเวลา {fmtTime(session.startedAt)}</p>
             </div>
 
             <div className="flex items-center gap-2 flex-wrap justify-end">
@@ -141,7 +141,7 @@ export function ChecklistPage({
                 <button
                   type="button"
                   onClick={onOpenDashboard}
-                  className="text-xs px-3 py-2 rounded-xl bg-[#FAF4EC] border border-[#EADBCE] text-[#2B1413] hover:bg-[#F2E7DC] transition-colors font-semibold flex items-center gap-1.5 min-h-[36px] cursor-pointer shadow-xs"
+                  className="text-xs px-3 py-2 rounded-xl bg-[var(--color-surface-2)] border border-[var(--color-border)] text-[var(--color-text)] hover:bg-[#F2E7DC] transition-colors font-semibold flex items-center gap-1.5 min-h-[36px] cursor-pointer shadow-xs"
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                     <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
@@ -157,10 +157,10 @@ export function ChecklistPage({
                 disabled={!canContinueShift}
                 onClick={handleToggleContinue}
                 className={`text-xs px-3.5 py-2 rounded-xl border font-semibold flex items-center gap-1.5 min-h-[36px] transition-all ${!canContinueShift
-                  ? "bg-[#FAF4EC]/50 border-[#EADBCE] text-[#A88B77] cursor-not-allowed opacity-60"
+                  ? "bg-[var(--color-surface-2)]/50 border-[var(--color-border)] text-[var(--color-text-subtle)] cursor-not-allowed opacity-60"
                   : continueShift
-                    ? "bg-[#2B1413] border-[#2B1413] text-amber-300 shadow-sm cursor-pointer hover:bg-[#442220]"
-                    : "bg-[#FAF4EC] border-[#EADBCE] text-[#2B1413] hover:border-amber-400 hover:text-amber-700 cursor-pointer"
+                    ? "bg-[var(--color-brown)] border-[var(--color-text)] text-amber-300 shadow-sm cursor-pointer hover:bg-[var(--color-brown-light)]"
+                    : "bg-[var(--color-surface-2)] border-[var(--color-border)] text-[var(--color-text)] hover:border-amber-400 hover:text-amber-700 cursor-pointer"
                   }`}
                 title={
                   !hasNextShift
@@ -200,7 +200,7 @@ export function ChecklistPage({
                 disabled={!canFinishShift}
                 onClick={() => setShowConfirm(true)}
                 className={`text-xs px-4 py-2 rounded-xl border font-semibold flex items-center gap-1.5 min-h-[36px] transition-all ${!canFinishShift
-                  ? "bg-[#FAF4EC]/50 border-[#EADBCE] text-[#A88B77] cursor-not-allowed opacity-60"
+                  ? "bg-[var(--color-surface-2)]/50 border-[var(--color-border)] text-[var(--color-text-subtle)] cursor-not-allowed opacity-60"
                   : "bg-rose-50 border-rose-200 text-rose-700 hover:bg-rose-100 hover:border-rose-300 cursor-pointer shadow-sm"
                   }`}
                 title={
@@ -224,7 +224,7 @@ export function ChecklistPage({
               <button
                 type="button"
                 onClick={() => setShowExitConfirm(true)}
-                className="text-xs px-3.5 py-2 rounded-xl border border-[#EADBCE] bg-[#FAF4EC] text-[#78483B] hover:text-rose-700 hover:border-rose-200 hover:bg-rose-50 transition-all font-semibold flex items-center gap-1.5 min-h-[36px] cursor-pointer shadow-xs"
+                className="text-xs px-3.5 py-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-2)] text-[var(--color-text-muted)] hover:text-rose-700 hover:border-rose-200 hover:bg-rose-50 transition-all font-semibold flex items-center gap-1.5 min-h-[36px] cursor-pointer shadow-xs"
                 title="ออกจากหน้านี้ / สลับกะหรือออกจากระบบ"
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -240,12 +240,12 @@ export function ChecklistPage({
           {/* Progress Indicator */}
           <div className="pt-4">
             <div className="flex items-center justify-between text-xs mb-2">
-              <span className="font-semibold text-[#78483B]">
-                ความคืบหน้า: <span className="font-mono font-bold text-[#2B1413]">{done}/{total}</span> รายการ
+              <span className="font-semibold text-[var(--color-text-muted)]">
+                ความคืบหน้า: <span className="font-mono font-bold text-[var(--color-text)]">{done}/{total}</span> รายการ
               </span>
-              <span className={`font-mono font-bold ${allDone ? "text-emerald-700" : "text-[#2B1413]"}`}>{progress}%</span>
+              <span className={`font-mono font-bold ${allDone ? "text-emerald-700" : "text-[var(--color-text)]"}`}>{progress}%</span>
             </div>
-            <div className="w-full h-2.5 bg-[#FAF4EC] rounded-full overflow-hidden border border-[#EADBCE] p-0.5">
+            <div className="w-full h-2.5 bg-[var(--color-surface-2)] rounded-full overflow-hidden border border-[var(--color-border)] p-0.5">
               <div
                 className={`h-full rounded-full transition-all duration-300 ease-out ${allDone ? "bg-emerald-500" : "bg-amber-400"
                   }`}
@@ -271,7 +271,7 @@ export function ChecklistPage({
                 setFilter(filterTabs[(currentIndex - 1 + filterTabs.length) % filterTabs.length]);
               }
             }}
-            className="flex bg-[#FAF4EC] p-1 rounded-xl text-xs font-semibold gap-1 border border-[#EADBCE]"
+            className="flex bg-[var(--color-surface-2)] p-1 rounded-xl text-xs font-semibold gap-1 border border-[var(--color-border)]"
           >
             {(["all", "pending", "done"] as const).map((t) => (
               <button
@@ -281,7 +281,7 @@ export function ChecklistPage({
                 aria-selected={filter === t}
                 tabIndex={filter === t ? 0 : -1}
                 onClick={() => setFilter(t)}
-                className={`px-3 py-1.5 min-h-[32px] rounded-lg transition-all cursor-pointer ${filter === t ? "bg-[#2B1413] text-amber-300 shadow-sm font-bold" : "text-[#78483B] hover:text-[#2B1413]"
+                className={`px-3 py-1.5 min-h-[32px] rounded-lg transition-all cursor-pointer ${filter === t ? "bg-[var(--color-brown)] text-amber-300 shadow-sm font-bold" : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
                   }`}
               >
                 {t === "all" ? `ทั้งหมด (${total})` : t === "pending" ? `ที่ต้องทำ (${total - done})` : `เสร็จแล้ว (${done})`}
@@ -308,8 +308,8 @@ export function ChecklistPage({
               <div key={item.id} className="space-y-2">
                 {showCategoryHeader && (
                   <div className="pt-3 pb-1 flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500" aria-hidden="true" />
-                    <h2 className="text-xs font-bold text-[#2B1413] tracking-wide">{item.category}</h2>
+                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-amber-glow)]0" aria-hidden="true" />
+                    <h2 className="text-xs font-bold text-[var(--color-text)] tracking-wide">{item.category}</h2>
                   </div>
                 )}
                 <button
@@ -318,14 +318,14 @@ export function ChecklistPage({
                   aria-checked={isDone}
                   onClick={() => toggleItem(item.id)}
                   className={`w-full flex items-start gap-3.5 p-4 rounded-2xl border text-left transition-all duration-150 focus-visible:outline-none focus:ring-2 focus:ring-amber-400 cursor-pointer ${isDone
-                    ? "bg-amber-50/50 border-amber-200 hover:border-amber-300"
-                    : "bg-white border-[#EADBCE] hover:border-amber-400 hover:bg-[#FFFDF9]"
+                    ? "bg-[var(--color-amber-glow)]/50 border-[var(--color-amber)] hover:border-[var(--color-amber)]"
+                    : "bg-[var(--color-surface)] border-[var(--color-border)] hover:border-amber-400 hover:bg-[var(--color-background)]"
                     }`}
                 >
                   <div
                     className={`mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all ${isDone
-                      ? "border-amber-500 bg-amber-500 text-white shadow-2xs"
-                      : "border-[#C9B29F] bg-white hover:border-amber-400"
+                      ? "border-amber-500 bg-[var(--color-amber-glow)]0 text-[var(--color-brown)] shadow-2xs"
+                      : "border-[#C9B29F] bg-[var(--color-surface)] hover:border-amber-400"
                       }`}
                   >
                     {isDone && (
@@ -336,10 +336,10 @@ export function ChecklistPage({
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start gap-2">
-                      <span className={`text-xs font-mono font-semibold pt-0.5 select-none ${isDone ? "text-amber-700" : "text-[#A88B77]"}`} aria-hidden="true">
+                      <span className={`text-xs font-mono font-semibold pt-0.5 select-none ${isDone ? "text-amber-700" : "text-[var(--color-text-subtle)]"}`} aria-hidden="true">
                         {String(originalIndex + 1).padStart(2, "0")}
                       </span>
-                      <p className={`text-sm leading-relaxed ${isDone ? "text-[#A88B77] line-through opacity-80" : "text-[#2B1413] font-medium"}`}>
+                      <p className={`text-sm leading-relaxed ${isDone ? "text-[var(--color-text-subtle)] line-through opacity-80" : "text-[var(--color-text)] font-medium"}`}>
                         {item.label}
                       </p>
                     </div>
@@ -378,9 +378,9 @@ export function ChecklistPage({
           })}
 
           {filteredItems.length === 0 && (
-            <div className="p-8 text-center bg-white border border-[#EADBCE] rounded-2xl">
-              <p className="text-sm font-semibold text-[#2B1413]">ไม่มีรายการในหมวดนี้</p>
-              <p className="text-xs text-[#78483B] mt-1 font-medium">
+            <div className="p-8 text-center bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl">
+              <p className="text-sm font-semibold text-[var(--color-text)]">ไม่มีรายการในหมวดนี้</p>
+              <p className="text-xs text-[var(--color-text-muted)] mt-1 font-medium">
                 {filter === "pending" ? "คุณทำครบทุกรายการแล้ว" : "ยังไม่มีรายการที่เสร็จสมบูรณ์"}
               </p>
             </div>
@@ -401,17 +401,17 @@ export function ChecklistPage({
             aria-modal="true"
             aria-labelledby="confirm-shift-title"
             tabIndex={-1}
-            className="bg-white border border-[#EADBCE] rounded-2xl p-6 sm:p-7 w-full max-w-sm focus-visible:outline-none shadow-2xl"
+            className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-6 sm:p-7 w-full max-w-sm focus-visible:outline-none shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 id="confirm-shift-title" className="text-base font-bold text-[#2B1413] mb-2">
+            <h2 id="confirm-shift-title" className="text-base font-bold text-[var(--color-text)] mb-2">
               ยืนยันการจบกะงาน?
             </h2>
-            <p className="text-sm text-[#78483B] mb-4 leading-relaxed">
+            <p className="text-sm text-[var(--color-text-muted)] mb-4 leading-relaxed">
               คุณได้ตรวจสอบครบถ้วนทั้ง 100% แล้ว ต้องการบันทึกและจบกะนี้ใช่หรือไม่?
             </p>
             {continueShift && (
-              <div className="mb-5 p-3 rounded-xl bg-amber-50 border border-amber-300 text-amber-800 text-xs font-semibold flex items-center gap-2">
+              <div className="mb-5 p-3 rounded-xl bg-[var(--color-amber-glow)] border border-[var(--color-amber)] text-[var(--color-amber)] text-xs font-semibold flex items-center gap-2">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <polyline points="20 6 9 17 4 12" />
                 </svg>
@@ -422,14 +422,14 @@ export function ChecklistPage({
               <button
                 type="button"
                 onClick={() => setShowConfirm(false)}
-                className="flex-1 py-2.5 rounded-xl border border-[#EADBCE] text-xs sm:text-sm font-semibold text-[#78483B] hover:bg-[#FAF4EC] transition-colors cursor-pointer"
+                className="flex-1 py-2.5 rounded-xl border border-[var(--color-border)] text-xs sm:text-sm font-semibold text-[var(--color-text-muted)] hover:bg-[var(--color-surface-2)] transition-colors cursor-pointer"
               >
                 ยกเลิก
               </button>
               <button
                 type="button"
                 onClick={endShift}
-                className="flex-1 py-2.5 rounded-xl bg-[#2B1413] hover:bg-[#442220] text-amber-300 text-xs sm:text-sm font-semibold transition-colors shadow-sm cursor-pointer"
+                className="flex-1 py-2.5 rounded-xl bg-[var(--color-brown)] hover:bg-[var(--color-brown-light)] text-amber-300 text-xs sm:text-sm font-semibold transition-colors shadow-sm cursor-pointer"
               >
                 จบกะงาน
               </button>
@@ -449,7 +449,7 @@ export function ChecklistPage({
             aria-modal="true"
             aria-labelledby="exit-modal-title"
             tabIndex={-1}
-            className="bg-white border border-[#EADBCE] rounded-2xl p-6 sm:p-7 w-full max-w-sm focus-visible:outline-none shadow-2xl"
+            className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-6 sm:p-7 w-full max-w-sm focus-visible:outline-none shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="w-10 h-10 rounded-xl bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center mb-3">
@@ -459,17 +459,17 @@ export function ChecklistPage({
                 <line x1="21" y1="12" x2="9" y2="12" />
               </svg>
             </div>
-            <h2 id="exit-modal-title" className="text-base font-bold text-[#2B1413] mb-2">
+            <h2 id="exit-modal-title" className="text-base font-bold text-[var(--color-text)] mb-2">
               ต้องการออกจากหน้า Checklist หรือไม่?
             </h2>
-            <p className="text-sm text-[#78483B] mb-6 leading-relaxed">
+            <p className="text-sm text-[var(--color-text-muted)] mb-6 leading-relaxed">
               คุณต้องการกลับไปยังหน้าเลือกกะการทำงานหรือไม่? (รายการที่บันทึกแล้วจะยังคงถูกบันทึกไว้ในระบบ)
             </p>
             <div className="flex gap-2.5">
               <button
                 type="button"
                 onClick={() => setShowExitConfirm(false)}
-                className="flex-1 py-2.5 rounded-xl border border-[#EADBCE] text-xs sm:text-sm font-semibold text-[#78483B] hover:bg-[#FAF4EC] transition-colors cursor-pointer"
+                className="flex-1 py-2.5 rounded-xl border border-[var(--color-border)] text-xs sm:text-sm font-semibold text-[var(--color-text-muted)] hover:bg-[var(--color-surface-2)] transition-colors cursor-pointer"
               >
                 ยกเลิก
               </button>
@@ -483,7 +483,7 @@ export function ChecklistPage({
                     window.location.href = "/shift";
                   }
                 }}
-                className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs sm:text-sm font-semibold transition-colors shadow-sm cursor-pointer"
+                className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-[var(--color-brown)] text-xs sm:text-sm font-semibold transition-colors shadow-sm cursor-pointer"
               >
                 ออกจากหน้านี้
               </button>

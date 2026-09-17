@@ -148,6 +148,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   function logout(redirectTo?: unknown) {
     const targetUrl = typeof redirectTo === "string" ? redirectTo : null;
     const prevRole = currentUser?.role;
+
+    // Clear all persistent local caches when changing users
+    secureRemoveItem("app_sessions");
+    secureRemoveItem("app_manager_read_notifs");
+    secureRemoveItem("app_queue_afternoon");
+    secureRemoveItem("app_active_session");
+    secureRemoveItem("app_selected_shift");
+    secureRemoveItem("app_current_user");
+
+    setSessionsState([]);
     setCurrentUser(null);
     setSelectedShift(null);
     setActiveSession(null);

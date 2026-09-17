@@ -298,10 +298,10 @@ export function AdminDashboardView({
   );
 
   return (
-    <div className="min-h-screen bg-[#FFFDF9] text-[#2B1413] flex flex-col justify-between">
+    <div className="min-h-screen bg-[var(--color-background)] text-[var(--color-text)] flex flex-col justify-between">
       {/* Toast Notification */}
       {toastMsg && (
-        <div className="fixed top-6 right-6 z-50 bg-[#2B1413] text-amber-300 border border-amber-300/40 text-xs font-semibold px-4 py-2.5 rounded-xl shadow-xl animate-fade-in flex items-center gap-2">
+        <div className="fixed top-6 right-6 z-50 bg-[var(--color-brown)] text-amber-300 border border-[var(--color-amber)]/40 text-xs font-semibold px-4 py-2.5 rounded-xl shadow-xl animate-fade-in flex items-center gap-2">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="20 6 9 17 4 12" />
           </svg>
@@ -310,24 +310,24 @@ export function AdminDashboardView({
       )}
 
       {/* Top Navbar */}
-      <header className="border-b border-[#EADBCE] bg-white/95 backdrop-blur-md sticky top-0 z-40 px-4 sm:px-8 py-3.5 flex items-center justify-between shadow-xs">
+      <header className="border-b border-[var(--color-border)] bg-[var(--color-surface)]/95 backdrop-blur-md sticky top-0 z-40 px-4 sm:px-8 py-3.5 flex items-center justify-between shadow-xs">
         <div className="flex items-center gap-4">
           <BrandLogo size={36} showText={true} isDark={false} />
-          <div className="hidden md:flex items-center gap-2 pl-4 border-l border-[#EADBCE]">
-            <span className="text-[10px] font-mono font-bold tracking-widest uppercase bg-amber-100 text-[#2B1413] border border-amber-300 px-2.5 py-1 rounded-md">
+          <div className="hidden md:flex items-center gap-2 pl-4 border-l border-[var(--color-border)]">
+            <span className="text-[10px] font-mono font-bold tracking-widest uppercase bg-[var(--color-surface-2)] text-[var(--color-amber)] border border-[var(--color-amber-dim)] px-2.5 py-1 rounded-md">
               System Admin Portal
             </span>
-            <span className="text-xs text-[#78483B]">ระดับศูนย์กลางองค์กร</span>
+            <span className="text-xs text-[var(--color-text-muted)]">ระดับศูนย์กลางองค์กร</span>
           </div>
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2.5 pl-3 border-l border-[#EADBCE]">
+          <div className="flex items-center gap-2.5 pl-3 border-l border-[var(--color-border)]">
             <div className="text-right hidden sm:block">
-              <p className="text-xs font-bold text-[#2B1413]">{user.name}</p>
-              <p className="text-[11px] text-[#78483B]">{user.position || "ผู้ดูแลระบบส่วนกลาง"}</p>
+              <p className="text-xs font-bold text-[var(--color-text)]">{user.name}</p>
+              <p className="text-[11px] text-[var(--color-text-muted)]">{user.position || "ผู้ดูแลระบบส่วนกลาง"}</p>
             </div>
-            <div className="w-8 h-8 rounded-xl bg-[#2B1413] text-amber-300 flex items-center justify-center font-bold text-xs shadow-xs">
+            <div className="w-8 h-8 rounded-xl bg-[var(--color-brown)] text-amber-300 flex items-center justify-center font-bold text-xs shadow-xs">
               AD
             </div>
           </div>
@@ -335,7 +335,7 @@ export function AdminDashboardView({
           <button
             type="button"
             onClick={onLogout}
-            className="text-xs text-[#78483B] hover:text-rose-700 hover:bg-rose-50 px-3 py-1.5 rounded-xl border border-[#EADBCE] transition-all font-semibold cursor-pointer"
+            className="text-xs text-[var(--color-text-muted)] hover:text-rose-700 hover:bg-rose-50 px-3 py-1.5 rounded-xl border border-[var(--color-border)] transition-all font-semibold cursor-pointer"
           >
             ออกจากระบบ
           </button>
@@ -345,8 +345,8 @@ export function AdminDashboardView({
       {/* Main Container */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-8 py-6 space-y-6">
         {/* Navigation Tabs Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#EADBCE] pb-4">
-          <div className="flex items-center gap-1 bg-[#FAF4EC] p-1.5 rounded-2xl border border-[#EADBCE] text-xs font-semibold">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--color-border)] pb-4">
+          <div className="flex items-center gap-1 bg-[var(--color-surface-2)] p-1.5 rounded-2xl border border-[var(--color-border)] text-xs font-semibold">
             {[
               { id: "overview", label: "ภาพรวมระบบ (Overview)" },
               { id: "branches", label: `จัดการสาขา (${branches.length})` },
@@ -358,8 +358,8 @@ export function AdminDashboardView({
                 type="button"
                 onClick={() => setActiveTab(tab.id as any)}
                 className={`px-3.5 py-2 rounded-xl transition-all cursor-pointer ${activeTab === tab.id
-                  ? "bg-[#2B1413] text-amber-300 shadow-sm font-bold"
-                  : "text-[#78483B] hover:text-[#2B1413] hover:bg-white"
+                  ? "bg-[var(--color-brown)] text-amber-300 shadow-sm font-bold"
+                  : "text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface)]"
                   }`}
               >
                 {tab.label}
@@ -369,7 +369,7 @@ export function AdminDashboardView({
 
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-            <span className="text-xs text-[#78483B] font-mono">DB Pooler: Connected</span>
+            <span className="text-xs text-[var(--color-text-muted)] font-mono">DB Pooler: Connected</span>
           </div>
         </div>
 
@@ -378,23 +378,23 @@ export function AdminDashboardView({
           <div className="space-y-6 animate-fade-in">
             {/* 4 Stats Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="bg-white border border-[#EADBCE] p-5 rounded-2xl shadow-sm">
+              <div className="bg-[var(--color-surface)] border border-[var(--color-border)] p-5 rounded-2xl shadow-sm">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium text-[#78483B]">สาขาที่เปิดทำการ</span>
+                  <span className="text-xs font-medium text-[var(--color-text-muted)]">สาขาที่เปิดทำการ</span>
                   <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
                     Online 100%
                   </span>
                 </div>
                 <div className="mt-3 flex items-baseline gap-2">
-                  <span className="text-3xl font-black text-[#2B1413] font-mono">{branches.filter(b => b.status === "active").length}</span>
-                  <span className="text-xs text-[#A88B77]">/ {branches.length} สาขาทั่วประเทศ</span>
+                  <span className="text-3xl font-black text-[var(--color-text)] font-mono">{branches.filter(b => b.status === "active").length}</span>
+                  <span className="text-xs text-[var(--color-text-subtle)]">/ {branches.length} สาขาทั่วประเทศ</span>
                 </div>
               </div>
 
-              <div className="bg-white border border-[#EADBCE] p-5 rounded-2xl shadow-sm">
+              <div className="bg-[var(--color-surface)] border border-[var(--color-border)] p-5 rounded-2xl shadow-sm">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium text-[#78483B]">อัตราการเช็คลิสต์รวมวันนี้</span>
-                  <span className="text-[10px] font-bold text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
+                  <span className="text-xs font-medium text-[var(--color-text-muted)]">อัตราการเช็คลิสต์รวมวันนี้</span>
+                  <span className="text-[10px] font-bold text-[var(--color-amber)] bg-[var(--color-amber-glow)] border border-[var(--color-amber)] px-2 py-0.5 rounded-full">
                     ทั่วประเทศ
                   </span>
                 </div>
@@ -404,44 +404,44 @@ export function AdminDashboardView({
                 </div>
               </div>
 
-              <div className="bg-white border border-[#EADBCE] p-5 rounded-2xl shadow-sm">
+              <div className="bg-[var(--color-surface)] border border-[var(--color-border)] p-5 rounded-2xl shadow-sm">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium text-[#78483B]">พนักงานในระบบทั้งหมด</span>
-                  <span className="text-[10px] font-bold text-[#78483B] bg-[#FAF4EC] px-2 py-0.5 rounded-full border border-[#EADBCE]">
+                  <span className="text-xs font-medium text-[var(--color-text-muted)]">พนักงานในระบบทั้งหมด</span>
+                  <span className="text-[10px] font-bold text-[var(--color-text-muted)] bg-[var(--color-surface-2)] px-2 py-0.5 rounded-full border border-[var(--color-border)]">
                     Active
                   </span>
                 </div>
                 <div className="mt-3 flex items-baseline gap-2">
-                  <span className="text-3xl font-black text-[#2B1413] font-mono">{usersList.length || 8}</span>
-                  <span className="text-xs text-[#A88B77]">บัญชีผู้ใช้งาน</span>
+                  <span className="text-3xl font-black text-[var(--color-text)] font-mono">{usersList.length || 8}</span>
+                  <span className="text-xs text-[var(--color-text-subtle)]">บัญชีผู้ใช้งาน</span>
                 </div>
               </div>
 
-              <div className="bg-white border border-[#EADBCE] p-5 rounded-2xl shadow-sm">
+              <div className="bg-[var(--color-surface)] border border-[var(--color-border)] p-5 rounded-2xl shadow-sm">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium text-[#78483B]">ระบบฐานข้อมูล Supabase</span>
+                  <span className="text-xs font-medium text-[var(--color-text-muted)]">ระบบฐานข้อมูล Supabase</span>
                   <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
                     Healthy
                   </span>
                 </div>
                 <div className="mt-3 flex items-baseline gap-2">
-                  <span className="text-xl font-bold text-[#2B1413]">PostgreSQL 15</span>
-                  <span className="text-xs text-[#A88B77] font-mono">24ms Ping</span>
+                  <span className="text-xl font-bold text-[var(--color-text)]">PostgreSQL 15</span>
+                  <span className="text-xs text-[var(--color-text-subtle)] font-mono">24ms Ping</span>
                 </div>
               </div>
             </div>
 
             {/* Quick Status Table */}
-            <div className="bg-white border border-[#EADBCE] rounded-2xl p-6 shadow-sm">
+            <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-6 shadow-sm">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h3 className="text-base font-bold text-[#2B1413]">สรุปผลการปฏิบัติงานรายสาขาประจำวัน</h3>
-                  <p className="text-xs text-[#78483B]">แสดงข้อมูลความคืบหน้าการเช็คลิสต์ของทุกสาขาแบบเรียลไทม์</p>
+                  <h3 className="text-base font-bold text-[var(--color-text)]">สรุปผลการปฏิบัติงานรายสาขาประจำวัน</h3>
+                  <p className="text-xs text-[var(--color-text-muted)]">แสดงข้อมูลความคืบหน้าการเช็คลิสต์ของทุกสาขาแบบเรียลไทม์</p>
                 </div>
                 <button
                   type="button"
                   onClick={() => setActiveTab("branches")}
-                  className="text-xs text-amber-700 hover:text-amber-800 font-semibold transition-colors cursor-pointer"
+                  className="text-xs text-amber-700 hover:text-[var(--color-amber)] font-semibold transition-colors cursor-pointer"
                 >
                   จัดการสาขาทั้งหมด →
                 </button>
@@ -449,7 +449,7 @@ export function AdminDashboardView({
 
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
-                  <thead className="border-b border-[#EADBCE] text-[#78483B] font-semibold bg-[#FAF4EC]">
+                  <thead className="border-b border-[var(--color-border)] text-[var(--color-text-muted)] font-semibold bg-[var(--color-surface-2)]">
                     <tr>
                       <th className="py-3 px-3 rounded-l-lg">รหัสสาขา</th>
                       <th className="py-3 px-3">ชื่อสาขา</th>
@@ -459,18 +459,18 @@ export function AdminDashboardView({
                       <th className="py-3 px-3 text-right rounded-r-lg">ความคืบหน้า Checklist</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#EADBCE]/70">
+                  <tbody className="divide-y divide-[var(--color-border)]/70">
                     {branches.map((b) => (
-                      <tr key={b.id} className="hover:bg-[#FFFDF9] transition-colors">
+                      <tr key={b.id} className="hover:bg-[var(--color-background)] transition-colors">
                         <td className="py-3 px-3 font-mono font-bold text-amber-700">{b.code}</td>
-                        <td className="py-3 px-3 font-semibold text-[#2B1413]">{b.name}</td>
-                        <td className="py-3 px-3 text-[#78483B]">{b.managerName}</td>
-                        <td className="py-3 px-3 text-[#78483B] font-mono">{b.staffCount} คน</td>
+                        <td className="py-3 px-3 font-semibold text-[var(--color-text)]">{b.name}</td>
+                        <td className="py-3 px-3 text-[var(--color-text-muted)]">{b.managerName}</td>
+                        <td className="py-3 px-3 text-[var(--color-text-muted)] font-mono">{b.staffCount} คน</td>
                         <td className="py-3 px-3">
                           <span
                             className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${b.status === "active"
                               ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                              : "bg-amber-50 text-amber-800 border border-amber-200"
+                              : "bg-[var(--color-amber-glow)] text-[var(--color-amber)] border border-[var(--color-amber)]"
                               }`}
                           >
                             {b.status === "active" ? "เปิดปกติ" : "รอเปิด"}
@@ -478,7 +478,7 @@ export function AdminDashboardView({
                         </td>
                         <td className="py-3 px-3 text-right">
                           <div className="flex items-center justify-end gap-2">
-                            <div className="w-24 h-2 bg-[#F2E7DC] rounded-full overflow-hidden border border-[#EADBCE]">
+                            <div className="w-24 h-2 bg-[#F2E7DC] rounded-full overflow-hidden border border-[var(--color-border)]">
                               <div
                                 className={`h-full rounded-full ${b.todayCompletionRate === 100
                                   ? "bg-emerald-500"
@@ -489,7 +489,7 @@ export function AdminDashboardView({
                                 style={{ width: `${b.todayCompletionRate}%` }}
                               />
                             </div>
-                            <span className="font-mono font-bold text-[#2B1413] w-10 text-right">
+                            <span className="font-mono font-bold text-[var(--color-text)] w-10 text-right">
                               {b.todayCompletionRate}%
                             </span>
                           </div>
@@ -506,18 +506,18 @@ export function AdminDashboardView({
         {/* TAB 2: BRANCH MANAGEMENT */}
         {activeTab === "branches" && (
           <div className="space-y-4 animate-fade-in">
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white border border-[#EADBCE] p-4 rounded-2xl shadow-sm">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-[var(--color-surface)] border border-[var(--color-border)] p-4 rounded-2xl shadow-sm">
               <input
                 type="text"
                 value={branchSearch}
                 onChange={(e) => setBranchSearch(e.target.value)}
                 placeholder="ค้นหาชื่อสาขา หรือรหัสสาขา..."
-                className="bg-[#FAF4EC] border border-[#EADBCE] rounded-xl px-3.5 py-2 text-xs text-[#2B1413] placeholder:text-[#A88B77] focus:outline-none focus:border-amber-400 w-full sm:w-80"
+                className="bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-xl px-3.5 py-2 text-xs text-[var(--color-text)] placeholder:text-[var(--color-text-subtle)] focus:outline-none focus:border-amber-400 w-full sm:w-80"
               />
               <button
                 type="button"
                 onClick={() => setIsNewBranchModalOpen(true)}
-                className="bg-[#2B1413] hover:bg-[#442220] text-amber-300 text-xs font-semibold px-4 py-2 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
+                className="bg-[var(--color-brown)] hover:bg-[var(--color-brown-light)] text-amber-300 text-xs font-semibold px-4 py-2 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
               >
                 <span>+ เพิ่มสาขาใหม่</span>
               </button>
@@ -525,33 +525,33 @@ export function AdminDashboardView({
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredBranches.map((b) => (
-                <div key={b.id} className="bg-white border border-[#EADBCE] rounded-2xl p-5 space-y-4 hover:border-amber-400 shadow-sm transition-all">
+                <div key={b.id} className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-5 space-y-4 hover:border-amber-400 shadow-sm transition-all">
                   <div className="flex items-start justify-between">
                     <div>
-                      <span className="text-[10px] font-mono font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                      <span className="text-[10px] font-mono font-bold text-[var(--color-amber)] bg-[var(--color-amber-glow)] px-2 py-0.5 rounded border border-[var(--color-amber)]">
                         {b.code}
                       </span>
-                      <h4 className="text-base font-bold text-[#2B1413] mt-1.5">{b.name}</h4>
-                      <p className="text-xs text-[#78483B]">{b.location}</p>
+                      <h4 className="text-base font-bold text-[var(--color-text)] mt-1.5">{b.name}</h4>
+                      <p className="text-xs text-[var(--color-text-muted)]">{b.location}</p>
                     </div>
                     <span
                       className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${b.status === "active"
                         ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                        : "bg-amber-50 text-amber-800 border border-amber-200"
+                        : "bg-[var(--color-amber-glow)] text-[var(--color-amber)] border border-[var(--color-amber)]"
                         }`}
                     >
                       {b.status === "active" ? "เปิดทำการ" : "Standby"}
                     </span>
                   </div>
 
-                  <div className="pt-3 border-t border-[#EADBCE] grid grid-cols-2 gap-2 text-xs">
+                  <div className="pt-3 border-t border-[var(--color-border)] grid grid-cols-2 gap-2 text-xs">
                     <div>
-                      <p className="text-[#A88B77]">ผู้จัดการสาขา</p>
-                      <p className="font-semibold text-[#2B1413] mt-0.5">{b.managerName}</p>
+                      <p className="text-[var(--color-text-subtle)]">ผู้จัดการสาขา</p>
+                      <p className="font-semibold text-[var(--color-text)] mt-0.5">{b.managerName}</p>
                     </div>
                     <div>
-                      <p className="text-[#A88B77]">จำนวนพนักงาน</p>
-                      <p className="font-semibold text-[#2B1413] mt-0.5">{b.staffCount} คน</p>
+                      <p className="text-[var(--color-text-subtle)]">จำนวนพนักงาน</p>
+                      <p className="font-semibold text-[var(--color-text)] mt-0.5">{b.staffCount} คน</p>
                     </div>
                   </div>
 
@@ -559,14 +559,14 @@ export function AdminDashboardView({
                     <button
                       type="button"
                       onClick={() => openManageStaffModal(b.id)}
-                      className="text-[11px] font-semibold text-[#2B1413] hover:text-[#442220] bg-[#FAF4EC] hover:bg-[#F2E7DC] px-2 py-1.5 rounded-lg border border-[#EADBCE] transition-all cursor-pointer flex-1"
+                      className="text-[11px] font-semibold text-[var(--color-text)] hover:text-[var(--color-brown-light)] bg-[var(--color-surface-2)] hover:bg-[#F2E7DC] px-2 py-1.5 rounded-lg border border-[var(--color-border)] transition-all cursor-pointer flex-1"
                     >
                       จัดการสาขา
                     </button>
                     <button
                       type="button"
                       onClick={() => openManageTasksModal(b.id)}
-                      className="text-[11px] font-semibold text-amber-800 hover:text-amber-950 bg-amber-50 hover:bg-amber-100 px-2 py-1.5 rounded-lg border border-amber-200 transition-all cursor-pointer flex-1"
+                      className="text-[11px] font-semibold text-[var(--color-amber)] hover:text-amber-950 bg-[var(--color-amber-glow)] hover:bg-[var(--color-amber-glow)] px-2 py-1.5 rounded-lg border border-[var(--color-amber)] transition-all cursor-pointer flex-1"
                     >
                       จัดการงาน
                     </button>
@@ -580,8 +580,8 @@ export function AdminDashboardView({
         {/* TAB 3: MASTER TASKS */}
         {activeTab === "tasks" && (
           <div className="space-y-4 animate-fade-in">
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white border border-[#EADBCE] p-4 rounded-2xl shadow-sm">
-              <div className="flex items-center gap-1 bg-[#FAF4EC] p-1 rounded-xl border border-[#EADBCE] text-xs font-semibold">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-[var(--color-surface)] border border-[var(--color-border)] p-4 rounded-2xl shadow-sm">
+              <div className="flex items-center gap-1 bg-[var(--color-surface-2)] p-1 rounded-xl border border-[var(--color-border)] text-xs font-semibold">
                 {[
                   { id: "all", label: "ทั้งหมด" },
                   { id: "cashier", label: "แคชเชียร์" },
@@ -592,7 +592,7 @@ export function AdminDashboardView({
                     key={f.id}
                     type="button"
                     onClick={() => setTaskRoleFilter(f.id as any)}
-                    className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${taskRoleFilter === f.id ? "bg-[#2B1413] text-amber-300 font-bold" : "text-[#78483B] hover:text-[#2B1413]"
+                    className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${taskRoleFilter === f.id ? "bg-[var(--color-brown)] text-amber-300 font-bold" : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
                       }`}
                   >
                     {f.label}
@@ -603,16 +603,16 @@ export function AdminDashboardView({
               <button
                 type="button"
                 onClick={() => setIsCreateTaskModalOpen(true)}
-                className="bg-[#2B1413] hover:bg-[#442220] text-amber-300 text-xs font-semibold px-4 py-2 rounded-xl transition-all cursor-pointer shadow-sm"
+                className="bg-[var(--color-brown)] hover:bg-[var(--color-brown-light)] text-amber-300 text-xs font-semibold px-4 py-2 rounded-xl transition-all cursor-pointer shadow-sm"
               >
                 + เพิ่มรายการงานใหม่
               </button>
             </div>
 
-            <div className="bg-white border border-[#EADBCE] rounded-2xl overflow-hidden shadow-sm">
+            <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl overflow-hidden shadow-sm">
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
-                  <thead className="border-b border-[#EADBCE] text-[#78483B] font-semibold bg-[#FAF4EC]">
+                  <thead className="border-b border-[var(--color-border)] text-[var(--color-text-muted)] font-semibold bg-[var(--color-surface-2)]">
                     <tr>
                       <th className="py-3.5 px-4">รายการงาน (Master Task)</th>
                       <th className="py-3.5 px-3">ตำแหน่งงาน</th>
@@ -621,30 +621,30 @@ export function AdminDashboardView({
                       <th className="py-3.5 px-3 text-right">สถานะระบบ</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#EADBCE]/70">
+                  <tbody className="divide-y divide-[var(--color-border)]/70">
                     {filteredTasks.length === 0 ? (
                       <tr>
-                        <td colSpan={5} className="py-8 text-center text-[#A88B77]">ไม่มีข้อมูล หรือ ไม่มีงานในตำแหน่งนี้</td>
+                        <td colSpan={5} className="py-8 text-center text-[var(--color-text-subtle)]">ไม่มีข้อมูล หรือ ไม่มีงานในตำแหน่งนี้</td>
                       </tr>
                     ) : (
                       filteredTasks.map((t, idx) => (
-                        <tr key={t.id} className="hover:bg-[#FFFDF9] transition-colors">
-                          <td className="py-3.5 px-4 font-medium text-[#2B1413] max-w-md">
-                            <span className="font-mono text-[#A88B77] mr-2">{String(idx + 1).padStart(2, "0")}</span>
+                        <tr key={t.id} className="hover:bg-[var(--color-background)] transition-colors">
+                          <td className="py-3.5 px-4 font-medium text-[var(--color-text)] max-w-md">
+                            <span className="font-mono text-[var(--color-text-subtle)] mr-2">{String(idx + 1).padStart(2, "0")}</span>
                             <span>{t.name}</span>
                           </td>
                           <td className="py-3.5 px-3">
-                            <span className="px-2 py-0.5 rounded-md bg-[#FAF4EC] text-[#78483B] border border-[#EADBCE] font-semibold text-[11px]">
+                            <span className="px-2 py-0.5 rounded-md bg-[var(--color-surface-2)] text-[var(--color-text-muted)] border border-[var(--color-border)] font-semibold text-[11px]">
                               {t.task_role === "cashier" ? "แคชเชียร์" : t.task_role === "stock" ? "สต็อก/จัดเรียง" : "ผู้ช่วยผจก."}
                             </span>
                           </td>
-                          <td className="py-3.5 px-3 text-[#78483B] capitalize">{t.shift === "morning" ? "กะเช้า" : t.shift === "afternoon" ? "กะบ่าย" : "ควบกะ"}</td>
-                          <td className="py-3.5 px-3 font-mono text-[#78483B]">{t.start ? `${t.start} - ${t.end}` : "ตามเวลาปฏิบัติการ"}</td>
+                          <td className="py-3.5 px-3 text-[var(--color-text-muted)] capitalize">{t.shift === "morning" ? "กะเช้า" : t.shift === "afternoon" ? "กะบ่าย" : "ควบกะ"}</td>
+                          <td className="py-3.5 px-3 font-mono text-[var(--color-text-muted)]">{t.start ? `${t.start} - ${t.end}` : "ตามเวลาปฏิบัติการ"}</td>
                           <td className="py-3.5 px-3 text-right">
                             <span
                               className={`px-3 py-1 rounded-full text-[11px] font-bold ${!t.disabled
                                 ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                                : "bg-[#FAF4EC] text-[#A88B77] border border-[#EADBCE]"
+                                : "bg-[var(--color-surface-2)] text-[var(--color-text-subtle)] border border-[var(--color-border)]"
                                 }`}
                             >
                               {!t.disabled ? "ทำงานได้" : "ปิดชั่วคราว"}
@@ -663,28 +663,28 @@ export function AdminDashboardView({
         {/* TAB 4: USERS & PERMISSIONS */}
         {activeTab === "users" && (
           <div className="space-y-4 animate-fade-in">
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white border border-[#EADBCE] p-4 rounded-2xl shadow-sm">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-[var(--color-surface)] border border-[var(--color-border)] p-4 rounded-2xl shadow-sm">
               <input
                 type="text"
                 value={userSearch}
                 onChange={(e) => setUserSearch(e.target.value)}
                 placeholder="ค้นหาชื่อผู้ใช้งาน, อีเมล หรือตำแหน่ง..."
-                className="bg-[#FAF4EC] border border-[#EADBCE] rounded-xl px-3.5 py-2 text-xs text-[#2B1413] placeholder:text-[#A88B77] focus:outline-none focus:border-amber-400 w-full sm:w-80"
+                className="bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-xl px-3.5 py-2 text-xs text-[var(--color-text)] placeholder:text-[var(--color-text-subtle)] focus:outline-none focus:border-amber-400 w-full sm:w-80"
               />
 
               <button
                 type="button"
                 onClick={() => showToast("เปิดแบบฟอร์มสร้างบัญชีผู้ใช้งานใหม่")}
-                className="bg-[#2B1413] hover:bg-[#442220] text-amber-300 text-xs font-semibold px-4 py-2 rounded-xl transition-all cursor-pointer shadow-sm"
+                className="bg-[var(--color-brown)] hover:bg-[var(--color-brown-light)] text-amber-300 text-xs font-semibold px-4 py-2 rounded-xl transition-all cursor-pointer shadow-sm"
               >
                 + เพิ่มผู้ใช้ใหม่
               </button>
             </div>
 
-            <div className="bg-white border border-[#EADBCE] rounded-2xl overflow-hidden shadow-sm">
+            <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl overflow-hidden shadow-sm">
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
-                  <thead className="border-b border-[#EADBCE] text-[#78483B] font-semibold bg-[#FAF4EC]">
+                  <thead className="border-b border-[var(--color-border)] text-[var(--color-text-muted)] font-semibold bg-[var(--color-surface-2)]">
                     <tr>
                       <th className="py-3.5 px-4">ชื่อ-นามสกุล</th>
                       <th className="py-3.5 px-3">อีเมล</th>
@@ -694,17 +694,17 @@ export function AdminDashboardView({
                       <th className="py-3.5 px-3 text-right">ปรับเปลี่ยนสิทธิ์</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#EADBCE]/70">
+                  <tbody className="divide-y divide-[var(--color-border)]/70">
                     {filteredUsers.map((u) => (
-                      <tr key={u.id} className="hover:bg-[#FFFDF9] transition-colors">
-                        <td className="py-3.5 px-4 font-bold text-[#2B1413] flex items-center gap-2">
-                          <div className="w-6 h-6 rounded-lg bg-[#FAF4EC] border border-[#EADBCE] flex items-center justify-center text-[10px] text-[#78483B]">
+                      <tr key={u.id} className="hover:bg-[var(--color-background)] transition-colors">
+                        <td className="py-3.5 px-4 font-bold text-[var(--color-text)] flex items-center gap-2">
+                          <div className="w-6 h-6 rounded-lg bg-[var(--color-surface-2)] border border-[var(--color-border)] flex items-center justify-center text-[10px] text-[var(--color-text-muted)]">
                             {u.name.charAt(0)}
                           </div>
                           <span>{u.name}</span>
                         </td>
-                        <td className="py-3.5 px-3 font-mono text-[#78483B]">{u.email}</td>
-                        <td className="py-3.5 px-3 font-mono text-[#78483B]">
+                        <td className="py-3.5 px-3 font-mono text-[var(--color-text-muted)]">{u.email}</td>
+                        <td className="py-3.5 px-3 font-mono text-[var(--color-text-muted)]">
                           <div className="flex items-center gap-2">
                             <span>
                               {visiblePasswords.has(u.id) ? (u.password || "ไม่มีรหัสผ่าน") : "••••••••"}
@@ -712,7 +712,7 @@ export function AdminDashboardView({
                             <button
                               type="button"
                               onClick={() => togglePassword(u.id)}
-                              className="text-[#A88B77] hover:text-amber-700 cursor-pointer"
+                              className="text-[var(--color-text-subtle)] hover:text-amber-700 cursor-pointer"
                               title={visiblePasswords.has(u.id) ? "ซ่อนรหัสผ่าน" : "แสดงรหัสผ่าน"}
                             >
                               {visiblePasswords.has(u.id) ? (
@@ -726,22 +726,22 @@ export function AdminDashboardView({
                         <td className="py-3.5 px-3">
                           <span
                             className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${u.role === "admin" || u.role === "committee"
-                              ? "bg-amber-100 text-[#2B1413] border border-amber-300"
+                              ? "bg-[var(--color-amber)] text-[var(--color-background)] border border-[var(--color-amber-dim)]"
                               : u.role === "manager"
-                                ? "bg-amber-50 text-amber-800 border border-amber-200"
-                                : "bg-[#FAF4EC] text-[#78483B] border border-[#EADBCE]"
+                                ? "bg-[var(--color-surface-2)] text-[var(--color-amber)] border border-[var(--color-border)]"
+                                : "bg-[var(--color-surface-2)] text-[var(--color-text-muted)] border border-[var(--color-border)]"
                               }`}
                           >
                             {u.role}
                           </span>
                         </td>
-                        <td className="py-3.5 px-3 text-[#78483B]">{u.position || "-"}</td>
+                        <td className="py-3.5 px-3 text-[var(--color-text-muted)]">{u.position || "-"}</td>
                         <td className="py-3.5 px-3 text-right">
                           <select
                             value={u.role}
                             disabled={u.role === "admin"}
                             onChange={(e) => handlePromoteUser(u.id, e.target.value)}
-                            className="bg-[#FAF4EC] border border-[#EADBCE] rounded-lg px-2.5 py-1 text-xs text-[#2B1413] focus:outline-none focus:border-amber-400 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-lg px-2.5 py-1 text-xs text-[var(--color-text)] focus:outline-none focus:border-amber-400 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             <option value="employee">Staff (พนักงานทั่วไป)</option>
                             <option value="manager_assistant">Assistant (ผู้ช่วยผู้จัดการร้าน)</option>
@@ -763,13 +763,13 @@ export function AdminDashboardView({
         {/* MODALS */}
         {isNewBranchModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4 animate-fade-in">
-            <div className="bg-white border border-[#EADBCE] rounded-3xl w-full max-w-md overflow-hidden shadow-2xl">
-              <div className="px-6 py-4 border-b border-[#EADBCE] flex justify-between items-center bg-[#FAF4EC]">
-                <h3 className="font-bold text-[#2B1413] text-lg">เพิ่มสาขาใหม่</h3>
+            <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-3xl w-full max-w-md overflow-hidden shadow-2xl">
+              <div className="px-6 py-4 border-b border-[var(--color-border)] flex justify-between items-center bg-[var(--color-surface-2)]">
+                <h3 className="font-bold text-[var(--color-text)] text-lg">เพิ่มสาขาใหม่</h3>
                 <button
                   type="button"
                   onClick={() => setIsNewBranchModalOpen(false)}
-                  className="text-[#78483B] hover:text-[#2B1413] cursor-pointer"
+                  className="text-[var(--color-text-muted)] hover:text-[var(--color-text)] cursor-pointer"
                 >
                   ✕
                 </button>
@@ -777,28 +777,28 @@ export function AdminDashboardView({
               <div className="p-6">
                 <form onSubmit={handleCreateBranch} className="space-y-4">
                   <div>
-                    <label className="block text-xs font-semibold text-[#78483B] mb-1.5">ชื่อสาขา (อย่างน้อย 3 ตัวอักษร)</label>
+                    <label className="block text-xs font-semibold text-[var(--color-text-muted)] mb-1.5">ชื่อสาขา (อย่างน้อย 3 ตัวอักษร)</label>
                     <input
                       type="text"
                       required
                       value={newBranchName}
                       onChange={(e) => setNewBranchName(e.target.value)}
                       placeholder="เช่น สาขาพญาไท"
-                      className="w-full bg-[#FAF4EC] border border-[#EADBCE] rounded-xl px-4 py-3 text-sm text-[#2B1413] placeholder:text-[#A88B77] focus:outline-none focus:border-amber-400 transition-colors"
+                      className="w-full bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-xl px-4 py-3 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-subtle)] focus:outline-none focus:border-amber-400 transition-colors"
                     />
                   </div>
                   <div className="flex gap-3 pt-4">
                     <button
                       type="button"
                       onClick={() => setIsNewBranchModalOpen(false)}
-                      className="flex-1 py-3 bg-[#FAF4EC] hover:bg-[#F2E7DC] text-[#78483B] border border-[#EADBCE] rounded-xl text-sm font-bold transition-all cursor-pointer"
+                      className="flex-1 py-3 bg-[var(--color-surface-2)] hover:bg-[#F2E7DC] text-[var(--color-text-muted)] border border-[var(--color-border)] rounded-xl text-sm font-bold transition-all cursor-pointer"
                     >
                       ยกเลิก
                     </button>
                     <button
                       type="submit"
                       disabled={isCreatingBranch || newBranchName.length < 3}
-                      className="flex-1 py-3 bg-[#2B1413] hover:bg-[#442220] disabled:opacity-50 disabled:cursor-not-allowed text-amber-300 rounded-xl text-sm font-bold transition-all shadow-sm cursor-pointer"
+                      className="flex-1 py-3 bg-[var(--color-brown)] hover:bg-[var(--color-brown-light)] disabled:opacity-50 disabled:cursor-not-allowed text-amber-300 rounded-xl text-sm font-bold transition-all shadow-sm cursor-pointer"
                     >
                       {isCreatingBranch ? "กำลังสร้าง..." : "บันทึกข้อมูลสาขา"}
                     </button>
@@ -811,13 +811,13 @@ export function AdminDashboardView({
 
         {isManageStaffModalOpen && selectedBranchForStaff && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4 animate-fade-in">
-            <div className="bg-white border border-[#EADBCE] rounded-3xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl">
-              <div className="px-6 py-4 border-b border-[#EADBCE] flex justify-between items-center bg-[#FAF4EC]">
-                <h3 className="font-bold text-[#2B1413] text-lg">จัดการพนักงานและผู้จัดการสาขา</h3>
+            <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-3xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl">
+              <div className="px-6 py-4 border-b border-[var(--color-border)] flex justify-between items-center bg-[var(--color-surface-2)]">
+                <h3 className="font-bold text-[var(--color-text)] text-lg">จัดการพนักงานและผู้จัดการสาขา</h3>
                 <button
                   type="button"
                   onClick={() => setIsManageStaffModalOpen(false)}
-                  className="text-[#78483B] hover:text-[#2B1413] cursor-pointer"
+                  className="text-[var(--color-text-muted)] hover:text-[var(--color-text)] cursor-pointer"
                 >
                   ✕
                 </button>
@@ -825,26 +825,26 @@ export function AdminDashboardView({
 
               <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
                 {/* Left Panel: Assigned Staff (Cards Stack) */}
-                <div className="w-full md:w-1/2 border-r border-[#EADBCE] flex flex-col bg-[#FFFDF9]">
-                  <div className="p-4 border-b border-[#EADBCE]">
+                <div className="w-full md:w-1/2 border-r border-[var(--color-border)] flex flex-col bg-[var(--color-background)]">
+                  <div className="p-4 border-b border-[var(--color-border)]">
                     <h4 className="font-semibold text-emerald-700">พนักงานประจำสาขานี้</h4>
-                    <p className="text-xs text-[#78483B]">บุคลากรที่ถูกคัดเลือกและจัดตารางงานแล้ว</p>
+                    <p className="text-xs text-[var(--color-text-muted)]">บุคลากรที่ถูกคัดเลือกและจัดตารางงานแล้ว</p>
                   </div>
                   <div className="p-4 overflow-y-auto flex-1 space-y-4">
                     {/* Management Level */}
-                    <div className="bg-white border border-[#EADBCE] rounded-xl overflow-hidden shadow-xs">
-                      <div className="bg-amber-50 border-b border-[#EADBCE] px-3 py-2 text-xs font-bold text-amber-800">
+                    <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl overflow-hidden shadow-xs">
+                      <div className="bg-[var(--color-amber-glow)] border-b border-[var(--color-border)] px-3 py-2 text-xs font-bold text-[var(--color-amber)]">
                         ผู้จัดการร้าน (Manager)
                       </div>
                       <div className="p-2 space-y-1">
                         {usersList.filter(u => selectedStaffIds.includes(u.id) && (u.role === "manager" || u.role === "general_manager")).length === 0 && (
-                          <div className="text-xs text-[#A88B77] text-center py-2">ยังไม่มีบุคลากร</div>
+                          <div className="text-xs text-[var(--color-text-subtle)] text-center py-2">ยังไม่มีบุคลากร</div>
                         )}
                         {usersList.filter(u => selectedStaffIds.includes(u.id) && (u.role === "manager" || u.role === "general_manager")).map((user) => (
-                          <div key={user.id} className="flex justify-between items-center p-2 rounded-lg bg-[#FAF4EC] border border-[#EADBCE]">
+                          <div key={user.id} className="flex justify-between items-center p-2 rounded-lg bg-[var(--color-surface-2)] border border-[var(--color-border)]">
                             <div>
-                              <p className="text-sm font-bold text-[#2B1413] leading-tight">{user.name}</p>
-                              <p className="text-[10px] text-[#A88B77] mt-0.5">{user.email}</p>
+                              <p className="text-sm font-bold text-[var(--color-text)] leading-tight">{user.name}</p>
+                              <p className="text-[10px] text-[var(--color-text-subtle)] mt-0.5">{user.email}</p>
                             </div>
                             <button onClick={() => setSelectedStaffIds(prev => prev.filter(id => id !== user.id))} className="text-rose-700 text-xs px-2 py-1 rounded bg-rose-50 hover:bg-rose-100 font-semibold cursor-pointer">นำออก</button>
                           </div>
@@ -853,18 +853,18 @@ export function AdminDashboardView({
                     </div>
 
                     {/* Assistant Level */}
-                    <div className="bg-white border border-[#EADBCE] rounded-xl overflow-hidden shadow-xs">
-                      <div className="bg-amber-100/60 border-b border-[#EADBCE] px-3 py-2 text-xs font-bold text-[#2B1413]">
+                    <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl overflow-hidden shadow-xs">
+                      <div className="bg-[var(--color-amber-glow)]/60 border-b border-[var(--color-border)] px-3 py-2 text-xs font-bold text-[var(--color-text)]">
                         ผู้ช่วยผู้จัดการ (Assistant)
                       </div>
                       <div className="p-2 space-y-1">
                         {usersList.filter(u => selectedStaffIds.includes(u.id) && u.role === "manager_assistant").length === 0 && (
-                          <div className="text-xs text-[#A88B77] text-center py-2">ยังไม่มีบุคลากร</div>
+                          <div className="text-xs text-[var(--color-text-subtle)] text-center py-2">ยังไม่มีบุคลากร</div>
                         )}
                         {usersList.filter(u => selectedStaffIds.includes(u.id) && u.role === "manager_assistant").map((user) => (
-                          <div key={user.id} className="flex justify-between items-center p-2 rounded-lg bg-[#FAF4EC] border border-[#EADBCE]">
+                          <div key={user.id} className="flex justify-between items-center p-2 rounded-lg bg-[var(--color-surface-2)] border border-[var(--color-border)]">
                             <div>
-                              <p className="text-sm font-bold text-[#2B1413] leading-tight">{user.name}</p>
+                              <p className="text-sm font-bold text-[var(--color-text)] leading-tight">{user.name}</p>
                             </div>
                             <button onClick={() => setSelectedStaffIds(prev => prev.filter(id => id !== user.id))} className="text-rose-700 text-xs px-2 py-1 rounded bg-rose-50 hover:bg-rose-100 font-semibold cursor-pointer">นำออก</button>
                           </div>
@@ -873,19 +873,19 @@ export function AdminDashboardView({
                     </div>
 
                     {/* Staff Level */}
-                    <div className="bg-white border border-[#EADBCE] rounded-xl overflow-hidden shadow-xs">
-                      <div className="bg-[#FAF4EC] border-b border-[#EADBCE] px-3 py-2 text-xs font-bold text-[#78483B]">
+                    <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl overflow-hidden shadow-xs">
+                      <div className="bg-[var(--color-surface-2)] border-b border-[var(--color-border)] px-3 py-2 text-xs font-bold text-[var(--color-text-muted)]">
                         พนักงานทั่วไป (Staff)
                       </div>
                       <div className="p-2 space-y-1">
                         {usersList.filter(u => selectedStaffIds.includes(u.id) && u.role === "employee").length === 0 && (
-                          <div className="text-xs text-[#A88B77] text-center py-2">ยังไม่มีบุคลากร</div>
+                          <div className="text-xs text-[var(--color-text-subtle)] text-center py-2">ยังไม่มีบุคลากร</div>
                         )}
                         {usersList.filter(u => selectedStaffIds.includes(u.id) && u.role === "employee").map((user) => (
-                          <div key={user.id} className="flex justify-between items-center p-2 rounded-lg bg-[#FAF4EC] border border-[#EADBCE]">
+                          <div key={user.id} className="flex justify-between items-center p-2 rounded-lg bg-[var(--color-surface-2)] border border-[var(--color-border)]">
                             <div>
-                              <p className="text-sm font-bold text-[#2B1413] leading-tight">{user.name}</p>
-                              <p className="text-[10px] text-[#A88B77]">{user.position || "พนักงาน"}</p>
+                              <p className="text-sm font-bold text-[var(--color-text)] leading-tight">{user.name}</p>
+                              <p className="text-[10px] text-[var(--color-text-subtle)]">{user.position || "พนักงาน"}</p>
                             </div>
                             <button onClick={() => setSelectedStaffIds(prev => prev.filter(id => id !== user.id))} className="text-rose-700 text-xs px-2 py-1 rounded bg-rose-50 hover:bg-rose-100 font-semibold cursor-pointer">นำออก</button>
                           </div>
@@ -896,15 +896,15 @@ export function AdminDashboardView({
                 </div>
 
                 {/* Right Panel: Available Users (Searchable) */}
-                <div className="w-full md:w-1/2 flex flex-col bg-white">
-                  <div className="p-4 border-b border-[#EADBCE]">
-                    <h4 className="font-semibold text-[#2B1413]">รายชื่อพนักงานในระบบ</h4>
+                <div className="w-full md:w-1/2 flex flex-col bg-[var(--color-surface)]">
+                  <div className="p-4 border-b border-[var(--color-border)]">
+                    <h4 className="font-semibold text-[var(--color-text)]">รายชื่อพนักงานในระบบ</h4>
                     <input
                       type="text"
                       placeholder="ค้นหาชื่อ หรืออีเมล..."
                       value={staffSearchQuery}
                       onChange={(e) => setStaffSearchQuery(e.target.value)}
-                      className="mt-2 w-full bg-[#FAF4EC] border border-[#EADBCE] rounded-lg px-3 py-2 text-sm text-[#2B1413] focus:outline-none focus:border-amber-400 transition-colors"
+                      className="mt-2 w-full bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-amber-400 transition-colors"
                     />
                   </div>
                   <div className="p-4 overflow-y-auto flex-1 space-y-2">
@@ -919,15 +919,15 @@ export function AdminDashboardView({
                         return rankA - rankB;
                       })
                       .map((user) => (
-                        <div key={user.id} className="flex justify-between items-center p-3 rounded-xl border border-[#EADBCE] bg-white hover:border-amber-400 transition-colors">
+                        <div key={user.id} className="flex justify-between items-center p-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] hover:border-amber-400 transition-colors">
                           <div className="flex-1">
-                            <div className="text-sm font-bold text-[#2B1413] leading-tight">{user.name}</div>
-                            <div className="text-[10px] text-[#A88B77] mt-0.5">{user.position || "พนักงาน"}</div>
+                            <div className="text-sm font-bold text-[var(--color-text)] leading-tight">{user.name}</div>
+                            <div className="text-[10px] text-[var(--color-text-subtle)] mt-0.5">{user.position || "พนักงาน"}</div>
                           </div>
                           <button
                             type="button"
                             onClick={() => setSelectedStaffIds(prev => [...prev, user.id])}
-                            className="bg-[#2B1413] hover:bg-[#442220] text-amber-300 text-[11px] font-bold px-3 py-1.5 rounded-lg cursor-pointer shadow-xs"
+                            className="bg-[var(--color-brown)] hover:bg-[var(--color-brown-light)] text-amber-300 text-[11px] font-bold px-3 py-1.5 rounded-lg cursor-pointer shadow-xs"
                           >
                             + เพิ่มเข้าสาขา
                           </button>
@@ -937,7 +937,7 @@ export function AdminDashboardView({
                       .filter(u => !selectedStaffIds.includes(u.id))
                       .filter(u => u.role === "manager" || u.role === "manager_assistant" || u.role === "employee")
                       .filter(u => u.name.toLowerCase().includes(staffSearchQuery.toLowerCase()) || u.email.toLowerCase().includes(staffSearchQuery.toLowerCase())).length === 0 && (
-                        <div className="text-center text-[#A88B77] text-sm py-8">
+                        <div className="text-center text-[var(--color-text-subtle)] text-sm py-8">
                           ไม่พบรายชื่อพนักงาน หรือถูกเพิ่มเข้าสาขาหมดแล้ว
                         </div>
                       )}
@@ -946,11 +946,11 @@ export function AdminDashboardView({
               </div>
 
               {/* Bottom Actions */}
-              <div className="px-6 py-4 border-t border-[#EADBCE] bg-[#FAF4EC] flex justify-end gap-3">
+              <div className="px-6 py-4 border-t border-[var(--color-border)] bg-[var(--color-surface-2)] flex justify-end gap-3">
                 <button
                   type="button"
                   onClick={() => setIsManageStaffModalOpen(false)}
-                  className="px-6 py-2.5 bg-white hover:bg-[#F2E7DC] text-[#78483B] border border-[#EADBCE] rounded-xl text-sm font-bold transition-all cursor-pointer"
+                  className="px-6 py-2.5 bg-[var(--color-surface)] hover:bg-[#F2E7DC] text-[var(--color-text-muted)] border border-[var(--color-border)] rounded-xl text-sm font-bold transition-all cursor-pointer"
                 >
                   ยกเลิก
                 </button>
@@ -958,7 +958,7 @@ export function AdminDashboardView({
                   type="button"
                   onClick={handleSaveStaff}
                   disabled={isSavingStaff}
-                  className="px-6 py-2.5 bg-[#2B1413] hover:bg-[#442220] disabled:opacity-50 text-amber-300 rounded-xl text-sm font-bold transition-all shadow-sm cursor-pointer"
+                  className="px-6 py-2.5 bg-[var(--color-brown)] hover:bg-[var(--color-brown-light)] disabled:opacity-50 text-amber-300 rounded-xl text-sm font-bold transition-all shadow-sm cursor-pointer"
                 >
                   {isSavingStaff ? "กำลังบันทึก..." : "ยืนยันการตั้งค่าพนักงาน"}
                 </button>
@@ -969,13 +969,13 @@ export function AdminDashboardView({
 
         {isManageTasksModalOpen && selectedBranchForTasks && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4 animate-fade-in">
-            <div className="bg-white border border-[#EADBCE] rounded-3xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl">
-              <div className="px-6 py-4 border-b border-[#EADBCE] flex justify-between items-center bg-[#FAF4EC]">
-                <h3 className="font-bold text-[#2B1413] text-lg">กำหนดขอบเขตงานของสาขา</h3>
+            <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-3xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl">
+              <div className="px-6 py-4 border-b border-[var(--color-border)] flex justify-between items-center bg-[var(--color-surface-2)]">
+                <h3 className="font-bold text-[var(--color-text)] text-lg">กำหนดขอบเขตงานของสาขา</h3>
                 <button
                   type="button"
                   onClick={() => setIsManageTasksModalOpen(false)}
-                  className="text-[#78483B] hover:text-[#2B1413] cursor-pointer"
+                  className="text-[var(--color-text-muted)] hover:text-[var(--color-text)] cursor-pointer"
                 >
                   ✕
                 </button>
@@ -983,32 +983,32 @@ export function AdminDashboardView({
 
               <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
                 {/* Left Panel: Assigned Tasks */}
-                <div className="w-full md:w-1/2 border-r border-[#EADBCE] flex flex-col bg-[#FFFDF9]">
-                  <div className="p-4 border-b border-[#EADBCE]">
+                <div className="w-full md:w-1/2 border-r border-[var(--color-border)] flex flex-col bg-[var(--color-background)]">
+                  <div className="p-4 border-b border-[var(--color-border)]">
                     <h4 className="font-semibold text-emerald-700">งานที่สาขานี้ต้องทำ</h4>
                     <input
                       type="text"
                       placeholder="ค้นหาชื่องานที่มอบหมายแล้ว..."
                       value={assignedTaskSearchQuery}
                       onChange={(e) => setAssignedTaskSearchQuery(e.target.value)}
-                      className="mt-2 w-full bg-[#FAF4EC] border border-[#EADBCE] rounded-lg px-3 py-2 text-sm text-[#2B1413] placeholder:text-[#A88B77] focus:outline-none focus:border-amber-400 transition-colors"
+                      className="mt-2 w-full bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-subtle)] focus:outline-none focus:border-amber-400 transition-colors"
                     />
                   </div>
                   <div className="p-4 overflow-y-auto flex-1 space-y-4">
                     {/* Management Level */}
-                    <div className="bg-white border border-[#EADBCE] rounded-xl overflow-hidden shadow-xs">
-                      <div className="bg-amber-100/60 border-b border-[#EADBCE] px-3 py-2 text-xs font-bold text-[#2B1413]">
+                    <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl overflow-hidden shadow-xs">
+                      <div className="bg-[var(--color-amber-glow)]/60 border-b border-[var(--color-border)] px-3 py-2 text-xs font-bold text-[var(--color-text)]">
                         ผู้ช่วยผู้จัดการ (Assistant)
                       </div>
                       <div className="p-2 space-y-1">
                         {tasksList.filter(t => selectedTaskIds.includes(t.id) && t.task_role === "manager_assistant" && t.name.toLowerCase().includes(assignedTaskSearchQuery.toLowerCase())).length === 0 && (
-                          <div className="text-xs text-[#A88B77] text-center py-2">ไม่มีระบบงาน</div>
+                          <div className="text-xs text-[var(--color-text-subtle)] text-center py-2">ไม่มีระบบงาน</div>
                         )}
                         {tasksList.filter(t => selectedTaskIds.includes(t.id) && t.task_role === "manager_assistant" && t.name.toLowerCase().includes(assignedTaskSearchQuery.toLowerCase())).map((t) => (
-                          <div key={t.id} className="flex justify-between items-center p-2 rounded-lg bg-[#FAF4EC] border border-[#EADBCE]">
+                          <div key={t.id} className="flex justify-between items-center p-2 rounded-lg bg-[var(--color-surface-2)] border border-[var(--color-border)]">
                             <div>
-                              <p className="text-sm font-bold text-[#2B1413] leading-tight">{t.name}</p>
-                              <p className="text-[10px] text-[#A88B77] mt-0.5">{t.shift} | {t.start || "ตามกำหนด"}</p>
+                              <p className="text-sm font-bold text-[var(--color-text)] leading-tight">{t.name}</p>
+                              <p className="text-[10px] text-[var(--color-text-subtle)] mt-0.5">{t.shift} | {t.start || "ตามกำหนด"}</p>
                             </div>
                             <button onClick={() => setSelectedTaskIds(prev => prev.filter(id => id !== t.id))} className="text-rose-700 text-xs px-2 py-1 rounded bg-rose-50 hover:bg-rose-100 font-semibold cursor-pointer">นำออก</button>
                           </div>
@@ -1017,19 +1017,19 @@ export function AdminDashboardView({
                     </div>
 
                     {/* Staff Level - Cashier */}
-                    <div className="bg-white border border-[#EADBCE] rounded-xl overflow-hidden shadow-xs">
-                      <div className="bg-[#FAF4EC] border-b border-[#EADBCE] px-3 py-2 text-xs font-bold text-emerald-700">
+                    <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl overflow-hidden shadow-xs">
+                      <div className="bg-[var(--color-surface-2)] border-b border-[var(--color-border)] px-3 py-2 text-xs font-bold text-emerald-700">
                         พนักงานแคชเชียร์ (Cashier)
                       </div>
                       <div className="p-2 space-y-1">
                         {tasksList.filter(t => selectedTaskIds.includes(t.id) && t.task_role === "cashier" && t.name.toLowerCase().includes(assignedTaskSearchQuery.toLowerCase())).length === 0 && (
-                          <div className="text-xs text-[#A88B77] text-center py-2">ไม่มีระบบงาน</div>
+                          <div className="text-xs text-[var(--color-text-subtle)] text-center py-2">ไม่มีระบบงาน</div>
                         )}
                         {tasksList.filter(t => selectedTaskIds.includes(t.id) && t.task_role === "cashier" && t.name.toLowerCase().includes(assignedTaskSearchQuery.toLowerCase())).map((t) => (
-                          <div key={t.id} className="flex justify-between items-center p-2 rounded-lg bg-[#FAF4EC] border border-[#EADBCE]">
+                          <div key={t.id} className="flex justify-between items-center p-2 rounded-lg bg-[var(--color-surface-2)] border border-[var(--color-border)]">
                             <div>
-                              <p className="text-sm font-bold text-[#2B1413] leading-tight">{t.name}</p>
-                              <p className="text-[10px] text-[#A88B77] mt-0.5">{t.shift} | {t.start || "ตามกำหนด"}</p>
+                              <p className="text-sm font-bold text-[var(--color-text)] leading-tight">{t.name}</p>
+                              <p className="text-[10px] text-[var(--color-text-subtle)] mt-0.5">{t.shift} | {t.start || "ตามกำหนด"}</p>
                             </div>
                             <button onClick={() => setSelectedTaskIds(prev => prev.filter(id => id !== t.id))} className="text-rose-700 text-xs px-2 py-1 rounded bg-rose-50 hover:bg-rose-100 font-semibold cursor-pointer">นำออก</button>
                           </div>
@@ -1038,19 +1038,19 @@ export function AdminDashboardView({
                     </div>
 
                     {/* Staff Level - Stock */}
-                    <div className="bg-white border border-[#EADBCE] rounded-xl overflow-hidden shadow-xs">
-                      <div className="bg-[#FAF4EC] border-b border-[#EADBCE] px-3 py-2 text-xs font-bold text-amber-800">
+                    <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl overflow-hidden shadow-xs">
+                      <div className="bg-[var(--color-surface-2)] border-b border-[var(--color-border)] px-3 py-2 text-xs font-bold text-[var(--color-amber)]">
                         พนักงานสต็อก (Stock)
                       </div>
                       <div className="p-2 space-y-1">
                         {tasksList.filter(t => selectedTaskIds.includes(t.id) && t.task_role === "stock" && t.name.toLowerCase().includes(assignedTaskSearchQuery.toLowerCase())).length === 0 && (
-                          <div className="text-xs text-[#A88B77] text-center py-2">ไม่มีระบบงาน</div>
+                          <div className="text-xs text-[var(--color-text-subtle)] text-center py-2">ไม่มีระบบงาน</div>
                         )}
                         {tasksList.filter(t => selectedTaskIds.includes(t.id) && t.task_role === "stock" && t.name.toLowerCase().includes(assignedTaskSearchQuery.toLowerCase())).map((t) => (
-                          <div key={t.id} className="flex justify-between items-center p-2 rounded-lg bg-[#FAF4EC] border border-[#EADBCE]">
+                          <div key={t.id} className="flex justify-between items-center p-2 rounded-lg bg-[var(--color-surface-2)] border border-[var(--color-border)]">
                             <div>
-                              <p className="text-sm font-bold text-[#2B1413] leading-tight">{t.name}</p>
-                              <p className="text-[10px] text-[#A88B77] mt-0.5">{t.shift} | {t.start || "ตามกำหนด"}</p>
+                              <p className="text-sm font-bold text-[var(--color-text)] leading-tight">{t.name}</p>
+                              <p className="text-[10px] text-[var(--color-text-subtle)] mt-0.5">{t.shift} | {t.start || "ตามกำหนด"}</p>
                             </div>
                             <button onClick={() => setSelectedTaskIds(prev => prev.filter(id => id !== t.id))} className="text-rose-700 text-xs px-2 py-1 rounded bg-rose-50 hover:bg-rose-100 font-semibold cursor-pointer">นำออก</button>
                           </div>
@@ -1061,15 +1061,15 @@ export function AdminDashboardView({
                 </div>
 
                 {/* Right Panel: Available Tasks (Searchable) */}
-                <div className="w-full md:w-1/2 flex flex-col bg-white">
-                  <div className="p-4 border-b border-[#EADBCE]">
-                    <h4 className="font-semibold text-[#2B1413]">งานทั้งหมดในระบบกลาง</h4>
+                <div className="w-full md:w-1/2 flex flex-col bg-[var(--color-surface)]">
+                  <div className="p-4 border-b border-[var(--color-border)]">
+                    <h4 className="font-semibold text-[var(--color-text)]">งานทั้งหมดในระบบกลาง</h4>
                     <input
                       type="text"
                       placeholder="ค้นหาชื่องาน..."
                       value={taskSearchQuery}
                       onChange={(e) => setTaskSearchQuery(e.target.value)}
-                      className="mt-2 w-full bg-[#FAF4EC] border border-[#EADBCE] rounded-lg px-3 py-2 text-sm text-[#2B1413] placeholder:text-[#A88B77] focus:outline-none focus:border-amber-400 transition-colors"
+                      className="mt-2 w-full bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-subtle)] focus:outline-none focus:border-amber-400 transition-colors"
                     />
                   </div>
                   <div className="p-4 overflow-y-auto flex-1 space-y-2">
@@ -1078,15 +1078,15 @@ export function AdminDashboardView({
                       .filter(t => t.name.toLowerCase().includes(taskSearchQuery.toLowerCase()))
                       .sort((a, b) => a.task_role.localeCompare(b.task_role))
                       .map((t) => (
-                        <div key={t.id} className="flex justify-between items-center p-3 rounded-xl border border-[#EADBCE] bg-white hover:border-amber-400 transition-colors">
+                        <div key={t.id} className="flex justify-between items-center p-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] hover:border-amber-400 transition-colors">
                           <div className="flex-1">
-                            <div className="text-sm font-bold text-[#2B1413] leading-tight">{t.name}</div>
-                            <div className="text-[10px] text-[#A88B77] mt-0.5">{t.task_role} | กะ: {t.shift} | {t.start || "ตามกำหนด"}</div>
+                            <div className="text-sm font-bold text-[var(--color-text)] leading-tight">{t.name}</div>
+                            <div className="text-[10px] text-[var(--color-text-subtle)] mt-0.5">{t.task_role} | กะ: {t.shift} | {t.start || "ตามกำหนด"}</div>
                           </div>
                           <button
                             type="button"
                             onClick={() => setSelectedTaskIds(prev => [...prev, t.id])}
-                            className="bg-[#2B1413] hover:bg-[#442220] text-amber-300 text-[11px] font-bold px-3 py-1.5 rounded-lg cursor-pointer flex-shrink-0 ml-2 shadow-xs"
+                            className="bg-[var(--color-brown)] hover:bg-[var(--color-brown-light)] text-amber-300 text-[11px] font-bold px-3 py-1.5 rounded-lg cursor-pointer flex-shrink-0 ml-2 shadow-xs"
                           >
                             + มอบหมาย
                           </button>
@@ -1095,7 +1095,7 @@ export function AdminDashboardView({
                     {tasksList
                       .filter(t => !selectedTaskIds.includes(t.id))
                       .filter(t => t.name.toLowerCase().includes(taskSearchQuery.toLowerCase())).length === 0 && (
-                        <div className="text-center text-[#A88B77] text-sm py-8">
+                        <div className="text-center text-[var(--color-text-subtle)] text-sm py-8">
                           ไม่พบรายการงาน หรือถูกกำหนดเข้าสาขาหมดแล้ว
                         </div>
                       )}
@@ -1104,11 +1104,11 @@ export function AdminDashboardView({
               </div>
 
               {/* Bottom Actions */}
-              <div className="px-6 py-4 border-t border-[#EADBCE] bg-[#FAF4EC] flex justify-end gap-3">
+              <div className="px-6 py-4 border-t border-[var(--color-border)] bg-[var(--color-surface-2)] flex justify-end gap-3">
                 <button
                   type="button"
                   onClick={() => setIsManageTasksModalOpen(false)}
-                  className="px-6 py-2.5 bg-white hover:bg-[#F2E7DC] text-[#78483B] border border-[#EADBCE] rounded-xl text-sm font-bold transition-all cursor-pointer"
+                  className="px-6 py-2.5 bg-[var(--color-surface)] hover:bg-[#F2E7DC] text-[var(--color-text-muted)] border border-[var(--color-border)] rounded-xl text-sm font-bold transition-all cursor-pointer"
                 >
                   ยกเลิก
                 </button>
@@ -1116,7 +1116,7 @@ export function AdminDashboardView({
                   type="button"
                   onClick={handleSaveTasks}
                   disabled={isSavingTasks}
-                  className="px-6 py-2.5 bg-[#2B1413] hover:bg-[#442220] disabled:opacity-50 text-amber-300 rounded-xl text-sm font-bold transition-all shadow-sm cursor-pointer"
+                  className="px-6 py-2.5 bg-[var(--color-brown)] hover:bg-[var(--color-brown-light)] disabled:opacity-50 text-amber-300 rounded-xl text-sm font-bold transition-all shadow-sm cursor-pointer"
                 >
                   {isSavingTasks ? "กำลังบันทึก..." : "ยืนยันการตั้งค่างานสาขา"}
                 </button>
@@ -1127,13 +1127,13 @@ export function AdminDashboardView({
 
         {isCreateTaskModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4 animate-fade-in">
-            <div className="bg-white border border-[#EADBCE] rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl">
-              <div className="px-6 py-4 border-b border-[#EADBCE] flex justify-between items-center bg-[#FAF4EC]">
-                <h3 className="font-bold text-[#2B1413] text-lg">เพิ่มรายการงานใหม่ (Master Task)</h3>
+            <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl">
+              <div className="px-6 py-4 border-b border-[var(--color-border)] flex justify-between items-center bg-[var(--color-surface-2)]">
+                <h3 className="font-bold text-[var(--color-text)] text-lg">เพิ่มรายการงานใหม่ (Master Task)</h3>
                 <button
                   type="button"
                   onClick={() => setIsCreateTaskModalOpen(false)}
-                  className="text-[#78483B] hover:text-[#2B1413] cursor-pointer"
+                  className="text-[var(--color-text-muted)] hover:text-[var(--color-text)] cursor-pointer"
                 >
                   ✕
                 </button>
@@ -1142,7 +1142,7 @@ export function AdminDashboardView({
               <form onSubmit={handleCreateTask}>
                 <div className="p-6 space-y-4">
                   <div>
-                    <label className="block text-xs font-semibold text-[#78483B] mb-1.5">
+                    <label className="block text-xs font-semibold text-[var(--color-text-muted)] mb-1.5">
                       ชื่อรายการงาน <span className="text-rose-500">*</span>
                     </label>
                     <input
@@ -1150,20 +1150,20 @@ export function AdminDashboardView({
                       value={newTaskName}
                       onChange={(e) => setNewTaskName(e.target.value)}
                       placeholder="เช่น ทำความสะอาดจุดแคชเชียร์"
-                      className="bg-[#FAF4EC] border border-[#EADBCE] rounded-xl px-4 py-2.5 text-sm text-[#2B1413] placeholder:text-[#A88B77] focus:outline-none focus:border-amber-400 w-full transition-all"
+                      className="bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-xl px-4 py-2.5 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-subtle)] focus:outline-none focus:border-amber-400 w-full transition-all"
                       required
                     />
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-semibold text-[#78483B] mb-1.5">
+                      <label className="block text-xs font-semibold text-[var(--color-text-muted)] mb-1.5">
                         ตำแหน่งงาน <span className="text-rose-500">*</span>
                       </label>
                       <select
                         value={newTaskRole}
                         onChange={(e) => setNewTaskRole(e.target.value as any)}
-                        className="bg-[#FAF4EC] border border-[#EADBCE] rounded-xl px-4 py-2.5 text-sm text-[#2B1413] focus:outline-none focus:border-amber-400 w-full transition-all cursor-pointer"
+                        className="bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-xl px-4 py-2.5 text-sm text-[var(--color-text)] focus:outline-none focus:border-amber-400 w-full transition-all cursor-pointer"
                       >
                         <option value="cashier">แคชเชียร์</option>
                         <option value="stock">สต็อก / จัดเรียง</option>
@@ -1172,13 +1172,13 @@ export function AdminDashboardView({
                     </div>
 
                     <div>
-                      <label className="block text-xs font-semibold text-[#78483B] mb-1.5">
+                      <label className="block text-xs font-semibold text-[var(--color-text-muted)] mb-1.5">
                         กะงาน <span className="text-rose-500">*</span>
                       </label>
                       <select
                         value={newTaskShift}
                         onChange={(e) => setNewTaskShift(e.target.value as any)}
-                        className="bg-[#FAF4EC] border border-[#EADBCE] rounded-xl px-4 py-2.5 text-sm text-[#2B1413] focus:outline-none focus:border-amber-400 w-full transition-all cursor-pointer"
+                        className="bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-xl px-4 py-2.5 text-sm text-[var(--color-text)] focus:outline-none focus:border-amber-400 w-full transition-all cursor-pointer"
                       >
                         <option value="morning">กะเช้า</option>
                         <option value="afternoon">กะบ่าย</option>
@@ -1189,43 +1189,43 @@ export function AdminDashboardView({
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-semibold text-[#78483B] mb-1.5">
+                      <label className="block text-xs font-semibold text-[var(--color-text-muted)] mb-1.5">
                         เวลาเริ่ม (Optional)
                       </label>
                       <input
                         type="time"
                         value={newTaskStart}
                         onChange={(e) => setNewTaskStart(e.target.value)}
-                        className="bg-[#FAF4EC] border border-[#EADBCE] rounded-xl px-4 py-2.5 text-sm text-[#2B1413] placeholder:text-[#A88B77] focus:outline-none focus:border-amber-400 w-full transition-all"
+                        className="bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-xl px-4 py-2.5 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-subtle)] focus:outline-none focus:border-amber-400 w-full transition-all"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-xs font-semibold text-[#78483B] mb-1.5">
+                      <label className="block text-xs font-semibold text-[var(--color-text-muted)] mb-1.5">
                         เวลาสิ้นสุด (Optional)
                       </label>
                       <input
                         type="time"
                         value={newTaskEnd}
                         onChange={(e) => setNewTaskEnd(e.target.value)}
-                        className="bg-[#FAF4EC] border border-[#EADBCE] rounded-xl px-4 py-2.5 text-sm text-[#2B1413] placeholder:text-[#A88B77] focus:outline-none focus:border-amber-400 w-full transition-all"
+                        className="bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-xl px-4 py-2.5 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-subtle)] focus:outline-none focus:border-amber-400 w-full transition-all"
                       />
                     </div>
                   </div>
                 </div>
 
-                <div className="px-6 py-4 border-t border-[#EADBCE] bg-[#FAF4EC] flex justify-end gap-3">
+                <div className="px-6 py-4 border-t border-[var(--color-border)] bg-[var(--color-surface-2)] flex justify-end gap-3">
                   <button
                     type="button"
                     onClick={() => setIsCreateTaskModalOpen(false)}
-                    className="px-6 py-2.5 bg-white hover:bg-[#F2E7DC] text-[#78483B] border border-[#EADBCE] rounded-xl text-sm font-bold transition-all cursor-pointer"
+                    className="px-6 py-2.5 bg-[var(--color-surface)] hover:bg-[#F2E7DC] text-[var(--color-text-muted)] border border-[var(--color-border)] rounded-xl text-sm font-bold transition-all cursor-pointer"
                   >
                     ยกเลิก
                   </button>
                   <button
                     type="submit"
                     disabled={isCreatingTask}
-                    className="px-6 py-2.5 bg-[#2B1413] hover:bg-[#442220] disabled:opacity-50 text-amber-300 rounded-xl text-sm font-bold transition-all cursor-pointer flex items-center gap-2 shadow-sm"
+                    className="px-6 py-2.5 bg-[var(--color-brown)] hover:bg-[var(--color-brown-light)] disabled:opacity-50 text-amber-300 rounded-xl text-sm font-bold transition-all cursor-pointer flex items-center gap-2 shadow-sm"
                   >
                     {isCreatingTask ? "กำลังบันทึก..." : "เพิ่มงาน"}
                   </button>
@@ -1237,7 +1237,7 @@ export function AdminDashboardView({
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-[#EADBCE] bg-[#FAF4EC] py-3 text-center text-xs text-[#78483B]">
+      <footer className="border-t border-[var(--color-border)] bg-[var(--color-surface-2)] py-3 text-center text-xs text-[var(--color-text-muted)]">
         Eater Egg Fresh Mart • Central Enterprise Administration Portal v2.0
       </footer>
     </div>

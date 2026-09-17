@@ -27,7 +27,7 @@ export function SessionDetailModal({
 
   return (
     <div
-      className="fixed inset-0 bg-[#2B1413]/40 backdrop-blur-xs flex items-center justify-center z-50 px-4"
+      className="fixed inset-0 bg-[var(--color-brown)]/40 backdrop-blur-xs flex items-center justify-center z-50 px-4"
       onClick={onClose}
       onKeyDown={handleKeyDown}
     >
@@ -37,25 +37,25 @@ export function SessionDetailModal({
         aria-modal="true"
         aria-labelledby="session-detail-title"
         tabIndex={-1}
-        className="bg-white border border-[#EADBCE] rounded-2xl w-full max-w-lg max-h-[85vh] overflow-y-auto shadow-2xl p-6 sm:p-8 focus-visible:outline-2 focus-visible:outline-amber-400 flex flex-col justify-between text-[#2B1413]"
+        className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl w-full max-w-lg max-h-[85vh] overflow-y-auto shadow-2xl p-6 sm:p-8 focus-visible:outline-2 focus-visible:outline-amber-400 flex flex-col justify-between text-[var(--color-text)]"
         onClick={(e) => e.stopPropagation()}
       >
         <div>
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 id="session-detail-title" className="text-base font-bold text-[#2B1413]">
+              <h2 id="session-detail-title" className="text-base font-bold text-[var(--color-text)]">
                 {session.userName}
               </h2>
               <div className="flex items-center gap-2 mt-1 flex-wrap">
                 {session.userPosition && <Badge color="muted">{session.userPosition}</Badge>}
                 {getShiftBadge(session.shift)}
-                <span className="text-xs font-mono text-[#78483B]">{fmtDate(session.startedAt)}</span>
+                <span className="text-xs font-mono text-[var(--color-text-muted)]">{fmtDate(session.startedAt)}</span>
                 {isApproved ? (
-                  <span className="text-[10px] font-bold text-amber-900 bg-amber-100 border border-amber-300 px-2 py-0.5 rounded-full">
+                  <span className="text-[10px] font-bold text-[var(--color-amber)] bg-[var(--color-amber-glow)] border border-[var(--color-amber)] px-2 py-0.5 rounded-full">
                     ✓ รับรองผลแล้ว
                   </span>
                 ) : (
-                  <span className="text-[10px] font-bold text-[#78483B] bg-[#FAF4EC] border border-[#EADBCE] px-2 py-0.5 rounded-full">
+                  <span className="text-[10px] font-bold text-[var(--color-text-muted)] bg-[var(--color-surface-2)] border border-[var(--color-border)] px-2 py-0.5 rounded-full">
                     รอรับรองผล
                   </span>
                 )}
@@ -65,7 +65,7 @@ export function SessionDetailModal({
               type="button"
               onClick={onClose}
               aria-label="ปิดรายละเอียดกะ"
-              className="p-2 -mr-2 text-[#78483B] hover:text-[#2B1413] hover:bg-[#FAF4EC] rounded-lg min-w-[36px] min-h-[36px] flex items-center justify-center focus-visible:outline-2 focus-visible:outline-amber-400 cursor-pointer"
+              className="p-2 -mr-2 text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-2)] rounded-lg min-w-[36px] min-h-[36px] flex items-center justify-center focus-visible:outline-2 focus-visible:outline-amber-400 cursor-pointer"
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
@@ -73,9 +73,9 @@ export function SessionDetailModal({
             </button>
           </div>
 
-          <div className="p-2.5 rounded-xl bg-[#FAF4EC] border border-[#EADBCE] mb-4 flex items-center justify-between text-xs font-semibold text-[#78483B]">
+          <div className="p-2.5 rounded-xl bg-[var(--color-surface-2)] border border-[var(--color-border)] mb-4 flex items-center justify-between text-xs font-semibold text-[var(--color-text-muted)]">
             <span>ความคืบหน้างาน: {done}/{total} ข้อ</span>
-            <span className="font-mono font-bold text-[#2B1413]">{total > 0 ? Math.round((done / total) * 100) : 0}%</span>
+            <span className="font-mono font-bold text-[var(--color-text)]">{total > 0 ? Math.round((done / total) * 100) : 0}%</span>
           </div>
 
           <Divider />
@@ -86,14 +86,14 @@ export function SessionDetailModal({
               return (
                 <div key={item.id} className="space-y-1.5">
                   {showCat && (
-                    <p className="text-[11px] font-bold text-[#78483B] pt-2 pb-0.5">{item.category}</p>
+                    <p className="text-[11px] font-bold text-[var(--color-text-muted)] pt-2 pb-0.5">{item.category}</p>
                   )}
                   <div
-                    className={`flex items-start gap-3 p-3 rounded-xl border ${item.completedAt ? "bg-[#FFFDF8] border-amber-300/80" : "bg-white border-[#EADBCE]"
+                    className={`flex items-start gap-3 p-3 rounded-xl border ${item.completedAt ? "bg-[#FFFDF8] border-[var(--color-amber)]/80" : "bg-[var(--color-surface)] border-[var(--color-border)]"
                       }`}
                   >
                     <div
-                      className={`mt-0.5 w-4 h-4 rounded-full border flex items-center justify-center flex-shrink-0 ${item.completedAt ? "border-amber-500 bg-amber-500" : "border-[#EADBCE] bg-white"
+                      className={`mt-0.5 w-4 h-4 rounded-full border flex items-center justify-center flex-shrink-0 ${item.completedAt ? "border-amber-500 bg-[var(--color-amber-glow)]0" : "border-[var(--color-border)] bg-[var(--color-surface)]"
                         }`}
                     >
                       {item.completedAt && (
@@ -110,10 +110,10 @@ export function SessionDetailModal({
                     </div>
                     <div className="flex-1">
                       <div className="flex gap-2">
-                        <span className="text-[10px] font-mono text-[#9C6C60]">
+                        <span className="text-[10px] font-mono text-[var(--color-text-subtle)]">
                           {String(idx + 1).padStart(2, "0")}
                         </span>
-                        <p className={`text-xs font-medium ${item.completedAt ? "text-[#78483B] line-through" : "text-[#2B1413]"}`}>{item.label}</p>
+                        <p className={`text-xs font-medium ${item.completedAt ? "text-[var(--color-text-muted)] line-through" : "text-[var(--color-text)]"}`}>{item.label}</p>
                       </div>
                       {item.completedAt && (() => {
                         let isLate = item.isLate ?? false;
@@ -147,11 +147,11 @@ export function SessionDetailModal({
 
         {/* Modal Bottom Action: Approve Button */}
         {canApprove && onApprove && !isApproved && (
-          <div className="mt-5 pt-4 border-t border-[#EADBCE]">
+          <div className="mt-5 pt-4 border-t border-[var(--color-border)]">
             <button
               type="button"
               onClick={() => onApprove(session.id)}
-              className="w-full py-2.5 px-4 bg-[#2B1413] hover:bg-[#3D1D1B] text-amber-300 rounded-xl text-xs sm:text-sm font-semibold transition-all shadow-sm cursor-pointer flex items-center justify-center gap-2"
+              className="w-full py-2.5 px-4 bg-[var(--color-brown)] hover:bg-[#3D1D1B] text-amber-300 rounded-xl text-xs sm:text-sm font-semibold transition-all shadow-sm cursor-pointer flex items-center justify-center gap-2"
             >
               <span>รับรองผลการตรวจงาน ({approveRoleTitle})</span>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">

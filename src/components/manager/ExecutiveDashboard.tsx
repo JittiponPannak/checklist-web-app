@@ -297,28 +297,28 @@ export function ExecutiveDashboard({
   const roleConfig = {
     manager_assistant: {
       title: "ผู้ช่วยผู้จัดการร้าน (Assistant Manager)",
-      badge: "bg-[#FAF2EB] text-[#78483B] border-[#EADBCE]",
+      badge: "bg-[#FAF2EB] text-[var(--color-text-muted)] border-[var(--color-border)]",
       description: "ตรวจสอบความเรียบร้อยหน้างาน รับรองกะพนักงานเบื้องต้น และรายงานสรุป",
       primaryDuty: "ตรวจรับรองกะงานพนักงาน (Morning / Afternoon Sign-off)",
       icon: "📋",
     },
     manager: {
       title: "ผู้จัดการร้าน (Store Manager)",
-      badge: "bg-[#2B1413] text-amber-300 border-[#2B1413]",
+      badge: "bg-[var(--color-brown)] text-amber-300 border-[var(--color-text)]",
       description: "กำกับดูแลภาพรวมสาขา อนุมัติขั้นสุดท้าย และควบคุมมาตรฐานการปฏิบัติงาน",
       primaryDuty: "อนุมัติขั้นสุดท้าย (Manager Final Approval) & ควบคุมดัชนีร้าน",
       icon: "👔",
     },
     committee: {
       title: "กรรมการบริหาร (Executive Committee)",
-      badge: "bg-amber-100 text-[#2B1413] border-amber-300 font-bold",
+      badge: "bg-[var(--color-amber-glow)] text-[var(--color-text)] border-[var(--color-amber)] font-bold",
       description: "ตรวจสอบนโยบาย ติดตาม KPI คุณภาพสาขา และดูรายงานสรุปประสิทธิภาพ",
       primaryDuty: "ตรวจสอบดัชนีคุณภาพ (Quality Audit) & สรุปผลการดำเนินงาน",
       icon: "🏛️",
     },
     general_manager: {
       title: "ผู้จัดการทั่วไป (General Manager)",
-      badge: "bg-amber-300 text-[#2B1413] border-amber-400 font-bold",
+      badge: "bg-amber-300 text-[var(--color-text)] border-amber-400 font-bold",
       description: "บริหารระดับสูง กำหนดทิศทาง ระเบียบปฏิบัติของทุกสาขา มีอำนาจสูงสุดคล้ายกรรมการบริหาร",
       primaryDuty: "ตรวจสอบดัชนีภาพรวม และติดตามความก้าวหน้า",
       icon: "🌟",
@@ -470,22 +470,22 @@ export function ExecutiveDashboard({
   });
 
   return (
-    <div className="min-h-screen bg-[#FFFDF9] text-[#2B1413] pb-16 font-sans">
+    <div className="min-h-screen bg-[var(--color-background)] text-[var(--color-text)] pb-16 font-sans">
       {/* ─── Top Brand Navigation Bar ────────────────────────────────────────────── */}
-      <nav className="bg-white/95 backdrop-blur-md border-b border-[#EADBCE] sticky top-0 z-30 shadow-xs">
+      <nav className="bg-[var(--color-surface)]/95 backdrop-blur-md border-b border-[var(--color-border)] sticky top-0 z-30 shadow-xs">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3.5">
             <BrandLogo size={40} showText={false} isDark={false} />
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-extrabold text-sm sm:text-base text-[#2B1413] tracking-tight">
+                <span className="font-extrabold text-sm sm:text-base text-[var(--color-text)] tracking-tight">
                   Eater Egg Fresh Mart
                 </span>
-                <span className="hidden sm:inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#FAF2EB] text-[#78483B] border border-[#EADBCE]">
+                <span className="hidden sm:inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#FAF2EB] text-[var(--color-text-muted)] border border-[var(--color-border)]">
                   {user.branchName || "ไม่ได้ระบุสาขา"}
                 </span>
               </div>
-              <p className="text-[11px] text-[#78483B] hidden sm:block">
+              <p className="text-[11px] text-[var(--color-text-muted)] hidden sm:block">
                 ระบบกำกับดูแลและตรวจสอบมาตรฐานงานสาขา (Operations & Audit Portal)
               </p>
             </div>
@@ -497,7 +497,7 @@ export function ExecutiveDashboard({
               <button
                 type="button"
                 onClick={() => setActiveTab("overview")}
-                className="p-2 text-[#78483B] hover:text-[#2B1413] hover:bg-[#FAF4EC] rounded-xl transition-all relative cursor-pointer"
+                className="p-2 text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-2)] rounded-xl transition-all relative cursor-pointer"
                 title="การแจ้งเตือนงานสาขา"
               >
                 <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -505,7 +505,7 @@ export function ExecutiveDashboard({
                   <path d="M13.73 21a2 2 0 0 1-3.46 0" />
                 </svg>
                 {unreadCount > 0 && (
-                  <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full bg-amber-500 ring-2 ring-white" />
+                  <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full bg-[var(--color-amber-glow)]0 ring-2 ring-white" />
                 )}
               </button>
             </div>
@@ -531,7 +531,7 @@ export function ExecutiveDashboard({
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 space-y-6">
         {/* Toast Notification Alert */}
         {actionFeedback && (
-          <div className="p-3 bg-amber-50 border border-amber-300 text-amber-950 text-xs font-semibold rounded-xl flex items-center justify-between shadow-sm animate-fade-in">
+          <div className="p-3 bg-[var(--color-amber-glow)] border border-[var(--color-amber)] text-amber-950 text-xs font-semibold rounded-xl flex items-center justify-between shadow-sm animate-fade-in">
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-emerald-400" />
               <span>{actionFeedback}</span>
@@ -539,7 +539,7 @@ export function ExecutiveDashboard({
             <button
               type="button"
               onClick={() => setActionFeedback(null)}
-              className="text-emerald-300 hover:text-white text-xs font-bold px-2 py-0.5"
+              className="text-emerald-300 hover:text-[var(--color-brown)] text-xs font-bold px-2 py-0.5"
             >
               ปิด
             </button>
@@ -547,10 +547,10 @@ export function ExecutiveDashboard({
         )}
 
         {/* ─── Executive Welcome Banner ───────────────────────────────────────── */}
-        <header className="bg-white border border-[#EADBCE] rounded-2xl p-5 sm:p-6 shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-4 relative overflow-hidden">
+        <header className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-5 sm:p-6 shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-4 relative overflow-hidden">
           <div className="space-y-1.5 z-10">
             <div className="flex items-center gap-2.5 flex-wrap">
-              <span className="text-xl sm:text-2xl font-extrabold text-[#2B1413] tracking-tight">
+              <span className="text-xl sm:text-2xl font-extrabold text-[var(--color-text)] tracking-tight">
                 สวัสดี, {user.name}
               </span>
               <span className={`text-xs px-2.5 py-0.5 rounded-full border font-semibold flex items-center gap-1 ${roleConfig.badge}`}>
@@ -558,11 +558,11 @@ export function ExecutiveDashboard({
                 <span>{roleConfig.title}</span>
               </span>
             </div>
-            <p className="text-xs text-[#78483B] max-w-2xl leading-relaxed">
+            <p className="text-xs text-[var(--color-text-muted)] max-w-2xl leading-relaxed">
               {roleConfig.description}
             </p>
-            <p className="text-[11px] text-[#9C6C60] font-mono pt-0.5">
-              ภารกิจหลักวันนี้: <span className="font-semibold text-[#2B1413]">{roleConfig.primaryDuty}</span>
+            <p className="text-[11px] text-[var(--color-text-subtle)] font-mono pt-0.5">
+              ภารกิจหลักวันนี้: <span className="font-semibold text-[var(--color-text)]">{roleConfig.primaryDuty}</span>
             </p>
           </div>
 
@@ -571,7 +571,7 @@ export function ExecutiveDashboard({
               <button
                 type="button"
                 onClick={() => setActiveTab("checklist")}
-                className="px-4 py-2.5 bg-[#2B1413] hover:bg-[#3D1D1B] active:bg-black text-amber-300 text-xs font-semibold rounded-xl shadow-sm transition-all flex items-center gap-2 cursor-pointer"
+                className="px-4 py-2.5 bg-[var(--color-brown)] hover:bg-[#3D1D1B] active:bg-black text-amber-300 text-xs font-semibold rounded-xl shadow-sm transition-all flex items-center gap-2 cursor-pointer"
               >
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M9 11l3 3L22 4" />
@@ -584,7 +584,7 @@ export function ExecutiveDashboard({
         </header>
 
         {/* ─── Navigation Tabs (Tailored to Executive & Operations) ──────────── */}
-        <div className="bg-[#F7F1E9] p-1.5 rounded-2xl border border-[#EADBCE] shadow-2xs">
+        <div className="bg-[#F7F1E9] p-1.5 rounded-2xl border border-[var(--color-border)] shadow-2xs">
           <div className={`grid ${currentRole === "manager_assistant" ? "grid-cols-1 sm:grid-cols-3" : "grid-cols-1 sm:grid-cols-2"} gap-1`}>
             {[
               {
@@ -615,15 +615,15 @@ export function ExecutiveDashboard({
                 type="button"
                 onClick={() => setActiveTab(tab.id)}
                 className={`p-2.5 sm:p-3 rounded-xl text-left transition-all cursor-pointer flex flex-col ${activeTab === tab.id
-                  ? "bg-[#2B1413] text-amber-300 shadow-sm font-bold"
-                  : "text-[#78483B] hover:text-[#2B1413] hover:bg-white/70"
+                  ? "bg-[var(--color-brown)] text-amber-300 shadow-sm font-bold"
+                  : "text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface)]/70"
                   }`}
               >
                 <div className="flex items-center gap-2">
                   <span>{tab.icon}</span>
                   <span className="text-xs sm:text-sm">{tab.label}</span>
                 </div>
-                <span className={`text-[10px] font-normal pl-5 hidden sm:block ${activeTab === tab.id ? "text-amber-200/80" : "text-[#9C6C60]"}`}>
+                <span className={`text-[10px] font-normal pl-5 hidden sm:block ${activeTab === tab.id ? "text-amber-200/80" : "text-[var(--color-text-subtle)]"}`}>
                   {tab.desc}
                 </span>
               </button>
@@ -635,22 +635,22 @@ export function ExecutiveDashboard({
         {activeTab === "overview" && (
           <div className="space-y-6 animate-fade-in">
             {/* Live Shift Handover & Approval Queue */}
-            <div className="bg-white border border-[#EADBCE] rounded-2xl p-5 shadow-sm space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#EADBCE] pb-3">
+            <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-5 shadow-sm space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[var(--color-border)] pb-3">
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-bold text-[#2B1413] flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-amber-500" />
+                    <h3 className="text-sm font-bold text-[var(--color-text)] flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-[var(--color-amber-glow)]0" />
                       <span>รายการกะงานสาขา & สถานะการรับรอง (Shift Handover & Approval Queue)</span>
                     </h3>
                     {isLiveFromDb && (
-                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-100 text-[#2B1413] border border-amber-300">
+                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-bold bg-[var(--color-amber-glow)] text-[var(--color-text)] border border-[var(--color-amber)]">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                         <span>Supabase Live DB</span>
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-[#78483B] mt-0.5">
+                  <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
                     ตรวจสอบความเรียบร้อยของรายการเช็คลิสต์และกดรับรองกะงาน
                   </p>
                 </div>
@@ -659,7 +659,7 @@ export function ExecutiveDashboard({
                     type="button"
                     onClick={() => loadDbSessions(true)}
                     disabled={isLoadingDb}
-                    className="text-[11px] font-semibold text-[#2B1413] hover:text-[#442220] bg-[#FAF4EC] hover:bg-[#F2E7DC] border border-[#EADBCE] px-2.5 py-1 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                    className="text-[11px] font-semibold text-[var(--color-text)] hover:text-[var(--color-brown-light)] bg-[var(--color-surface-2)] hover:bg-[#F2E7DC] border border-[var(--color-border)] px-2.5 py-1 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                     title="โหลดข้อมูลล่าสุดจากฐานข้อมูล"
                   >
                     <svg
@@ -692,7 +692,7 @@ export function ExecutiveDashboard({
                     <span>{isResetting ? "กำลังรีเซ็ต..." : "รีเซ็ตข้อมูลเช็คลิสต์"}</span>
                   </button>
 
-                  <span className="text-[11px] font-mono text-[#78483B] bg-[#FAF4EC] border border-[#EADBCE] px-2.5 py-1 rounded-lg">
+                  <span className="text-[11px] font-mono text-[var(--color-text-muted)] bg-[var(--color-surface-2)] border border-[var(--color-border)] px-2.5 py-1 rounded-lg">
                     วันนี้: {fmtDate(new Date().toISOString())}
                   </span>
                 </div>
@@ -702,7 +702,7 @@ export function ExecutiveDashboard({
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
                   <thead>
-                    <tr className="border-b border-[#EADBCE] text-[#78483B] font-semibold bg-[#FAF4EC]">
+                    <tr className="border-b border-[var(--color-border)] text-[var(--color-text-muted)] font-semibold bg-[var(--color-surface-2)]">
                       <th className="py-2.5 px-3 rounded-l-lg">ผู้ปฏิบัติงาน</th>
                       <th className="py-2.5 px-3">ตำแหน่ง / กะ</th>
                       <th className="py-2.5 px-3">ความคืบหน้า</th>
@@ -712,7 +712,7 @@ export function ExecutiveDashboard({
                       <th className="py-2.5 px-3 text-right rounded-r-lg">การจัดการ</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#EADBCE]/70">
+                  <tbody className="divide-y divide-[var(--color-border)]/70">
                     {sessions.filter(sess => {
                       if (currentRole === "manager_assistant") {
                         return !(sess.taskRole === "manager_assistant" || sess.userPosition === "ผู้ช่วยผู้จัดการร้าน");
@@ -726,16 +726,16 @@ export function ExecutiveDashboard({
                         sess.taskRole === "manager_assistant" || sess.userPosition === "ผู้ช่วยผู้จัดการร้าน";
 
                       return (
-                        <tr key={sess.id} className="hover:bg-[#FFFDF9] transition-colors">
-                          <td className="py-3 px-3 font-semibold text-[#2B1413]">
+                        <tr key={sess.id} className="hover:bg-[var(--color-background)] transition-colors">
+                          <td className="py-3 px-3 font-semibold text-[var(--color-text)]">
                             {sess.userName}
                           </td>
                           <td className="py-3 px-3 space-y-1">
                             <div className="flex items-center gap-1.5 flex-wrap">
                               <span
                                 className={`px-2 py-0.5 rounded-md font-medium text-[11px] ${isAssistantSession
-                                  ? "bg-amber-100 text-[#2B1413] border border-amber-300"
-                                  : "bg-[#FAF4EC] text-[#78483B] border border-[#EADBCE]"
+                                  ? "bg-[var(--color-amber-glow)] text-[var(--color-text)] border border-[var(--color-amber)]"
+                                  : "bg-[var(--color-surface-2)] text-[var(--color-text-muted)] border border-[var(--color-border)]"
                                   }`}
                               >
                                 {sess.userPosition || "พนักงาน"}
@@ -745,11 +745,11 @@ export function ExecutiveDashboard({
                           </td>
                           <td className="py-3 px-3">
                             <div className="space-y-1">
-                              <div className="flex items-center justify-between text-[11px] font-mono text-[#78483B]">
+                              <div className="flex items-center justify-between text-[11px] font-mono text-[var(--color-text-muted)]">
                                 <span>{completedCount}/{sess.items.length}</span>
-                                <span className="font-bold text-[#2B1413]">{pct}%</span>
+                                <span className="font-bold text-[var(--color-text)]">{pct}%</span>
                               </div>
-                              <div className="w-24 bg-[#F2E7DC] h-1.5 rounded-full overflow-hidden border border-[#EADBCE]">
+                              <div className="w-24 bg-[#F2E7DC] h-1.5 rounded-full overflow-hidden border border-[var(--color-border)]">
                                 <div
                                   className={`h-full rounded-full ${pct === 100 ? "bg-emerald-500" : "bg-amber-400"}`}
                                   style={{ width: `${pct}%` }}
@@ -757,9 +757,9 @@ export function ExecutiveDashboard({
                               </div>
                             </div>
                           </td>
-                          <td className="py-3 px-3 font-mono text-[#78483B] text-[11px]">
+                          <td className="py-3 px-3 font-mono text-[var(--color-text-muted)] text-[11px]">
                             {sess.completedAt ? fmtTime(sess.completedAt) : (
-                              <span className="text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-md font-semibold text-[10px]">
+                              <span className="text-[var(--color-amber)] bg-[var(--color-amber-glow)] border border-[var(--color-amber)] px-2 py-0.5 rounded-md font-semibold text-[10px]">
                                 กำลังปฏิบัติงาน
                               </span>
                             )}
@@ -767,7 +767,7 @@ export function ExecutiveDashboard({
                           {/* Assistant Approval */}
                           <td className="py-3 px-3 text-center">
                             {isAssistantSession ? (
-                              <span className="text-[10px] text-[#A88B77] font-medium">
+                              <span className="text-[10px] text-[var(--color-text-subtle)] font-medium">
                                 - (งานผู้ช่วย)
                               </span>
                             ) : app.assistantApproved ? (
@@ -775,11 +775,11 @@ export function ExecutiveDashboard({
                                 ✓ รับรองแล้ว
                               </span>
                             ) : !hasAssistantLoggedInToday ? (
-                              <span className="text-[10px] text-[#A88B77] font-medium tooltip" title="ไม่มีผู้ช่วยเข้างานในวันนี้ จึงข้ามขั้นตอนนี้ให้ผู้จัดการพิจารณาโดยตรง">
+                              <span className="text-[10px] text-[var(--color-text-subtle)] font-medium tooltip" title="ไม่มีผู้ช่วยเข้างานในวันนี้ จึงข้ามขั้นตอนนี้ให้ผู้จัดการพิจารณาโดยตรง">
                                 - (ข้าม)
                               </span>
                             ) : (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-50 text-amber-800 border border-amber-200">
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-[var(--color-amber-glow)] text-[var(--color-amber)] border border-[var(--color-amber)]">
                                 รอดำเนินการ
                               </span>
                             )}
@@ -791,15 +791,15 @@ export function ExecutiveDashboard({
                                 ✓ อนุมัติแล้ว
                               </span>
                             ) : isAssistantSession ? (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-50 text-amber-800 border border-amber-200">
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-[var(--color-amber-glow)] text-[var(--color-amber)] border border-[var(--color-amber)]">
                                 รอผู้จัดการอนุมัติ
                               </span>
                             ) : app.assistantApproved || !hasAssistantLoggedInToday ? (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-50 text-amber-800 border border-amber-200">
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-[var(--color-amber-glow)] text-[var(--color-amber)] border border-[var(--color-amber)]">
                                 รอผู้จัดการอนุมัติ
                               </span>
                             ) : (
-                              <span className="text-[10px] text-[#A88B77] font-medium">
+                              <span className="text-[10px] text-[var(--color-text-subtle)] font-medium">
                                 (รอผู้ช่วยรับรองก่อน)
                               </span>
                             )}
@@ -809,7 +809,7 @@ export function ExecutiveDashboard({
                             <button
                               type="button"
                               onClick={() => setSelectedSession(sess)}
-                              className="px-3 py-1.5 text-xs font-semibold text-[#2B1413] bg-amber-400 hover:bg-amber-300 active:bg-amber-500 rounded-lg transition-colors cursor-pointer shadow-sm shadow-amber-200/50"
+                              className="px-3 py-1.5 text-xs font-semibold text-[var(--color-text)] bg-amber-400 hover:bg-amber-300 active:bg-[var(--color-amber-glow)]0 rounded-lg transition-colors cursor-pointer shadow-sm shadow-amber-200/50"
                             >
                               ตรวจรับรอง →
                             </button>
@@ -823,9 +823,9 @@ export function ExecutiveDashboard({
             </div>
 
             {/* Shift Notifications Log */}
-            <div className="bg-white border border-[#EADBCE] rounded-2xl p-5 shadow-sm space-y-4">
-              <div className="flex items-center justify-between border-b border-[#EADBCE] pb-3">
-                <h3 className="text-sm font-bold text-[#2B1413] flex items-center gap-2">
+            <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-5 shadow-sm space-y-4">
+              <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-3">
+                <h3 className="text-sm font-bold text-[var(--color-text)] flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-amber-400" />
                   <span>บันทึกการส่งงานและแจ้งเตือนล่าสุด (Recent Shift Notifications)</span>
                 </h3>
@@ -833,7 +833,7 @@ export function ExecutiveDashboard({
                   <button
                     type="button"
                     onClick={handleMarkAllNotifsRead}
-                    className="text-xs font-semibold text-amber-700 hover:text-amber-800 underline cursor-pointer"
+                    className="text-xs font-semibold text-amber-700 hover:text-[var(--color-amber)] underline cursor-pointer"
                   >
                     อ่านทั้งหมดแล้ว
                   </button>
@@ -842,7 +842,7 @@ export function ExecutiveDashboard({
 
               <div className="space-y-2.5">
                 {notifications.length === 0 ? (
-                  <div className="text-center py-6 text-[#78483B] text-xs bg-[#FAF4EC]/60 rounded-xl border border-dashed border-[#EADBCE]">
+                  <div className="text-center py-6 text-[var(--color-text-muted)] text-xs bg-[var(--color-surface-2)]/60 rounded-xl border border-dashed border-[var(--color-border)]">
                     ยังไม่มีรายการส่งมอบกะในวันนี้ (ข้อมูลจะแสดงอัตโนมัติเมื่อมีพนักงานเริ่มงานหรือส่งกะ)
                   </div>
                 ) : (
@@ -859,31 +859,31 @@ export function ExecutiveDashboard({
                       <div
                         key={notif.id}
                         className={`p-3 rounded-xl border flex items-center justify-between gap-3 transition-all ${notif.read
-                          ? "bg-[#FAF4EC]/50 border-[#EADBCE]"
-                          : "bg-amber-50/70 border-amber-300"
+                          ? "bg-[var(--color-surface-2)]/50 border-[var(--color-border)]"
+                          : "bg-[var(--color-amber-glow)]/70 border-[var(--color-amber)]"
                           }`}
                       >
                         <div className="flex items-center gap-3">
                           <div
-                            className={`w-2 h-2 rounded-full ${notif.read ? "bg-[#B89B85]" : "bg-amber-500"
+                            className={`w-2 h-2 rounded-full ${notif.read ? "bg-[#B89B85]" : "bg-[var(--color-amber-glow)]0"
                               }`}
                           />
                           <div>
-                            <p className="text-xs font-semibold text-[#2B1413]">
+                            <p className="text-xs font-semibold text-[var(--color-text)]">
                               {notif.userName}{" "}
-                              <span className="font-normal text-[#78483B]">
+                              <span className="font-normal text-[var(--color-text-muted)]">
                                 ({notif.userPosition || "พนักงาน"})
                               </span>{" "}
                               {isCompleted ? (
                                 <span className="text-emerald-700 font-semibold">ส่งมอบกะ {getShiftName(notif.shift)}</span>
                               ) : (
-                                <span className="text-amber-800">
+                                <span className="text-[var(--color-amber)]">
                                   กำลังปฏิบัติงานกะ {getShiftName(notif.shift)} ({doneCount}/
                                   {totalCount} ข้อ)
                                 </span>
                               )}
                             </p>
-                            <p className="text-[11px] font-mono text-[#78483B]">
+                            <p className="text-[11px] font-mono text-[var(--color-text-muted)]">
                               {isCompleted ? "ส่งเมื่อ" : "บันทึกล่าสุด"} {fmtTime(notif.completedAt)}
                             </p>
                           </div>
@@ -894,7 +894,7 @@ export function ExecutiveDashboard({
                           onClick={() => {
                             if (target) setSelectedSession(target);
                           }}
-                          className="px-2.5 py-1 text-xs font-semibold text-[#2B1413] hover:text-[#442220] bg-white hover:bg-[#FAF4EC] border border-[#EADBCE] rounded-lg cursor-pointer transition-colors shadow-xs"
+                          className="px-2.5 py-1 text-xs font-semibold text-[var(--color-text)] hover:text-[var(--color-brown-light)] bg-[var(--color-surface)] hover:bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-lg cursor-pointer transition-colors shadow-xs"
                         >
                           ดูรายงาน
                         </button>
@@ -910,20 +910,20 @@ export function ExecutiveDashboard({
         {/* ─── TAB 2: MY CHECKLIST (ASSISTANT MANAGER ONLY) ─────────────────── */}
         {activeTab === "checklist" && currentRole === "manager_assistant" && (
           <div className="space-y-6 animate-fade-in">
-            <div className="bg-white border border-[#EADBCE] rounded-2xl p-5 sm:p-6 shadow-sm space-y-5">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#EADBCE] pb-4">
+            <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-5 sm:p-6 shadow-sm space-y-5">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[var(--color-border)] pb-4">
                 <div>
-                  <h3 className="text-sm sm:text-base font-bold text-[#2B1413] flex items-center gap-2">
+                  <h3 className="text-sm sm:text-base font-bold text-[var(--color-text)] flex items-center gap-2">
                     <span>{roleConfig.icon}</span>
                     <span>เช็คลิสต์ตรวจงานประจำกะของ {roleConfig.title}</span>
                   </h3>
-                  <p className="text-xs text-[#78483B] mt-0.5">
+                  <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
                     ติ๊กถูกเมื่อทำการตรวจสอบแต่ละขั้นตอนเสร็จสมบูรณ์ (เชื่อมต่อฐานข้อมูลจริง)
                   </p>
                 </div>
 
                 {/* Shift Selector */}
-                <div className="inline-flex bg-[#FAF4EC] p-1 rounded-xl border border-[#EADBCE]">
+                <div className="inline-flex bg-[var(--color-surface-2)] p-1 rounded-xl border border-[var(--color-border)]">
                   {(["morning", "afternoon"] as ShiftType[]).map((sh) => (
                     <button
                       key={sh}
@@ -933,8 +933,8 @@ export function ExecutiveDashboard({
                         loadAssistantChecklist(sh);
                       }}
                       className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer ${myChecklistShift === sh
-                        ? "bg-[#2B1413] text-amber-300 shadow-sm"
-                        : "text-[#78483B] hover:text-[#2B1413]"
+                        ? "bg-[var(--color-brown)] text-amber-300 shadow-sm"
+                        : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
                         }`}
                     >
                       {sh === "morning" ? "กะเช้า" : "กะบ่าย"}
@@ -944,7 +944,7 @@ export function ExecutiveDashboard({
               </div>
 
               {isLoadingChecklist ? (
-                <div className="py-12 text-center text-[#78483B] text-xs flex flex-col items-center justify-center gap-2">
+                <div className="py-12 text-center text-[var(--color-text-muted)] text-xs flex flex-col items-center justify-center gap-2">
                   <div className="w-5 h-5 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
                   <span>กำลังดึงรายการเช็คลิสต์จากฐานข้อมูล...</span>
                 </div>
@@ -956,14 +956,14 @@ export function ExecutiveDashboard({
                     const total = myChecklistItems.length;
                     const pct = total > 0 ? Math.round((done / total) * 100) : 0;
                     return (
-                      <div className="bg-[#FAF4EC] p-3.5 rounded-xl border border-[#EADBCE] space-y-2">
-                        <div className="flex justify-between text-xs font-semibold text-[#2B1413]">
+                      <div className="bg-[var(--color-surface-2)] p-3.5 rounded-xl border border-[var(--color-border)] space-y-2">
+                        <div className="flex justify-between text-xs font-semibold text-[var(--color-text)]">
                           <span>ความคืบหน้าการตรวจเช็คลิสต์:</span>
-                          <span className="font-mono text-amber-800">
+                          <span className="font-mono text-[var(--color-amber)]">
                             {done} จาก {total} ข้อ ({pct}%)
                           </span>
                         </div>
-                        <div className="w-full bg-[#EADBCE] h-2 rounded-full overflow-hidden">
+                        <div className="w-full bg-[var(--color-border)] h-2 rounded-full overflow-hidden">
                           <div
                             className="bg-amber-400 h-full rounded-full transition-all duration-300"
                             style={{ width: `${pct}%` }}
@@ -975,7 +975,7 @@ export function ExecutiveDashboard({
 
                   {/* Checklist items */}
                   {myChecklistItems.length === 0 ? (
-                    <div className="py-8 text-center text-[#78483B] text-xs border border-dashed border-[#EADBCE] rounded-xl bg-[#FAF4EC]/50">
+                    <div className="py-8 text-center text-[var(--color-text-muted)] text-xs border border-dashed border-[var(--color-border)] rounded-xl bg-[var(--color-surface-2)]/50">
                       ไม่พบรายการเช็คลิสต์ของตำแหน่งผู้ช่วยผู้จัดการร้านในฐานข้อมูลสำหรับกะนี้
                     </div>
                   ) : (
@@ -987,14 +987,14 @@ export function ExecutiveDashboard({
                             key={item.id}
                             onClick={() => handleToggleMyItem(item.id)}
                             className={`p-3.5 rounded-xl border flex items-start gap-3 cursor-pointer transition-all ${isDone
-                              ? "bg-amber-50/50 border-amber-200 hover:bg-amber-50"
-                              : "bg-white border-[#EADBCE] hover:border-amber-400 hover:bg-[#FFFDF9]"
+                              ? "bg-[var(--color-amber-glow)]/50 border-[var(--color-amber)] hover:bg-[var(--color-amber-glow)]"
+                              : "bg-[var(--color-surface)] border-[var(--color-border)] hover:border-amber-400 hover:bg-[var(--color-background)]"
                               }`}
                           >
                             <div
                               className={`w-5 h-5 rounded-md border flex items-center justify-center mt-0.5 transition-colors ${isDone
-                                ? "bg-amber-500 border-amber-500 text-white"
-                                : "border-[#C9B29F] bg-white"
+                                ? "bg-[var(--color-amber-glow)]0 border-amber-500 text-[var(--color-brown)]"
+                                : "border-[#C9B29F] bg-[var(--color-surface)]"
                                 }`}
                             >
                               {isDone && (
@@ -1015,19 +1015,19 @@ export function ExecutiveDashboard({
 
                             <div className="flex-1">
                               <div className="flex items-center gap-2">
-                                <span className="text-[10px] font-mono text-[#78483B]">
+                                <span className="text-[10px] font-mono text-[var(--color-text-muted)]">
                                   {String(idx + 1).padStart(2, "0")}
                                 </span>
                                 {item.category && (
-                                  <span className="text-[10px] font-semibold text-[#2B1413] bg-[#FAF4EC] px-1.5 py-0.5 rounded border border-[#EADBCE]">
+                                  <span className="text-[10px] font-semibold text-[var(--color-text)] bg-[var(--color-surface-2)] px-1.5 py-0.5 rounded border border-[var(--color-border)]">
                                     {item.category}
                                   </span>
                                 )}
                               </div>
                               <p
                                 className={`text-xs sm:text-sm font-medium mt-1 ${isDone
-                                  ? "text-[#A88B77] line-through opacity-80"
-                                  : "text-[#2B1413]"
+                                  ? "text-[var(--color-text-subtle)] line-through opacity-80"
+                                  : "text-[var(--color-text)]"
                                   }`}
                               >
                                 {item.label}
@@ -1068,16 +1068,16 @@ export function ExecutiveDashboard({
 
         {/* ─── TAB 3: AUDIT HISTORY & SHIFT REPORTS ───────────────────────────── */}
         {activeTab === "history" && (
-          <div className="bg-white border border-[#EADBCE] rounded-2xl p-5 sm:p-6 shadow-sm space-y-5 animate-fade-in">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#EADBCE] pb-4">
+          <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-5 sm:p-6 shadow-sm space-y-5 animate-fade-in">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[var(--color-border)] pb-4">
               <div>
-                <h3 className="text-sm sm:text-base font-bold text-[#2B1413] flex items-center gap-2">
+                <h3 className="text-sm sm:text-base font-bold text-[var(--color-text)] flex items-center gap-2">
                   <span>🕒</span>
                   <span>ประวัติและรายงานการตรวจสอบย้อนหลัง (Audit Inspection History)</span>
                 </h3>
-                <p className="text-xs text-[#78483B] mt-0.5 flex flex-wrap items-center gap-1.5">
+                <p className="text-xs text-[var(--color-text-muted)] mt-0.5 flex flex-wrap items-center gap-1.5">
                   <span>ค้นหาและเรียกดูรายละเอียดของแต่ละกะที่ปฏิบัติงานแล้ว</span>
-                  <span className="inline-flex items-center text-[10px] bg-amber-50 text-amber-800 font-semibold px-2 py-0.5 rounded border border-amber-200">
+                  <span className="inline-flex items-center text-[10px] bg-[var(--color-amber-glow)] text-[var(--color-amber)] font-semibold px-2 py-0.5 rounded border border-[var(--color-amber)]">
                     <svg className="w-3 h-3 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 8v4l3 3M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                     แสดงข้อมูลย้อนหลัง 14 วัน (2 สัปดาห์)
                   </span>
@@ -1088,12 +1088,12 @@ export function ExecutiveDashboard({
               <div className="flex flex-wrap items-center gap-2">
 
                 {/* Specific Date Fetcher */}
-                <div className="flex items-center gap-1.5 bg-[#FAF4EC] border border-[#EADBCE] rounded-xl px-2 py-1">
+                <div className="flex items-center gap-1.5 bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-xl px-2 py-1">
                   <input
                     type="date"
                     value={selectedHistoryDate}
                     onChange={handleDateSelection}
-                    className="bg-transparent text-xs text-[#2B1413] placeholder:text-[#A88B77] focus:outline-none cursor-pointer"
+                    className="bg-transparent text-xs text-[var(--color-text)] placeholder:text-[var(--color-text-subtle)] focus:outline-none cursor-pointer"
                   />
                   {selectedHistoryDate && (
                     <button
@@ -1112,12 +1112,12 @@ export function ExecutiveDashboard({
                   placeholder="ค้นหาชื่อ หรือตำแหน่ง..."
                   value={historySearch}
                   onChange={(e) => setHistorySearch(e.target.value)}
-                  className="px-3 py-1.5 text-xs bg-[#FAF4EC] border border-[#EADBCE] text-[#2B1413] placeholder:text-[#A88B77] rounded-xl focus:border-amber-400 focus:outline-none"
+                  className="px-3 py-1.5 text-xs bg-[var(--color-surface-2)] border border-[var(--color-border)] text-[var(--color-text)] placeholder:text-[var(--color-text-subtle)] rounded-xl focus:border-amber-400 focus:outline-none"
                 />
                 <select
                   value={historyShiftFilter}
                   onChange={(e) => setHistoryShiftFilter(e.target.value as "all" | ShiftType)}
-                  className="px-2.5 py-1.5 text-xs bg-[#FAF4EC] border border-[#EADBCE] text-[#2B1413] rounded-xl focus:border-amber-400 focus:outline-none cursor-pointer"
+                  className="px-2.5 py-1.5 text-xs bg-[var(--color-surface-2)] border border-[var(--color-border)] text-[var(--color-text)] rounded-xl focus:border-amber-400 focus:outline-none cursor-pointer"
                 >
                   <option value="all">ทุกกะงาน</option>
                   <option value="morning">กะเช้า</option>
@@ -1130,7 +1130,7 @@ export function ExecutiveDashboard({
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead>
-                  <tr className="border-b border-[#EADBCE] text-[#78483B] font-semibold bg-[#FAF4EC]">
+                  <tr className="border-b border-[var(--color-border)] text-[var(--color-text-muted)] font-semibold bg-[var(--color-surface-2)]">
                     <th className="py-2.5 px-3 rounded-l-lg">รหัสกะ / วันที่</th>
                     <th className="py-2.5 px-3">ผู้ปฏิบัติงาน</th>
                     <th className="py-2.5 px-3">ตำแหน่ง</th>
@@ -1140,7 +1140,7 @@ export function ExecutiveDashboard({
                     <th className="py-2.5 px-3 text-right rounded-r-lg">การจัดการ</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#EADBCE]/70">
+                <tbody className="divide-y divide-[var(--color-border)]/70">
                   {filteredHistory.filter(sess => {
                     if (currentRole === "manager_assistant") {
                       return !(sess.taskRole === "manager_assistant" || sess.userPosition === "ผู้ช่วยผู้จัดการร้าน");
@@ -1152,23 +1152,23 @@ export function ExecutiveDashboard({
                     const app = approvals[sess.id] || {};
 
                     return (
-                      <tr key={sess.id} className="hover:bg-[#FFFDF9] transition-colors">
-                        <td className="py-3 px-3 font-mono text-[#78483B]">
-                          <span className="font-semibold text-[#2B1413]">{sess.id}</span>
-                          <span className="block text-[10px] text-[#A88B77]">{fmtDate(sess.startedAt)}</span>
+                      <tr key={sess.id} className="hover:bg-[var(--color-background)] transition-colors">
+                        <td className="py-3 px-3 font-mono text-[var(--color-text-muted)]">
+                          <span className="font-semibold text-[var(--color-text)]">{sess.id}</span>
+                          <span className="block text-[10px] text-[var(--color-text-subtle)]">{fmtDate(sess.startedAt)}</span>
                         </td>
-                        <td className="py-3 px-3 font-semibold text-[#2B1413]">
+                        <td className="py-3 px-3 font-semibold text-[var(--color-text)]">
                           {sess.userName}
                         </td>
-                        <td className="py-3 px-3 text-[#78483B]">
+                        <td className="py-3 px-3 text-[var(--color-text-muted)]">
                           {sess.userPosition || "-"}
                         </td>
                         <td className="py-3 px-3">
                           {getShiftBadge(sess.shift)}
                         </td>
                         <td className="py-3 px-3 font-mono">
-                          <span className="font-bold text-[#2B1413]">{doneCount}/{sess.items.length}</span>
-                          <span className="text-[10px] text-[#78483B] ml-1">({pct}%)</span>
+                          <span className="font-bold text-[var(--color-text)]">{doneCount}/{sess.items.length}</span>
+                          <span className="text-[10px] text-[var(--color-text-muted)] ml-1">({pct}%)</span>
                         </td>
                         <td className="py-3 px-3 text-center">
                           {app.managerApproved ? (
@@ -1176,15 +1176,15 @@ export function ExecutiveDashboard({
                               ✓ อนุมัติสมบูรณ์
                             </span>
                           ) : (sess.taskRole === "manager_assistant" || sess.userPosition === "ผู้ช่วยผู้จัดการร้าน") ? (
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-50 text-amber-800 border border-amber-200">
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-[var(--color-amber-glow)] text-[var(--color-amber)] border border-[var(--color-amber)]">
                               รอผู้จัดการอนุมัติ
                             </span>
                           ) : app.assistantApproved ? (
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-[#2B1413] border border-amber-300">
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[var(--color-amber-glow)] text-[var(--color-text)] border border-[var(--color-amber)]">
                               ผู้ช่วยตรวจแล้ว
                             </span>
                           ) : (
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-[#FAF4EC] text-[#78483B] border border-[#EADBCE]">
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-[var(--color-surface-2)] text-[var(--color-text-muted)] border border-[var(--color-border)]">
                               รอดำเนินการ
                             </span>
                           )}
@@ -1193,7 +1193,7 @@ export function ExecutiveDashboard({
                           <button
                             type="button"
                             onClick={() => setSelectedSession(sess)}
-                            className="px-3 py-1.5 text-xs font-semibold text-[#2B1413] bg-amber-400 hover:bg-amber-300 active:bg-amber-500 rounded-lg transition-colors cursor-pointer shadow-sm shadow-amber-200/50"
+                            className="px-3 py-1.5 text-xs font-semibold text-[var(--color-text)] bg-amber-400 hover:bg-amber-300 active:bg-[var(--color-amber-glow)]0 rounded-lg transition-colors cursor-pointer shadow-sm shadow-amber-200/50"
                           >
                             เปิดดูข้อตรวจ →
                           </button>
@@ -1253,9 +1253,9 @@ export function ExecutiveDashboard({
       })()}
 
       {/* ─── Footer with Reset Option (Same style as staff pages) ─────────────── */}
-      <footer className="max-w-6xl mx-auto px-4 sm:px-6 pt-10 pb-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[#78483B] border-t border-[#EADBCE] mt-12">
+      <footer className="max-w-6xl mx-auto px-4 sm:px-6 pt-10 pb-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[var(--color-text-muted)] border-t border-[var(--color-border)] mt-12">
         <div className="flex items-center gap-2">
-          <span className="font-semibold text-[#2B1413]">Eater Egg Fresh Mart</span>
+          <span className="font-semibold text-[var(--color-text)]">Eater Egg Fresh Mart</span>
           <span>•</span>
           <span>Operations & Audit Management Portal</span>
         </div>
@@ -1265,7 +1265,7 @@ export function ExecutiveDashboard({
             type="button"
             onClick={handleResetChecklistData}
             disabled={isResetting}
-            className="text-xs text-[#78483B] hover:text-rose-700 font-medium inline-flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
+            className="text-xs text-[var(--color-text-muted)] hover:text-rose-700 font-medium inline-flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
             title="ล้างข้อมูลเช็คลิสต์ทั้งหมดเพื่อเริ่มทดสอบใหม่"
           >
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

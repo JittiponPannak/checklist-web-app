@@ -18,7 +18,7 @@ export default function AdminDashboardPage() {
 
   if (!isReady) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#FFFDF9]">
+      <div className="min-h-screen flex items-center justify-center bg-[var(--color-background)]">
         <div className="h-8 w-8 animate-spin rounded-full border-3 border-amber-500 border-t-transparent" />
       </div>
     );

@@ -91,12 +91,12 @@ export function ManagerAuthPage({ onLogin }: { onLogin: (user: User) => void }) 
   }
 
   const inputStyle =
-    "w-full bg-slate-950 hover:bg-slate-900 focus:bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-xl px-4 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus-visible:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all";
+    "w-full bg-[var(--color-surface)] hover:bg-slate-900 focus:bg-[var(--color-surface)] border border-slate-800 focus:border-indigo-500 rounded-xl px-4 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus-visible:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all";
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-center px-4 py-8 sm:py-12 relative overflow-hidden">
+    <div className="min-h-screen bg-[var(--color-surface)] text-slate-100 flex flex-col items-center justify-center px-4 py-8 sm:py-12 relative overflow-hidden">
       {/* Subtle Ambient Brand Glow */}
-      <div className="absolute top-1/4 -right-20 w-72 h-72 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" aria-hidden="true" />
+      <div className="absolute top-1/4 -right-20 w-72 h-72 bg-[var(--color-amber-glow)]0/10 rounded-full blur-3xl pointer-events-none" aria-hidden="true" />
       <div className="absolute bottom-1/4 -left-20 w-72 h-72 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" aria-hidden="true" />
 
       <div className="w-full max-w-[440px] bg-slate-900/90 backdrop-blur-md border border-slate-800 rounded-2xl p-7 sm:p-8 shadow-2xl space-y-5 relative z-10">
@@ -113,7 +113,7 @@ export function ManagerAuthPage({ onLogin }: { onLogin: (user: User) => void }) 
         <div
           role="tablist"
           aria-label="ตัวเลือกเข้าสู่ระบบฝ่ายบริหาร"
-          className="flex bg-slate-950 p-1 rounded-xl border border-slate-800"
+          className="flex bg-[var(--color-surface)] p-1 rounded-xl border border-slate-800"
         >
           {(["login", "register"] as const).map((t) => (
             <button
@@ -125,7 +125,7 @@ export function ManagerAuthPage({ onLogin }: { onLogin: (user: User) => void }) 
                 setTab(t);
                 setError("");
               }}
-              className={`flex-1 py-2 text-xs sm:text-sm font-semibold rounded-lg transition-all cursor-pointer ${tab === t ? "bg-indigo-600 text-white shadow-md font-bold" : "text-slate-400 hover:text-slate-200"
+              className={`flex-1 py-2 text-xs sm:text-sm font-semibold rounded-lg transition-all cursor-pointer ${tab === t ? "bg-indigo-600 text-[var(--color-brown)] shadow-md font-bold" : "text-slate-400 hover:text-slate-200"
                 }`}
             >
               {t === "login" ? "เข้าสู่ระบบฝ่ายบริหาร" : "ลงทะเบียนใหม่"}
@@ -190,9 +190,9 @@ export function ManagerAuthPage({ onLogin }: { onLogin: (user: User) => void }) 
                 onChange={(e) => setForm({ ...form, position: e.target.value })}
                 className={inputStyle}
               >
-                <option value="ผู้ช่วยผู้จัดการร้าน" className="bg-slate-900 text-white">ผู้ช่วยผู้จัดการร้าน (Assistant Manager)</option>
-                <option value="ผู้จัดการร้าน" className="bg-slate-900 text-white">ผู้จัดการร้าน (Store Manager)</option>
-                <option value="กรรมการ" className="bg-slate-900 text-white">กรรมการบริหาร (Executive Committee)</option>
+                <option value="ผู้ช่วยผู้จัดการร้าน" className="bg-slate-900 text-[var(--color-brown)]">ผู้ช่วยผู้จัดการร้าน (Assistant Manager)</option>
+                <option value="ผู้จัดการร้าน" className="bg-slate-900 text-[var(--color-brown)]">ผู้จัดการร้าน (Store Manager)</option>
+                <option value="กรรมการ" className="bg-slate-900 text-[var(--color-brown)]">กรรมการบริหาร (Executive Committee)</option>
               </select>
             </div>
           )}
@@ -207,7 +207,7 @@ export function ManagerAuthPage({ onLogin }: { onLogin: (user: User) => void }) 
             type="button"
             disabled={loading}
             onClick={tab === "login" ? handleLogin : handleRegister}
-            className={`w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white text-sm font-semibold rounded-xl shadow-lg transition-all cursor-pointer mt-1 flex items-center justify-center gap-2 shadow-indigo-950/50 ${loading ? "opacity-70 cursor-not-allowed" : ""
+            className={`w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-[var(--color-brown)] text-sm font-semibold rounded-xl shadow-lg transition-all cursor-pointer mt-1 flex items-center justify-center gap-2 shadow-indigo-950/50 ${loading ? "opacity-70 cursor-not-allowed" : ""
               }`}
           >
             <span>{loading ? "กำลังตรวจสอบข้อมูล..." : (tab === "login" ? "เข้าสู่ระบบฝ่ายบริหาร →" : "ยืนยันการลงทะเบียน")}</span>

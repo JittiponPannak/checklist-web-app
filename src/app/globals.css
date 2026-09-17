@@ -34,10 +34,40 @@
   --color-danger-glow: rgba(220, 38, 38, 0.12);
 }
 
+.dark {
+  --color-background: #1c1311;
+  --color-surface: #2b1413;
+  --color-surface-2: #3a221f;
+  --color-border: #5c352a;
+  --color-border-subtle: #442220;
+
+  --color-primary: #f59e0b;
+  --color-primary-dim: #d97706;
+  --color-primary-glow: rgba(245, 158, 11, 0.15);
+
+  --color-amber: #d97706;
+  --color-amber-dim: #b45309;
+  --color-amber-glow: rgba(217, 119, 6, 0.15);
+
+  --color-yellow: #facc15;
+  --color-yellow-glow: rgba(250, 204, 21, 0.2);
+
+  --color-brown: #0f0a09;
+  --color-brown-light: #1c1311;
+  --color-brown-subtle: #2b1413;
+
+  --color-text: #fffdf9;
+  --color-text-muted: #eadbce;
+  --color-text-subtle: #f2e7dc;
+
+  --color-danger: #f87171;
+  --color-danger-glow: rgba(248, 113, 113, 0.15);
+}
+
 html {
   scroll-padding-top: 2.5rem;
   scroll-padding-bottom: 2.5rem;
-  background-color: #fffdf9;
+  background-color: var(--color-background);
 }
 
 html,
@@ -45,7 +75,7 @@ body,
 #root {
   min-height: 100%;
   font-family: var(--font-sans);
-  background-color: #fffdf9;
+  background-color: var(--color-background);
   color: var(--color-text);
 }
 

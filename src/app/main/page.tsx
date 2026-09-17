@@ -114,7 +114,7 @@ const MANAGEMENT_POSITIONS = [
 function Badge({ children, color = "muted" }: { children: React.ReactNode; color?: "green" | "amber" | "blue" | "muted" | "red" }) {
   const cls = {
     green: "bg-emerald-50 text-emerald-900 border-emerald-300 font-semibold",
-    amber: "bg-amber-50 text-amber-900 border-amber-300 font-semibold",
+    amber: "bg-[var(--color-amber-glow)] text-[var(--color-amber)] border-[var(--color-amber)] font-semibold",
     blue: "bg-blue-50 text-blue-900 border-blue-300 font-semibold",
     muted: "bg-slate-100 text-slate-800 border-slate-300 font-medium",
     red: "bg-red-50 text-red-900 border-red-300 font-semibold",
@@ -166,7 +166,7 @@ function StaffAuthPage({ onLogin, onSwitchToExecutive, onSwitchToAdmin }: { onLo
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const inp = "w-full bg-slate-950 hover:bg-slate-900 focus:bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus-visible:outline-2 focus-visible:outline-indigo-500 focus:ring-4 focus:ring-indigo-500/20 transition-all";
+  const inp = "w-full bg-[var(--color-surface)] hover:bg-slate-900 focus:bg-[var(--color-surface)] border border-slate-800 focus:border-indigo-500 rounded-xl px-4 py-2.5 text-sm text-[var(--color-brown)] placeholder:text-slate-500 focus-visible:outline-2 focus-visible:outline-indigo-500 focus:ring-4 focus:ring-indigo-500/20 transition-all";
 
   async function handleLogin() {
     setLoading(true);
@@ -186,17 +186,17 @@ function StaffAuthPage({ onLogin, onSwitchToExecutive, onSwitchToAdmin }: { onLo
   }
 
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-center px-4 py-8 relative">
+    <main className="min-h-screen bg-[var(--color-surface)] text-slate-100 flex flex-col items-center justify-center px-4 py-8 relative">
       <div className="w-full max-w-[390px] bg-slate-900/90 backdrop-blur-xl border border-slate-800 rounded-2xl p-6 shadow-2xl">
         <header className="mb-6 text-center">
-          <div className="inline-flex items-center justify-center w-11 h-11 rounded-xl bg-indigo-600 text-white mb-3 shadow-lg shadow-indigo-950/50">
+          <div className="inline-flex items-center justify-center w-11 h-11 rounded-xl bg-indigo-600 text-[var(--color-brown)] mb-3 shadow-lg shadow-indigo-950/50">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
           </div>
-          <h1 className="text-xl font-bold text-white tracking-tight">Eater Egg Fresh Mart</h1>
+          <h1 className="text-xl font-bold text-[var(--color-brown)] tracking-tight">Eater Egg Fresh Mart</h1>
           <p className="text-xs text-slate-400 mt-1 font-medium">ระบบเช็คลิสต์พนักงานและผู้ช่วยฯ</p>
         </header>
 
-        <div role="tablist" aria-label="โหมดการสลับหน้าพนักงาน" className="flex bg-slate-950 p-1 rounded-xl mb-5 border border-slate-800">
+        <div role="tablist" aria-label="โหมดการสลับหน้าพนักงาน" className="flex bg-[var(--color-surface)] p-1 rounded-xl mb-5 border border-slate-800">
           {["login", "register"].map((t) => (
             <button
               key={t}
@@ -206,7 +206,7 @@ function StaffAuthPage({ onLogin, onSwitchToExecutive, onSwitchToAdmin }: { onLo
               aria-controls={`staff-${t}-panel`}
               id={`staff-${t}-tab`}
               onClick={() => { setTab(t as any); setError(""); }}
-              className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all focus-visible:outline-2 focus-visible:outline-indigo-500 ${tab === t ? "bg-indigo-600 text-white shadow-md font-bold" : "text-slate-400 hover:text-slate-200"}`}
+              className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all focus-visible:outline-2 focus-visible:outline-indigo-500 ${tab === t ? "bg-indigo-600 text-[var(--color-brown)] shadow-md font-bold" : "text-slate-400 hover:text-slate-200"}`}
             >
               {t === "login" ? "เข้าสู่ระบบ" : "สมัครสมาชิก"}
             </button>
@@ -264,7 +264,7 @@ function StaffAuthPage({ onLogin, onSwitchToExecutive, onSwitchToAdmin }: { onLo
               {error}
             </div>
           )}
-          <button disabled={loading} type="submit" className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white rounded-xl shadow-lg shadow-indigo-950/50 font-semibold mt-3 transition-all cursor-pointer focus-visible:outline-2 focus-visible:outline-indigo-500">
+          <button disabled={loading} type="submit" className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-[var(--color-brown)] rounded-xl shadow-lg shadow-indigo-950/50 font-semibold mt-3 transition-all cursor-pointer focus-visible:outline-2 focus-visible:outline-indigo-500">
             {loading ? "กำลังโหลด..." : tab === "login" ? "เข้าสู่ระบบ" : "ยืนยันสมัครสมาชิก"}
           </button>
         </form>
@@ -285,7 +285,7 @@ function ExecutiveAuthPage({ onLogin, onSwitchToStaff }: { onLogin: (user: User)
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const inp = "w-full bg-slate-950 hover:bg-slate-900 focus:bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus-visible:outline-2 focus:ring-4 focus:ring-indigo-500/20 transition-all";
+  const inp = "w-full bg-[var(--color-surface)] hover:bg-slate-900 focus:bg-[var(--color-surface)] border border-slate-800 focus:border-indigo-500 rounded-xl px-4 py-2.5 text-sm text-[var(--color-brown)] placeholder:text-slate-500 focus-visible:outline-2 focus:ring-4 focus:ring-indigo-500/20 transition-all";
 
   async function handleLogin() {
     setLoading(true);
@@ -308,7 +308,7 @@ function ExecutiveAuthPage({ onLogin, onSwitchToStaff }: { onLogin: (user: User)
   }
 
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-center px-4 py-8 relative">
+    <main className="min-h-screen bg-[var(--color-surface)] text-slate-100 flex flex-col items-center justify-center px-4 py-8 relative">
       <div className="w-full max-w-[420px] bg-slate-900/90 backdrop-blur-xl border border-slate-800 rounded-2xl p-6 shadow-2xl">
         <header className="mb-6 text-center">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-950/80 border border-indigo-800 text-indigo-400 text-xs font-bold mb-3 font-mono">
@@ -316,11 +316,11 @@ function ExecutiveAuthPage({ onLogin, onSwitchToStaff }: { onLogin: (user: User)
             <span>•</span>
             <span>ฝ่ายบริหาร</span>
           </div>
-          <h1 className="text-xl font-bold text-white tracking-tight">Executive Dashboard</h1>
+          <h1 className="text-xl font-bold text-[var(--color-brown)] tracking-tight">Executive Dashboard</h1>
           <p className="text-xs text-slate-400 mt-1">Eater Egg Fresh Mart</p>
         </header>
 
-        <div role="tablist" aria-label="โหมดการสลับหน้าผู้บริหาร" className="flex bg-slate-950 p-1 rounded-xl mb-5 border border-slate-800">
+        <div role="tablist" aria-label="โหมดการสลับหน้าผู้บริหาร" className="flex bg-[var(--color-surface)] p-1 rounded-xl mb-5 border border-slate-800">
           {["login", "register"].map((t) => (
             <button
               key={t}
@@ -330,7 +330,7 @@ function ExecutiveAuthPage({ onLogin, onSwitchToStaff }: { onLogin: (user: User)
               aria-controls={`exec-${t}-panel`}
               id={`exec-${t}-tab`}
               onClick={() => { setTab(t as any); setError(""); }}
-              className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all focus-visible:outline-2 focus-visible:outline-indigo-500 ${tab === t ? "bg-indigo-600 text-white shadow-md font-bold" : "text-slate-400 hover:text-slate-200"}`}
+              className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all focus-visible:outline-2 focus-visible:outline-indigo-500 ${tab === t ? "bg-indigo-600 text-[var(--color-brown)] shadow-md font-bold" : "text-slate-400 hover:text-slate-200"}`}
             >
               {t === "login" ? "เข้าสู่ระบบผู้บริหาร" : "ลงทะเบียนผู้บริหาร"}
             </button>
@@ -389,7 +389,7 @@ function ExecutiveAuthPage({ onLogin, onSwitchToStaff }: { onLogin: (user: User)
               {error}
             </div>
           )}
-          <button disabled={loading} type="submit" className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white rounded-xl shadow-lg shadow-indigo-950/50 font-semibold mt-3 transition-all cursor-pointer focus-visible:outline-2 focus-visible:outline-indigo-500">
+          <button disabled={loading} type="submit" className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-[var(--color-brown)] rounded-xl shadow-lg shadow-indigo-950/50 font-semibold mt-3 transition-all cursor-pointer focus-visible:outline-2 focus-visible:outline-indigo-500">
             {loading ? "กำลังโหลด..." : tab === "login" ? "เข้าสู่ระบบผู้บริหาร" : "บันทึกข้อมูลผู้บริหาร"}
           </button>
         </form>
@@ -408,7 +408,7 @@ function SystemAdminAuthPage({ onLogin, onSwitchToStaff }: { onLogin: (user: Use
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const inp = "w-full bg-slate-950 focus:bg-slate-900 border border-slate-800 focus:border-red-500 rounded-xl px-4 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus-visible:outline-2 focus:ring-4 focus:ring-red-500/20 transition-all";
+  const inp = "w-full bg-[var(--color-surface)] focus:bg-slate-900 border border-slate-800 focus:border-red-500 rounded-xl px-4 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus-visible:outline-2 focus:ring-4 focus:ring-red-500/20 transition-all";
 
   async function handleLogin() {
     setLoading(true);
@@ -425,13 +425,13 @@ function SystemAdminAuthPage({ onLogin, onSwitchToStaff }: { onLogin: (user: Use
   }
 
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-center px-4 py-8 relative">
+    <main className="min-h-screen bg-[var(--color-surface)] text-slate-100 flex flex-col items-center justify-center px-4 py-8 relative">
       {/* Background effect */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-red-900/20 via-slate-950 to-slate-950 pointer-events-none"></div>
 
       <div className="w-full max-w-[390px] bg-slate-900/90 backdrop-blur-xl border border-slate-800 rounded-2xl p-6 shadow-2xl relative z-10">
-        <header className="mb-8 text-center text-white">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-red-500 to-red-700 text-white shadow-lg mb-4">
+        <header className="mb-8 text-center text-[var(--color-brown)]">
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-red-500 to-red-700 text-[var(--color-brown)] shadow-lg mb-4">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
             </svg>
@@ -476,13 +476,13 @@ function SystemAdminAuthPage({ onLogin, onSwitchToStaff }: { onLogin: (user: Use
               {error}
             </div>
           )}
-          <button disabled={loading} type="submit" className="w-full py-2.5 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white rounded-xl shadow-[0_0_15px_rgba(220,38,38,0.3)] font-semibold mt-4 transition-all cursor-pointer focus-visible:outline-2 focus-visible:outline-red-500">
+          <button disabled={loading} type="submit" className="w-full py-2.5 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-[var(--color-brown)] rounded-xl shadow-[0_0_15px_rgba(220,38,38,0.3)] font-semibold mt-4 transition-all cursor-pointer focus-visible:outline-2 focus-visible:outline-red-500">
             {loading ? "Authenticating..." : "Authorize Access"}
           </button>
         </form>
 
         <div className="mt-8 pt-4 border-t border-slate-800 text-center">
-          <button type="button" onClick={onSwitchToStaff} className="text-xs text-slate-400 hover:text-white transition-colors cursor-pointer flex items-center justify-center gap-1 mx-auto py-2 px-3 rounded-lg focus-visible:outline-2 focus-visible:outline-red-500 min-h-[36px]">
+          <button type="button" onClick={onSwitchToStaff} className="text-xs text-slate-400 hover:text-[var(--color-brown)] transition-colors cursor-pointer flex items-center justify-center gap-1 mx-auto py-2 px-3 rounded-lg focus-visible:outline-2 focus-visible:outline-red-500 min-h-[36px]">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
             Return to Core App
           </button>
@@ -541,11 +541,11 @@ function ShiftSelectPage({
     ];
 
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between px-4 py-6 sm:py-10">
+    <main className="min-h-screen bg-[var(--color-surface)] text-slate-100 flex flex-col justify-between px-4 py-6 sm:py-10">
       {/* Clean Top Profile Bar */}
       <header className="w-full max-w-4xl mx-auto mb-6 flex items-center justify-between gap-4 p-4 bg-slate-900/90 border border-slate-800 rounded-2xl shadow-xl">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold text-sm select-none shadow-md">
+          <div className="w-10 h-10 rounded-xl bg-indigo-600 text-[var(--color-brown)] flex items-center justify-center font-bold text-sm select-none shadow-md">
             {user.name.slice(0, 2)}
           </div>
           <div>
@@ -556,9 +556,9 @@ function ShiftSelectPage({
                     {user.branchName}
                   </p>
                 )}
-                <h1 className="text-sm sm:text-base font-bold text-white leading-tight">{user.name}</h1>
+                <h1 className="text-sm sm:text-base font-bold text-[var(--color-brown)] leading-tight">{user.name}</h1>
               </div>
-              <span className="text-[11px] font-semibold bg-slate-950 text-slate-300 px-2.5 py-0.5 rounded-full border border-slate-800">
+              <span className="text-[11px] font-semibold bg-[var(--color-surface)] text-slate-300 px-2.5 py-0.5 rounded-full border border-slate-800">
                 {user.position || "พนักงาน"}
               </span>
             </div>
@@ -581,7 +581,7 @@ function ShiftSelectPage({
           <span className="inline-block text-[11px] font-bold text-indigo-400 tracking-wider uppercase bg-indigo-950/80 border border-indigo-800/80 px-3 py-1 rounded-full mb-3">
             ขั้นตอนที่ 1 จาก 2 • เลือกกะการทำงาน
           </span>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-[var(--color-brown)] tracking-tight">
             เลือกกะการทำงาน
           </h2>
           <p className="text-xs sm:text-sm text-slate-400 mt-1 max-w-md mx-auto">
@@ -599,7 +599,7 @@ function ShiftSelectPage({
               <div>
                 {/* Top Bar inside Card */}
                 <div className="flex items-center justify-between gap-2 mb-4">
-                  <div className="w-11 h-11 rounded-2xl bg-slate-950 border border-slate-800 text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white flex items-center justify-center transition-colors">
+                  <div className="w-11 h-11 rounded-2xl bg-[var(--color-surface)] border border-slate-800 text-indigo-400 group-hover:bg-indigo-600 group-hover:text-[var(--color-brown)] flex items-center justify-center transition-colors">
                     {s.id === "morning" ? (
                       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                         <circle cx="12" cy="12" r="4" />
@@ -622,7 +622,7 @@ function ShiftSelectPage({
                         เวลานี้
                       </span>
                     )}
-                    <span className="text-xs font-semibold text-slate-300 font-mono bg-slate-950 border border-slate-800 px-2.5 py-0.5 rounded-full">
+                    <span className="text-xs font-semibold text-slate-300 font-mono bg-[var(--color-surface)] border border-slate-800 px-2.5 py-0.5 rounded-full">
                       {s.subTitle}
                     </span>
                   </div>
@@ -630,7 +630,7 @@ function ShiftSelectPage({
 
                 {/* Big Clean Title */}
                 <div className="my-2">
-                  <h3 className="text-3xl font-extrabold text-white tracking-tight">
+                  <h3 className="text-3xl font-extrabold text-[var(--color-brown)] tracking-tight">
                     {s.title}
                   </h3>
                   <p className="text-xs font-semibold text-slate-400 mt-1 font-mono flex items-center gap-1.5">
@@ -652,7 +652,7 @@ function ShiftSelectPage({
                 <button
                   type="button"
                   onClick={() => onSelect(s.id)}
-                  className="w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white text-xs sm:text-sm font-semibold shadow-lg shadow-indigo-950/50 transition-all flex items-center justify-center gap-2 cursor-pointer focus-visible:outline-2 focus-visible:outline-indigo-500"
+                  className="w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-[var(--color-brown)] text-xs sm:text-sm font-semibold shadow-lg shadow-indigo-950/50 transition-all flex items-center justify-center gap-2 cursor-pointer focus-visible:outline-2 focus-visible:outline-indigo-500"
                 >
                   <span>เลือกกะ{s.title}</span>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -694,7 +694,7 @@ function PositionSelectPage({
   const availablePositions = user.role === "manager" ? MANAGEMENT_POSITIONS : STAFF_POSITIONS;
 
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between px-4 py-6 sm:py-10">
+    <main className="min-h-screen bg-[var(--color-surface)] text-slate-100 flex flex-col justify-between px-4 py-6 sm:py-10">
       {/* Top Header Card */}
       <header className="w-full max-w-4xl mx-auto mb-6 flex items-center justify-between gap-4 p-4 bg-slate-900/90 border border-slate-800 rounded-2xl shadow-xl">
         <div className="flex items-center gap-3">
@@ -714,7 +714,7 @@ function PositionSelectPage({
                 {user.branchName}
               </p>
             )}
-            <p className="text-sm sm:text-base font-bold text-white leading-tight mb-1">{user.name}</p>
+            <p className="text-sm sm:text-base font-bold text-[var(--color-brown)] leading-tight mb-1">{user.name}</p>
             <p className="text-[11px] text-slate-400 font-medium">
               กะที่เลือก: <span className="font-bold text-indigo-300">{shiftTitle} ({shiftHours})</span>
             </p>
@@ -737,7 +737,7 @@ function PositionSelectPage({
           <span className="inline-block text-[11px] font-bold text-indigo-400 tracking-wider uppercase bg-indigo-950/80 border border-indigo-800/80 px-3 py-1 rounded-full mb-3">
             ขั้นตอนที่ 2 จาก 2 • เลือกตำแหน่งหน้าที่
           </span>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[var(--color-brown)] tracking-tight">
             เลือกตำแหน่งงาน
           </h1>
           <p className="text-xs sm:text-sm text-slate-400 mt-1 max-w-md mx-auto">
@@ -757,7 +757,7 @@ function PositionSelectPage({
               >
                 <div>
                   <div className="flex items-start justify-between gap-3 mb-4">
-                    <div className="w-12 h-12 rounded-2xl bg-slate-950 border border-slate-800 text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white flex items-center justify-center transition-colors">
+                    <div className="w-12 h-12 rounded-2xl bg-[var(--color-surface)] border border-slate-800 text-indigo-400 group-hover:bg-indigo-600 group-hover:text-[var(--color-brown)] flex items-center justify-center transition-colors">
                       {isCashier ? (
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                           <rect x="2" y="4" width="20" height="16" rx="2" />
@@ -780,7 +780,7 @@ function PositionSelectPage({
                     </span>
                   </div>
 
-                  <h3 className="text-xl font-bold text-white tracking-tight mb-2">
+                  <h3 className="text-xl font-bold text-[var(--color-brown)] tracking-tight mb-2">
                     {pos}
                   </h3>
 
@@ -822,7 +822,7 @@ function PositionSelectPage({
                   <button
                     type="button"
                     onClick={() => onSelectPosition(pos)}
-                    className="w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white text-xs sm:text-sm font-semibold shadow-lg shadow-indigo-950/50 transition-all flex items-center justify-center gap-2 cursor-pointer focus-visible:outline-2 focus-visible:outline-indigo-500"
+                    className="w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-[var(--color-brown)] text-xs sm:text-sm font-semibold shadow-lg shadow-indigo-950/50 transition-all flex items-center justify-center gap-2 cursor-pointer focus-visible:outline-2 focus-visible:outline-indigo-500"
                   >
                     <span>เลือกหน้าที่{pos}</span>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -840,7 +840,7 @@ function PositionSelectPage({
           <button
             type="button"
             onClick={onBack}
-            className="text-xs text-slate-400 hover:text-white font-semibold inline-flex items-center gap-1.5 transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-indigo-500 rounded-lg px-2 py-1 min-h-[36px]"
+            className="text-xs text-slate-400 hover:text-[var(--color-brown)] font-semibold inline-flex items-center gap-1.5 transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-indigo-500 rounded-lg px-2 py-1 min-h-[36px]"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M19 12H5M12 19l-7-7 7-7" />
@@ -918,7 +918,7 @@ function ChecklistPage({
   }
 
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center px-4 py-6 sm:py-10">
+    <main className="min-h-screen bg-[var(--color-surface)] text-slate-100 flex flex-col items-center px-4 py-6 sm:py-10">
       {/* Off-screen live status update for assistive tech (SC 4.1.3) */}
       <div aria-live="polite" className="sr-only">
         ความคืบหน้างาน {done} จาก {total} รายการ ({progress}%)
@@ -932,7 +932,7 @@ function ChecklistPage({
               <div className="flex items-center gap-2 mb-1.5 flex-wrap">
                 {getShiftBadge(session.shift)}
                 {session.userPosition && (
-                  <span className="text-xs font-semibold text-slate-300 bg-slate-950 px-2 py-0.5 rounded-full border border-slate-800">
+                  <span className="text-xs font-semibold text-slate-300 bg-[var(--color-surface)] px-2 py-0.5 rounded-full border border-slate-800">
                     {session.userPosition}
                   </span>
                 )}
@@ -947,7 +947,7 @@ function ChecklistPage({
                   {session.branchName}
                 </p>
               )}
-              <h1 className="text-lg sm:text-xl font-extrabold text-white tracking-tight leading-none">{session.userName}</h1>
+              <h1 className="text-lg sm:text-xl font-extrabold text-[var(--color-brown)] tracking-tight leading-none">{session.userName}</h1>
               <p className="text-xs text-slate-400 font-mono mt-1.5">เริ่มงานเวลา {fmtTime(session.startedAt)}</p>
             </div>
 
@@ -988,7 +988,7 @@ function ChecklistPage({
                       className={`text-xs px-3.5 py-2 rounded-xl border font-semibold flex items-center gap-1.5 min-h-[36px] transition-all ${!canContinueShift
                         ? "bg-slate-900/60 border-slate-800 text-slate-500 cursor-not-allowed opacity-60"
                         : typeof window !== "undefined" && secureGetItem("app_queue_afternoon") === "true"
-                          ? "bg-indigo-600 border-indigo-500 text-white shadow-md cursor-pointer"
+                          ? "bg-indigo-600 border-indigo-500 text-[var(--color-brown)] shadow-md cursor-pointer"
                           : "bg-slate-800/90 border-slate-700 text-slate-200 hover:border-indigo-500 cursor-pointer"
                         }`}
                       title={
@@ -1014,7 +1014,7 @@ function ChecklistPage({
                       onClick={() => setShowConfirm(true)}
                       className={`text-xs px-4 py-2 rounded-xl border font-semibold flex items-center gap-1.5 min-h-[36px] transition-all ${!canFinishShift
                         ? "bg-slate-900/60 border-slate-800 text-slate-500 cursor-not-allowed opacity-60"
-                        : "bg-rose-950/80 border-rose-800 text-rose-200 hover:bg-rose-900 hover:border-rose-600 hover:text-white cursor-pointer shadow-lg shadow-rose-950/50"
+                        : "bg-rose-950/80 border-rose-800 text-rose-200 hover:bg-rose-900 hover:border-rose-600 hover:text-[var(--color-brown)] cursor-pointer shadow-lg shadow-rose-950/50"
                         }`}
                     >
                       {!canFinishShift && (
@@ -1053,7 +1053,7 @@ function ChecklistPage({
               </span>
               <span className="font-mono font-bold text-indigo-400">{progress}%</span>
             </div>
-            <div className="w-full h-2.5 bg-slate-950 rounded-full overflow-hidden border border-slate-800">
+            <div className="w-full h-2.5 bg-[var(--color-surface)] rounded-full overflow-hidden border border-slate-800">
               <div
                 className="h-full bg-indigo-500 rounded-full transition-all duration-300 ease-out shadow-[0_0_10px_rgba(99,102,241,0.5)]"
                 style={{ width: `${progress}%` }}
@@ -1064,11 +1064,11 @@ function ChecklistPage({
 
         {/* Filter Tabs */}
         <div className="flex items-center justify-between gap-2 px-1">
-          <div className="flex bg-slate-950 p-1 rounded-xl text-xs font-semibold border border-slate-800">
+          <div className="flex bg-[var(--color-surface)] p-1 rounded-xl text-xs font-semibold border border-slate-800">
             <button
               type="button"
               onClick={() => setFilter("all")}
-              className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${filter === "all" ? "bg-indigo-600 text-white font-bold shadow-md" : "text-slate-400 hover:text-slate-200"
+              className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${filter === "all" ? "bg-indigo-600 text-[var(--color-brown)] font-bold shadow-md" : "text-slate-400 hover:text-slate-200"
                 }`}
             >
               ทั้งหมด ({total})
@@ -1076,7 +1076,7 @@ function ChecklistPage({
             <button
               type="button"
               onClick={() => setFilter("pending")}
-              className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${filter === "pending" ? "bg-indigo-600 text-white font-bold shadow-md" : "text-slate-400 hover:text-slate-200"
+              className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${filter === "pending" ? "bg-indigo-600 text-[var(--color-brown)] font-bold shadow-md" : "text-slate-400 hover:text-slate-200"
                 }`}
             >
               ที่ต้องทำ ({total - done})
@@ -1084,7 +1084,7 @@ function ChecklistPage({
             <button
               type="button"
               onClick={() => setFilter("done")}
-              className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${filter === "done" ? "bg-indigo-600 text-white font-bold shadow-md" : "text-slate-400 hover:text-slate-200"
+              className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${filter === "done" ? "bg-indigo-600 text-[var(--color-brown)] font-bold shadow-md" : "text-slate-400 hover:text-slate-200"
                 }`}
             >
               เสร็จแล้ว ({done})
@@ -1120,14 +1120,14 @@ function ChecklistPage({
                   aria-checked={isDone}
                   onClick={() => toggleItem(item.id)}
                   className={`w-full flex items-start gap-3.5 p-4 rounded-2xl border text-left transition-all duration-150 focus-visible:outline-2 focus-visible:outline-indigo-500 shadow-md cursor-pointer ${isDone
-                    ? "bg-slate-950/80 border-slate-850"
+                    ? "bg-[var(--color-surface)]/80 border-slate-850"
                     : "bg-slate-900 border-slate-800 hover:border-slate-700"
                     }`}
                 >
                   <div
                     className={`mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all ${isDone
-                      ? "border-indigo-500 bg-indigo-600 text-white shadow-[0_0_8px_rgba(99,102,241,0.6)]"
-                      : "border-slate-700 bg-slate-950 hover:border-slate-500"
+                      ? "border-indigo-500 bg-indigo-600 text-[var(--color-brown)] shadow-[0_0_8px_rgba(99,102,241,0.6)]"
+                      : "border-slate-700 bg-[var(--color-surface)] hover:border-slate-500"
                       }`}
                   >
                     {isDone && (
@@ -1141,7 +1141,7 @@ function ChecklistPage({
                       <span className="text-xs font-mono text-slate-500 font-semibold pt-0.5 select-none" aria-hidden="true">
                         {String(originalIndex + 1).padStart(2, "0")}
                       </span>
-                      <p className={`text-sm leading-relaxed ${isDone ? "text-slate-500 line-through" : "text-white font-medium"}`}>
+                      <p className={`text-sm leading-relaxed ${isDone ? "text-slate-500 line-through" : "text-[var(--color-brown)] font-medium"}`}>
                         {item.label}
                       </p>
                     </div>
@@ -1193,7 +1193,7 @@ function ChecklistPage({
       {/* Confirmation Modal */}
       {showConfirm && (
         <div
-          className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center z-50 px-4"
+          className="fixed inset-0 bg-[var(--color-surface)]/80 backdrop-blur-sm flex items-center justify-center z-50 px-4"
           onClick={() => setShowConfirm(false)}
           onKeyDown={handleConfirmKeyDown}
         >
@@ -1206,7 +1206,7 @@ function ChecklistPage({
             className="bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-7 w-full max-w-sm focus-visible:outline-2 focus-visible:outline-indigo-500 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 id="confirm-shift-title" className="text-base font-bold text-white mb-2">
+            <h2 id="confirm-shift-title" className="text-base font-bold text-[var(--color-brown)] mb-2">
               ยืนยันการจบกะงาน?
             </h2>
             <p className="text-sm text-slate-400 mb-6 leading-relaxed">
@@ -1218,14 +1218,14 @@ function ChecklistPage({
               <button
                 type="button"
                 onClick={() => setShowConfirm(false)}
-                className="flex-1 py-2.5 rounded-xl border border-slate-800 bg-slate-950 text-xs sm:text-sm font-semibold text-slate-300 hover:bg-slate-800 transition-colors cursor-pointer"
+                className="flex-1 py-2.5 rounded-xl border border-slate-800 bg-[var(--color-surface)] text-xs sm:text-sm font-semibold text-slate-300 hover:bg-slate-800 transition-colors cursor-pointer"
               >
                 ยกเลิก
               </button>
               <button
                 type="button"
                 onClick={endShift}
-                className="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs sm:text-sm font-semibold transition-colors shadow-lg shadow-indigo-950/50 cursor-pointer"
+                className="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-[var(--color-brown)] text-xs sm:text-sm font-semibold transition-colors shadow-lg shadow-indigo-950/50 cursor-pointer"
               >
                 จบกะงาน
               </button>
@@ -1237,7 +1237,7 @@ function ChecklistPage({
       {/* Exit Confirmation Modal */}
       {showExitConfirm && (
         <div
-          className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center z-50 px-4"
+          className="fixed inset-0 bg-[var(--color-surface)]/80 backdrop-blur-sm flex items-center justify-center z-50 px-4"
           onClick={() => setShowExitConfirm(false)}
         >
           <div
@@ -1255,7 +1255,7 @@ function ChecklistPage({
                 <line x1="21" y1="12" x2="9" y2="12" />
               </svg>
             </div>
-            <h2 id="exit-modal-main-title" className="text-base font-bold text-white mb-2">
+            <h2 id="exit-modal-main-title" className="text-base font-bold text-[var(--color-brown)] mb-2">
               ต้องการออกจากหน้า Checklist หรือไม่?
             </h2>
             <p className="text-sm text-slate-300 mb-6 leading-relaxed">
@@ -1275,7 +1275,7 @@ function ChecklistPage({
                   setShowExitConfirm(false);
                   if (onExit) onExit();
                 }}
-                className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs sm:text-sm font-semibold transition-colors shadow-lg shadow-rose-950/50 cursor-pointer"
+                className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-[var(--color-brown)] text-xs sm:text-sm font-semibold transition-colors shadow-lg shadow-rose-950/50 cursor-pointer"
               >
                 ออกจากหน้านี้
               </button>
@@ -1478,15 +1478,15 @@ function ManagerDashboard({
   });
 
   return (
-    <div className="min-h-screen bg-white flex flex-col items-center justify-center px-4 py-8 sm:py-12">
-      <div className="w-full max-w-3xl bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-xl shadow-slate-100 space-y-6">
+    <div className="min-h-screen bg-[var(--color-surface)] flex flex-col items-center justify-center px-4 py-8 sm:py-12">
+      <div className="w-full max-w-3xl bg-[var(--color-surface)] border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-xl shadow-slate-100 space-y-6">
         {/* Header */}
         <header className="flex items-center justify-between pb-4 border-b border-slate-200 gap-4 flex-wrap">
           <div>
             <div className="flex items-center gap-2">
               <span
                 className={`w-2.5 h-2.5 rounded-full ${user.position?.includes("กรรมการ")
-                  ? "bg-amber-500"
+                  ? "bg-[var(--color-amber-glow)]0"
                   : user.position?.includes("ผู้ช่วย")
                     ? "bg-blue-500"
                     : "bg-emerald-500"
@@ -1524,9 +1524,9 @@ function ManagerDashboard({
               <button
                 type="button"
                 onClick={onOpenChecklistPage}
-                className="text-xs px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold transition-colors flex items-center gap-1.5 shadow-sm min-h-[36px]"
+                className="text-xs px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-[var(--color-brown)] font-semibold transition-colors flex items-center gap-1.5 shadow-sm min-h-[36px]"
               >
-                <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
+                <span className="w-2 h-2 rounded-full bg-[var(--color-surface)] animate-pulse" />
                 <span>เช็คลิสต์ที่ทำอยู่ ({activeSession.items.filter((i) => i.completedAt).length}/{activeSession.items.length})</span>
               </button>
             ) : (
@@ -1574,7 +1574,7 @@ function ManagerDashboard({
               aria-selected={activeTab === t}
               aria-controls={`${t}-panel`}
               onClick={() => setActiveTab(t)}
-              className={`flex-1 py-2 px-2 text-xs sm:text-sm font-medium rounded-md transition-all flex items-center justify-center gap-1.5 ${activeTab === t ? "bg-white text-slate-900 shadow-sm font-bold" : "text-slate-600 hover:text-slate-900"
+              className={`flex-1 py-2 px-2 text-xs sm:text-sm font-medium rounded-md transition-all flex items-center justify-center gap-1.5 ${activeTab === t ? "bg-[var(--color-surface)] text-slate-900 shadow-sm font-bold" : "text-slate-600 hover:text-slate-900"
                 }`}
             >
               {t === "my-checklist" && (
@@ -1592,7 +1592,7 @@ function ManagerDashboard({
 
               {t === "staff" && unassignedEmployees.length > 0 && canManagePositions && (
                 <span
-                  className="bg-amber-600 text-white text-[10px] font-bold font-mono rounded-full px-1.5 py-0.2 flex items-center justify-center"
+                  className="bg-amber-600 text-[var(--color-brown)] text-[10px] font-bold font-mono rounded-full px-1.5 py-0.2 flex items-center justify-center"
                   aria-label={`รอกำหนดตำแหน่ง ${unassignedEmployees.length} คน`}
                 >
                   {unassignedEmployees.length}
@@ -1600,7 +1600,7 @@ function ManagerDashboard({
               )}
               {t === "inbox" && unread > 0 && (
                 <span
-                  className="bg-amber-600 text-white text-[10px] font-bold font-mono rounded-full w-4 h-4 flex items-center justify-center"
+                  className="bg-amber-600 text-[var(--color-brown)] text-[10px] font-bold font-mono rounded-full w-4 h-4 flex items-center justify-center"
                   aria-label={`ยังไม่อ่าน ${unread} รายการ`}
                 >
                   {unread}
@@ -1633,7 +1633,7 @@ function ManagerDashboard({
                   <button
                     type="button"
                     onClick={onOpenChecklistPage}
-                    className="text-xs px-3 py-1.5 rounded-lg bg-white border border-emerald-300 text-emerald-800 hover:bg-emerald-100 font-semibold transition-colors flex items-center gap-1.5 shadow-2xs whitespace-nowrap"
+                    className="text-xs px-3 py-1.5 rounded-lg bg-[var(--color-surface)] border border-emerald-300 text-emerald-800 hover:bg-emerald-100 font-semibold transition-colors flex items-center gap-1.5 shadow-2xs whitespace-nowrap"
                   >
                     <span>เปิดแบบเต็มจอ</span>
                   </button>
@@ -1642,7 +1642,7 @@ function ManagerDashboard({
 
               {!activeSession ? (
                 /* Shift Selection for Assistant / Manager */
-                <div className="bg-white border border-slate-200 rounded-xl p-5 sm:p-6 space-y-4 shadow-2xs">
+                <div className="bg-[var(--color-surface)] border border-slate-200 rounded-xl p-5 sm:p-6 space-y-4 shadow-2xs">
                   <div className="text-center max-w-md mx-auto mb-4">
                     <h2 className="text-base font-bold text-slate-900">เลือกกะการปฏิบัติงานเพื่อเริ่มเช็คลิสต์</h2>
                     <p className="text-xs text-slate-500 mt-1">
@@ -1652,10 +1652,10 @@ function ManagerDashboard({
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {/* Morning Shift Card */}
-                    <div className="border border-slate-200 rounded-xl p-4 bg-slate-50/70 hover:border-amber-400 hover:bg-amber-50/20 transition-all flex flex-col justify-between space-y-3">
+                    <div className="border border-slate-200 rounded-xl p-4 bg-slate-50/70 hover:border-amber-400 hover:bg-[var(--color-amber-glow)]/20 transition-all flex flex-col justify-between space-y-3">
                       <div>
                         <div className="flex items-center justify-between mb-2">
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-100 text-amber-900 text-xs font-bold font-mono">
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[var(--color-amber-glow)] text-[var(--color-amber)] text-xs font-bold font-mono">
                             กะเช้า (05:30 - 15:00)
                           </span>
                           <span className="text-xs font-mono font-bold text-slate-600">
@@ -1675,7 +1675,7 @@ function ManagerDashboard({
                       <button
                         type="button"
                         onClick={() => onStartChecklist("morning")}
-                        className="w-full py-2.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-lg shadow-sm transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                        className="w-full py-2.5 bg-amber-600 hover:bg-amber-700 text-[var(--color-brown)] text-xs font-bold rounded-lg shadow-sm transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
                       >
                         <span>เริ่มทำเช็คลิสต์กะเช้า</span>
                       </button>
@@ -1705,7 +1705,7 @@ function ManagerDashboard({
                       <button
                         type="button"
                         onClick={() => onStartChecklist("afternoon")}
-                        className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg shadow-sm transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                        className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-[var(--color-brown)] text-xs font-bold rounded-lg shadow-sm transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
                       >
                         <span>เริ่มทำเช็คลิสต์กะบ่าย</span>
                       </button>
@@ -1735,7 +1735,7 @@ function ManagerDashboard({
                       <button
                         type="button"
                         onClick={() => onStartChecklist("both")}
-                        className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg shadow-sm transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                        className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-[var(--color-brown)] text-xs font-bold rounded-lg shadow-sm transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
                       >
                         <span>เริ่มทำเช็คลิสต์รวบสอง</span>
                       </button>
@@ -1744,7 +1744,7 @@ function ManagerDashboard({
                 </div>
               ) : (
                 /* Live In-Dashboard Checklist Runner */
-                <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-5 shadow-2xs">
+                <div className="bg-[var(--color-surface)] border border-slate-200 rounded-xl p-5 space-y-5 shadow-2xs">
                   {/* Progress header */}
                   <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2">
                     <div className="flex items-center justify-between flex-wrap gap-2">
@@ -1829,11 +1829,11 @@ function ManagerDashboard({
                             onClick={() => toggleDashboardItem(item.id)}
                             className={`w-full text-left p-3.5 rounded-xl border flex items-start gap-3 transition-all ${isDone
                               ? "bg-emerald-50/70 border-emerald-300 text-slate-600"
-                              : "bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-900"
+                              : "bg-[var(--color-surface)] border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-900"
                               }`}
                           >
                             <div
-                              className={`mt-0.5 w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0 ${isDone ? "border-emerald-600 bg-emerald-600" : "border-slate-400 bg-white"
+                              className={`mt-0.5 w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0 ${isDone ? "border-emerald-600 bg-emerald-600" : "border-slate-400 bg-[var(--color-surface)]"
                                 }`}
                             >
                               {isDone && (
@@ -1887,10 +1887,10 @@ function ManagerDashboard({
             <div className="space-y-4">
               {/* Permission Banner for Assistant Manager */}
               {!canManagePositions && (
-                <div className="bg-amber-50 border border-amber-200 rounded-xl p-3.5 text-xs text-amber-950">
+                <div className="bg-[var(--color-amber-glow)] border border-[var(--color-amber)] rounded-xl p-3.5 text-xs text-amber-950">
                   <div>
-                    <p className="font-bold text-amber-900">สิทธิ์ผู้ช่วยผู้จัดการร้าน (Assistant Store Manager)</p>
-                    <p className="text-amber-800 mt-0.5">
+                    <p className="font-bold text-[var(--color-amber)]">สิทธิ์ผู้ช่วยผู้จัดการร้าน (Assistant Store Manager)</p>
+                    <p className="text-[var(--color-amber)] mt-0.5">
                       ท่านสามารถตรวจสอบรายชื่อและสถานะของพนักงานได้ แต่<strong>ไม่สามารถเลือกหรือกำหนดตำแหน่งงานให้พนักงานได้</strong> (สิทธิ์การกำหนดตำแหน่งสงวนไว้เฉพาะผู้จัดการร้านและกรรมการ)
                     </p>
                   </div>
@@ -1912,27 +1912,27 @@ function ManagerDashboard({
                     placeholder="ค้นหาชื่อ, อีเมล หรือตำแหน่ง..."
                     value={staffSearch}
                     onChange={(e) => setStaffSearch(e.target.value)}
-                    className="flex-1 bg-slate-50 border border-slate-400 rounded-lg px-3 py-2 text-xs text-slate-900 placeholder:text-slate-500 focus:border-emerald-600 focus:bg-white focus-visible:outline-2 focus-visible:outline-emerald-700 transition-colors"
+                    className="flex-1 bg-slate-50 border border-slate-400 rounded-lg px-3 py-2 text-xs text-slate-900 placeholder:text-slate-500 focus:border-emerald-600 focus:bg-[var(--color-surface)] focus-visible:outline-2 focus-visible:outline-emerald-700 transition-colors"
                   />
                   <div className="flex bg-slate-100 p-0.5 rounded-lg border border-slate-200 text-xs">
                     <button
                       type="button"
                       onClick={() => setStaffFilter("all")}
-                      className={`px-2.5 py-1.5 rounded-md font-medium transition-all ${staffFilter === "all" ? "bg-white text-slate-900 shadow-2xs font-bold" : "text-slate-600"}`}
+                      className={`px-2.5 py-1.5 rounded-md font-medium transition-all ${staffFilter === "all" ? "bg-[var(--color-surface)] text-slate-900 shadow-2xs font-bold" : "text-slate-600"}`}
                     >
                       ทั้งหมด ({employees.length})
                     </button>
                     <button
                       type="button"
                       onClick={() => setStaffFilter("unassigned")}
-                      className={`px-2.5 py-1.5 rounded-md font-medium transition-all ${staffFilter === "unassigned" ? "bg-white text-amber-900 shadow-2xs font-bold" : "text-slate-600"}`}
+                      className={`px-2.5 py-1.5 rounded-md font-medium transition-all ${staffFilter === "unassigned" ? "bg-[var(--color-surface)] text-[var(--color-amber)] shadow-2xs font-bold" : "text-slate-600"}`}
                     >
                       รอกำหนด ({unassignedEmployees.length})
                     </button>
                     <button
                       type="button"
                       onClick={() => setStaffFilter("assigned")}
-                      className={`px-2.5 py-1.5 rounded-md font-medium transition-all ${staffFilter === "assigned" ? "bg-white text-slate-900 shadow-2xs font-bold" : "text-slate-600"}`}
+                      className={`px-2.5 py-1.5 rounded-md font-medium transition-all ${staffFilter === "assigned" ? "bg-[var(--color-surface)] text-slate-900 shadow-2xs font-bold" : "text-slate-600"}`}
                     >
                       มีตำแหน่งแล้ว ({employees.length - unassignedEmployees.length})
                     </button>
@@ -1942,7 +1942,7 @@ function ManagerDashboard({
                 <button
                   type="button"
                   onClick={() => setShowAddStaffModal(true)}
-                  className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow-sm transition-colors flex items-center justify-center gap-1.5 min-h-[36px]"
+                  className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-[var(--color-brown)] text-xs font-semibold rounded-lg shadow-sm transition-colors flex items-center justify-center gap-1.5 min-h-[36px]"
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                     <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
@@ -1965,7 +1965,7 @@ function ManagerDashboard({
                     return (
                       <div
                         key={emp.id}
-                        className={`p-4 rounded-xl border transition-all ${!emp.position ? "bg-amber-50/40 border-amber-300" : "bg-white border-slate-200 hover:border-slate-300"
+                        className={`p-4 rounded-xl border transition-all ${!emp.position ? "bg-[var(--color-amber-glow)]/40 border-[var(--color-amber)]" : "bg-[var(--color-surface)] border-slate-200 hover:border-slate-300"
                           }`}
                       >
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -1978,7 +1978,7 @@ function ManagerDashboard({
                               <div className="flex items-center gap-2 flex-wrap">
                                 <p className="text-sm font-bold text-slate-900">{emp.name}</p>
                                 {!emp.position && (
-                                  <span className="text-[10px] bg-amber-100 text-amber-900 border border-amber-300 px-1.5 py-0.5 rounded font-bold font-mono">
+                                  <span className="text-[10px] bg-[var(--color-amber-glow)] text-[var(--color-amber)] border border-[var(--color-amber)] px-1.5 py-0.5 rounded font-bold font-mono">
                                     รอกำหนดตำแหน่ง
                                   </span>
                                 )}
@@ -2004,7 +2004,7 @@ function ManagerDashboard({
                                   value={emp.position || ""}
                                   onChange={(e) => handleUpdateUserPosition(emp.id, e.target.value)}
                                   aria-label={`เลือกตำแหน่งงานสำหรับ ${emp.name}`}
-                                  className="text-xs font-medium bg-white border border-slate-400 rounded-lg px-2.5 py-1.5 text-slate-900 focus:border-emerald-600 focus-visible:outline-2 focus-visible:outline-emerald-700 cursor-pointer shadow-2xs min-w-[170px]"
+                                  className="text-xs font-medium bg-[var(--color-surface)] border border-slate-400 rounded-lg px-2.5 py-1.5 text-slate-900 focus:border-emerald-600 focus-visible:outline-2 focus-visible:outline-emerald-700 cursor-pointer shadow-2xs min-w-[170px]"
                                 >
                                   <option value="">-- ยังไม่กำหนดตำแหน่ง --</option>
                                   {positions.map((p) => (
@@ -2015,10 +2015,10 @@ function ManagerDashboard({
                                 </select>
                               ) : (
                                 <div className="flex items-center gap-1.5 min-w-[170px]">
-                                  <span className={`text-xs font-semibold px-2.5 py-1.5 rounded-lg border ${emp.position ? "bg-slate-50 text-slate-800 border-slate-200" : "bg-amber-50 text-amber-800 border-amber-200 italic"}`}>
+                                  <span className={`text-xs font-semibold px-2.5 py-1.5 rounded-lg border ${emp.position ? "bg-slate-50 text-slate-800 border-slate-200" : "bg-[var(--color-amber-glow)] text-[var(--color-amber)] border-[var(--color-amber)] italic"}`}>
                                     {emp.position || "รอกำหนดตำแหน่ง"}
                                   </span>
-                                  <span className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded font-medium flex items-center gap-0.5" title="ผู้ช่วยไม่สามารถเลือกตำแหน่งให้พนักงานได้">
+                                  <span className="text-[11px] text-amber-700 bg-[var(--color-amber-glow)] border border-[var(--color-amber)] px-1.5 py-0.5 rounded font-medium flex items-center gap-0.5" title="ผู้ช่วยไม่สามารถเลือกตำแหน่งให้พนักงานได้">
                                     เฉพาะผู้จัดการกำหนด
                                   </span>
                                 </div>
@@ -2053,7 +2053,7 @@ function ManagerDashboard({
             <div>
               {notifications.length > 0 && unread > 0 && (
                 <div className="flex justify-end mb-3">
-                  <button type="button" onClick={markAllRead} className="text-xs px-3.5 py-1.5 rounded-lg border border-slate-300 bg-white text-slate-700 hover:text-slate-900 hover:bg-slate-50 transition-colors min-h-[32px] inline-flex items-center font-medium shadow-xs">
+                  <button type="button" onClick={markAllRead} className="text-xs px-3.5 py-1.5 rounded-lg border border-slate-300 bg-[var(--color-surface)] text-slate-700 hover:text-slate-900 hover:bg-slate-50 transition-colors min-h-[32px] inline-flex items-center font-medium shadow-xs">
                     อ่านทั้งหมด
                   </button>
                 </div>
@@ -2078,12 +2078,12 @@ function ManagerDashboard({
                   }).map((notif) => {
                     const sess = sessions.find((s) => s.id === notif.shiftSessionId);
                     return (
-                      <div key={notif.id} className={`p-4 rounded-xl border transition-all ${!notif.read ? "bg-amber-50/70 border-amber-300" : "bg-slate-50/60 border-slate-200"}`}>
+                      <div key={notif.id} className={`p-4 rounded-xl border transition-all ${!notif.read ? "bg-[var(--color-amber-glow)]/70 border-[var(--color-amber)]" : "bg-slate-50/60 border-slate-200"}`}>
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1 flex-wrap">
                               {!notif.read && (
-                                <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-800 bg-amber-100 px-2 py-0.5 rounded border border-amber-300">
+                                <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[var(--color-amber)] bg-[var(--color-amber-glow)] px-2 py-0.5 rounded border border-[var(--color-amber)]">
                                   <span className="w-1.5 h-1.5 rounded-full bg-amber-600" aria-hidden="true" />
                                   <span>ยังไม่อ่าน</span>
                                 </span>
@@ -2098,13 +2098,13 @@ function ManagerDashboard({
                           <div className="flex gap-2">
                             {sess && (
                               <button type="button" onClick={() => { setSelectedSession(sess); markRead(notif.id); }}
-                                className="text-xs px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors min-h-[32px] inline-flex items-center font-medium shadow-xs">
+                                className="text-xs px-3 py-1.5 rounded-lg border border-slate-300 bg-[var(--color-surface)] text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors min-h-[32px] inline-flex items-center font-medium shadow-xs">
                                 ดูรายละเอียด
                               </button>
                             )}
                             {!notif.read && (
                               <button type="button" onClick={() => markRead(notif.id)}
-                                className="text-xs px-3 py-1.5 rounded-lg border border-amber-300 bg-amber-100 text-amber-800 hover:bg-amber-200 transition-colors min-h-[32px] inline-flex items-center font-semibold">
+                                className="text-xs px-3 py-1.5 rounded-lg border border-[var(--color-amber)] bg-[var(--color-amber-glow)] text-[var(--color-amber)] hover:bg-[var(--color-amber-glow)] transition-colors min-h-[32px] inline-flex items-center font-semibold">
                                 อ่านแล้ว
                               </button>
                             )}
@@ -2130,7 +2130,7 @@ function ManagerDashboard({
                   }
                   return true;
                 }).map((sess) => (
-                  <button type="button" key={sess.id} onClick={() => setSelectedSession(sess)} className="w-full text-left p-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50/70 hover:border-slate-300 transition-all focus-visible:outline-2 focus-visible:outline-emerald-600 shadow-xs">
+                  <button type="button" key={sess.id} onClick={() => setSelectedSession(sess)} className="w-full text-left p-4 rounded-xl border border-slate-200 bg-[var(--color-surface)] hover:bg-slate-50/70 hover:border-slate-300 transition-all focus-visible:outline-2 focus-visible:outline-emerald-600 shadow-xs">
                     <div className="flex items-center justify-between">
                       <div>
                         <div className="flex items-center gap-2 mb-1 flex-wrap">
@@ -2156,7 +2156,7 @@ function ManagerDashboard({
             <div className="space-y-6">
               {/* Permission Banner or Add position form */}
               {!canManagePositions ? (
-                <div className="bg-amber-50/80 border border-amber-200 rounded-xl p-3.5 text-xs text-amber-900 flex items-center gap-2">
+                <div className="bg-[var(--color-amber-glow)]/80 border border-[var(--color-amber)] rounded-xl p-3.5 text-xs text-[var(--color-amber)] flex items-center gap-2">
                   <span>ผู้ช่วยผู้จัดการร้านสามารถตรวจสอบเกณฑ์เช็คลิสต์ของแต่ละตำแหน่งได้ แต่<strong>ไม่สามารถเพิ่มหรือลบตำแหน่งได้</strong> (สงวนสิทธิ์เฉพาะผู้จัดการร้านและกรรมการ)</span>
                 </div>
               ) : (
@@ -2170,13 +2170,13 @@ function ManagerDashboard({
                       value={newPositionName}
                       onChange={(e) => setNewPositionName(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && handleAddPosition()}
-                      className="flex-1 bg-white border border-slate-400 rounded-lg px-3.5 py-2 text-sm text-slate-900 placeholder:text-slate-500 focus:border-emerald-600 focus-visible:outline-2 focus-visible:outline-emerald-700 transition-colors"
+                      className="flex-1 bg-[var(--color-surface)] border border-slate-400 rounded-lg px-3.5 py-2 text-sm text-slate-900 placeholder:text-slate-500 focus:border-emerald-600 focus-visible:outline-2 focus-visible:outline-emerald-700 transition-colors"
                     />
                     <button
                       type="button"
                       onClick={handleAddPosition}
                       disabled={!newPositionName.trim()}
-                      className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-lg shadow-sm transition-colors flex items-center justify-center gap-1.5 min-h-[38px]"
+                      className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-[var(--color-brown)] text-sm font-semibold rounded-lg shadow-sm transition-colors flex items-center justify-center gap-1.5 min-h-[38px]"
                     >
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                         <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
@@ -2211,7 +2211,7 @@ function ManagerDashboard({
                       return (
                         <div
                           key={pos.id}
-                          className="flex items-center justify-between p-3.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50/60 transition-colors shadow-2xs"
+                          className="flex items-center justify-between p-3.5 rounded-xl border border-slate-200 bg-[var(--color-surface)] hover:bg-slate-50/60 transition-colors shadow-2xs"
                         >
                           <div className="flex items-center gap-2.5">
                             <div className="w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700 flex-shrink-0">
@@ -2266,7 +2266,7 @@ function ManagerDashboard({
             aria-modal="true"
             aria-labelledby="add-staff-modal-title"
             tabIndex={-1}
-            className="bg-white border border-slate-200 rounded-2xl w-full max-w-md shadow-2xl p-6 sm:p-7 space-y-4"
+            className="bg-[var(--color-surface)] border border-slate-200 rounded-2xl w-full max-w-md shadow-2xl p-6 sm:p-7 space-y-4"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between pb-3 border-b border-slate-200">
@@ -2293,7 +2293,7 @@ function ManagerDashboard({
                   placeholder="เช่น สมศรี ใจดี"
                   value={newStaffForm.name}
                   onChange={(e) => setNewStaffForm({ ...newStaffForm, name: e.target.value })}
-                  className="w-full bg-slate-50 border border-slate-400 rounded-lg px-3.5 py-2 text-sm text-slate-900 placeholder:text-slate-500 focus:border-emerald-600 focus:bg-white focus-visible:outline-2 focus-visible:outline-emerald-700"
+                  className="w-full bg-slate-50 border border-slate-400 rounded-lg px-3.5 py-2 text-sm text-slate-900 placeholder:text-slate-500 focus:border-emerald-600 focus:bg-[var(--color-surface)] focus-visible:outline-2 focus-visible:outline-emerald-700"
                 />
               </div>
 
@@ -2304,7 +2304,7 @@ function ManagerDashboard({
                   placeholder="name@factory.com"
                   value={newStaffForm.email}
                   onChange={(e) => setNewStaffForm({ ...newStaffForm, email: e.target.value })}
-                  className="w-full bg-slate-50 border border-slate-400 rounded-lg px-3.5 py-2 text-sm text-slate-900 placeholder:text-slate-500 focus:border-emerald-600 focus:bg-white focus-visible:outline-2 focus-visible:outline-emerald-700"
+                  className="w-full bg-slate-50 border border-slate-400 rounded-lg px-3.5 py-2 text-sm text-slate-900 placeholder:text-slate-500 focus:border-emerald-600 focus:bg-[var(--color-surface)] focus-visible:outline-2 focus-visible:outline-emerald-700"
                 />
               </div>
 
@@ -2315,7 +2315,7 @@ function ManagerDashboard({
                   placeholder="รหัสผ่านเข้าสู่ระบบ"
                   value={newStaffForm.password}
                   onChange={(e) => setNewStaffForm({ ...newStaffForm, password: e.target.value })}
-                  className="w-full bg-slate-50 border border-slate-400 rounded-lg px-3.5 py-2 text-sm text-slate-900 placeholder:text-slate-500 focus:border-emerald-600 focus:bg-white focus-visible:outline-2 focus-visible:outline-emerald-700"
+                  className="w-full bg-slate-50 border border-slate-400 rounded-lg px-3.5 py-2 text-sm text-slate-900 placeholder:text-slate-500 focus:border-emerald-600 focus:bg-[var(--color-surface)] focus-visible:outline-2 focus-visible:outline-emerald-700"
                 />
               </div>
 
@@ -2325,7 +2325,7 @@ function ManagerDashboard({
                   <select
                     value={newStaffForm.position}
                     onChange={(e) => setNewStaffForm({ ...newStaffForm, position: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-400 rounded-lg px-3.5 py-2 text-sm text-slate-900 focus:border-emerald-600 focus:bg-white focus-visible:outline-2 focus-visible:outline-emerald-700 cursor-pointer"
+                    className="w-full bg-slate-50 border border-slate-400 rounded-lg px-3.5 py-2 text-sm text-slate-900 focus:border-emerald-600 focus:bg-[var(--color-surface)] focus-visible:outline-2 focus-visible:outline-emerald-700 cursor-pointer"
                   >
                     <option value="">-- ยังไม่กำหนดตำแหน่ง (กำหนดภายหลังได้) --</option>
                     {positions.map((p) => (
@@ -2337,7 +2337,7 @@ function ManagerDashboard({
                 ) : (
                   <div className="w-full bg-slate-100 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-slate-500 flex items-center justify-between">
                     <span>รอผู้จัดการกำหนดตำแหน่ง</span>
-                    <span className="text-[10px] text-amber-700 font-semibold bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">ผู้ช่วยไม่สามารถเลือกตำแหน่งได้</span>
+                    <span className="text-[10px] text-amber-700 font-semibold bg-[var(--color-amber-glow)] border border-[var(--color-amber)] px-1.5 py-0.5 rounded">ผู้ช่วยไม่สามารถเลือกตำแหน่งได้</span>
                   </div>
                 )}
               </div>
@@ -2354,7 +2354,7 @@ function ManagerDashboard({
               <button
                 type="button"
                 onClick={handleAddStaff}
-                className="flex-1 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-sm transition-colors"
+                className="flex-1 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-[var(--color-brown)] text-xs font-semibold shadow-sm transition-colors"
               >
                 บันทึกพนักงาน
               </button>
@@ -2369,7 +2369,7 @@ function ManagerDashboard({
           onClick={() => setSelectedSession(null)}
           onKeyDown={handleSessionKeyDown}>
           <div ref={sessionDialogRef} role="dialog" aria-modal="true" aria-labelledby="session-detail-title" tabIndex={-1}
-            className="bg-white border border-slate-200 rounded-2xl w-full max-w-lg max-h-[85vh] overflow-y-auto shadow-2xl p-6 sm:p-8 focus-visible:outline-2 focus-visible:outline-emerald-700"
+            className="bg-[var(--color-surface)] border border-slate-200 rounded-2xl w-full max-w-lg max-h-[85vh] overflow-y-auto shadow-2xl p-6 sm:p-8 focus-visible:outline-2 focus-visible:outline-emerald-700"
             onClick={(e) => e.stopPropagation()}>
             <div>
               <div className="flex items-center justify-between mb-4">
@@ -2396,7 +2396,7 @@ function ManagerDashboard({
                         <p className="text-[11px] font-bold text-slate-700 pt-2 pb-0.5">{item.category}</p>
                       )}
                       <div className={`flex items-start gap-3 p-3 rounded-lg border ${item.completedAt ? "bg-emerald-50/60 border-emerald-200" : "bg-slate-50/70 border-slate-200"}`}>
-                        <div className={`mt-0.5 w-4 h-4 rounded-full border flex items-center justify-center flex-shrink-0 ${item.completedAt ? "border-emerald-600 bg-emerald-600" : "border-slate-400 bg-white"}`}>
+                        <div className={`mt-0.5 w-4 h-4 rounded-full border flex items-center justify-center flex-shrink-0 ${item.completedAt ? "border-emerald-600 bg-emerald-600" : "border-slate-400 bg-[var(--color-surface)]"}`}>
                           {item.completedAt && <svg width="8" height="8" viewBox="0 0 10 10" fill="none" aria-hidden="true"><path d="M2 5l2.5 2.5L8 3" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>}
                         </div>
                         <div className="flex-1">
@@ -2444,21 +2444,21 @@ function ManagerDashboard({
 // ─── Awaiting Assignment Page ─────────────────────────────────────────────────────
 function AwaitingAssignmentPage({ onLogout }: { onLogout: () => void }) {
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen bg-[var(--color-surface)] flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-sm bg-slate-900 border border-slate-800 rounded-2xl p-8 sm:p-10 shadow-2xl text-center">
         <div className="w-16 h-16 rounded-full bg-amber-950 border border-amber-800 text-amber-400 mx-auto flex items-center justify-center mb-6">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
           </svg>
         </div>
-        <h2 className="text-lg font-bold text-white mb-3">รอการกำหนดสาขา</h2>
+        <h2 className="text-lg font-bold text-[var(--color-brown)] mb-3">รอการกำหนดสาขา</h2>
         <p className="text-sm text-slate-400 mb-8 leading-relaxed">
           บัญชีของคุณยังไม่ได้ถูกกำหนดให้อยู่ในสาขาใด ๆ กรุณาติดต่อผู้ดูแลระบบ (Admin) เพื่อทำการกำหนดสาขาก่อนเข้าใช้งาน
         </p>
         <button
           type="button"
           onClick={onLogout}
-          className="w-full py-3 px-4 rounded-xl font-bold bg-slate-800 text-white hover:bg-slate-700 transition-colors shadow-lg cursor-pointer focus-visible:outline-2 focus-visible:outline-indigo-500"
+          className="w-full py-3 px-4 rounded-xl font-bold bg-slate-800 text-[var(--color-brown)] hover:bg-slate-700 transition-colors shadow-lg cursor-pointer focus-visible:outline-2 focus-visible:outline-indigo-500"
         >
           กลับสู่หน้าล็อกอิน
         </button>
@@ -2562,10 +2562,10 @@ export default function App() {
 
   return (
     <>
-      <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:px-4 focus:py-2 focus:bg-emerald-700 focus:text-white focus:font-bold focus:rounded-lg focus:shadow-lg focus-visible:outline-2 focus-visible:outline-emerald-950 focus:ring-2 focus:ring-emerald-700">
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:px-4 focus:py-2 focus:bg-emerald-700 focus:text-[var(--color-brown)] focus:font-bold focus:rounded-lg focus:shadow-lg focus-visible:outline-2 focus-visible:outline-emerald-950 focus:ring-2 focus:ring-emerald-700">
         ข้ามไปยังเนื้อหาหลัก
       </a>
-      <main id="main-content" tabIndex={-1} className="min-h-screen bg-white text-slate-900 focus-visible:outline-none">
+      <main id="main-content" tabIndex={-1} className="min-h-screen bg-[var(--color-surface)] text-slate-900 focus-visible:outline-none">
         {page === "auth" && (
           authView === "admin" ? (
             <SystemAdminAuthPage onLogin={handleLogin} onSwitchToStaff={() => setAuthView("staff")} />

@@ -96,12 +96,12 @@ export function StaffAuthPage({
   }
 
   const inp =
-    "w-full bg-slate-950 hover:bg-slate-900 focus:bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-xl px-4 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus-visible:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all";
+    "w-full bg-[var(--color-surface)] hover:bg-slate-900 focus:bg-[var(--color-surface)] border border-slate-800 focus:border-indigo-500 rounded-xl px-4 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus-visible:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all";
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-center px-4 py-8 sm:py-12 relative overflow-hidden">
+    <div className="min-h-screen bg-[var(--color-surface)] text-slate-100 flex flex-col items-center justify-center px-4 py-8 sm:py-12 relative overflow-hidden">
       {/* Subtle Ambient Brand Glow */}
-      <div className="absolute top-1/4 -left-20 w-72 h-72 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" aria-hidden="true" />
+      <div className="absolute top-1/4 -left-20 w-72 h-72 bg-[var(--color-amber-glow)]0/10 rounded-full blur-3xl pointer-events-none" aria-hidden="true" />
       <div className="absolute bottom-1/4 -right-20 w-72 h-72 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" aria-hidden="true" />
 
       <div className="w-full max-w-[400px] bg-slate-900/90 backdrop-blur-md border border-slate-800 rounded-2xl p-7 sm:p-8 shadow-2xl space-y-5 relative z-10">
@@ -114,7 +114,7 @@ export function StaffAuthPage({
         <div
           role="tablist"
           aria-label="ตัวเลือกการเข้าสู่ระบบ"
-          className="flex bg-slate-950 p-1 rounded-xl mb-5 border border-slate-800 gap-1"
+          className="flex bg-[var(--color-surface)] p-1 rounded-xl mb-5 border border-slate-800 gap-1"
         >
           {[
             { id: "staff" as AuthTab, label: "เข้าสู่ระบบพนักงาน" },
@@ -133,7 +133,7 @@ export function StaffAuthPage({
                 setError("");
               }}
               className={`flex-1 py-2 min-h-[36px] text-xs font-semibold rounded-lg transition-all cursor-pointer text-center ${tab === t.id
-                ? "bg-indigo-600 text-white shadow-md font-bold"
+                ? "bg-indigo-600 text-[var(--color-brown)] shadow-md font-bold"
                 : "text-slate-400 hover:text-slate-200"
                 }`}
             >
@@ -216,10 +216,10 @@ export function StaffAuthPage({
                 onChange={(e) => setForm({ ...form, role: e.target.value as any })}
                 className={inp}
               >
-                <option value="employee" className="bg-slate-900 text-white">พนักงานทั่วไป (แคชเชียร์ / สต็อก)</option>
-                <option value="manager_assistant" className="bg-slate-900 text-white">ผู้ช่วยผู้จัดการร้าน (Assistant Manager)</option>
-                <option value="manager" className="bg-slate-900 text-white">ผู้จัดการร้าน (Store Manager)</option>
-                <option value="committee" className="bg-slate-900 text-white">กรรมการบริหาร (Executive Committee)</option>
+                <option value="employee" className="bg-slate-900 text-[var(--color-brown)]">พนักงานทั่วไป (แคชเชียร์ / สต็อก)</option>
+                <option value="manager_assistant" className="bg-slate-900 text-[var(--color-brown)]">ผู้ช่วยผู้จัดการร้าน (Assistant Manager)</option>
+                <option value="manager" className="bg-slate-900 text-[var(--color-brown)]">ผู้จัดการร้าน (Store Manager)</option>
+                <option value="committee" className="bg-slate-900 text-[var(--color-brown)]">กรรมการบริหาร (Executive Committee)</option>
               </select>
             </div>
           )}
@@ -240,7 +240,7 @@ export function StaffAuthPage({
             type="button"
             disabled={loading}
             onClick={tab === "register" ? handleRegister : handleLogin}
-            className={`w-full py-2.5 text-white text-sm font-semibold rounded-xl shadow-lg transition-all mt-3 cursor-pointer flex items-center justify-center gap-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 shadow-indigo-950/50 ${loading ? "opacity-70 cursor-not-allowed" : ""}`}
+            className={`w-full py-2.5 text-[var(--color-brown)] text-sm font-semibold rounded-xl shadow-lg transition-all mt-3 cursor-pointer flex items-center justify-center gap-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 shadow-indigo-950/50 ${loading ? "opacity-70 cursor-not-allowed" : ""}`}
           >
             <span>
               {loading

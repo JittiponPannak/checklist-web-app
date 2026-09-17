@@ -16,11 +16,11 @@ export default function Error({
   }, [error]);
 
   return (
-    <div className="min-h-screen bg-[#FFFDF9] text-[#2B1413] flex items-center justify-center p-4 relative overflow-hidden font-sans">
+    <div className="min-h-screen bg-[var(--color-background)] text-[var(--color-text)] flex items-center justify-center p-4 relative overflow-hidden font-sans">
       {/* Ambient background glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-rose-200/20 rounded-full blur-3xl pointer-events-none" aria-hidden="true" />
 
-      <div className="w-full max-w-md bg-white border border-[#EADBCE] rounded-2xl p-6 sm:p-8 text-center shadow-lg relative z-10">
+      <div className="w-full max-w-md bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-6 sm:p-8 text-center shadow-lg relative z-10">
         <div className="mb-4 flex justify-center">
           <BrandLogo size={44} showText={false} isDark={false} />
         </div>
@@ -31,21 +31,21 @@ export default function Error({
             <line x1="12" y1="16" x2="12.01" y2="16" />
           </svg>
         </div>
-        <h1 className="text-xl font-bold text-[#2B1413] mb-2">เกิดข้อผิดพลาดในการทำงาน</h1>
-        <p className="text-xs sm:text-sm text-[#78483B] mb-6">
+        <h1 className="text-xl font-bold text-[var(--color-text)] mb-2">เกิดข้อผิดพลาดในการทำงาน</h1>
+        <p className="text-xs sm:text-sm text-[var(--color-text-muted)] mb-6">
           ระบบไม่สามารถโหลดข้อมูลหน้านี้ได้ กรุณาลองใหม่อีกครั้ง หรือกลับไปยังหน้าหลัก
         </p>
         <div className="flex flex-col sm:flex-row gap-2.5">
           <button
             type="button"
             onClick={() => reset()}
-            className="flex-1 py-2.5 rounded-xl bg-[#2B1413] hover:bg-[#442220] text-amber-300 text-xs sm:text-sm font-semibold transition-colors cursor-pointer shadow-sm"
+            className="flex-1 py-2.5 rounded-xl bg-[var(--color-brown)] hover:bg-[var(--color-brown-light)] text-amber-300 text-xs sm:text-sm font-semibold transition-colors cursor-pointer shadow-sm"
           >
             ลองใหม่อีกครั้ง
           </button>
           <Link
             href="/"
-            className="flex-1 py-2.5 rounded-xl border border-[#EADBCE] bg-[#FAF4EC] hover:bg-[#F2E7DC] text-[#2B1413] text-xs sm:text-sm font-semibold transition-colors flex items-center justify-center"
+            className="flex-1 py-2.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-2)] hover:bg-[#F2E7DC] text-[var(--color-text)] text-xs sm:text-sm font-semibold transition-colors flex items-center justify-center"
           >
             กลับสู่หน้าหลัก
           </Link>
