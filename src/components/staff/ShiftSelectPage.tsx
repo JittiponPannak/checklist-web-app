@@ -110,19 +110,19 @@ export function ShiftSelectPage({
   const hasSelection = chosenShift !== null;
 
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between px-4 py-6 sm:py-10 relative overflow-hidden">
+    <main className="min-h-screen bg-[#FFFDF9] text-[#2B1413] flex flex-col justify-between px-4 py-6 sm:py-10 relative overflow-hidden">
       {/* Ambient Brand Glow */}
-      <div className="absolute top-10 left-1/2 -translate-x-1/2 w-96 h-96 bg-indigo-900/20 rounded-full blur-3xl pointer-events-none" aria-hidden="true" />
+      <div className="absolute top-10 left-1/2 -translate-x-1/2 w-96 h-96 bg-amber-200/20 rounded-full blur-3xl pointer-events-none" aria-hidden="true" />
       {showConfetti && <Confetti />}
 
       {/* Clean Top Profile Bar */}
-      <header className="w-full max-w-4xl mx-auto mb-6 flex items-center justify-between gap-4 p-4 bg-slate-900/90 backdrop-blur-sm border border-slate-800 rounded-2xl shadow-xl relative z-10">
+      <header className="w-full max-w-4xl mx-auto mb-6 flex items-center justify-between gap-4 p-4 bg-white border border-[#EADBCE] rounded-2xl shadow-sm relative z-10">
         <div className="flex items-center gap-3">
           {onBack && (
             <button
               type="button"
               onClick={onBack}
-              className="w-9 h-9 rounded-xl border border-slate-800 hover:bg-slate-800 flex items-center justify-center text-slate-300 transition-all cursor-pointer"
+              className="w-9 h-9 rounded-xl border border-[#EADBCE] hover:bg-[#FAF4EC] flex items-center justify-center text-[#78483B] transition-all cursor-pointer"
               title="ย้อนกลับไปเลือกตำแหน่ง"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -130,21 +130,21 @@ export function ShiftSelectPage({
               </svg>
             </button>
           )}
-          <BrandLogo size={36} showText={true} isDark={true} />
+          <BrandLogo size={36} showText={true} isDark={false} />
         </div>
 
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 text-right hidden sm:flex">
             <div>
               {user.branchName && (
-                <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-0.5 leading-none">
+                <p className="text-[10px] font-bold text-amber-700 uppercase tracking-widest mb-0.5 leading-none">
                   {user.branchName}
                 </p>
               )}
-              <p className="text-xs font-bold text-white leading-tight">{user.name}</p>
-              <p className="text-[11px] text-slate-400 font-medium">{user.position || "พนักงานสาขา"}</p>
+              <p className="text-xs font-bold text-[#2B1413] leading-tight">{user.name}</p>
+              <p className="text-[11px] text-[#78483B] font-medium">{user.position || "พนักงานสาขา"}</p>
             </div>
-            <div className="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-md">
+            <div className="w-9 h-9 rounded-xl bg-[#2B1413] text-amber-300 flex items-center justify-center font-bold text-xs shadow-xs">
               {user.name.slice(0, 2)}
             </div>
           </div>
@@ -152,7 +152,7 @@ export function ShiftSelectPage({
           <button
             type="button"
             onClick={onLogout}
-            className="text-xs text-slate-400 hover:text-rose-400 hover:bg-rose-950/40 hover:border-rose-900 transition-all px-3 py-1.5 rounded-xl border border-slate-800 font-semibold cursor-pointer min-h-[36px]"
+            className="text-xs text-[#78483B] hover:text-rose-700 hover:bg-rose-50 hover:border-rose-200 transition-all px-3 py-1.5 rounded-xl border border-[#EADBCE] font-semibold cursor-pointer min-h-[36px]"
           >
             ออกจากระบบ
           </button>
@@ -163,14 +163,14 @@ export function ShiftSelectPage({
       <div className="w-full max-w-3xl mx-auto flex-1 flex flex-col items-center justify-center py-4 relative z-10">
         {/* Step Indicator & Title */}
         <div className="text-center mb-8">
-          <span className="inline-block text-[11px] font-bold text-indigo-400 tracking-wider uppercase bg-indigo-950/80 border border-indigo-800/80 px-3 py-1 rounded-full mb-3 shadow-2xs">
+          <span className="inline-block text-[11px] font-bold text-[#2B1413] tracking-wider uppercase bg-amber-100 border border-amber-300 px-3 py-1 rounded-full mb-3 shadow-2xs">
             ขั้นตอนที่ 2 จาก 2 • เลือกกะการทำงาน
           </span>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-[#2B1413] tracking-tight">
             เลือกกะการทำงาน
           </h2>
-          <p className="text-xs sm:text-sm text-slate-400 mt-1 max-w-md mx-auto">
-            ติ๊กเลือกกะที่ต้องการปฏิบัติงานสำหรับตำแหน่ง <span className="font-bold text-white">{user.position || "พนักงาน"}</span>
+          <p className="text-xs sm:text-sm text-[#78483B] mt-1 max-w-md mx-auto">
+            ติ๊กเลือกกะที่ต้องการปฏิบัติงานสำหรับตำแหน่ง <span className="font-bold text-[#2B1413]">{user.position || "พนักงาน"}</span>
           </p>
         </div>
 
@@ -230,11 +230,11 @@ export function ShiftSelectPage({
 
             const containerTheme = isDisabled
               ? checkStatus === "completed"
-                ? "border-emerald-900/40 bg-emerald-950/20 opacity-75"
-                : "border-slate-800 bg-slate-900/50 opacity-50"
+                ? "border-emerald-200 bg-emerald-50/50 opacity-80"
+                : "border-[#EADBCE] bg-[#FAF4EC]/60 opacity-50"
               : isChecked
-                ? "border-indigo-500 bg-indigo-950/30 ring-2 ring-indigo-500/50 shadow-[0_12px_28px_-6px_rgba(99,102,241,0.3)]"
-                : "border-slate-800 bg-slate-900/90 hover:border-slate-700 hover:bg-slate-900/95";
+                ? "border-amber-400 bg-amber-50/40 ring-2 ring-amber-400/40 shadow-md"
+                : "border-[#EADBCE] bg-white hover:border-amber-300 hover:bg-[#FFFDF9]";
 
             return (
               <div
@@ -250,7 +250,7 @@ export function ShiftSelectPage({
                     toggleSelect();
                   }
                 }}
-                className={`group border rounded-2xl p-6 shadow-xl ${containerTheme} focus-visible:outline-none focus:ring-2 focus:ring-indigo-500 ${isDisabled ? "cursor-not-allowed" : "hover:-translate-y-1 cursor-pointer"} transition-all duration-200 flex flex-col justify-between relative overflow-hidden`}
+                className={`group border rounded-2xl p-6 shadow-sm ${containerTheme} focus-visible:outline-none focus:ring-2 focus:ring-amber-400 ${isDisabled ? "cursor-not-allowed" : "hover:-translate-y-1 cursor-pointer"} transition-all duration-200 flex flex-col justify-between relative overflow-hidden`}
               >
                 <div>
                   {/* Top Header inside Card: Checkbox & Shift Icon / Badges */}
@@ -259,10 +259,10 @@ export function ShiftSelectPage({
                     <div className="flex items-center gap-3">
                       <div
                         className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all duration-200 ${isChecked
-                          ? "bg-indigo-600 border-indigo-500 text-white shadow-md shadow-indigo-900/50 scale-105"
+                          ? "bg-amber-500 border-amber-500 text-white shadow-sm scale-105"
                           : isDisabled && checkStatus === "completed"
-                            ? "bg-emerald-900/50 border-emerald-800 text-emerald-400"
-                            : "bg-slate-950 border-slate-600 group-hover:border-slate-400"
+                            ? "bg-emerald-500 border-emerald-500 text-white"
+                            : "bg-white border-[#C9B29F] group-hover:border-amber-400"
                           }`}
                       >
                         {(isChecked || (isDisabled && checkStatus === "completed")) && (
@@ -271,28 +271,28 @@ export function ShiftSelectPage({
                           </svg>
                         )}
                       </div>
-                      <span className={`text-sm font-bold transition-colors ${isChecked ? "text-indigo-300" : isDisabled ? (checkStatus === "completed" ? "text-emerald-500" : "text-slate-500") : "text-slate-400"}`}>
+                      <span className={`text-sm font-bold transition-colors ${isChecked ? "text-[#2B1413]" : isDisabled ? (checkStatus === "completed" ? "text-emerald-700" : "text-[#A88B77]") : "text-[#78483B]"}`}>
                         {isChecked ? "เลือกแล้ว" : isDisabled ? (checkStatus === "completed" ? "ทำเสร็จแล้ว" : isLoading ? "กำลังโหลด..." : "ไม่สามารถเลือกได้") : "แตะเพื่อเลือก"}
                       </span>
                     </div>
 
                     <div className="flex items-center gap-1.5 flex-wrap justify-end">
                       {checkStatus === "completed" ? (
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800 flex items-center gap-1">
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
                           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
                             <polyline points="20 6 9 17 4 12" />
                           </svg>
                           <span>เสร็จสมบูรณ์</span>
                         </span>
                       ) : checkStatus === "incomplete" ? (
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-950 text-amber-400 border border-amber-800 flex items-center gap-1">
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 flex items-center gap-1">
                           <span>ค้าง {totalItems - doneItems} ข้อ</span>
                         </span>
                       ) : null}
 
                       {s.isCurrent && (
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-600 text-white font-mono shadow-xs flex items-center gap-1">
-                          <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" aria-hidden="true" />
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-400 text-[#2B1413] font-mono shadow-xs flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#2B1413] animate-pulse" aria-hidden="true" />
                           เวลานี้
                         </span>
                       )}
@@ -302,8 +302,8 @@ export function ShiftSelectPage({
                   {/* Title & Icon Header */}
                   <div className="flex items-start gap-3.5 mb-2">
                     <div className={`w-12 h-12 rounded-2xl border flex items-center justify-center shrink-0 transition-all ${isMorn
-                      ? (isChecked ? "bg-amber-500/20 border-amber-500/50 text-amber-400" : "bg-slate-950 border-slate-800 text-amber-400")
-                      : (isChecked ? "bg-sky-500/20 border-sky-500/50 text-sky-400" : "bg-slate-950 border-slate-800 text-sky-400")
+                      ? "bg-[#FAF4EC] border-[#EADBCE] text-amber-600"
+                      : "bg-[#FAF4EC] border-[#EADBCE] text-amber-600"
                       }`}>
                       {isMorn ? (
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -318,10 +318,10 @@ export function ShiftSelectPage({
                     </div>
 
                     <div>
-                      <h3 className="text-2xl font-extrabold text-white tracking-tight flex items-center gap-2">
+                      <h3 className="text-2xl font-extrabold text-[#2B1413] tracking-tight flex items-center gap-2">
                         {s.title}
                       </h3>
-                      <p className="text-xs font-semibold text-slate-400 mt-0.5 font-mono flex items-center gap-1.5">
+                      <p className="text-xs font-semibold text-[#78483B] mt-0.5 font-mono flex items-center gap-1.5">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                           <circle cx="12" cy="12" r="10" />
                           <polyline points="12 6 12 12 16 14" />
@@ -331,18 +331,18 @@ export function ShiftSelectPage({
                     </div>
                   </div>
 
-                  <p className="text-xs text-slate-400 mt-3 leading-relaxed">
+                  <p className="text-xs text-[#78483B] mt-3 leading-relaxed">
                     {s.tagline}
                   </p>
                 </div>
 
-                <div className="mt-5 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400 font-medium">
+                <div className="mt-5 pt-3 border-t border-[#EADBCE] flex items-center justify-between text-xs text-[#78483B] font-medium">
                   <span>{s.subTitle}</span>
                   {checkStatus === "completed" && (
-                    <span className="text-emerald-400 font-mono text-[11px] font-bold">เช็คแล้ว ({doneItems}/{totalItems})</span>
+                    <span className="text-emerald-700 font-mono text-[11px] font-bold">เช็คแล้ว ({doneItems}/{totalItems})</span>
                   )}
                   {checkStatus === "incomplete" && (
-                    <span className="text-amber-400 font-mono text-[11px] font-bold">ค้าง ({totalItems - doneItems})</span>
+                    <span className="text-amber-800 font-mono text-[11px] font-bold">ค้าง ({totalItems - doneItems})</span>
                   )}
                 </div>
               </div>
@@ -353,15 +353,15 @@ export function ShiftSelectPage({
         {/* Selected Shifts Summary Text */}
         <div className="w-full text-center mb-6 min-h-[32px] flex items-center justify-center">
           {chosenShift === "morning" ? (
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-900 border border-slate-800 text-slate-300 text-xs sm:text-sm font-medium">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-[#EADBCE] text-[#2B1413] text-xs sm:text-sm font-medium shadow-xs">
               <span>เลือกเฉพาะ: กะเช้า (06:00 - 16:30)</span>
             </div>
           ) : chosenShift === "afternoon" ? (
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-900 border border-slate-800 text-slate-300 text-xs sm:text-sm font-medium">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-[#EADBCE] text-[#2B1413] text-xs sm:text-sm font-medium shadow-xs">
               <span>เลือกเฉพาะ: กะบ่าย (10:00 - 20:30)</span>
             </div>
           ) : (
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-rose-950/50 border border-rose-900/50 text-rose-300 text-xs font-medium">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-50 border border-amber-300 text-amber-800 text-xs font-medium">
               <span>กรุณาติ๊กเลือก 1 กะการทำงาน</span>
             </div>
           )}
@@ -373,9 +373,9 @@ export function ShiftSelectPage({
             type="button"
             disabled={!hasSelection}
             onClick={handleStartWork}
-            className={`w-full py-3.5 px-6 rounded-xl font-bold text-sm sm:text-base shadow-xl transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer ${hasSelection
-              ? "bg-indigo-600 hover:bg-indigo-500 text-white shadow-indigo-950/60 hover:shadow-indigo-900/80 hover:-translate-y-0.5 active:translate-y-0"
-              : "bg-slate-800 text-slate-500 border border-slate-700/50 cursor-not-allowed opacity-60"
+            className={`w-full py-3.5 px-6 rounded-xl font-bold text-sm sm:text-base shadow-md transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer ${hasSelection
+              ? "bg-[#2B1413] hover:bg-[#442220] text-amber-300 hover:-translate-y-0.5 active:translate-y-0"
+              : "bg-[#FAF4EC] text-[#A88B77] border border-[#EADBCE] cursor-not-allowed opacity-60"
               }`}
           >
             <span>เริ่มตรวจงาน</span>
@@ -391,7 +391,7 @@ export function ShiftSelectPage({
             <button
               type="button"
               onClick={onBack}
-              className="text-xs text-slate-400 hover:text-white font-semibold inline-flex items-center gap-1.5 transition-colors cursor-pointer"
+              className="text-xs text-[#78483B] hover:text-[#2B1413] font-semibold inline-flex items-center gap-1.5 transition-colors cursor-pointer"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M19 12H5M12 19l-7-7 7-7" />
@@ -400,7 +400,7 @@ export function ShiftSelectPage({
             </button>
           )}
 
-          {onBack && <span className="text-slate-600 hidden sm:inline" aria-hidden="true">•</span>}
+          {onBack && <span className="text-[#C9B29F] hidden sm:inline" aria-hidden="true">•</span>}
 
           <button
             type="button"
@@ -413,7 +413,7 @@ export function ShiftSelectPage({
                 window.location.reload();
               }
             }}
-            className="text-xs text-slate-500 hover:text-rose-400 font-medium inline-flex items-center gap-1.5 transition-colors cursor-pointer"
+            className="text-xs text-[#78483B] hover:text-rose-700 font-medium inline-flex items-center gap-1.5 transition-colors cursor-pointer"
             title="ล้างข้อมูลเช็คลิสต์ทั้งหมดเพื่อเริ่มทดสอบใหม่"
           >
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -425,10 +425,9 @@ export function ShiftSelectPage({
         </div>
       </div>
 
-      <footer className="text-center text-[11px] text-slate-500 font-medium py-2 relative z-10">
+      <footer className="text-center text-[11px] text-[#A88B77] font-medium py-2 relative z-10">
         {user.branchName || "Eater Egg Fresh Mart"} • Checklist System
       </footer>
     </main>
   );
 }
-

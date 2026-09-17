@@ -11,23 +11,23 @@ export function Badge({
 }) {
   const styles = {
     green: {
-      wrap: "bg-emerald-50/90 text-emerald-900 border-emerald-200/90 font-semibold",
-      dot: "bg-emerald-600",
-    },
-    amber: {
-      wrap: "bg-amber-50/90 text-amber-950 border-amber-200/90 font-semibold",
+      wrap: "bg-amber-100 text-[#2B1413] border-amber-300 font-semibold",
       dot: "bg-amber-600",
     },
+    amber: {
+      wrap: "bg-amber-100 text-[#2B1413] border-amber-300 font-semibold",
+      dot: "bg-amber-500",
+    },
     blue: {
-      wrap: "bg-sky-50/90 text-sky-950 border-sky-200/90 font-semibold",
-      dot: "bg-sky-600",
+      wrap: "bg-[#F7EFE9] text-[#78483B] border-[#EADBCE] font-semibold",
+      dot: "bg-[#78483B]",
     },
     muted: {
-      wrap: "bg-slate-100 text-slate-700 border-slate-200 font-medium",
-      dot: "bg-slate-500",
+      wrap: "bg-[#FAF4EC] text-[#78483B] border-[#EADBCE] font-medium",
+      dot: "bg-[#9C6C60]",
     },
     red: {
-      wrap: "bg-rose-50/90 text-rose-900 border-rose-200/90 font-semibold",
+      wrap: "bg-rose-50 text-rose-900 border-rose-200 font-semibold",
       dot: "bg-rose-600",
     },
   }[color];

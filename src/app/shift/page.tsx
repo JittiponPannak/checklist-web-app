@@ -22,8 +22,8 @@ export default function ShiftRoutePage() {
 
   if (!isReady || !currentUser || (currentUser.role === "employee" && !currentUser.position)) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-950">
-        <div className="h-8 w-8 animate-spin rounded-full border-3 border-indigo-500 border-t-transparent" />
+      <div className="min-h-screen flex items-center justify-center bg-[#FFFDF9]">
+        <div className="h-8 w-8 animate-spin rounded-full border-3 border-amber-500 border-t-transparent" />
       </div>
     );
   }

@@ -297,28 +297,28 @@ export function ExecutiveDashboard({
   const roleConfig = {
     manager_assistant: {
       title: "ผู้ช่วยผู้จัดการร้าน (Assistant Manager)",
-      badge: "bg-indigo-50 text-indigo-900 border-indigo-200",
+      badge: "bg-[#FAF2EB] text-[#78483B] border-[#EADBCE]",
       description: "ตรวจสอบความเรียบร้อยหน้างาน รับรองกะพนักงานเบื้องต้น และรายงานสรุป",
       primaryDuty: "ตรวจรับรองกะงานพนักงาน (Morning / Afternoon Sign-off)",
       icon: "📋",
     },
     manager: {
       title: "ผู้จัดการร้าน (Store Manager)",
-      badge: "bg-slate-900 text-white border-slate-900",
+      badge: "bg-[#2B1413] text-amber-300 border-[#2B1413]",
       description: "กำกับดูแลภาพรวมสาขา อนุมัติขั้นสุดท้าย และควบคุมมาตรฐานการปฏิบัติงาน",
       primaryDuty: "อนุมัติขั้นสุดท้าย (Manager Final Approval) & ควบคุมดัชนีร้าน",
       icon: "👔",
     },
     committee: {
       title: "กรรมการบริหาร (Executive Committee)",
-      badge: "bg-amber-100 text-amber-950 border-amber-300 font-bold",
+      badge: "bg-amber-100 text-[#2B1413] border-amber-300 font-bold",
       description: "ตรวจสอบนโยบาย ติดตาม KPI คุณภาพสาขา และดูรายงานสรุปประสิทธิภาพ",
       primaryDuty: "ตรวจสอบดัชนีคุณภาพ (Quality Audit) & สรุปผลการดำเนินงาน",
       icon: "🏛️",
     },
     general_manager: {
       title: "ผู้จัดการทั่วไป (General Manager)",
-      badge: "bg-emerald-100 text-emerald-950 border-emerald-300 font-bold",
+      badge: "bg-amber-300 text-[#2B1413] border-amber-400 font-bold",
       description: "บริหารระดับสูง กำหนดทิศทาง ระเบียบปฏิบัติของทุกสาขา มีอำนาจสูงสุดคล้ายกรรมการบริหาร",
       primaryDuty: "ตรวจสอบดัชนีภาพรวม และติดตามความก้าวหน้า",
       icon: "🌟",
@@ -470,22 +470,22 @@ export function ExecutiveDashboard({
   });
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 pb-16 font-sans">
+    <div className="min-h-screen bg-[#FFFDF9] text-[#2B1413] pb-16 font-sans">
       {/* ─── Top Brand Navigation Bar ────────────────────────────────────────────── */}
-      <nav className="bg-slate-900/90 backdrop-blur-md border-b border-slate-800 sticky top-0 z-30 shadow-xl">
+      <nav className="bg-white/95 backdrop-blur-md border-b border-[#EADBCE] sticky top-0 z-30 shadow-xs">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3.5">
-            <BrandLogo size={36} showText={false} isDark={true} />
+            <BrandLogo size={40} showText={false} isDark={false} />
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-extrabold text-sm sm:text-base text-white tracking-tight">
+                <span className="font-extrabold text-sm sm:text-base text-[#2B1413] tracking-tight">
                   Eater Egg Fresh Mart
                 </span>
-                <span className="hidden sm:inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-800 text-slate-300 border border-slate-700">
+                <span className="hidden sm:inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#FAF2EB] text-[#78483B] border border-[#EADBCE]">
                   {user.branchName || "ไม่ได้ระบุสาขา"}
                 </span>
               </div>
-              <p className="text-[11px] text-slate-400 hidden sm:block">
+              <p className="text-[11px] text-[#78483B] hidden sm:block">
                 ระบบกำกับดูแลและตรวจสอบมาตรฐานงานสาขา (Operations & Audit Portal)
               </p>
             </div>
@@ -497,7 +497,7 @@ export function ExecutiveDashboard({
               <button
                 type="button"
                 onClick={() => setActiveTab("overview")}
-                className="p-2 text-slate-300 hover:text-white hover:bg-slate-800 rounded-xl transition-all relative cursor-pointer"
+                className="p-2 text-[#78483B] hover:text-[#2B1413] hover:bg-[#FAF4EC] rounded-xl transition-all relative cursor-pointer"
                 title="การแจ้งเตือนงานสาขา"
               >
                 <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -505,7 +505,7 @@ export function ExecutiveDashboard({
                   <path d="M13.73 21a2 2 0 0 1-3.46 0" />
                 </svg>
                 {unreadCount > 0 && (
-                  <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full bg-rose-500 ring-2 ring-slate-900" />
+                  <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full bg-amber-500 ring-2 ring-white" />
                 )}
               </button>
             </div>
@@ -514,7 +514,7 @@ export function ExecutiveDashboard({
             <button
               type="button"
               onClick={onLogout}
-              className="px-3 py-1.5 text-xs font-semibold text-rose-300 hover:text-rose-100 hover:bg-rose-950/60 border border-rose-800/80 rounded-xl transition-all cursor-pointer flex items-center gap-1.5"
+              className="px-3 py-1.5 text-xs font-semibold text-rose-700 hover:text-rose-800 hover:bg-rose-50 border border-rose-200 rounded-xl transition-all cursor-pointer flex items-center gap-1.5"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
@@ -527,12 +527,11 @@ export function ExecutiveDashboard({
         </div>
       </nav>
 
-
       {/* ─── Main Content Container ───────────────────────────────────────────── */}
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 space-y-6">
         {/* Toast Notification Alert */}
         {actionFeedback && (
-          <div className="p-3 bg-emerald-950/80 border border-emerald-800/80 text-emerald-200 text-xs font-semibold rounded-xl flex items-center justify-between shadow-lg animate-fade-in">
+          <div className="p-3 bg-amber-50 border border-amber-300 text-amber-950 text-xs font-semibold rounded-xl flex items-center justify-between shadow-sm animate-fade-in">
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-emerald-400" />
               <span>{actionFeedback}</span>
@@ -548,10 +547,10 @@ export function ExecutiveDashboard({
         )}
 
         {/* ─── Executive Welcome Banner ───────────────────────────────────────── */}
-        <header className="bg-slate-900/90 backdrop-blur-md border border-slate-800 rounded-2xl p-5 sm:p-6 shadow-2xl flex flex-col md:flex-row md:items-center md:justify-between gap-4 relative overflow-hidden">
+        <header className="bg-white border border-[#EADBCE] rounded-2xl p-5 sm:p-6 shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-4 relative overflow-hidden">
           <div className="space-y-1.5 z-10">
             <div className="flex items-center gap-2.5 flex-wrap">
-              <span className="text-xl sm:text-2xl font-extrabold text-white tracking-tight">
+              <span className="text-xl sm:text-2xl font-extrabold text-[#2B1413] tracking-tight">
                 สวัสดี, {user.name}
               </span>
               <span className={`text-xs px-2.5 py-0.5 rounded-full border font-semibold flex items-center gap-1 ${roleConfig.badge}`}>
@@ -559,11 +558,11 @@ export function ExecutiveDashboard({
                 <span>{roleConfig.title}</span>
               </span>
             </div>
-            <p className="text-xs text-slate-300 max-w-2xl leading-relaxed">
+            <p className="text-xs text-[#78483B] max-w-2xl leading-relaxed">
               {roleConfig.description}
             </p>
-            <p className="text-[11px] text-slate-400 font-mono pt-0.5">
-              ภารกิจหลักวันนี้: <span className="font-semibold text-slate-200">{roleConfig.primaryDuty}</span>
+            <p className="text-[11px] text-[#9C6C60] font-mono pt-0.5">
+              ภารกิจหลักวันนี้: <span className="font-semibold text-[#2B1413]">{roleConfig.primaryDuty}</span>
             </p>
           </div>
 
@@ -572,7 +571,7 @@ export function ExecutiveDashboard({
               <button
                 type="button"
                 onClick={() => setActiveTab("checklist")}
-                className="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 active:bg-black text-white text-xs font-semibold rounded-xl shadow-sm transition-all flex items-center gap-2 cursor-pointer"
+                className="px-4 py-2.5 bg-[#2B1413] hover:bg-[#3D1D1B] active:bg-black text-amber-300 text-xs font-semibold rounded-xl shadow-sm transition-all flex items-center gap-2 cursor-pointer"
               >
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M9 11l3 3L22 4" />
@@ -585,7 +584,7 @@ export function ExecutiveDashboard({
         </header>
 
         {/* ─── Navigation Tabs (Tailored to Executive & Operations) ──────────── */}
-        <div className="bg-slate-900/90 p-1.5 rounded-2xl border border-slate-800 shadow-2xl">
+        <div className="bg-[#F7F1E9] p-1.5 rounded-2xl border border-[#EADBCE] shadow-2xs">
           <div className={`grid ${currentRole === "manager_assistant" ? "grid-cols-1 sm:grid-cols-3" : "grid-cols-1 sm:grid-cols-2"} gap-1`}>
             {[
               {
@@ -616,15 +615,15 @@ export function ExecutiveDashboard({
                 type="button"
                 onClick={() => setActiveTab(tab.id)}
                 className={`p-2.5 sm:p-3 rounded-xl text-left transition-all cursor-pointer flex flex-col ${activeTab === tab.id
-                  ? "bg-indigo-600 text-white shadow-md font-bold"
-                  : "text-slate-400 hover:text-slate-200 hover:bg-slate-800"
+                  ? "bg-[#2B1413] text-amber-300 shadow-sm font-bold"
+                  : "text-[#78483B] hover:text-[#2B1413] hover:bg-white/70"
                   }`}
               >
                 <div className="flex items-center gap-2">
                   <span>{tab.icon}</span>
                   <span className="text-xs sm:text-sm">{tab.label}</span>
                 </div>
-                <span className="text-[10px] text-slate-300 font-normal pl-5 hidden sm:block">
+                <span className={`text-[10px] font-normal pl-5 hidden sm:block ${activeTab === tab.id ? "text-amber-200/80" : "text-[#9C6C60]"}`}>
                   {tab.desc}
                 </span>
               </button>
@@ -636,22 +635,22 @@ export function ExecutiveDashboard({
         {activeTab === "overview" && (
           <div className="space-y-6 animate-fade-in">
             {/* Live Shift Handover & Approval Queue */}
-            <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-2xl space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-3">
+            <div className="bg-white border border-[#EADBCE] rounded-2xl p-5 shadow-sm space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#EADBCE] pb-3">
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-indigo-400" />
+                    <h3 className="text-sm font-bold text-[#2B1413] flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-amber-500" />
                       <span>รายการกะงานสาขา & สถานะการรับรอง (Shift Handover & Approval Queue)</span>
                     </h3>
                     {isLiveFromDb && (
-                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-950/80 text-emerald-300 border border-emerald-800/80">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-100 text-[#2B1413] border border-amber-300">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                         <span>Supabase Live DB</span>
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-slate-400 mt-0.5">
+                  <p className="text-xs text-[#78483B] mt-0.5">
                     ตรวจสอบความเรียบร้อยของรายการเช็คลิสต์และกดรับรองกะงาน
                   </p>
                 </div>
@@ -660,7 +659,7 @@ export function ExecutiveDashboard({
                     type="button"
                     onClick={() => loadDbSessions(true)}
                     disabled={isLoadingDb}
-                    className="text-[11px] font-semibold text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 px-2.5 py-1 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                    className="text-[11px] font-semibold text-[#2B1413] hover:text-[#442220] bg-[#FAF4EC] hover:bg-[#F2E7DC] border border-[#EADBCE] px-2.5 py-1 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                     title="โหลดข้อมูลล่าสุดจากฐานข้อมูล"
                   >
                     <svg
@@ -672,7 +671,7 @@ export function ExecutiveDashboard({
                       strokeWidth="2.5"
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      className={isLoadingDb ? "animate-spin text-indigo-400" : ""}
+                      className={isLoadingDb ? "animate-spin text-amber-600" : ""}
                     >
                       <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
                     </svg>
@@ -683,7 +682,7 @@ export function ExecutiveDashboard({
                     type="button"
                     onClick={handleResetChecklistData}
                     disabled={isResetting}
-                    className="text-[11px] font-semibold text-rose-300 hover:text-rose-100 bg-rose-950/60 hover:bg-rose-900/80 border border-rose-800/80 px-2.5 py-1 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                    className="text-[11px] font-semibold text-rose-700 hover:text-rose-900 bg-rose-50 hover:bg-rose-100 border border-rose-200 px-2.5 py-1 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                     title="ล้างข้อมูลเช็คลิสต์ประจำวันทั้งหมดในฐานข้อมูลเพื่อเริ่มทดสอบใหม่"
                   >
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -693,7 +692,7 @@ export function ExecutiveDashboard({
                     <span>{isResetting ? "กำลังรีเซ็ต..." : "รีเซ็ตข้อมูลเช็คลิสต์"}</span>
                   </button>
 
-                  <span className="text-[11px] font-mono text-slate-400 bg-slate-950 border border-slate-800 px-2.5 py-1 rounded-lg">
+                  <span className="text-[11px] font-mono text-[#78483B] bg-[#FAF4EC] border border-[#EADBCE] px-2.5 py-1 rounded-lg">
                     วันนี้: {fmtDate(new Date().toISOString())}
                   </span>
                 </div>
@@ -703,7 +702,7 @@ export function ExecutiveDashboard({
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
                   <thead>
-                    <tr className="border-b border-slate-800 text-slate-400 font-semibold bg-slate-950/60">
+                    <tr className="border-b border-[#EADBCE] text-[#78483B] font-semibold bg-[#FAF4EC]">
                       <th className="py-2.5 px-3 rounded-l-lg">ผู้ปฏิบัติงาน</th>
                       <th className="py-2.5 px-3">ตำแหน่ง / กะ</th>
                       <th className="py-2.5 px-3">ความคืบหน้า</th>
@@ -713,7 +712,7 @@ export function ExecutiveDashboard({
                       <th className="py-2.5 px-3 text-right rounded-r-lg">การจัดการ</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-800/80">
+                  <tbody className="divide-y divide-[#EADBCE]/70">
                     {sessions.filter(sess => {
                       if (currentRole === "manager_assistant") {
                         return !(sess.taskRole === "manager_assistant" || sess.userPosition === "ผู้ช่วยผู้จัดการร้าน");
@@ -727,16 +726,16 @@ export function ExecutiveDashboard({
                         sess.taskRole === "manager_assistant" || sess.userPosition === "ผู้ช่วยผู้จัดการร้าน";
 
                       return (
-                        <tr key={sess.id} className="hover:bg-slate-800/50 transition-colors">
-                          <td className="py-3 px-3 font-semibold text-slate-100">
+                        <tr key={sess.id} className="hover:bg-[#FFFDF9] transition-colors">
+                          <td className="py-3 px-3 font-semibold text-[#2B1413]">
                             {sess.userName}
                           </td>
                           <td className="py-3 px-3 space-y-1">
                             <div className="flex items-center gap-1.5 flex-wrap">
                               <span
                                 className={`px-2 py-0.5 rounded-md font-medium text-[11px] ${isAssistantSession
-                                  ? "bg-indigo-950/80 text-indigo-300 border border-indigo-800"
-                                  : "bg-slate-800 text-slate-300"
+                                  ? "bg-amber-100 text-[#2B1413] border border-amber-300"
+                                  : "bg-[#FAF4EC] text-[#78483B] border border-[#EADBCE]"
                                   }`}
                               >
                                 {sess.userPosition || "พนักงาน"}
@@ -746,21 +745,21 @@ export function ExecutiveDashboard({
                           </td>
                           <td className="py-3 px-3">
                             <div className="space-y-1">
-                              <div className="flex items-center justify-between text-[11px] font-mono text-slate-400">
+                              <div className="flex items-center justify-between text-[11px] font-mono text-[#78483B]">
                                 <span>{completedCount}/{sess.items.length}</span>
-                                <span className="font-bold text-slate-200">{pct}%</span>
+                                <span className="font-bold text-[#2B1413]">{pct}%</span>
                               </div>
-                              <div className="w-24 bg-slate-950 h-1.5 rounded-full overflow-hidden border border-slate-800">
+                              <div className="w-24 bg-[#F2E7DC] h-1.5 rounded-full overflow-hidden border border-[#EADBCE]">
                                 <div
-                                  className={`h-full rounded-full ${pct === 100 ? "bg-emerald-500" : "bg-indigo-500"}`}
+                                  className={`h-full rounded-full ${pct === 100 ? "bg-emerald-500" : "bg-amber-400"}`}
                                   style={{ width: `${pct}%` }}
                                 />
                               </div>
                             </div>
                           </td>
-                          <td className="py-3 px-3 font-mono text-slate-400 text-[11px]">
+                          <td className="py-3 px-3 font-mono text-[#78483B] text-[11px]">
                             {sess.completedAt ? fmtTime(sess.completedAt) : (
-                              <span className="text-sky-300 bg-sky-950/80 border border-sky-800/80 px-2 py-0.5 rounded-md font-semibold text-[10px]">
+                              <span className="text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-md font-semibold text-[10px]">
                                 กำลังปฏิบัติงาน
                               </span>
                             )}
@@ -768,19 +767,19 @@ export function ExecutiveDashboard({
                           {/* Assistant Approval */}
                           <td className="py-3 px-3 text-center">
                             {isAssistantSession ? (
-                              <span className="text-[10px] text-slate-500 font-medium">
+                              <span className="text-[10px] text-[#A88B77] font-medium">
                                 - (งานผู้ช่วย)
                               </span>
                             ) : app.assistantApproved ? (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-950/80 text-emerald-300 border border-emerald-800">
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
                                 ✓ รับรองแล้ว
                               </span>
                             ) : !hasAssistantLoggedInToday ? (
-                              <span className="text-[10px] text-slate-500 font-medium tooltip" title="ไม่มีผู้ช่วยเข้างานในวันนี้ จึงข้ามขั้นตอนนี้ให้ผู้จัดการพิจารณาโดยตรง">
+                              <span className="text-[10px] text-[#A88B77] font-medium tooltip" title="ไม่มีผู้ช่วยเข้างานในวันนี้ จึงข้ามขั้นตอนนี้ให้ผู้จัดการพิจารณาโดยตรง">
                                 - (ข้าม)
                               </span>
                             ) : (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-950/80 text-amber-300 border border-amber-800">
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-50 text-amber-800 border border-amber-200">
                                 รอดำเนินการ
                               </span>
                             )}
@@ -788,19 +787,19 @@ export function ExecutiveDashboard({
                           {/* Manager Approval */}
                           <td className="py-3 px-3 text-center">
                             {app.managerApproved ? (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-950/80 text-emerald-300 border border-emerald-800">
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
                                 ✓ อนุมัติแล้ว
                               </span>
                             ) : isAssistantSession ? (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-950/80 text-amber-300 border border-amber-800">
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-50 text-amber-800 border border-amber-200">
                                 รอผู้จัดการอนุมัติ
                               </span>
                             ) : app.assistantApproved || !hasAssistantLoggedInToday ? (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-950/80 text-amber-300 border border-amber-800">
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-50 text-amber-800 border border-amber-200">
                                 รอผู้จัดการอนุมัติ
                               </span>
                             ) : (
-                              <span className="text-[10px] text-slate-500 font-medium">
+                              <span className="text-[10px] text-[#A88B77] font-medium">
                                 (รอผู้ช่วยรับรองก่อน)
                               </span>
                             )}
@@ -810,7 +809,7 @@ export function ExecutiveDashboard({
                             <button
                               type="button"
                               onClick={() => setSelectedSession(sess)}
-                              className="px-3 py-1.5 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 rounded-lg transition-colors cursor-pointer shadow-md shadow-indigo-950/50"
+                              className="px-3 py-1.5 text-xs font-semibold text-[#2B1413] bg-amber-400 hover:bg-amber-300 active:bg-amber-500 rounded-lg transition-colors cursor-pointer shadow-sm shadow-amber-200/50"
                             >
                               ตรวจรับรอง →
                             </button>
@@ -824,9 +823,9 @@ export function ExecutiveDashboard({
             </div>
 
             {/* Shift Notifications Log */}
-            <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-2xl space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                <h3 className="text-sm font-bold text-white flex items-center gap-2">
+            <div className="bg-white border border-[#EADBCE] rounded-2xl p-5 shadow-sm space-y-4">
+              <div className="flex items-center justify-between border-b border-[#EADBCE] pb-3">
+                <h3 className="text-sm font-bold text-[#2B1413] flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-amber-400" />
                   <span>บันทึกการส่งงานและแจ้งเตือนล่าสุด (Recent Shift Notifications)</span>
                 </h3>
@@ -834,7 +833,7 @@ export function ExecutiveDashboard({
                   <button
                     type="button"
                     onClick={handleMarkAllNotifsRead}
-                    className="text-xs font-semibold text-indigo-400 hover:text-indigo-300 underline cursor-pointer"
+                    className="text-xs font-semibold text-amber-700 hover:text-amber-800 underline cursor-pointer"
                   >
                     อ่านทั้งหมดแล้ว
                   </button>
@@ -843,7 +842,7 @@ export function ExecutiveDashboard({
 
               <div className="space-y-2.5">
                 {notifications.length === 0 ? (
-                  <div className="text-center py-6 text-slate-400 text-xs bg-slate-950/60 rounded-xl border border-dashed border-slate-800">
+                  <div className="text-center py-6 text-[#78483B] text-xs bg-[#FAF4EC]/60 rounded-xl border border-dashed border-[#EADBCE]">
                     ยังไม่มีรายการส่งมอบกะในวันนี้ (ข้อมูลจะแสดงอัตโนมัติเมื่อมีพนักงานเริ่มงานหรือส่งกะ)
                   </div>
                 ) : (
@@ -860,31 +859,31 @@ export function ExecutiveDashboard({
                       <div
                         key={notif.id}
                         className={`p-3 rounded-xl border flex items-center justify-between gap-3 transition-all ${notif.read
-                          ? "bg-slate-950/60 border-slate-800/80"
-                          : "bg-amber-950/30 border-amber-800/60"
+                          ? "bg-[#FAF4EC]/50 border-[#EADBCE]"
+                          : "bg-amber-50/70 border-amber-300"
                           }`}
                       >
                         <div className="flex items-center gap-3">
                           <div
-                            className={`w-2 h-2 rounded-full ${notif.read ? "bg-slate-600" : "bg-amber-400"
+                            className={`w-2 h-2 rounded-full ${notif.read ? "bg-[#B89B85]" : "bg-amber-500"
                               }`}
                           />
                           <div>
-                            <p className="text-xs font-semibold text-slate-100">
+                            <p className="text-xs font-semibold text-[#2B1413]">
                               {notif.userName}{" "}
-                              <span className="font-normal text-slate-400">
+                              <span className="font-normal text-[#78483B]">
                                 ({notif.userPosition || "พนักงาน"})
                               </span>{" "}
                               {isCompleted ? (
-                                <span className="text-emerald-300">ส่งมอบกะ {getShiftName(notif.shift)}</span>
+                                <span className="text-emerald-700 font-semibold">ส่งมอบกะ {getShiftName(notif.shift)}</span>
                               ) : (
-                                <span className="text-sky-300">
+                                <span className="text-amber-800">
                                   กำลังปฏิบัติงานกะ {getShiftName(notif.shift)} ({doneCount}/
                                   {totalCount} ข้อ)
                                 </span>
                               )}
                             </p>
-                            <p className="text-[11px] font-mono text-slate-400">
+                            <p className="text-[11px] font-mono text-[#78483B]">
                               {isCompleted ? "ส่งเมื่อ" : "บันทึกล่าสุด"} {fmtTime(notif.completedAt)}
                             </p>
                           </div>
@@ -895,7 +894,7 @@ export function ExecutiveDashboard({
                           onClick={() => {
                             if (target) setSelectedSession(target);
                           }}
-                          className="px-2.5 py-1 text-xs font-semibold text-slate-200 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg cursor-pointer transition-colors shadow-xs"
+                          className="px-2.5 py-1 text-xs font-semibold text-[#2B1413] hover:text-[#442220] bg-white hover:bg-[#FAF4EC] border border-[#EADBCE] rounded-lg cursor-pointer transition-colors shadow-xs"
                         >
                           ดูรายงาน
                         </button>
@@ -911,20 +910,20 @@ export function ExecutiveDashboard({
         {/* ─── TAB 2: MY CHECKLIST (ASSISTANT MANAGER ONLY) ─────────────────── */}
         {activeTab === "checklist" && currentRole === "manager_assistant" && (
           <div className="space-y-6 animate-fade-in">
-            <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 sm:p-6 shadow-2xl space-y-5">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+            <div className="bg-white border border-[#EADBCE] rounded-2xl p-5 sm:p-6 shadow-sm space-y-5">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#EADBCE] pb-4">
                 <div>
-                  <h3 className="text-sm sm:text-base font-bold text-white flex items-center gap-2">
+                  <h3 className="text-sm sm:text-base font-bold text-[#2B1413] flex items-center gap-2">
                     <span>{roleConfig.icon}</span>
                     <span>เช็คลิสต์ตรวจงานประจำกะของ {roleConfig.title}</span>
                   </h3>
-                  <p className="text-xs text-slate-400 mt-0.5">
+                  <p className="text-xs text-[#78483B] mt-0.5">
                     ติ๊กถูกเมื่อทำการตรวจสอบแต่ละขั้นตอนเสร็จสมบูรณ์ (เชื่อมต่อฐานข้อมูลจริง)
                   </p>
                 </div>
 
                 {/* Shift Selector */}
-                <div className="inline-flex bg-slate-950 p-1 rounded-xl border border-slate-800">
+                <div className="inline-flex bg-[#FAF4EC] p-1 rounded-xl border border-[#EADBCE]">
                   {(["morning", "afternoon"] as ShiftType[]).map((sh) => (
                     <button
                       key={sh}
@@ -934,8 +933,8 @@ export function ExecutiveDashboard({
                         loadAssistantChecklist(sh);
                       }}
                       className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer ${myChecklistShift === sh
-                        ? "bg-indigo-600 text-white shadow-md"
-                        : "text-slate-400 hover:text-slate-200"
+                        ? "bg-[#2B1413] text-amber-300 shadow-sm"
+                        : "text-[#78483B] hover:text-[#2B1413]"
                         }`}
                     >
                       {sh === "morning" ? "กะเช้า" : "กะบ่าย"}
@@ -945,8 +944,8 @@ export function ExecutiveDashboard({
               </div>
 
               {isLoadingChecklist ? (
-                <div className="py-12 text-center text-slate-400 text-xs flex flex-col items-center justify-center gap-2">
-                  <div className="w-5 h-5 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+                <div className="py-12 text-center text-[#78483B] text-xs flex flex-col items-center justify-center gap-2">
+                  <div className="w-5 h-5 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
                   <span>กำลังดึงรายการเช็คลิสต์จากฐานข้อมูล...</span>
                 </div>
               ) : (
@@ -957,16 +956,16 @@ export function ExecutiveDashboard({
                     const total = myChecklistItems.length;
                     const pct = total > 0 ? Math.round((done / total) * 100) : 0;
                     return (
-                      <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-2">
-                        <div className="flex justify-between text-xs font-semibold text-slate-300">
+                      <div className="bg-[#FAF4EC] p-3.5 rounded-xl border border-[#EADBCE] space-y-2">
+                        <div className="flex justify-between text-xs font-semibold text-[#2B1413]">
                           <span>ความคืบหน้าการตรวจเช็คลิสต์:</span>
-                          <span className="font-mono">
+                          <span className="font-mono text-amber-800">
                             {done} จาก {total} ข้อ ({pct}%)
                           </span>
                         </div>
-                        <div className="w-full bg-slate-900 h-2 rounded-full overflow-hidden border border-slate-800">
+                        <div className="w-full bg-[#EADBCE] h-2 rounded-full overflow-hidden">
                           <div
-                            className="bg-indigo-500 h-full rounded-full transition-all duration-300"
+                            className="bg-amber-400 h-full rounded-full transition-all duration-300"
                             style={{ width: `${pct}%` }}
                           />
                         </div>
@@ -976,7 +975,7 @@ export function ExecutiveDashboard({
 
                   {/* Checklist items */}
                   {myChecklistItems.length === 0 ? (
-                    <div className="py-8 text-center text-slate-400 text-xs border border-dashed border-slate-800 rounded-xl bg-slate-950/50">
+                    <div className="py-8 text-center text-[#78483B] text-xs border border-dashed border-[#EADBCE] rounded-xl bg-[#FAF4EC]/50">
                       ไม่พบรายการเช็คลิสต์ของตำแหน่งผู้ช่วยผู้จัดการร้านในฐานข้อมูลสำหรับกะนี้
                     </div>
                   ) : (
@@ -988,14 +987,14 @@ export function ExecutiveDashboard({
                             key={item.id}
                             onClick={() => handleToggleMyItem(item.id)}
                             className={`p-3.5 rounded-xl border flex items-start gap-3 cursor-pointer transition-all ${isDone
-                              ? "bg-emerald-950/20 border-emerald-800/50 hover:bg-emerald-950/40"
-                              : "bg-slate-950/80 border-slate-800 hover:border-slate-700 hover:bg-slate-900"
+                              ? "bg-amber-50/50 border-amber-200 hover:bg-amber-50"
+                              : "bg-white border-[#EADBCE] hover:border-amber-400 hover:bg-[#FFFDF9]"
                               }`}
                           >
                             <div
                               className={`w-5 h-5 rounded-md border flex items-center justify-center mt-0.5 transition-colors ${isDone
-                                ? "bg-emerald-500 border-emerald-500 text-white"
-                                : "border-slate-600 bg-slate-950"
+                                ? "bg-amber-500 border-amber-500 text-white"
+                                : "border-[#C9B29F] bg-white"
                                 }`}
                             >
                               {isDone && (
@@ -1016,19 +1015,19 @@ export function ExecutiveDashboard({
 
                             <div className="flex-1">
                               <div className="flex items-center gap-2">
-                                <span className="text-[10px] font-mono text-slate-500">
+                                <span className="text-[10px] font-mono text-[#78483B]">
                                   {String(idx + 1).padStart(2, "0")}
                                 </span>
                                 {item.category && (
-                                  <span className="text-[10px] font-semibold text-slate-300 bg-slate-800 px-1.5 py-0.5 rounded border border-slate-700">
+                                  <span className="text-[10px] font-semibold text-[#2B1413] bg-[#FAF4EC] px-1.5 py-0.5 rounded border border-[#EADBCE]">
                                     {item.category}
                                   </span>
                                 )}
                               </div>
                               <p
                                 className={`text-xs sm:text-sm font-medium mt-1 ${isDone
-                                  ? "text-slate-400 line-through opacity-80"
-                                  : "text-slate-100"
+                                  ? "text-[#A88B77] line-through opacity-80"
+                                  : "text-[#2B1413]"
                                   }`}
                               >
                                 {item.label}
@@ -1049,9 +1048,9 @@ export function ExecutiveDashboard({
                                   }
                                 }
                                 return (
-                                  <p className="text-[10px] font-mono text-emerald-400 mt-0.5">
+                                  <p className="text-[10px] font-mono text-emerald-600 mt-0.5">
                                     บันทึกเมื่อ: {fmtTime(item.completedAt)}
-                                    {isLate && <span className="text-amber-500 font-bold ml-1 font-sans">(ล่าช้า)</span>}
+                                    {isLate && <span className="text-amber-600 font-bold ml-1 font-sans">(ล่าช้า)</span>}
                                   </p>
                                 );
                               })()}
@@ -1069,16 +1068,16 @@ export function ExecutiveDashboard({
 
         {/* ─── TAB 3: AUDIT HISTORY & SHIFT REPORTS ───────────────────────────── */}
         {activeTab === "history" && (
-          <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 sm:p-6 shadow-2xl space-y-5 animate-fade-in">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+          <div className="bg-white border border-[#EADBCE] rounded-2xl p-5 sm:p-6 shadow-sm space-y-5 animate-fade-in">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#EADBCE] pb-4">
               <div>
-                <h3 className="text-sm sm:text-base font-bold text-white flex items-center gap-2">
+                <h3 className="text-sm sm:text-base font-bold text-[#2B1413] flex items-center gap-2">
                   <span>🕒</span>
                   <span>ประวัติและรายงานการตรวจสอบย้อนหลัง (Audit Inspection History)</span>
                 </h3>
-                <p className="text-xs text-slate-400 mt-0.5 flex flex-wrap items-center gap-1.5">
+                <p className="text-xs text-[#78483B] mt-0.5 flex flex-wrap items-center gap-1.5">
                   <span>ค้นหาและเรียกดูรายละเอียดของแต่ละกะที่ปฏิบัติงานแล้ว</span>
-                  <span className="inline-flex items-center text-[10px] bg-indigo-950/50 text-indigo-300 font-semibold px-2 py-0.5 rounded border border-indigo-800/50">
+                  <span className="inline-flex items-center text-[10px] bg-amber-50 text-amber-800 font-semibold px-2 py-0.5 rounded border border-amber-200">
                     <svg className="w-3 h-3 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 8v4l3 3M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                     แสดงข้อมูลย้อนหลัง 14 วัน (2 สัปดาห์)
                   </span>
@@ -1089,18 +1088,18 @@ export function ExecutiveDashboard({
               <div className="flex flex-wrap items-center gap-2">
 
                 {/* Specific Date Fetcher */}
-                <div className="flex items-center gap-1.5 bg-slate-950 border border-slate-800 rounded-xl px-2 py-1">
+                <div className="flex items-center gap-1.5 bg-[#FAF4EC] border border-[#EADBCE] rounded-xl px-2 py-1">
                   <input
                     type="date"
                     value={selectedHistoryDate}
                     onChange={handleDateSelection}
-                    className="bg-transparent text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none cursor-pointer"
+                    className="bg-transparent text-xs text-[#2B1413] placeholder:text-[#A88B77] focus:outline-none cursor-pointer"
                   />
                   {selectedHistoryDate && (
                     <button
                       type="button"
                       onClick={() => handleDateSelection({ target: { value: "" } } as React.ChangeEvent<HTMLInputElement>)}
-                      className="text-xs text-rose-400 hover:text-rose-300 font-bold px-2 py-0.5 rounded hover:bg-slate-900 transition-colors"
+                      className="text-xs text-rose-500 hover:text-rose-700 font-bold px-2 py-0.5 rounded hover:bg-rose-50 transition-colors"
                       title="Clear specific date and restore 14-days history"
                     >
                       ×
@@ -1113,16 +1112,16 @@ export function ExecutiveDashboard({
                   placeholder="ค้นหาชื่อ หรือตำแหน่ง..."
                   value={historySearch}
                   onChange={(e) => setHistorySearch(e.target.value)}
-                  className="px-3 py-1.5 text-xs bg-slate-950 border border-slate-800 text-slate-100 placeholder:text-slate-500 rounded-xl focus:bg-slate-950 focus:border-indigo-500 focus:outline-none"
+                  className="px-3 py-1.5 text-xs bg-[#FAF4EC] border border-[#EADBCE] text-[#2B1413] placeholder:text-[#A88B77] rounded-xl focus:border-amber-400 focus:outline-none"
                 />
                 <select
                   value={historyShiftFilter}
                   onChange={(e) => setHistoryShiftFilter(e.target.value as "all" | ShiftType)}
-                  className="px-2.5 py-1.5 text-xs bg-slate-950 border border-slate-800 text-slate-100 rounded-xl focus:bg-slate-950 focus:border-indigo-500 focus:outline-none"
+                  className="px-2.5 py-1.5 text-xs bg-[#FAF4EC] border border-[#EADBCE] text-[#2B1413] rounded-xl focus:border-amber-400 focus:outline-none cursor-pointer"
                 >
-                  <option value="all" className="bg-slate-900 text-white">ทุกกะงาน</option>
-                  <option value="morning" className="bg-slate-900 text-white">กะเช้า</option>
-                  <option value="afternoon" className="bg-slate-900 text-white">กะบ่าย</option>
+                  <option value="all">ทุกกะงาน</option>
+                  <option value="morning">กะเช้า</option>
+                  <option value="afternoon">กะบ่าย</option>
                 </select>
               </div>
             </div>
@@ -1131,7 +1130,7 @@ export function ExecutiveDashboard({
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead>
-                  <tr className="border-b border-slate-800 text-slate-400 font-semibold bg-slate-950/60">
+                  <tr className="border-b border-[#EADBCE] text-[#78483B] font-semibold bg-[#FAF4EC]">
                     <th className="py-2.5 px-3 rounded-l-lg">รหัสกะ / วันที่</th>
                     <th className="py-2.5 px-3">ผู้ปฏิบัติงาน</th>
                     <th className="py-2.5 px-3">ตำแหน่ง</th>
@@ -1141,7 +1140,7 @@ export function ExecutiveDashboard({
                     <th className="py-2.5 px-3 text-right rounded-r-lg">การจัดการ</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/80">
+                <tbody className="divide-y divide-[#EADBCE]/70">
                   {filteredHistory.filter(sess => {
                     if (currentRole === "manager_assistant") {
                       return !(sess.taskRole === "manager_assistant" || sess.userPosition === "ผู้ช่วยผู้จัดการร้าน");
@@ -1153,27 +1152,27 @@ export function ExecutiveDashboard({
                     const app = approvals[sess.id] || {};
 
                     return (
-                      <tr key={sess.id} className="hover:bg-slate-800/50 transition-colors">
-                        <td className="py-3 px-3 font-mono text-slate-400">
-                          <span className="font-semibold text-slate-100">{sess.id}</span>
-                          <span className="block text-[10px] text-slate-400">{fmtDate(sess.startedAt)}</span>
+                      <tr key={sess.id} className="hover:bg-[#FFFDF9] transition-colors">
+                        <td className="py-3 px-3 font-mono text-[#78483B]">
+                          <span className="font-semibold text-[#2B1413]">{sess.id}</span>
+                          <span className="block text-[10px] text-[#A88B77]">{fmtDate(sess.startedAt)}</span>
                         </td>
-                        <td className="py-3 px-3 font-semibold text-slate-100">
+                        <td className="py-3 px-3 font-semibold text-[#2B1413]">
                           {sess.userName}
                         </td>
-                        <td className="py-3 px-3 text-slate-300">
+                        <td className="py-3 px-3 text-[#78483B]">
                           {sess.userPosition || "-"}
                         </td>
                         <td className="py-3 px-3">
                           {getShiftBadge(sess.shift)}
                         </td>
                         <td className="py-3 px-3 font-mono">
-                          <span className="font-bold text-slate-200">{doneCount}/{sess.items.length}</span>
-                          <span className="text-[10px] text-slate-400 ml-1">({pct}%)</span>
+                          <span className="font-bold text-[#2B1413]">{doneCount}/{sess.items.length}</span>
+                          <span className="text-[10px] text-[#78483B] ml-1">({pct}%)</span>
                         </td>
                         <td className="py-3 px-3 text-center">
                           {app.managerApproved ? (
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-950/80 text-emerald-300 border border-emerald-800">
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
                               ✓ อนุมัติสมบูรณ์
                             </span>
                           ) : (sess.taskRole === "manager_assistant" || sess.userPosition === "ผู้ช่วยผู้จัดการร้าน") ? (
@@ -1181,11 +1180,11 @@ export function ExecutiveDashboard({
                               รอผู้จัดการอนุมัติ
                             </span>
                           ) : app.assistantApproved ? (
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-800 border border-indigo-200">
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-[#2B1413] border border-amber-300">
                               ผู้ช่วยตรวจแล้ว
                             </span>
                           ) : (
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-600 border border-slate-200">
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-[#FAF4EC] text-[#78483B] border border-[#EADBCE]">
                               รอดำเนินการ
                             </span>
                           )}
@@ -1194,7 +1193,7 @@ export function ExecutiveDashboard({
                           <button
                             type="button"
                             onClick={() => setSelectedSession(sess)}
-                            className="px-3 py-1.5 text-xs font-semibold text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer"
+                            className="px-3 py-1.5 text-xs font-semibold text-[#2B1413] bg-amber-400 hover:bg-amber-300 active:bg-amber-500 rounded-lg transition-colors cursor-pointer shadow-sm shadow-amber-200/50"
                           >
                             เปิดดูข้อตรวจ →
                           </button>
@@ -1254,9 +1253,9 @@ export function ExecutiveDashboard({
       })()}
 
       {/* ─── Footer with Reset Option (Same style as staff pages) ─────────────── */}
-      <footer className="max-w-6xl mx-auto px-4 sm:px-6 pt-10 pb-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400 border-t border-slate-800 mt-12">
+      <footer className="max-w-6xl mx-auto px-4 sm:px-6 pt-10 pb-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[#78483B] border-t border-[#EADBCE] mt-12">
         <div className="flex items-center gap-2">
-          <span className="font-semibold text-slate-200">Eater Egg Fresh Mart</span>
+          <span className="font-semibold text-[#2B1413]">Eater Egg Fresh Mart</span>
           <span>•</span>
           <span>Operations & Audit Management Portal</span>
         </div>
@@ -1266,7 +1265,7 @@ export function ExecutiveDashboard({
             type="button"
             onClick={handleResetChecklistData}
             disabled={isResetting}
-            className="text-xs text-slate-400 hover:text-rose-400 font-medium inline-flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
+            className="text-xs text-[#78483B] hover:text-rose-700 font-medium inline-flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
             title="ล้างข้อมูลเช็คลิสต์ทั้งหมดเพื่อเริ่มทดสอบใหม่"
           >
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

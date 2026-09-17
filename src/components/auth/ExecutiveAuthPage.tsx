@@ -53,26 +53,26 @@ export function ExecutiveAuthPage({
     }
 
     const inp =
-        "w-full bg-slate-950 hover:bg-slate-900 focus:bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-xl px-4 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus-visible:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all";
+        "w-full bg-[#FAF4EC] hover:bg-[#F5EDE2] focus:bg-white border border-[#EADBCE] focus:border-amber-400 rounded-xl px-4 py-2.5 text-sm text-[#2B1413] placeholder:text-[#A88B77] focus-visible:outline-none focus:ring-2 focus:ring-amber-400/40 transition-all";
 
     return (
-        <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-center px-4 py-8 sm:py-12 relative overflow-hidden">
-            <div className="absolute top-1/4 -right-20 w-72 h-72 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none" aria-hidden="true" />
-            <div className="absolute bottom-1/4 -left-20 w-72 h-72 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" aria-hidden="true" />
+        <div className="min-h-screen bg-[#FFFDF9] text-[#2B1413] flex flex-col items-center justify-center px-4 py-8 sm:py-12 relative overflow-hidden">
+            <div className="absolute top-1/4 -right-20 w-72 h-72 bg-amber-200/30 rounded-full blur-3xl pointer-events-none" aria-hidden="true" />
+            <div className="absolute bottom-1/4 -left-20 w-72 h-72 bg-amber-100/40 rounded-full blur-3xl pointer-events-none" aria-hidden="true" />
 
-            <div className="w-full max-w-[400px] bg-slate-900/90 backdrop-blur-md border border-slate-800 rounded-2xl p-7 sm:p-8 shadow-2xl space-y-5 relative z-10">
+            <div className="w-full max-w-[400px] bg-white border border-[#EADBCE] rounded-2xl p-7 sm:p-8 shadow-xl shadow-amber-900/5 space-y-5 relative z-10">
                 <header className="mb-2 text-center flex flex-col items-center">
-                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-950/80 text-indigo-300 text-[11px] font-semibold border border-indigo-800/60 mb-3">
-                        <span className="w-1.5 h-1.5 rounded-full bg-indigo-400" aria-hidden="true" />
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 text-[#2B1413] text-[11px] font-semibold border border-amber-300 mb-3">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500" aria-hidden="true" />
                         <span>ระบบบริหารสาขาและการจัดการ</span>
                     </div>
-                    <BrandLogo size={48} showText={true} isDark={true} />
+                    <BrandLogo size={48} showText={true} isDark={false} />
                 </header>
 
-                <form onSubmit={handleLogin} className="space-y-4 pt-4 border-t border-slate-800/80 focus-visible:outline-none">
+                <form onSubmit={handleLogin} className="space-y-4 pt-4 border-t border-[#EADBCE] focus-visible:outline-none">
 
                     <div>
-                        <label htmlFor="exec-email" className="block text-xs font-semibold text-slate-300 mb-1.5">
+                        <label htmlFor="exec-email" className="block text-xs font-semibold text-[#78483B] mb-1.5">
                             อีเมลฝ่ายบริหาร
                         </label>
                         <input
@@ -86,7 +86,7 @@ export function ExecutiveAuthPage({
                     </div>
 
                     <div>
-                        <label htmlFor="exec-password" className="block text-xs font-semibold text-slate-300 mb-1.5">
+                        <label htmlFor="exec-password" className="block text-xs font-semibold text-[#78483B] mb-1.5">
                             รหัสผ่าน
                         </label>
                         <input
@@ -100,7 +100,7 @@ export function ExecutiveAuthPage({
                     </div>
 
                     {error && (
-                        <div role="alert" className="p-3 rounded-xl bg-rose-950/80 border border-rose-800/80 text-xs text-rose-200 text-center font-semibold">
+                        <div role="alert" className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700 text-center font-semibold">
                             {error}
                         </div>
                     )}
@@ -108,7 +108,7 @@ export function ExecutiveAuthPage({
                     <button
                         type="submit"
                         disabled={loading}
-                        className={`w-full py-2.5 text-white text-sm font-semibold rounded-xl shadow-lg transition-all mt-3 cursor-pointer flex items-center justify-center gap-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 shadow-indigo-950/50 ${loading ? "opacity-70 cursor-not-allowed" : ""
+                        className={`w-full py-2.5 text-amber-300 text-sm font-semibold rounded-xl shadow-md transition-all mt-3 cursor-pointer flex items-center justify-center gap-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500 bg-[#2B1413] hover:bg-[#442220] active:bg-[#1f0d0c] shadow-amber-950/20 ${loading ? "opacity-70 cursor-not-allowed" : ""
                             }`}
                     >
                         <span>{loading ? "กำลังตรวจสอบข้อมูล..." : "เข้าสู่ระบบ (Executive) →"}</span>
@@ -117,11 +117,11 @@ export function ExecutiveAuthPage({
 
 
 
-                <div className="mt-5 pt-4 border-t border-slate-800/80 text-center flex flex-col gap-2">
-                    <Link href="/login/staff" className="text-[11px] text-slate-400 hover:text-indigo-400 font-medium transition-colors">
+                <div className="mt-5 pt-4 border-t border-[#EADBCE] text-center flex flex-col gap-2">
+                    <Link href="/login/staff" className="text-[11px] text-[#78483B] hover:text-[#2B1413] font-medium transition-colors">
                         สำหรับพนักงาน / ผู้ช่วยผู้จัดการ →
                     </Link>
-                    <Link href="/" className="text-[11px] text-slate-500 hover:text-slate-300 font-medium transition-colors">
+                    <Link href="/" className="text-[11px] text-[#A88B77] hover:text-[#78483B] font-medium transition-colors">
                         ← กลับไปหน้าเลือกประเภทผู้ใช้งาน
                     </Link>
                 </div>

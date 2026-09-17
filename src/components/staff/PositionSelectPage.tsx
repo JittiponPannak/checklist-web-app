@@ -23,22 +23,22 @@ export function PositionSelectPage({
   const availablePositions = user.role === "manager" ? MANAGEMENT_POSITIONS : STAFF_POSITIONS;
 
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between px-4 py-6 sm:py-10">
+    <main className="min-h-screen bg-[#FFFDF9] text-[#2B1413] flex flex-col justify-between px-4 py-6 sm:py-10">
       {/* Top Header Card */}
-      <header className="w-full max-w-4xl mx-auto mb-6 flex items-center justify-between gap-4 p-4 bg-slate-900/90 border border-slate-800 rounded-2xl shadow-xl">
+      <header className="w-full max-w-4xl mx-auto mb-6 flex items-center justify-between gap-4 p-4 bg-white border border-[#EADBCE] rounded-2xl shadow-sm">
         <div className="flex items-center gap-3">
           <div>
             {user.branchName && (
-              <p className="text-[10px] sm:text-[11px] font-bold text-indigo-400 uppercase tracking-widest mb-0.5">
+              <p className="text-[10px] sm:text-[11px] font-bold text-amber-700 uppercase tracking-widest mb-0.5">
                 {user.branchName}
               </p>
             )}
-            <h1 className="text-sm sm:text-base font-extrabold text-white leading-none mb-1">{user.name}</h1>
-            <p className="text-[11px] text-slate-400 font-medium">
+            <h1 className="text-sm sm:text-base font-extrabold text-[#2B1413] leading-none mb-1">{user.name}</h1>
+            <p className="text-[11px] text-[#78483B] font-medium">
               {shiftTitle ? (
-                <>กะที่เลือก: <span className="font-bold text-indigo-300">{shiftTitle} ({shiftHours})</span></>
+                <>กะที่เลือก: <span className="font-bold text-[#2B1413]">{shiftTitle} ({shiftHours})</span></>
               ) : (
-                <>ขั้นตอนที่ 1 จาก 2 • <span className="font-bold text-indigo-300">เลือกตำแหน่งที่ปฏิบัติงาน</span></>
+                <>ขั้นตอนที่ 1 จาก 2 • <span className="font-bold text-[#2B1413]">เลือกตำแหน่งที่ปฏิบัติงาน</span></>
               )}
             </p>
           </div>
@@ -47,7 +47,7 @@ export function PositionSelectPage({
         <button
           type="button"
           onClick={onLogout}
-          className="text-xs text-slate-400 hover:text-rose-400 transition-colors px-3 py-1.5 rounded-xl border border-slate-800 hover:border-rose-900 hover:bg-rose-950/40 font-semibold cursor-pointer min-h-[36px]"
+          className="text-xs text-[#78483B] hover:text-rose-700 transition-colors px-3 py-1.5 rounded-xl border border-[#EADBCE] hover:border-rose-200 hover:bg-rose-50 font-semibold cursor-pointer min-h-[36px]"
         >
           ออกจากระบบ
         </button>
@@ -57,13 +57,13 @@ export function PositionSelectPage({
       <div className="w-full max-w-4xl mx-auto flex-1 flex flex-col items-center justify-center py-4">
         {/* Step Indicator & Title */}
         <div className="text-center mb-8">
-          <span className="inline-block text-[11px] font-bold text-indigo-400 tracking-wider uppercase bg-indigo-950/80 border border-indigo-800/80 px-3 py-1 rounded-full mb-3">
+          <span className="inline-block text-[11px] font-bold text-[#2B1413] tracking-wider uppercase bg-amber-100 border border-amber-300 px-3 py-1 rounded-full mb-3">
             ขั้นตอนที่ 1 จาก 2 • เลือกตำแหน่งหน้าที่
           </span>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-[#2B1413] tracking-tight">
             เลือกตำแหน่งงาน
           </h2>
-          <p className="text-xs sm:text-sm text-slate-400 mt-1 max-w-md mx-auto">
+          <p className="text-xs sm:text-sm text-[#78483B] mt-1 max-w-md mx-auto">
             เลือกหน้าที่ที่คุณปฏิบัติงาน เพื่อดำเนินการเลือกกะการทำงานในขั้นตอนถัดไป
           </p>
         </div>
@@ -72,19 +72,6 @@ export function PositionSelectPage({
         <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
           {availablePositions.map((pos) => {
             const isCashier = pos === "แคชเชียร์";
-            const cardTheme = isCashier
-              ? {
-                hoverBorder: "hover:border-emerald-500/60 hover:shadow-[0_12px_28px_-6px_rgba(16,185,129,0.2)]",
-                iconBox: "bg-slate-950 border-slate-800 text-emerald-400 group-hover:bg-emerald-600 group-hover:text-white group-hover:border-emerald-600",
-                btnHover: "group-hover:bg-emerald-600",
-                badgeColor: "green" as const,
-              }
-              : {
-                hoverBorder: "hover:border-sky-500/60 hover:shadow-[0_12px_28px_-6px_rgba(2,132,199,0.2)]",
-                iconBox: "bg-slate-950 border-slate-800 text-sky-400 group-hover:bg-sky-600 group-hover:text-white group-hover:border-sky-600",
-                btnHover: "group-hover:bg-sky-600",
-                badgeColor: "blue" as const,
-              };
 
             return (
               <div
@@ -99,11 +86,11 @@ export function PositionSelectPage({
                     onSelectPosition(pos);
                   }
                 }}
-                className={`group bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl ${cardTheme.hoverBorder} focus-visible:outline-none focus:ring-2 focus:ring-indigo-500 hover:-translate-y-1 transition-all duration-200 flex flex-col justify-between cursor-pointer`}
+                className="group bg-white border border-[#EADBCE] rounded-2xl p-6 shadow-sm hover:border-amber-400 hover:shadow-md focus-visible:outline-none focus:ring-2 focus:ring-amber-400 hover:-translate-y-1 transition-all duration-200 flex flex-col justify-between cursor-pointer"
               >
                 <div>
                   <div className="flex items-start justify-between gap-3 mb-4">
-                    <div className={`w-12 h-12 rounded-2xl border flex items-center justify-center transition-all ${cardTheme.iconBox}`}>
+                    <div className="w-12 h-12 rounded-2xl border border-[#EADBCE] bg-[#FAF4EC] text-[#2B1413] group-hover:bg-amber-400 group-hover:border-amber-400 flex items-center justify-center transition-all">
                       {isCashier ? (
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                           <rect x="2" y="4" width="20" height="16" rx="2" />
@@ -120,40 +107,38 @@ export function PositionSelectPage({
                         </svg>
                       )}
                     </div>
-
-
                   </div>
 
-                  <h3 className="text-xl sm:text-2xl font-bold text-white tracking-tight mb-2">
+                  <h3 className="text-xl sm:text-2xl font-bold text-[#2B1413] tracking-tight mb-2">
                     {pos}
                   </h3>
 
-                  <p className="text-xs sm:text-sm text-slate-400 leading-relaxed mb-4">
+                  <p className="text-xs sm:text-sm text-[#78483B] leading-relaxed mb-4">
                     {isCashier
                       ? "รับผิดชอบงานจุดชำระเงิน ตรวจสอบระบบแคชเชียร์ นับเงินทอน และดูแลบริการลูกค้าหน้าร้าน"
                       : "รับผิดชอบการจัดเรียงสินค้า ตรวจนับสต็อก เติมสินค้าตู้แช่ และตรวจสอบความสดใหม่"}
                   </p>
 
-                  <div className="space-y-2 py-3 border-t border-slate-800 text-xs text-slate-400">
+                  <div className="space-y-2 py-3 border-t border-[#EADBCE] text-xs text-[#78483B]">
                     {isCashier ? (
                       <>
                         <div className="flex items-center gap-2">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" aria-hidden="true" />
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500" aria-hidden="true" />
                           <span>ตรวจเงินสด ลิ้นชัก และอุปกรณ์รับชำระ</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" aria-hidden="true" />
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500" aria-hidden="true" />
                           <span>ดูแลความสะอาดรอบจุดเคาน์เตอร์</span>
                         </div>
                       </>
                     ) : (
                       <>
                         <div className="flex items-center gap-2">
-                          <span className="w-1.5 h-1.5 rounded-full bg-sky-400" aria-hidden="true" />
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500" aria-hidden="true" />
                           <span>ตรวจรับสินค้าสดและเติมตู้แช่</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="w-1.5 h-1.5 rounded-full bg-sky-400" aria-hidden="true" />
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500" aria-hidden="true" />
                           <span>ตรวจเช็คป้ายราคาและวันหมดอายุ</span>
                         </div>
                       </>
@@ -162,10 +147,10 @@ export function PositionSelectPage({
                 </div>
 
                 {/* Bottom Action Indicator */}
-                <div className="mt-6 pt-4 border-t border-slate-800">
+                <div className="mt-6 pt-4 border-t border-[#EADBCE]">
                   <div
                     aria-hidden="true"
-                    className={`w-full py-2.5 px-4 rounded-xl bg-indigo-600 ${cardTheme.btnHover} active:bg-indigo-700 text-white text-xs sm:text-sm font-semibold shadow-lg shadow-indigo-950/40 transition-all flex items-center justify-center gap-2 select-none`}
+                    className="w-full py-2.5 px-4 rounded-xl bg-[#2B1413] text-amber-300 group-hover:bg-[#442220] text-xs sm:text-sm font-semibold shadow-sm transition-all flex items-center justify-center gap-2 select-none"
                   >
                     <span>เลือกหน้าที่{pos} → ไปเลือกกะ</span>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="group-hover:translate-x-1 transition-transform">
@@ -184,7 +169,7 @@ export function PositionSelectPage({
             <button
               type="button"
               onClick={onBack}
-              className="text-xs text-slate-400 hover:text-white font-semibold inline-flex items-center gap-1.5 transition-colors cursor-pointer"
+              className="text-xs text-[#78483B] hover:text-[#2B1413] font-semibold inline-flex items-center gap-1.5 transition-colors cursor-pointer"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M19 12H5M12 19l-7-7 7-7" />
@@ -195,7 +180,7 @@ export function PositionSelectPage({
         )}
       </div>
 
-      <footer className="text-center text-[11px] text-slate-500 font-medium py-2">
+      <footer className="text-center text-[11px] text-[#A88B77] font-medium py-2">
         {user.branchName || "Eater Egg Fresh Mart"} • Checklist System
       </footer>
     </main>
