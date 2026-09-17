@@ -624,7 +624,12 @@ export function ExecutiveDashboard({
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-800/80">
-                    {sessions.map((sess) => {
+                    {sessions.filter(sess => {
+                      if (currentRole === "manager_assistant") {
+                        return !(sess.taskRole === "manager_assistant" || sess.userPosition === "ผู้ช่วยผู้จัดการร้าน");
+                      }
+                      return true;
+                    }).map((sess) => {
                       const completedCount = sess.items.filter((i) => i.completedAt).length;
                       const pct = Math.round((completedCount / (sess.items.length || 1)) * 100);
                       const app = approvals[sess.id] || {};
@@ -938,11 +943,28 @@ export function ExecutiveDashboard({
                               >
                                 {item.label}
                               </p>
-                              {item.completedAt && (
-                                <p className="text-[10px] font-mono text-emerald-400 mt-0.5">
-                                  บันทึกเมื่อ: {fmtTime(item.completedAt)}
-                                </p>
-                              )}
+                              {item.completedAt && (() => {
+                                let isLate = item.isLate ?? false;
+                                if (!isLate && item.category) {
+                                  const match = item.category.match(/(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})/);
+                                  if (match) {
+                                    const endStr = match[2];
+                                    const [endHr, endMin] = endStr.split(':').map(Number);
+                                    const completedDate = new Date(item.completedAt);
+                                    const deadlineDate = new Date(); // use today
+                                    deadlineDate.setHours(endHr, endMin, 0, 0);
+                                    if (completedDate > deadlineDate) {
+                                      isLate = true;
+                                    }
+                                  }
+                                }
+                                return (
+                                  <p className="text-[10px] font-mono text-emerald-400 mt-0.5">
+                                    บันทึกเมื่อ: {fmtTime(item.completedAt)}
+                                    {isLate && <span className="text-amber-500 font-bold ml-1 font-sans">(ล่าช้า)</span>}
+                                  </p>
+                                );
+                              })()}
                             </div>
                           </div>
                         );
@@ -1005,7 +1027,12 @@ export function ExecutiveDashboard({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800/80">
-                  {filteredHistory.map((sess) => {
+                  {filteredHistory.filter(sess => {
+                    if (currentRole === "manager_assistant") {
+                      return !(sess.taskRole === "manager_assistant" || sess.userPosition === "ผู้ช่วยผู้จัดการร้าน");
+                    }
+                    return true;
+                  }).map((sess) => {
                     const doneCount = sess.items.filter((i) => i.completedAt).length;
                     const pct = Math.round((doneCount / sess.items.length) * 100);
                     const app = approvals[sess.id] || {};

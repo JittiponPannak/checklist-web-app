@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { User } from "../../types";
 import { BrandLogo } from "../common/BrandLogo";
-import Link from "next/link";
+
 import { getBranchesAction, createBranchAction, assignStaffToBranchAction, assignTasksToBranchAction, DashboardBranch as Branch } from "../../actions/branch";
 import { getAllUsersAction } from "../../actions/auth";
 import { getAllTasksAction, createTaskAction } from "../../actions/task";
@@ -117,6 +117,7 @@ export function AdminDashboardView({
   const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([]);
   const [isSavingTasks, setIsSavingTasks] = useState(false);
   const [taskSearchQuery, setTaskSearchQuery] = useState("");
+  const [assignedTaskSearchQuery, setAssignedTaskSearchQuery] = useState("");
   const [tasksList, setTasksList] = useState<any[]>([]);
 
   const [isCreateTaskModalOpen, setIsCreateTaskModalOpen] = useState(false);
@@ -321,13 +322,7 @@ export function AdminDashboardView({
         </div>
 
         <div className="flex items-center gap-3">
-          <Link
-            href="/manager/dashboard"
-            className="hidden sm:inline-flex items-center gap-1.5 text-xs font-semibold text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-xl border border-slate-700 transition-all"
-          >
-            <span>ดูหน้าผู้จัดการร้าน</span>
-            <span className="text-indigo-400">→</span>
-          </Link>
+
 
           <div className="flex items-center gap-2.5 pl-3 border-l border-slate-800">
             <div className="text-right hidden sm:block">
@@ -993,7 +988,13 @@ export function AdminDashboardView({
                 <div className="w-full md:w-1/2 border-r border-slate-800 flex flex-col bg-slate-900/50">
                   <div className="p-4 border-b border-slate-800">
                     <h4 className="font-semibold text-emerald-400">งานที่สาขานี้ต้องทำ</h4>
-                    <p className="text-xs text-slate-400">รายการงานที่จะแสดงให้พนักงานในสาขาทำ</p>
+                    <input
+                      type="text"
+                      placeholder="ค้นหาชื่องานที่มอบหมายแล้ว..."
+                      value={assignedTaskSearchQuery}
+                      onChange={(e) => setAssignedTaskSearchQuery(e.target.value)}
+                      className="mt-2 w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500 transition-colors"
+                    />
                   </div>
                   <div className="p-4 overflow-y-auto flex-1 space-y-4">
                     {/* Management Level */}
@@ -1002,10 +1003,10 @@ export function AdminDashboardView({
                         ผู้ช่วยผู้จัดการ (Assistant)
                       </div>
                       <div className="p-2 space-y-1">
-                        {tasksList.filter(t => selectedTaskIds.includes(t.id) && t.task_role === "manager_assistant").length === 0 && (
+                        {tasksList.filter(t => selectedTaskIds.includes(t.id) && t.task_role === "manager_assistant" && t.name.toLowerCase().includes(assignedTaskSearchQuery.toLowerCase())).length === 0 && (
                           <div className="text-xs text-slate-500 text-center py-2">ไม่มีระบบงาน</div>
                         )}
-                        {tasksList.filter(t => selectedTaskIds.includes(t.id) && t.task_role === "manager_assistant").map((t) => (
+                        {tasksList.filter(t => selectedTaskIds.includes(t.id) && t.task_role === "manager_assistant" && t.name.toLowerCase().includes(assignedTaskSearchQuery.toLowerCase())).map((t) => (
                           <div key={t.id} className="flex justify-between items-center p-2 rounded-lg bg-slate-900 border border-slate-800">
                             <div>
                               <p className="text-sm font-bold text-white leading-tight">{t.name}</p>
@@ -1023,10 +1024,10 @@ export function AdminDashboardView({
                         พนักงานแคชเชียร์ (Cashier)
                       </div>
                       <div className="p-2 space-y-1">
-                        {tasksList.filter(t => selectedTaskIds.includes(t.id) && t.task_role === "cashier").length === 0 && (
+                        {tasksList.filter(t => selectedTaskIds.includes(t.id) && t.task_role === "cashier" && t.name.toLowerCase().includes(assignedTaskSearchQuery.toLowerCase())).length === 0 && (
                           <div className="text-xs text-slate-500 text-center py-2">ไม่มีระบบงาน</div>
                         )}
-                        {tasksList.filter(t => selectedTaskIds.includes(t.id) && t.task_role === "cashier").map((t) => (
+                        {tasksList.filter(t => selectedTaskIds.includes(t.id) && t.task_role === "cashier" && t.name.toLowerCase().includes(assignedTaskSearchQuery.toLowerCase())).map((t) => (
                           <div key={t.id} className="flex justify-between items-center p-2 rounded-lg bg-slate-900 border border-slate-800">
                             <div>
                               <p className="text-sm font-bold text-white leading-tight">{t.name}</p>
@@ -1044,10 +1045,10 @@ export function AdminDashboardView({
                         พนักงานสต็อก (Stock)
                       </div>
                       <div className="p-2 space-y-1">
-                        {tasksList.filter(t => selectedTaskIds.includes(t.id) && t.task_role === "stock").length === 0 && (
+                        {tasksList.filter(t => selectedTaskIds.includes(t.id) && t.task_role === "stock" && t.name.toLowerCase().includes(assignedTaskSearchQuery.toLowerCase())).length === 0 && (
                           <div className="text-xs text-slate-500 text-center py-2">ไม่มีระบบงาน</div>
                         )}
-                        {tasksList.filter(t => selectedTaskIds.includes(t.id) && t.task_role === "stock").map((t) => (
+                        {tasksList.filter(t => selectedTaskIds.includes(t.id) && t.task_role === "stock" && t.name.toLowerCase().includes(assignedTaskSearchQuery.toLowerCase())).map((t) => (
                           <div key={t.id} className="flex justify-between items-center p-2 rounded-lg bg-slate-900 border border-slate-800">
                             <div>
                               <p className="text-sm font-bold text-white leading-tight">{t.name}</p>

@@ -29,6 +29,7 @@ export interface ManagerShiftSummary {
     taskWorkId?: string;
     assistantApproved: boolean;
     managerApproved: boolean;
+    isLate?: boolean;
   }>;
   branchName?: string;
 }
@@ -123,6 +124,19 @@ export async function getManagerShiftSessionsAction(filterDate?: string): Promis
       const items = sessionWorks.map((work) => {
         const t = allTasks.find((item) => item.id === work.task);
         const timeRange = t?.start && t?.end ? `${t.start.slice(0, 5)} - ${t.end.slice(0, 5)}` : undefined;
+        let isLate = false;
+
+        if (work.timestamp && t?.end) {
+          const completedDate = new Date(work.timestamp);
+          const [endHour, endMinute] = t.end.split(':').map(Number);
+          const deadlineDate = new Date(sess.start);
+          deadlineDate.setHours(endHour, endMinute, 0, 0);
+
+          if (completedDate > deadlineDate) {
+            isLate = true;
+          }
+        }
+
         return {
           id: work.task,
           label: t ? t.name : "รายการงาน",
@@ -131,6 +145,7 @@ export async function getManagerShiftSessionsAction(filterDate?: string): Promis
           taskWorkId: work.id,
           assistantApproved: work.manager_assistance_approve_timestamp !== null,
           managerApproved: work.manager_approve_timestamp !== null,
+          isLate,
         };
       });
 

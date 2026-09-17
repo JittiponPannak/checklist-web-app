@@ -179,12 +179,27 @@ export async function getOrCreateShiftSessionAction(params: {
     const items: ChecklistItem[] = dbTasks.map((t) => {
       const work = workRows.find((w) => w.task === t.id);
       const timeRange = t.start && t.end ? `${t.start.slice(0, 5)} - ${t.end.slice(0, 5)}` : undefined;
+      let isLate = false;
+      if (work?.timestamp && t.end) {
+        const completedDate = new Date(work.timestamp);
+        const [endHour, endMinute] = t.end.split(':').map(Number);
+
+        // Use activeDbSession.start as the reference day to determine if it was done on the same shift day.
+        const deadlineDate = new Date(activeDbSession!.start);
+        deadlineDate.setHours(endHour, endMinute, 0, 0);
+
+        if (completedDate > deadlineDate) {
+          isLate = true;
+        }
+      }
+
       return {
         id: t.id,
         label: t.name,
         category: timeRange ? `ช่วงเวลา ${timeRange}` : undefined,
         completedAt: work?.timestamp ? new Date(work.timestamp).toISOString() : null,
         taskWorkId: work?.id,
+        isLate,
       };
     });
 

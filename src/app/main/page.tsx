@@ -1146,15 +1146,34 @@ function ChecklistPage({
                         {item.label}
                       </p>
                     </div>
-                    {isDone && item.completedAt && (
-                      <div className="flex items-center gap-1.5 mt-1.5 text-[11px] font-mono text-slate-400 pl-6 font-medium">
-                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                          <circle cx="12" cy="12" r="10" />
-                          <polyline points="12 6 12 12 16 14" />
-                        </svg>
-                        <span>เสร็จเมื่อ {fmtTime(item.completedAt)}</span>
-                      </div>
-                    )}
+                    {isDone && item.completedAt && (() => {
+                      let isLate = item.isLate ?? false;
+                      if (!isLate && item.category) {
+                        const match = item.category.match(/(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})/);
+                        if (match) {
+                          const endStr = match[2];
+                          const [endHr, endMin] = endStr.split(':').map(Number);
+                          const completedDate = new Date(item.completedAt);
+                          const deadlineDate = new Date(session.startedAt);
+                          deadlineDate.setHours(endHr, endMin, 0, 0);
+                          if (completedDate > deadlineDate) {
+                            isLate = true;
+                          }
+                        }
+                      }
+                      return (
+                        <div className="flex items-center gap-1.5 mt-1.5 text-[11px] font-mono text-slate-400 pl-6 font-medium">
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                            <circle cx="12" cy="12" r="10" />
+                            <polyline points="12 6 12 12 16 14" />
+                          </svg>
+                          <span>
+                            เสร็จเมื่อ {fmtTime(item.completedAt)}
+                            {isLate && <span className="text-amber-500 font-bold ml-1">(Late)</span>}
+                          </span>
+                        </div>
+                      );
+                    })()}
                   </div>
                 </button>
               </li>
@@ -1831,11 +1850,28 @@ function ManagerDashboard({
                                   {item.label}
                                 </p>
                               </div>
-                              {isDone && item.completedAt && (
-                                <p className="text-[10px] font-mono text-emerald-700 font-semibold mt-1">
-                                  เสร็จเมื่อ {fmtTime(item.completedAt)}
-                                </p>
-                              )}
+                              {isDone && item.completedAt && (() => {
+                                let isLate = item.isLate ?? false;
+                                if (!isLate && item.category) {
+                                  const match = item.category.match(/(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})/);
+                                  if (match) {
+                                    const endStr = match[2];
+                                    const [endHr, endMin] = endStr.split(':').map(Number);
+                                    const completedDate = new Date(item.completedAt);
+                                    const deadlineDate = new Date(activeSession!.startedAt);
+                                    deadlineDate.setHours(endHr, endMin, 0, 0);
+                                    if (completedDate > deadlineDate) {
+                                      isLate = true;
+                                    }
+                                  }
+                                }
+                                return (
+                                  <p className="text-[10px] font-mono text-emerald-700 font-semibold mt-1">
+                                    เสร็จเมื่อ {fmtTime(item.completedAt)}
+                                    {isLate && <span className="text-amber-500 font-bold ml-1">(Late)</span>}
+                                  </p>
+                                );
+                              })()}
                             </div>
                           </button>
                         </div>
@@ -2035,7 +2071,12 @@ function ManagerDashboard({
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {[...notifications].reverse().map((notif) => {
+                  {[...notifications].reverse().filter(notif => {
+                    if (isAssistant) {
+                      return !(notif.userPosition === "ผู้ช่วยผู้จัดการร้าน" || notif.userPosition?.includes("Assistant") || notif.userName === user.name);
+                    }
+                    return true;
+                  }).map((notif) => {
                     const sess = sessions.find((s) => s.id === notif.shiftSessionId);
                     return (
                       <div key={notif.id} className={`p-4 rounded-xl border transition-all ${!notif.read ? "bg-amber-50/70 border-amber-300" : "bg-slate-50/60 border-slate-200"}`}>
@@ -2084,7 +2125,12 @@ function ManagerDashboard({
               {completedSessions.length === 0 ? (
                 <div className="text-center py-16 text-slate-500 text-sm">ยังไม่มีประวัติกะ</div>
               ) : (
-                completedSessions.map((sess) => (
+                completedSessions.filter(sess => {
+                  if (isAssistant) {
+                    return !(sess.userPosition === "ผู้ช่วยผู้จัดการร้าน" || sess.userId === user.id);
+                  }
+                  return true;
+                }).map((sess) => (
                   <button type="button" key={sess.id} onClick={() => setSelectedSession(sess)} className="w-full text-left p-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50/70 hover:border-slate-300 transition-all focus-visible:outline-2 focus-visible:outline-emerald-600 shadow-xs">
                     <div className="flex items-center justify-between">
                       <div>
@@ -2359,9 +2405,28 @@ function ManagerDashboard({
                             <span className="text-[10px] font-mono text-slate-500">{String(idx + 1).padStart(2, "0")}</span>
                             <p className="text-xs font-medium text-slate-900">{item.label}</p>
                           </div>
-                          {item.completedAt && (
-                            <p className="text-[10px] font-mono text-emerald-700 font-semibold mt-0.5">{fmtTime(item.completedAt)}</p>
-                          )}
+                          {item.completedAt && (() => {
+                            let isLate = item.isLate ?? false;
+                            if (!isLate && item.category) {
+                              const match = item.category.match(/(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})/);
+                              if (match) {
+                                const endStr = match[2];
+                                const [endHr, endMin] = endStr.split(':').map(Number);
+                                const completedDate = new Date(item.completedAt);
+                                const deadlineDate = new Date(selectedSession.startedAt);
+                                deadlineDate.setHours(endHr, endMin, 0, 0);
+                                if (completedDate > deadlineDate) {
+                                  isLate = true;
+                                }
+                              }
+                            }
+                            return (
+                              <p className="text-[10px] font-mono text-emerald-700 font-semibold mt-0.5">
+                                {fmtTime(item.completedAt)}
+                                {isLate && <span className="text-amber-500 font-bold ml-1 font-sans">(Late)</span>}
+                              </p>
+                            );
+                          })()}
                         </div>
                       </div>
                     </div>

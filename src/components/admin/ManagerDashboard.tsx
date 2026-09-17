@@ -529,7 +529,11 @@ export function ManagerDashboard({
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {/* Card 1: Morning Shift */}
                   {(() => {
-                    const morningSess = sessions.find((s) => s.shift === "morning" && new Date(s.startedAt).toDateString() === todayDate);
+                    const morningSess = sessions.find((s) => {
+                      if (s.shift !== "morning" || new Date(s.startedAt).toDateString() !== todayDate) return false;
+                      if (isAssistant && (s.taskRole === "manager_assistant" || s.userPosition === "ผู้ช่วยผู้จัดการร้าน")) return false;
+                      return true;
+                    });
                     const doneCount = morningSess ? morningSess.items.filter((i) => i.completedAt).length : 13;
                     const totalCount = morningSess ? morningSess.items.length : 13;
                     const isDone = morningSess ? doneCount === totalCount : true;
@@ -594,7 +598,11 @@ export function ManagerDashboard({
 
                   {/* Card 2: Afternoon Shift */}
                   {(() => {
-                    const afternoonSess = sessions.find((s) => s.shift === "afternoon" && new Date(s.startedAt).toDateString() === todayDate);
+                    const afternoonSess = sessions.find((s) => {
+                      if (s.shift !== "afternoon" || new Date(s.startedAt).toDateString() !== todayDate) return false;
+                      if (isAssistant && (s.taskRole === "manager_assistant" || s.userPosition === "ผู้ช่วยผู้จัดการร้าน")) return false;
+                      return true;
+                    });
                     const doneCount = afternoonSess ? afternoonSess.items.filter((i) => i.completedAt).length : 6;
                     const totalCount = afternoonSess ? afternoonSess.items.length : 12;
                     const pct = Math.round((doneCount / totalCount) * 100);
@@ -718,7 +726,12 @@ export function ManagerDashboard({
                 </div>
 
                 <div className="divide-y divide-slate-800/80">
-                  {notifications.slice(0, 4).map((notif) => (
+                  {notifications.filter(notif => {
+                    if (isAssistant) {
+                      return !(notif.userPosition === "ผู้ช่วยผู้จัดการร้าน" || notif.userPosition?.includes("Assistant") || notif.userName === user.name);
+                    }
+                    return true;
+                  }).slice(0, 4).map((notif) => (
                     <div key={notif.id} className="py-3.5 flex items-center justify-between gap-3 hover:bg-slate-800/30 px-2 rounded-xl transition-colors">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full border border-emerald-800/80 bg-emerald-950/80 text-emerald-300 flex items-center justify-center flex-shrink-0">
@@ -875,14 +888,33 @@ export function ManagerDashboard({
                               </div>
                             </div>
 
-                            {isDone ? (
-                              <span className="text-[11px] font-mono font-semibold text-emerald-900 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded flex-shrink-0 flex items-center gap-1">
-                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                                  <polyline points="20 6 9 17 4 12" />
-                                </svg>
-                                <span>{fmtTime(item.completedAt!)}</span>
-                              </span>
-                            ) : (
+                            {isDone ? (() => {
+                              let isLate = item.isLate ?? false;
+                              if (!isLate && item.category) {
+                                const match = item.category.match(/(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})/);
+                                if (match) {
+                                  const endStr = match[2];
+                                  const [endHr, endMin] = endStr.split(':').map(Number);
+                                  const completedDate = new Date(item.completedAt!);
+                                  const deadlineDate = new Date(activeSession.startedAt);
+                                  deadlineDate.setHours(endHr, endMin, 0, 0);
+                                  if (completedDate > deadlineDate) {
+                                    isLate = true;
+                                  }
+                                }
+                              }
+                              return (
+                                <span className="text-[11px] font-mono font-semibold text-emerald-900 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded flex-shrink-0 flex items-center gap-1">
+                                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                    <polyline points="20 6 9 17 4 12" />
+                                  </svg>
+                                  <span>
+                                    {fmtTime(item.completedAt!)}
+                                    {isLate && <span className="text-amber-500 font-bold ml-1 font-sans">(ล่าช้า)</span>}
+                                  </span>
+                                </span>
+                              );
+                            })() : (
                               <span className="text-[11px] text-slate-500 bg-slate-100 px-2 py-0.5 rounded border border-slate-200 flex-shrink-0 font-mono">
                                 คลิกเพื่อตรวจ
                               </span>
@@ -1251,7 +1283,12 @@ export function ManagerDashboard({
                   </div>
                 ) : (
                   <div className="space-y-2.5">
-                    {completedSessions.map((sess) => (
+                    {completedSessions.filter(sess => {
+                      if (isAssistant) {
+                        return !(sess.taskRole === "manager_assistant" || sess.userPosition === "ผู้ช่วยผู้จัดการร้าน");
+                      }
+                      return true;
+                    }).map((sess) => (
                       <button
                         type="button"
                         key={sess.id}

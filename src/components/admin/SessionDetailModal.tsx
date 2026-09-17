@@ -89,14 +89,12 @@ export function SessionDetailModal({
                     <p className="text-[11px] font-bold text-slate-400 pt-2 pb-0.5">{item.category}</p>
                   )}
                   <div
-                    className={`flex items-start gap-3 p-3 rounded-xl border ${
-                      item.completedAt ? "bg-slate-950/80 border-emerald-900/60" : "bg-slate-950 border-slate-800"
-                    }`}
+                    className={`flex items-start gap-3 p-3 rounded-xl border ${item.completedAt ? "bg-slate-950/80 border-emerald-900/60" : "bg-slate-950 border-slate-800"
+                      }`}
                   >
                     <div
-                      className={`mt-0.5 w-4 h-4 rounded-full border flex items-center justify-center flex-shrink-0 ${
-                        item.completedAt ? "border-emerald-500 bg-emerald-500" : "border-slate-700 bg-slate-900"
-                      }`}
+                      className={`mt-0.5 w-4 h-4 rounded-full border flex items-center justify-center flex-shrink-0 ${item.completedAt ? "border-emerald-500 bg-emerald-500" : "border-slate-700 bg-slate-900"
+                        }`}
                     >
                       {item.completedAt && (
                         <svg width="8" height="8" viewBox="0 0 10 10" fill="none" aria-hidden="true">
@@ -117,11 +115,28 @@ export function SessionDetailModal({
                         </span>
                         <p className={`text-xs font-medium ${item.completedAt ? "text-slate-300 line-through" : "text-white"}`}>{item.label}</p>
                       </div>
-                      {item.completedAt && (
-                        <p className="text-[10px] font-mono text-emerald-400 font-semibold mt-0.5">
-                          เสร็จเมื่อ {fmtTime(item.completedAt)}
-                        </p>
-                      )}
+                      {item.completedAt && (() => {
+                        let isLate = item.isLate ?? false;
+                        if (!isLate && item.category) {
+                          const match = item.category.match(/(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})/);
+                          if (match) {
+                            const endStr = match[2];
+                            const [endHr, endMin] = endStr.split(':').map(Number);
+                            const completedDate = new Date(item.completedAt);
+                            const deadlineDate = new Date(session.startedAt);
+                            deadlineDate.setHours(endHr, endMin, 0, 0);
+                            if (completedDate > deadlineDate) {
+                              isLate = true;
+                            }
+                          }
+                        }
+                        return (
+                          <p className="text-[10px] font-mono text-emerald-400 font-semibold mt-0.5">
+                            เสร็จเมื่อ {fmtTime(item.completedAt)}
+                            {isLate && <span className="text-amber-400 font-bold ml-1 font-sans">(ล่าช้า)</span>}
+                          </p>
+                        );
+                      })()}
                     </div>
                   </div>
                 </div>

@@ -1,4 +1,5 @@
 "use client";
+import { useEffect } from "react";
 
 import { useRouter } from "next/navigation";
 import { ExecutiveDashboard } from "../../../components/manager/ExecutiveDashboard";
@@ -15,6 +16,12 @@ export default function ManagerDashboardPage() {
     updateSession,
     endShift,
   } = useApp();
+  useEffect(() => {
+    if (!isReady) return;
+    if (currentUser?.role === "admin") {
+      router.replace("/admin/dashboard");
+    }
+  }, [currentUser, isReady, router]);
 
   if (!isReady) {
     return (

@@ -22,6 +22,7 @@ export interface ChecklistItem {
   category?: string;
   completedAt: string | null;
   taskWorkId?: string;
+  isLate?: boolean;
 }
 
 export interface ShiftSession {

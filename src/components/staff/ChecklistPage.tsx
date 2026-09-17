@@ -348,15 +348,34 @@ export function ChecklistPage({
                         {item.label}
                       </p>
                     </div>
-                    {isDone && item.completedAt && (
-                      <div className="flex items-center gap-1.5 mt-1.5 text-[11px] font-mono text-emerald-400 pl-6 font-medium">
-                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                          <circle cx="12" cy="12" r="10" />
-                          <polyline points="12 6 12 12 16 14" />
-                        </svg>
-                        <span>เสร็จเมื่อ {fmtTime(item.completedAt)}</span>
-                      </div>
-                    )}
+                    {isDone && item.completedAt && (() => {
+                      let isLate = item.isLate ?? false;
+                      if (!isLate && item.category) {
+                        const match = item.category.match(/(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})/);
+                        if (match) {
+                          const endStr = match[2];
+                          const [endHr, endMin] = endStr.split(':').map(Number);
+                          const completedDate = new Date(item.completedAt);
+                          const deadlineDate = new Date(session.startedAt);
+                          deadlineDate.setHours(endHr, endMin, 0, 0);
+                          if (completedDate > deadlineDate) {
+                            isLate = true;
+                          }
+                        }
+                      }
+                      return (
+                        <div className="flex items-center gap-1.5 mt-1.5 text-[11px] font-mono text-emerald-400 pl-6 font-medium">
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                            <circle cx="12" cy="12" r="10" />
+                            <polyline points="12 6 12 12 16 14" />
+                          </svg>
+                          <span>
+                            เสร็จเมื่อ {fmtTime(item.completedAt)}
+                            {isLate && <span className="text-amber-500 font-bold ml-1">(ล่าช้า)</span>}
+                          </span>
+                        </div>
+                      );
+                    })()}
                   </div>
                 </button>
               </div>
