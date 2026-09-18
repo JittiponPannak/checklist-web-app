@@ -89,11 +89,11 @@ export function SessionDetailModal({
                     <p className="text-[11px] font-bold text-[var(--color-text-muted)] pt-2 pb-0.5">{item.category}</p>
                   )}
                   <div
-                    className={`flex items-start gap-3 p-3 rounded-xl border ${item.completedAt ? "bg-[#FFFDF8] border-[var(--color-amber)]/80" : "bg-[var(--color-surface)] border-[var(--color-border)]"
+                    className={`flex items-start gap-3 p-3 rounded-xl border transition-colors ${item.completedAt ? "bg-[var(--color-amber-glow)]/50 border-[var(--color-amber)]" : "bg-[var(--color-surface)] border-[var(--color-border)]"
                       }`}
                   >
                     <div
-                      className={`mt-0.5 w-4 h-4 rounded-full border flex items-center justify-center flex-shrink-0 ${item.completedAt ? "border-amber-500 bg-[var(--color-amber-glow)]0" : "border-[var(--color-border)] bg-[var(--color-surface)]"
+                      className={`mt-0.5 w-4 h-4 rounded-full border flex items-center justify-center flex-shrink-0 transition-colors ${item.completedAt ? "border-amber-500 bg-amber-500" : "border-[var(--color-border)] bg-[var(--color-surface)]"
                         }`}
                     >
                       {item.completedAt && (

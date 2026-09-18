@@ -25,6 +25,7 @@ import {
   toggleTaskWorkAction,
   resetTodayChecklistDataAction,
 } from "../../actions/checklist";
+import { RefrigeratorConfigView } from "./RefrigeratorConfigView";
 
 export type ExecutiveRole = "manager_assistant" | "manager" | "committee" | "general_manager";
 
@@ -78,7 +79,7 @@ export function ExecutiveDashboard({
   const [isLoadingChecklist, setIsLoadingChecklist] = useState(false);
 
   // Navigation tab
-  type DashboardTab = "overview" | "checklist" | "history";
+  type DashboardTab = "overview" | "checklist" | "history" | "refrigerator";
   const [activeTab, setActiveTab] = useState<DashboardTab>("overview");
 
   // Load live shift sessions from Supabase DB
@@ -297,7 +298,7 @@ export function ExecutiveDashboard({
   const roleConfig = {
     manager_assistant: {
       title: "ผู้ช่วยผู้จัดการร้าน (Assistant Manager)",
-      badge: "bg-[#FAF2EB] text-[var(--color-text-muted)] border-[var(--color-border)]",
+      badge: "bg-[var(--color-surface-2)] text-amber-200 border-[var(--color-border)] font-semibold shadow-sm",
       description: "ตรวจสอบความเรียบร้อยหน้างาน รับรองกะพนักงานเบื้องต้น และรายงานสรุป",
       primaryDuty: "ตรวจรับรองกะงานพนักงาน (Morning / Afternoon Sign-off)",
       icon: "📋",
@@ -531,15 +532,15 @@ export function ExecutiveDashboard({
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 space-y-6">
         {/* Toast Notification Alert */}
         {actionFeedback && (
-          <div className="p-3 bg-[var(--color-amber-glow)] border border-[var(--color-amber)] text-amber-950 text-xs font-semibold rounded-xl flex items-center justify-between shadow-sm animate-fade-in">
+          <div className="p-3 bg-[var(--color-surface)] border border-[var(--color-primary)]/40 text-[var(--color-text)] text-xs font-semibold rounded-xl flex items-center justify-between shadow-md animate-fade-in">
             <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-400" />
+              <span className="w-2 h-2 rounded-full bg-[var(--color-primary)]" />
               <span>{actionFeedback}</span>
             </div>
             <button
               type="button"
               onClick={() => setActionFeedback(null)}
-              className="text-emerald-300 hover:text-[var(--color-brown)] text-xs font-bold px-2 py-0.5"
+              className="text-[var(--color-text-muted)] hover:text-[var(--color-danger)] text-xs font-bold px-2 py-0.5 cursor-pointer transition-colors"
             >
               ปิด
             </button>
@@ -584,8 +585,8 @@ export function ExecutiveDashboard({
         </header>
 
         {/* ─── Navigation Tabs (Tailored to Executive & Operations) ──────────── */}
-        <div className="bg-[#F7F1E9] p-1.5 rounded-2xl border border-[var(--color-border)] shadow-2xs">
-          <div className={`grid ${currentRole === "manager_assistant" ? "grid-cols-1 sm:grid-cols-3" : "grid-cols-1 sm:grid-cols-2"} gap-1`}>
+        <div className="bg-[var(--color-surface-2)] p-1.5 rounded-2xl border border-[var(--color-border)] shadow-2xs">
+          <div className={`grid ${currentRole === "manager_assistant" ? "grid-cols-2 sm:grid-cols-4" : "grid-cols-2 sm:grid-cols-3"} gap-1`}>
             {[
               {
                 id: "overview" as DashboardTab,
@@ -603,6 +604,12 @@ export function ExecutiveDashboard({
                   },
                 ]
                 : []),
+              {
+                id: "refrigerator" as DashboardTab,
+                label: "ตั้งค่าตู้แช่",
+                icon: "❄️",
+                desc: "จัดการและตั้งค่าตู้แช่",
+              },
               {
                 id: "history" as DashboardTab,
                 label: "ประวัติการตรวจสอบย้อนหลัง",
@@ -632,6 +639,10 @@ export function ExecutiveDashboard({
         </div>
 
         {/* ─── TAB 1: OVERVIEW & LIVE SHIFT APPROVALS ──────────────────────────── */}
+        {activeTab === "refrigerator" && (
+          <RefrigeratorConfigView user={user} />
+        )}
+
         {activeTab === "overview" && (
           <div className="space-y-6 animate-fade-in">
             {/* Live Shift Handover & Approval Queue */}
@@ -659,7 +670,7 @@ export function ExecutiveDashboard({
                     type="button"
                     onClick={() => loadDbSessions(true)}
                     disabled={isLoadingDb}
-                    className="text-[11px] font-semibold text-[var(--color-text)] hover:text-[var(--color-brown-light)] bg-[var(--color-surface-2)] hover:bg-[#F2E7DC] border border-[var(--color-border)] px-2.5 py-1 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                    className="text-[11px] font-semibold text-[var(--color-text)] hover:text-[var(--color-amber)] bg-[var(--color-surface-2)] hover:bg-[var(--color-surface)] border border-[var(--color-border)] px-2.5 py-1 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                     title="โหลดข้อมูลล่าสุดจากฐานข้อมูล"
                   >
                     <svg
@@ -682,7 +693,7 @@ export function ExecutiveDashboard({
                     type="button"
                     onClick={handleResetChecklistData}
                     disabled={isResetting}
-                    className="text-[11px] font-semibold text-rose-700 hover:text-rose-900 bg-rose-50 hover:bg-rose-100 border border-rose-200 px-2.5 py-1 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                    className="text-[11px] font-semibold text-rose-500 hover:text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 px-2.5 py-1 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                     title="ล้างข้อมูลเช็คลิสต์ประจำวันทั้งหมดในฐานข้อมูลเพื่อเริ่มทดสอบใหม่"
                   >
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -718,105 +729,113 @@ export function ExecutiveDashboard({
                         return !(sess.taskRole === "manager_assistant" || sess.userPosition === "ผู้ช่วยผู้จัดการร้าน");
                       }
                       return true;
-                    }).map((sess) => {
-                      const completedCount = sess.items.filter((i) => i.completedAt).length;
-                      const pct = Math.round((completedCount / (sess.items.length || 1)) * 100);
-                      const app = approvals[sess.id] || {};
-                      const isAssistantSession =
-                        sess.taskRole === "manager_assistant" || sess.userPosition === "ผู้ช่วยผู้จัดการร้าน";
+                    })
+                      .sort((a, b) => {
+                        if (a.shift === "morning" && b.shift !== "morning") return -1;
+                        if (a.shift !== "morning" && b.shift === "morning") return 1;
+                        if (a.shift === "afternoon" && b.shift !== "afternoon") return -1;
+                        if (a.shift !== "afternoon" && b.shift === "afternoon") return 1;
+                        return 0;
+                      })
+                      .map((sess) => {
+                        const completedCount = sess.items.filter((i) => i.completedAt).length;
+                        const pct = Math.round((completedCount / (sess.items.length || 1)) * 100);
+                        const app = approvals[sess.id] || {};
+                        const isAssistantSession =
+                          sess.taskRole === "manager_assistant" || sess.userPosition === "ผู้ช่วยผู้จัดการร้าน";
 
-                      return (
-                        <tr key={sess.id} className="hover:bg-[var(--color-background)] transition-colors">
-                          <td className="py-3 px-3 font-semibold text-[var(--color-text)]">
-                            {sess.userName}
-                          </td>
-                          <td className="py-3 px-3 space-y-1">
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              <span
-                                className={`px-2 py-0.5 rounded-md font-medium text-[11px] ${isAssistantSession
-                                  ? "bg-[var(--color-amber-glow)] text-[var(--color-text)] border border-[var(--color-amber)]"
-                                  : "bg-[var(--color-surface-2)] text-[var(--color-text-muted)] border border-[var(--color-border)]"
-                                  }`}
+                        return (
+                          <tr key={sess.id} className="hover:bg-[var(--color-background)] transition-colors">
+                            <td className="py-3 px-3 font-semibold text-[var(--color-text)]">
+                              {sess.userName}
+                            </td>
+                            <td className="py-3 px-3 space-y-1">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span
+                                  className={`px-2 py-0.5 rounded-md font-medium text-[11px] ${isAssistantSession
+                                    ? "bg-[var(--color-amber-glow)] text-[var(--color-text)] border border-[var(--color-amber)]"
+                                    : "bg-[var(--color-surface-2)] text-[var(--color-text-muted)] border border-[var(--color-border)]"
+                                    }`}
+                                >
+                                  {sess.userPosition || "พนักงาน"}
+                                </span>
+                                {getShiftBadge(sess.shift)}
+                              </div>
+                            </td>
+                            <td className="py-3 px-3">
+                              <div className="space-y-1">
+                                <div className="flex items-center justify-between text-[11px] font-mono text-[var(--color-text-muted)]">
+                                  <span>{completedCount}/{sess.items.length}</span>
+                                  <span className="font-bold text-[var(--color-text)]">{pct}%</span>
+                                </div>
+                                <div className="w-24 bg-[#F2E7DC] h-1.5 rounded-full overflow-hidden border border-[var(--color-border)]">
+                                  <div
+                                    className={`h-full rounded-full ${pct === 100 ? "bg-emerald-500" : "bg-amber-400"}`}
+                                    style={{ width: `${pct}%` }}
+                                  />
+                                </div>
+                              </div>
+                            </td>
+                            <td className="py-3 px-3 font-mono text-[var(--color-text-muted)] text-[11px]">
+                              {sess.completedAt ? fmtTime(sess.completedAt) : (
+                                <span className="text-[var(--color-amber)] bg-[var(--color-amber-glow)] border border-[var(--color-amber)] px-2 py-0.5 rounded-md font-semibold text-[10px]">
+                                  กำลังปฏิบัติงาน
+                                </span>
+                              )}
+                            </td>
+                            {/* Assistant Approval */}
+                            <td className="py-3 px-3 text-center">
+                              {isAssistantSession ? (
+                                <span className="text-[10px] text-[var(--color-text-subtle)] font-medium">
+                                  - (งานผู้ช่วย)
+                                </span>
+                              ) : app.assistantApproved ? (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                  ✓ รับรองแล้ว
+                                </span>
+                              ) : !hasAssistantLoggedInToday ? (
+                                <span className="text-[10px] text-[var(--color-text-subtle)] font-medium tooltip" title="ไม่มีผู้ช่วยเข้างานในวันนี้ จึงข้ามขั้นตอนนี้ให้ผู้จัดการพิจารณาโดยตรง">
+                                  - (ข้าม)
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-[var(--color-amber-glow)] text-[var(--color-amber)] border border-[var(--color-amber)]">
+                                  รอดำเนินการ
+                                </span>
+                              )}
+                            </td>
+                            {/* Manager Approval */}
+                            <td className="py-3 px-3 text-center">
+                              {app.managerApproved ? (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                  ✓ อนุมัติแล้ว
+                                </span>
+                              ) : isAssistantSession ? (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-[var(--color-amber-glow)] text-[var(--color-amber)] border border-[var(--color-amber)]">
+                                  รอผู้จัดการอนุมัติ
+                                </span>
+                              ) : app.assistantApproved || !hasAssistantLoggedInToday ? (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-[var(--color-amber-glow)] text-[var(--color-amber)] border border-[var(--color-amber)]">
+                                  รอผู้จัดการอนุมัติ
+                                </span>
+                              ) : (
+                                <span className="text-[10px] text-[var(--color-text-subtle)] font-medium">
+                                  (รอผู้ช่วยรับรองก่อน)
+                                </span>
+                              )}
+                            </td>
+                            {/* Action button */}
+                            <td className="py-3 px-3 text-right">
+                              <button
+                                type="button"
+                                onClick={() => setSelectedSession(sess)}
+                                className="px-3 py-1.5 text-xs font-semibold text-[var(--color-text)] bg-amber-400 hover:bg-amber-300 active:bg-[var(--color-amber-glow)]0 rounded-lg transition-colors cursor-pointer shadow-sm shadow-amber-200/50"
                               >
-                                {sess.userPosition || "พนักงาน"}
-                              </span>
-                              {getShiftBadge(sess.shift)}
-                            </div>
-                          </td>
-                          <td className="py-3 px-3">
-                            <div className="space-y-1">
-                              <div className="flex items-center justify-between text-[11px] font-mono text-[var(--color-text-muted)]">
-                                <span>{completedCount}/{sess.items.length}</span>
-                                <span className="font-bold text-[var(--color-text)]">{pct}%</span>
-                              </div>
-                              <div className="w-24 bg-[#F2E7DC] h-1.5 rounded-full overflow-hidden border border-[var(--color-border)]">
-                                <div
-                                  className={`h-full rounded-full ${pct === 100 ? "bg-emerald-500" : "bg-amber-400"}`}
-                                  style={{ width: `${pct}%` }}
-                                />
-                              </div>
-                            </div>
-                          </td>
-                          <td className="py-3 px-3 font-mono text-[var(--color-text-muted)] text-[11px]">
-                            {sess.completedAt ? fmtTime(sess.completedAt) : (
-                              <span className="text-[var(--color-amber)] bg-[var(--color-amber-glow)] border border-[var(--color-amber)] px-2 py-0.5 rounded-md font-semibold text-[10px]">
-                                กำลังปฏิบัติงาน
-                              </span>
-                            )}
-                          </td>
-                          {/* Assistant Approval */}
-                          <td className="py-3 px-3 text-center">
-                            {isAssistantSession ? (
-                              <span className="text-[10px] text-[var(--color-text-subtle)] font-medium">
-                                - (งานผู้ช่วย)
-                              </span>
-                            ) : app.assistantApproved ? (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                ✓ รับรองแล้ว
-                              </span>
-                            ) : !hasAssistantLoggedInToday ? (
-                              <span className="text-[10px] text-[var(--color-text-subtle)] font-medium tooltip" title="ไม่มีผู้ช่วยเข้างานในวันนี้ จึงข้ามขั้นตอนนี้ให้ผู้จัดการพิจารณาโดยตรง">
-                                - (ข้าม)
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-[var(--color-amber-glow)] text-[var(--color-amber)] border border-[var(--color-amber)]">
-                                รอดำเนินการ
-                              </span>
-                            )}
-                          </td>
-                          {/* Manager Approval */}
-                          <td className="py-3 px-3 text-center">
-                            {app.managerApproved ? (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                ✓ อนุมัติแล้ว
-                              </span>
-                            ) : isAssistantSession ? (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-[var(--color-amber-glow)] text-[var(--color-amber)] border border-[var(--color-amber)]">
-                                รอผู้จัดการอนุมัติ
-                              </span>
-                            ) : app.assistantApproved || !hasAssistantLoggedInToday ? (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-[var(--color-amber-glow)] text-[var(--color-amber)] border border-[var(--color-amber)]">
-                                รอผู้จัดการอนุมัติ
-                              </span>
-                            ) : (
-                              <span className="text-[10px] text-[var(--color-text-subtle)] font-medium">
-                                (รอผู้ช่วยรับรองก่อน)
-                              </span>
-                            )}
-                          </td>
-                          {/* Action button */}
-                          <td className="py-3 px-3 text-right">
-                            <button
-                              type="button"
-                              onClick={() => setSelectedSession(sess)}
-                              className="px-3 py-1.5 text-xs font-semibold text-[var(--color-text)] bg-amber-400 hover:bg-amber-300 active:bg-[var(--color-amber-glow)]0 rounded-lg transition-colors cursor-pointer shadow-sm shadow-amber-200/50"
-                            >
-                              ตรวจรับรอง →
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    })}
+                                ตรวจรับรอง →
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
                   </tbody>
                 </table>
               </div>
@@ -993,7 +1012,7 @@ export function ExecutiveDashboard({
                           >
                             <div
                               className={`w-5 h-5 rounded-md border flex items-center justify-center mt-0.5 transition-colors ${isDone
-                                ? "bg-[var(--color-amber-glow)]0 border-amber-500 text-[var(--color-brown)]"
+                                ? "bg-amber-500 border-amber-500 text-white"
                                 : "border-[#C9B29F] bg-[var(--color-surface)]"
                                 }`}
                             >

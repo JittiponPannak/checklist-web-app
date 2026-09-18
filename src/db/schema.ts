@@ -3,6 +3,7 @@ import { boolean, date, integer, pgEnum, pgTable, timestamp, varchar, time, uuid
 export const roleEnum = pgEnum('role', ['admin', 'committee', 'general_manager', 'manager', 'manager_assistant', 'employee']);
 export const taskRoleEnum = pgEnum('task_role', ['manager_assistant', 'cashier', 'stock']);
 export const shiftEnum = pgEnum('shift', ['morning', 'afternoon', 'morning_afternoon']);
+export const pointStreakEnum = pgEnum('point_streak', ['none', 'flawed', 'perfect']);
 
 export const users = pgTable.withRLS("users", {
     id: uuid("id").primaryKey().defaultRandom(),
@@ -10,6 +11,9 @@ export const users = pgTable.withRLS("users", {
     email: text("email").notNull(),
     password: text("password").notNull(),
     role: roleEnum("role").notNull(),
+
+    point_streak_type: pointStreakEnum('point_streak_type').notNull().default('none'),
+    point_streak: integer('point_streak').notNull().default(0),
     point: integer("point").notNull().default(0),
 
     last_login: timestamp("last_login"),
@@ -51,7 +55,9 @@ export const taskWork = pgTable.withRLS("task_work", {
 
 export const refrigerators = pgTable.withRLS("refrigerators", {
     id: uuid("id").primaryKey().defaultRandom(),
+    name: text("name").notNull().default(""),
     target_temperature: integer("target_temperature").notNull(),
+    disable_check: boolean("disable_check").notNull().default(false),
 });
 
 export const refrigeratorCheck = pgTable.withRLS("refrigerator_check", {

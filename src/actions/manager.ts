@@ -2,7 +2,7 @@
 
 import { db } from "../db";
 import { tasks, taskWork, shiftSession, users, branches } from "../db/schema";
-import { eq, and, gte, lte, desc, inArray } from "drizzle-orm";
+import { eq, and, gte, lte, desc, inArray, sql } from "drizzle-orm";
 import { ShiftType } from "../types";
 
 export interface ManagerShiftSummary {
@@ -369,19 +369,29 @@ export async function approveShiftSessionAction(params: {
   try {
     const { shiftSessionId, role } = params;
 
-    // Check if session belongs to a manager assistant
+    // Check if session belongs to a manager assistant and get full session details
     const [targetSession] = await db
-      .select({ task_role: shiftSession.task_role })
+      .select({ task_role: shiftSession.task_role, start: shiftSession.start, user: shiftSession.user, branch: shiftSession.branch })
       .from(shiftSession)
       .where(eq(shiftSession.id, shiftSessionId))
       .limit(1);
 
-    if (targetSession?.task_role === "manager_assistant" && role === "manager_assistant") {
+    if (!targetSession) {
+      return { success: false, error: "ไม่พบข้อมูลกะนี้" };
+    }
+
+    if (targetSession.task_role === "manager_assistant" && role === "manager_assistant") {
       return {
         success: false,
         error: "ผู้ที่จะอนุมัติงานของผู้ช่วยผู้จัดการร้านได้จะต้องเป็นตำแหน่งผู้จัดการร้าน (Manager) หรือสูงกว่าเท่านั้น",
       };
     }
+
+    // Pre-fetch related taskWork to determine approval transition and calculate points
+    const sessionWorks = await db.select().from(taskWork).where(eq(taskWork.shift_session, shiftSessionId));
+
+    // Determine if it's already fully approved
+    const wasFullyApproved = sessionWorks.length > 0 && sessionWorks.every(w => w.manager_assistance_approve_timestamp !== null && w.manager_approve_timestamp !== null);
 
     const now = new Date();
 
@@ -398,19 +408,90 @@ export async function approveShiftSessionAction(params: {
         .where(eq(taskWork.shift_session, shiftSessionId));
     }
 
-    // Update branch last_update
-    const [sess] = await db
-      .select({ branch: shiftSession.branch })
-      .from(shiftSession)
-      .where(eq(shiftSession.id, shiftSessionId))
-      .limit(1);
+    // Determine current fully approved status based on role
+    let isNowFullyApproved = false;
+    if (sessionWorks.length > 0) {
+      if (role === "manager_assistant") {
+        isNowFullyApproved = sessionWorks.every(w => w.manager_approve_timestamp !== null);
+      } else {
+        isNowFullyApproved = sessionWorks.every(w => w.manager_assistance_approve_timestamp !== null);
+      }
+    }
 
-    if (sess && sess.branch) {
+    // Transition from Not Fully Approved -> Fully Approved
+    if (!wasFullyApproved && isNowFullyApproved) {
+      const taskIds = Array.from(new Set(sessionWorks.map((w) => w.task)));
+      let hasIssueOrLate = false;
+
+      if (taskIds.length > 0) {
+        const sessionTasks = await db.select().from(tasks).where(inArray(tasks.id, taskIds));
+
+        for (const work of sessionWorks) {
+          if (!work.timestamp) {
+            hasIssueOrLate = true;
+            break;
+          }
+          const t = sessionTasks.find((item) => item.id === work.task);
+          if (t?.end) {
+            const completedDate = new Date(work.timestamp);
+            const [endHour, endMinute] = t.end.split(':').map(Number);
+            const deadlineDate = new Date(targetSession.start);
+            deadlineDate.setHours(endHour, endMinute, 0, 0);
+
+            if (completedDate > deadlineDate) {
+              hasIssueOrLate = true;
+              break;
+            }
+          }
+        }
+      } else {
+        hasIssueOrLate = true; // No tasks => technically an issue, might want to just award 1 point.
+      }
+
+      const currentShiftType: 'perfect' | 'flawed' = hasIssueOrLate ? 'flawed' : 'perfect';
+      let pointsToAdd = hasIssueOrLate ? 1 : 2;
+
+      // Fetch user to calculate streaks
+      const [targetUser] = await db
+        .select({ point_streak_type: users.point_streak_type, point_streak: users.point_streak })
+        .from(users)
+        .where(eq(users.id, targetSession.user))
+        .limit(1);
+
+      if (targetUser) {
+        let newStreakType = targetUser.point_streak_type;
+        let newStreakCount = targetUser.point_streak;
+
+        if (newStreakType !== currentShiftType) {
+          newStreakType = currentShiftType;
+          newStreakCount = 1;
+        } else {
+          newStreakCount += 1;
+        }
+
+        if (newStreakCount > 0 && newStreakCount % 5 === 0) {
+          pointsToAdd += 3;
+        }
+
+        // Update points and streaks in users table
+        await db
+          .update(users)
+          .set({
+            point: sql`${users.point} + ${pointsToAdd}`,
+            point_streak_type: newStreakType,
+            point_streak: newStreakCount
+          })
+          .where(eq(users.id, targetSession.user));
+      }
+    }
+
+    // Update branch last_update
+    if (targetSession.branch) {
       const { branches } = await import("../db/schema");
       await db
         .update(branches)
         .set({ last_update: new Date() })
-        .where(eq(branches.id, sess.branch));
+        .where(eq(branches.id, targetSession.branch));
     }
 
     return { success: true };

@@ -18,6 +18,7 @@ export function EmployeeAuthPage({
         name: "",
         email: "",
         password: "",
+        confirmPassword: "",
         role: "employee" as "employee" | "manager_assistant",
         position: STAFF_POSITIONS[0],
         branchId: "",
@@ -74,8 +75,12 @@ export function EmployeeAuthPage({
     }
 
     async function handleRegister() {
-        if (!form.name.trim() || !form.email.trim() || !form.password.trim()) {
+        if (!form.name.trim() || !form.email.trim() || !form.password.trim() || !form.confirmPassword.trim()) {
             setError("กรุณากรอกข้อมูลให้ครบถ้วน");
+            return;
+        }
+        if (form.password !== form.confirmPassword) {
+            setError("รหัสผ่านไม่ตรงกัน");
             return;
         }
         setLoading(true);
@@ -214,6 +219,23 @@ export function EmployeeAuthPage({
                             onKeyDown={(e) => e.key === "Enter" && (tab === "register" ? handleRegister() : handleLogin())}
                         />
                     </div>
+
+                    {tab === "register" && (
+                        <div>
+                            <label htmlFor="reg-confirm-password" className="block text-xs font-semibold text-[var(--color-text-muted)] mb-1.5">
+                                ยืนยันรหัสผ่าน
+                            </label>
+                            <input
+                                id="reg-confirm-password"
+                                className={inp}
+                                placeholder="••••••••"
+                                type="password"
+                                value={form.confirmPassword}
+                                onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
+                                onKeyDown={(e) => e.key === "Enter" && handleRegister()}
+                            />
+                        </div>
+                    )}
 
                     {error && (
                         <div role="alert" className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700 text-center font-semibold">

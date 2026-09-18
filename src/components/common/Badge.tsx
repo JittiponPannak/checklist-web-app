@@ -19,8 +19,8 @@ export function Badge({
       dot: "bg-[var(--color-amber)]",
     },
     blue: {
-      wrap: "bg-[#F7EFE9] text-[var(--color-text-muted)] border-[var(--color-border)] font-semibold",
-      dot: "bg-[var(--color-text-muted)]",
+      wrap: "bg-[#2563eb1f] text-[#2563eb] border-[#2563eb] font-semibold",
+      dot: "bg-[#2563eb]",
     },
     muted: {
       wrap: "bg-[var(--color-surface-2)] text-[var(--color-text-muted)] border-[var(--color-border)] font-medium",

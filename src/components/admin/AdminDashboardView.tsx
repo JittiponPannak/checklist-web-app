@@ -377,7 +377,7 @@ export function AdminDashboardView({
         {activeTab === "overview" && (
           <div className="space-y-6 animate-fade-in">
             {/* 4 Stats Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <div className="bg-[var(--color-surface)] border border-[var(--color-border)] p-5 rounded-2xl shadow-sm">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-medium text-[var(--color-text-muted)]">สาขาที่เปิดทำการ</span>
@@ -388,19 +388,6 @@ export function AdminDashboardView({
                 <div className="mt-3 flex items-baseline gap-2">
                   <span className="text-3xl font-black text-[var(--color-text)] font-mono">{branches.filter(b => b.status === "active").length}</span>
                   <span className="text-xs text-[var(--color-text-subtle)]">/ {branches.length} สาขาทั่วประเทศ</span>
-                </div>
-              </div>
-
-              <div className="bg-[var(--color-surface)] border border-[var(--color-border)] p-5 rounded-2xl shadow-sm">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium text-[var(--color-text-muted)]">อัตราการเช็คลิสต์รวมวันนี้</span>
-                  <span className="text-[10px] font-bold text-[var(--color-amber)] bg-[var(--color-amber-glow)] border border-[var(--color-amber)] px-2 py-0.5 rounded-full">
-                    ทั่วประเทศ
-                  </span>
-                </div>
-                <div className="mt-3 flex items-baseline gap-2">
-                  <span className="text-3xl font-black text-amber-700 font-mono">96.5%</span>
-                  <span className="text-xs text-emerald-600 font-semibold">+2.1% จากสัปดาห์ก่อน</span>
                 </div>
               </div>
 
