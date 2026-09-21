@@ -93,7 +93,7 @@ export interface IChecklistService {
 
   endShiftSession(shiftSessionId: string): Promise<{ success: boolean; error?: string }>;
 
-  getPositionShiftsStatus(position: string): Promise<{
+  getPositionShiftsStatus(position: string, userId?: string): Promise<{
     success: boolean;
     statuses?: Record<ShiftType, { status: "completed" | "incomplete" | "none"; total: number; done: number }>;
     error?: string;

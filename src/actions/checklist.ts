@@ -28,13 +28,13 @@ export async function endShiftSessionAction(shiftSessionId: string): Promise<{ s
   return await services.checklist.endShiftSession(shiftSessionId);
 }
 
-export async function getPositionShiftsStatusAction(position: string): Promise<{
+export async function getPositionShiftsStatusAction(position: string, userId?: string): Promise<{
   success: boolean;
   statuses?: Record<ShiftType, { status: "completed" | "incomplete" | "none"; total: number; done: number }>;
   error?: string;
 }> {
   const services = getServices();
-  return await services.checklist.getPositionShiftsStatus(position);
+  return await services.checklist.getPositionShiftsStatus(position, userId);
 }
 
 export async function resetTodayChecklistDataAction(position?: string): Promise<{ success: boolean; error?: string }> {

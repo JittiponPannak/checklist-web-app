@@ -74,8 +74,21 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     if (storedUser) setCurrentUserState(storedUser);
     if (storedShift) setSelectedShiftState(storedShift);
-    if (storedSession) setActiveSessionState(storedSession);
-    setSessionsState(storedSessions);
+
+    // Only restore active session if it matches the current user
+    if (storedSession && storedUser && storedSession.userId === storedUser.id) {
+      setActiveSessionState(storedSession);
+    } else if (storedSession && (!storedUser || storedSession.userId !== storedUser?.id)) {
+      secureRemoveItem("app_active_session");
+      secureRemoveItem("app_selected_shift");
+    }
+
+    if (storedSessions && storedUser) {
+      const userSessions = storedSessions.filter((s) => s.userId === storedUser.id);
+      setSessionsState(userSessions);
+    } else {
+      setSessionsState([]);
+    }
 
     // Check Supabase Auth state for OAuth logins
     const supabase = createClient();
@@ -141,6 +154,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
+    // Reset previous user's active session and queue if user changed
+    const prevUser = getCurrentUser();
+    if (prevUser && prevUser.id !== user.id) {
+      secureRemoveItem("app_sessions");
+      secureRemoveItem("app_active_session");
+      secureRemoveItem("app_selected_shift");
+      secureRemoveItem("app_queue_afternoon");
+      setSessionsState([]);
+      setActiveSession(null);
+      setSelectedShift(null);
+    }
+
     if (user.role === "admin" || user.role === "committee" || user.role === "general_manager") {
       setCurrentUser(user);
       startTransition(() => {
@@ -152,6 +177,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         router.push("/manager/dashboard");
       });
     } else {
+      // Clear any leftover session when an employee logs in so they always start clean
+      setActiveSession(null);
+      setSelectedShift(null);
+      secureRemoveItem("app_active_session");
+      secureRemoveItem("app_selected_shift");
+
       const staffUser: User = { ...user, position: undefined };
       setCurrentUser(staffUser);
       startTransition(() => {
