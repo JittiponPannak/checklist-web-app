@@ -159,6 +159,18 @@ export class ChecklistService implements IChecklistService {
           }));
           workRows = await this.db.insert(taskWork).values(inserts).returning();
         }
+
+        if (this.notificationService) {
+          const shiftTitle = dbShift === "morning" ? "กะเช้า" : dbShift === "afternoon" ? "กะบ่าย" : "กะเช้า-บ่าย";
+          await this.notificationService.createNotification({
+            recipientId: validUserId,
+            title: `🚀 เริ่มต้นปฏิบัติงาน: ${shiftTitle}`,
+            message: `เริ่มบันทึกกะงานสำหรับตำแหน่ง ${position} เรียบร้อยแล้ว อย่าลืมตรวจสอบรายการงานตามรอบเวลาที่กำหนด`,
+            type: "info",
+            shiftSessionId: newSession.id,
+            branchId: branchId,
+          });
+        }
       } else {
         workRows = await this.db
           .select()
@@ -303,7 +315,14 @@ export class ChecklistService implements IChecklistService {
                 .where(eq(users.id, sess.user))
                 .limit(1);
 
-              const shiftName = sess.shift === "morning" ? "กะเช้า" : sess.shift === "afternoon" ? "กะบ่าย" : "กะเช้า-บ่าย";
+              const shiftName =
+                sess.shift === "morning"
+                  ? "กะเช้า"
+                  : sess.shift === "afternoon"
+                  ? "กะบ่าย"
+                  : "กะดึก";
+
+              // Notify manager
               await this.notificationService.createNotification({
                 branchId: sess.branch,
                 recipientRole: "manager",
@@ -311,6 +330,16 @@ export class ChecklistService implements IChecklistService {
                 message: `${userObj?.name || "พนักงาน"} ได้เช็ครายการงานครบทุกข้อแล้ว กรุณาตรวจสอบและอนุมัติ`,
                 type: "shift_submitted",
                 shiftSessionId: targetShiftSessionId,
+              });
+
+              // Notify employee
+              await this.notificationService.createNotification({
+                recipientId: sess.user,
+                title: `✨ ทำรายการตรวจครบ 100% แล้ว`,
+                message: `คุณได้ตรวจสอบรายการงานกะ ${shiftName} ครบทุกข้อแล้ว กรุณากด "จบกะงาน" เพื่อส่งรายงานให้ผู้จัดการร้าน`,
+                type: "shift_submitted",
+                shiftSessionId: targetShiftSessionId,
+                branchId: sess.branch,
               });
             }
           }
@@ -330,12 +359,43 @@ export class ChecklistService implements IChecklistService {
         return { success: false, error: "ID ของกะไม่ถูกต้อง" };
       }
 
-      await this.db
+      const [endedSession] = await this.db
         .update(shiftSession)
         .set({
           end: new Date(),
         })
-        .where(eq(shiftSession.id, shiftSessionId));
+        .where(eq(shiftSession.id, shiftSessionId))
+        .returning();
+
+      if (endedSession && this.notificationService) {
+        const [u] = await this.db
+          .select({ name: users.name })
+          .from(users)
+          .where(eq(users.id, endedSession.user))
+          .limit(1);
+
+        const shiftName = endedSession.shift === "morning" ? "กะเช้า" : endedSession.shift === "afternoon" ? "กะบ่าย" : "กะเช้า-บ่าย";
+
+        // Notify employee
+        await this.notificationService.createNotification({
+          recipientId: endedSession.user,
+          title: `🏁 บันทึกการจบกะงานสำเร็จ`,
+          message: `คุณได้ส่งมอบกะงาน ${shiftName} เรียบร้อยแล้ว รายงานถูกส่งไปยังผู้จัดการร้านเพื่อตรวจรับรองและให้แต้มรางวัล`,
+          type: "shift_submitted",
+          shiftSessionId: endedSession.id,
+          branchId: endedSession.branch,
+        });
+
+        // Notify branch managers
+        await this.notificationService.createNotification({
+          branchId: endedSession.branch,
+          recipientRole: "manager",
+          title: `🏁 พนักงานจบกะงาน: ${u?.name || "พนักงาน"}`,
+          message: `${u?.name || "พนักงาน"} ได้ส่งมอบและจบกะงาน ${shiftName} ประจำสาขาเรียบร้อยแล้ว พร้อมให้เข้าตรวจรับรอง`,
+          type: "shift_submitted",
+          shiftSessionId: endedSession.id,
+        });
+      }
 
       return { success: true };
     } catch (err: any) {

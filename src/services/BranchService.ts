@@ -27,14 +27,19 @@ export class BranchService implements IBranchService {
       const allBranches = await this.db.select().from(branches);
       const allUsers = await this.db.select().from(users);
 
-      const formattedBranches: DashboardBranch[] = allBranches.map((b: any) => {
+      const formattedBranches: DashboardBranch[] = allBranches.map((b: any, index: number) => {
         const branchUsers = allUsers.filter((u: any) => b.members.includes(u.id));
         const manager = branchUsers.find((u: any) => u.role === "manager" || u.role === "general_manager");
         const managerName = manager ? manager.name : "กำลังสรรหา";
 
+        // Generate clean branch code: e.g. "BR-001" or preserve explicit code without cutting Thai characters
+        const branchCode = /^[A-Z0-9_-]{2,8}$/i.test(b.name)
+          ? b.name.toUpperCase()
+          : `BR-${String(index + 1).padStart(3, "0")}`;
+
         return {
           id: b.id,
-          code: b.name.substring(0, 7).toUpperCase(),
+          code: branchCode,
           name: b.name,
           location: "-",
           managerName,

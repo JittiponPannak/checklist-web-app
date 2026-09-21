@@ -4,7 +4,7 @@ import { INotificationService } from "./types";
 import { Notification, Role } from "../types";
 
 export class NotificationService implements INotificationService {
-  constructor(private db: any) {}
+  constructor(private db: any) { }
 
   async createNotification(params: {
     recipientId?: string;

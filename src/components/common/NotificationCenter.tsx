@@ -9,6 +9,7 @@ import {
   markAllNotificationsReadAction,
 } from "../../actions/notifications";
 import { useApp } from "../../context/AppContext";
+import { createClient } from "../../db/supabase/client";
 
 export function NotificationCenter() {
   const { currentUser } = useApp();
@@ -37,8 +38,39 @@ export function NotificationCenter() {
 
   useEffect(() => {
     fetchNotifications();
-    const interval = setInterval(fetchNotifications, 15000); // 15s poll for real-time notifications
-    return () => clearInterval(interval);
+
+    // Supabase Realtime Subscription for live instant updates
+    let channel: any;
+    try {
+      const supabase = createClient();
+      channel = supabase
+        .channel("realtime-notifications")
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "notifications",
+          },
+          () => {
+            fetchNotifications();
+          }
+        )
+        .subscribe();
+    } catch (e) {
+      console.warn("Supabase realtime subscription skipped or unavailable:", e);
+    }
+
+    const interval = setInterval(fetchNotifications, 15000); // 15s backup poll
+    return () => {
+      clearInterval(interval);
+      if (channel) {
+        try {
+          const supabase = createClient();
+          supabase.removeChannel(channel);
+        } catch (_) {}
+      }
+    };
   }, [currentUser?.id, currentUser?.branchId]);
 
   // Click outside to close

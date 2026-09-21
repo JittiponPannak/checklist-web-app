@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { User } from "../../types";
-import { STAFF_POSITIONS } from "../../types";
 import { getUsers, saveUsers } from "../../data/storage";
 import { BrandLogo } from "../common/BrandLogo";
 import { loginAction, registerAction } from "../../actions/auth";
@@ -19,8 +18,6 @@ export function EmployeeAuthPage({
         email: "",
         password: "",
         confirmPassword: "",
-        role: "employee" as "employee" | "manager_assistant",
-        position: STAFF_POSITIONS[0],
         branchId: "",
     });
     const [error, setError] = useState("");
@@ -90,8 +87,7 @@ export function EmployeeAuthPage({
                 name: form.name,
                 email: form.email,
                 password: form.password,
-                role: form.role,
-                position: form.position,
+                role: "employee",
                 branchId: form.branchId || undefined,
             });
             if (!res.success || !res.user) {
@@ -102,11 +98,7 @@ export function EmployeeAuthPage({
             const localUsers = getUsers();
             saveUsers([...localUsers, res.user]);
 
-            if (res.user.role === "manager_assistant") {
-                onLogin(res.user, undefined, "/manager/dashboard");
-            } else {
-                onLogin(res.user);
-            }
+            onLogin(res.user);
         } catch (err: any) {
             console.error("Register error:", err);
             setError(err?.message || "เกิดข้อผิดพลาดในการสมัครสมาชิก กรุณาลองใหม่อีกครั้ง");
@@ -172,38 +164,7 @@ export function EmployeeAuthPage({
                                 />
                             </div>
 
-                            <div className="grid grid-cols-2 gap-2">
-                                <div>
-                                    <label htmlFor="reg-role" className="block text-xs font-semibold text-[var(--color-text-muted)] mb-1">
-                                        ระดับ
-                                    </label>
-                                    <select
-                                        id="reg-role"
-                                        className={inp}
-                                        value={form.role}
-                                        onChange={(e) => setForm({ ...form, role: e.target.value as any })}
-                                    >
-                                        <option value="employee">พนักงานสาขา</option>
-                                        <option value="manager_assistant">ผู้ช่วยผู้จัดการ</option>
-                                    </select>
-                                </div>
 
-                                <div>
-                                    <label htmlFor="reg-pos" className="block text-xs font-semibold text-[var(--color-text-muted)] mb-1">
-                                        ตำแหน่งงาน
-                                    </label>
-                                    <select
-                                        id="reg-pos"
-                                        className={inp}
-                                        value={form.position}
-                                        onChange={(e) => setForm({ ...form, position: e.target.value })}
-                                    >
-                                        {STAFF_POSITIONS.map((p) => (
-                                            <option key={p} value={p}>{p}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                            </div>
 
                             <div>
                                 <label htmlFor="reg-branch" className="block text-xs font-semibold text-[var(--color-text-muted)] mb-1">

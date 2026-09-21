@@ -419,6 +419,42 @@ export class ManagerService implements IManagerService {
         await this.pointService.evaluateShiftSession(shiftSessionId);
       }
 
+      // Notify employee and manager about approval
+      if (this.notificationService && targetSession.user) {
+        const [empUser] = await this.db
+          .select({ name: users.name })
+          .from(users)
+          .where(eq(users.id, targetSession.user))
+          .limit(1);
+
+        const empName = empUser?.name || "พนักงาน";
+        const roleLabel = role === "manager_assistant" ? "ผู้ช่วยผู้จัดการร้าน" : "ผู้จัดการร้าน";
+
+        // 1. Notify Employee
+        await this.notificationService.createNotification({
+          recipientId: targetSession.user,
+          title: isNowFullyApproved ? "🏆 กะงานได้รับการอนุมัติสมบูรณ์" : `📝 ${roleLabel}ตรวจรับรองงานแล้ว`,
+          message: isNowFullyApproved
+            ? `ผู้จัดการร้านได้อนุมัติการปฏิบัติงานกะของคุณเรียบร้อยแล้ว!`
+            : `${roleLabel}ได้ตรวจสอบรายการงานกะของคุณแล้ว และบันทึกผลการรับรอง`,
+          type: "shift_approved",
+          shiftSessionId: shiftSessionId,
+          branchId: targetSession.branch,
+        });
+
+        // 2. If Assistant Manager approved, notify the Store Manager
+        if (role === "manager_assistant") {
+          await this.notificationService.createNotification({
+            branchId: targetSession.branch,
+            recipientRole: "manager",
+            title: `📋 ผู้ช่วยผู้จัดการตรวจรับรองงานแล้ว`,
+            message: `ผู้ช่วยผู้จัดการได้ตรวจรับรองรายการงานของ ${empName} เรียบร้อยแล้ว กรุณาตรวจสอบเพื่ออนุมัติขั้นสุดท้าย`,
+            type: "shift_submitted",
+            shiftSessionId: shiftSessionId,
+          });
+        }
+      }
+
       // Update branch last_update
       if (targetSession.branch) {
         await this.db

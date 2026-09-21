@@ -277,6 +277,7 @@ export class AuthService implements IAuthService {
           id: u.id,
           name: u.name,
           email: u.email,
+          password: u.password || undefined,
           role: u.role as Role,
           position: defaultPosition,
           branchName: userBranch ? userBranch.name : undefined,
