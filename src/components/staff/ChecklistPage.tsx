@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { ShiftSession, ShiftType } from "../../types";
-import { fmtTime, getNotifications, getSelectedShift, saveNotifications, uid } from "../../data/storage";
+import { fmtTime, getSelectedShift } from "../../data/storage";
 import { secureGetItem, secureSetItem, secureRemoveItem } from "../../utils/crypto";
 import { getShiftBadge } from "../common/Badge";
 import { useModalFocusTrap } from "../common/ModalFocusTrap";
+import { NotificationCenter } from "../common/NotificationCenter";
+import { PointStreakBadge } from "../common/PointStreakBadge";
 
 export function ChecklistPage({
   session,
@@ -65,17 +67,6 @@ export function ChecklistPage({
     let updatedSession = { ...session, items: updated };
     if (allComplete && !session.notified) {
       updatedSession = { ...updatedSession, notified: true };
-      const notifs = getNotifications();
-      notifs.push({
-        id: uid(),
-        shiftSessionId: session.id,
-        userName: session.userName,
-        userPosition: session.userPosition,
-        shift: session.shift,
-        completedAt: new Date().toISOString(),
-        read: false,
-      });
-      saveNotifications(notifs);
     }
     onUpdate(updatedSession);
   }
@@ -108,7 +99,7 @@ export function ChecklistPage({
 
       <div className="w-full max-w-2xl space-y-4">
         {/* Header Card */}
-        <header className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-5 sm:p-6 shadow-sm">
+        <header className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-5 sm:p-6 shadow-sm relative z-30">
           <div className="flex items-start justify-between gap-4 pb-4 border-b border-[var(--color-border)]">
             <div>
               <div className="flex items-center gap-2 mb-2 flex-wrap">
@@ -137,6 +128,8 @@ export function ChecklistPage({
             </div>
 
             <div className="flex items-center gap-2 flex-wrap justify-end">
+              <PointStreakBadge />
+              <NotificationCenter />
               {onOpenDashboard && (
                 <button
                   type="button"
@@ -308,7 +301,7 @@ export function ChecklistPage({
               <div key={item.id} className="space-y-2">
                 {showCategoryHeader && (
                   <div className="pt-3 pb-1 flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-amber-glow)]0" aria-hidden="true" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500" aria-hidden="true" />
                     <h2 className="text-xs font-bold text-[var(--color-text)] tracking-wide">{item.category}</h2>
                   </div>
                 )}
@@ -324,13 +317,13 @@ export function ChecklistPage({
                 >
                   <div
                     className={`mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all ${isDone
-                      ? "border-amber-500 bg-[var(--color-amber-glow)]0 text-[var(--color-brown)] shadow-2xs"
-                      : "border-[#C9B29F] bg-[var(--color-surface)] hover:border-amber-400"
+                      ? "border-amber-500 bg-amber-500 text-stone-950 shadow-xs scale-105"
+                      : "border-[var(--color-border)] bg-[var(--color-surface)] hover:border-amber-400"
                       }`}
                   >
                     {isDone && (
-                      <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
-                        <path d="M2 5l2.5 2.5L8 3" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <polyline points="20 6 9 17 4 12" />
                       </svg>
                     )}
                   </div>
@@ -483,7 +476,7 @@ export function ChecklistPage({
                     window.location.href = "/shift";
                   }
                 }}
-                className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-[var(--color-brown)] text-xs sm:text-sm font-semibold transition-colors shadow-sm cursor-pointer"
+                className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs sm:text-sm font-semibold transition-colors shadow-sm cursor-pointer"
               >
                 ออกจากหน้านี้
               </button>

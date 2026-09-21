@@ -26,6 +26,8 @@ import {
   resetTodayChecklistDataAction,
 } from "../../actions/checklist";
 import { RefrigeratorConfigView } from "./RefrigeratorConfigView";
+import { NotificationCenter } from "../common/NotificationCenter";
+import { LeaderboardWidget } from "./LeaderboardWidget";
 
 export type ExecutiveRole = "manager_assistant" | "manager" | "committee" | "general_manager";
 
@@ -144,15 +146,19 @@ export function ExecutiveDashboard({
 
             return {
               id: `notif-${s.id}`,
+              title: `รายงานการส่งงาน: ${s.userName}`,
+              message: `${s.userPosition || "พนักงาน"} ส่งงานกะ ${s.shift}`,
+              type: "shift_submitted",
               shiftSessionId: s.id,
               userName: s.userName,
               userPosition: s.userPosition,
               shift: s.shift,
               completedAt: eventTime,
+              createdAt: eventTime,
               read: isRead,
             };
           })
-          .sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime());
+          .sort((a, b) => new Date(b.completedAt || b.createdAt).getTime() - new Date(a.completedAt || a.createdAt).getTime());
 
         setNotifications(dbNotifs);
       }
@@ -493,23 +499,7 @@ export function ExecutiveDashboard({
           </div>
 
           <div className="flex items-center gap-3">
-            {/* Notification Bell with Badge */}
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setActiveTab("overview")}
-                className="p-2 text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-2)] rounded-xl transition-all relative cursor-pointer"
-                title="การแจ้งเตือนงานสาขา"
-              >
-                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-                  <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-                </svg>
-                {unreadCount > 0 && (
-                  <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full bg-[var(--color-amber-glow)]0 ring-2 ring-white" />
-                )}
-              </button>
-            </div>
+            <NotificationCenter />
 
             {/* Logout Button */}
             <button
@@ -651,7 +641,7 @@ export function ExecutiveDashboard({
                 <div>
                   <div className="flex items-center gap-2">
                     <h3 className="text-sm font-bold text-[var(--color-text)] flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-[var(--color-amber-glow)]0" />
+                      <span className="w-2 h-2 rounded-full bg-amber-500" />
                       <span>รายการกะงานสาขา & สถานะการรับรอง (Shift Handover & Approval Queue)</span>
                     </h3>
                     {isLiveFromDb && (
@@ -828,7 +818,7 @@ export function ExecutiveDashboard({
                               <button
                                 type="button"
                                 onClick={() => setSelectedSession(sess)}
-                                className="px-3 py-1.5 text-xs font-semibold text-[var(--color-text)] bg-amber-400 hover:bg-amber-300 active:bg-[var(--color-amber-glow)]0 rounded-lg transition-colors cursor-pointer shadow-sm shadow-amber-200/50"
+                                className="px-3 py-1.5 text-xs font-semibold text-[var(--color-text)] bg-amber-400 hover:bg-amber-300 active:bg-amber-500 rounded-lg transition-colors cursor-pointer shadow-sm shadow-amber-200/50"
                               >
                                 ตรวจรับรอง →
                               </button>
@@ -884,7 +874,7 @@ export function ExecutiveDashboard({
                       >
                         <div className="flex items-center gap-3">
                           <div
-                            className={`w-2 h-2 rounded-full ${notif.read ? "bg-[#B89B85]" : "bg-[var(--color-amber-glow)]0"
+                            className={`w-2 h-2 rounded-full ${notif.read ? "bg-[#B89B85]" : "bg-amber-500"
                               }`}
                           />
                           <div>
@@ -894,16 +884,16 @@ export function ExecutiveDashboard({
                                 ({notif.userPosition || "พนักงาน"})
                               </span>{" "}
                               {isCompleted ? (
-                                <span className="text-emerald-700 font-semibold">ส่งมอบกะ {getShiftName(notif.shift)}</span>
+                                <span className="text-emerald-700 font-semibold">ส่งมอบกะ {notif.shift ? getShiftName(notif.shift) : ""}</span>
                               ) : (
                                 <span className="text-[var(--color-amber)]">
-                                  กำลังปฏิบัติงานกะ {getShiftName(notif.shift)} ({doneCount}/
+                                  กำลังปฏิบัติงานกะ {notif.shift ? getShiftName(notif.shift) : ""} ({doneCount}/
                                   {totalCount} ข้อ)
                                 </span>
                               )}
                             </p>
                             <p className="text-[11px] font-mono text-[var(--color-text-muted)]">
-                              {isCompleted ? "ส่งเมื่อ" : "บันทึกล่าสุด"} {fmtTime(notif.completedAt)}
+                              {isCompleted ? "ส่งเมื่อ" : "บันทึกล่าสุด"} {fmtTime(notif.completedAt || notif.createdAt)}
                             </p>
                           </div>
                         </div>
@@ -923,6 +913,9 @@ export function ExecutiveDashboard({
                 )}
               </div>
             </div>
+
+            {/* Team Leaderboard & Performance */}
+            <LeaderboardWidget branchId={user.branchId} />
           </div>
         )}
 
@@ -1212,7 +1205,7 @@ export function ExecutiveDashboard({
                           <button
                             type="button"
                             onClick={() => setSelectedSession(sess)}
-                            className="px-3 py-1.5 text-xs font-semibold text-[var(--color-text)] bg-amber-400 hover:bg-amber-300 active:bg-[var(--color-amber-glow)]0 rounded-lg transition-colors cursor-pointer shadow-sm shadow-amber-200/50"
+                            className="px-3 py-1.5 text-xs font-semibold text-[var(--color-text)] bg-amber-400 hover:bg-amber-300 active:bg-amber-500 rounded-lg transition-colors cursor-pointer shadow-sm shadow-amber-200/50"
                           >
                             เปิดดูข้อตรวจ →
                           </button>

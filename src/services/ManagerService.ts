@@ -1,0 +1,436 @@
+import { eq, and, gte, lte, desc, inArray } from "drizzle-orm";
+import { tasks, taskWork, shiftSession, users, branches } from "../db/schema";
+import { IManagerService, IPointService, INotificationService } from "./types";
+import { ShiftType, Role } from "../types";
+
+export interface ManagerShiftSummary {
+  id: string;
+  userId: string;
+  userName: string;
+  userPosition?: string;
+  taskRole?: "cashier" | "stock" | "manager_assistant";
+  shift: ShiftType;
+  startedAt: string;
+  completedAt: string | null;
+  totalItems: number;
+  doneItems: number;
+  isAllDone: boolean;
+  assistantApproved: boolean;
+  managerApproved: boolean;
+  assistantApproveTime?: string | null;
+  managerApproveTime?: string | null;
+  items: Array<{
+    id: string;
+    label: string;
+    category?: string;
+    completedAt: string | null;
+    taskWorkId?: string;
+    assistantApproved: boolean;
+    managerApproved: boolean;
+    isLate?: boolean;
+  }>;
+  branchName?: string;
+}
+
+function mapDbShiftToUi(dbShift: "morning" | "afternoon" | "morning_afternoon"): ShiftType {
+  if (dbShift === "morning") return "morning";
+  if (dbShift === "afternoon") return "afternoon";
+  return "both";
+}
+
+function mapTaskRoleToTitle(role: "cashier" | "stock" | "manager_assistant"): string {
+  if (role === "cashier") return "แคชเชียร์";
+  if (role === "stock") return "พนักงานสต็อก/จัดเรียง";
+  return "ผู้ช่วยผู้จัดการร้าน";
+}
+
+function getThaiStartAndEndOfDay(baseDate = new Date()) {
+  const yElement = new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Bangkok", year: "numeric" }).format(baseDate);
+  const mElement = new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Bangkok", month: "2-digit" }).format(baseDate);
+  const dElement = new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Bangkok", day: "2-digit" }).format(baseDate);
+
+  const startStr = `${yElement}-${mElement}-${dElement}T00:00:00+07:00`;
+  const endStr = `${yElement}-${mElement}-${dElement}T23:59:59.999+07:00`;
+
+  return {
+    startOfDay: new Date(startStr),
+    endOfDay: new Date(endStr),
+  };
+}
+
+export class ManagerService implements IManagerService {
+  constructor(
+    private db: any,
+    private pointService?: IPointService,
+    private notificationService?: INotificationService
+  ) {}
+
+  async getManagerShiftSessions(filterDate?: string): Promise<{
+    success: boolean;
+    sessions?: ManagerShiftSummary[];
+    hasAssistantLoggedInToday?: boolean;
+    error?: string;
+  }> {
+    try {
+      const today = filterDate ? new Date(filterDate) : new Date();
+      const { startOfDay, endOfDay } = getThaiStartAndEndOfDay(today);
+
+      const dbSessions = await this.db
+        .select()
+        .from(shiftSession)
+        .where(and(gte(shiftSession.start, startOfDay), lte(shiftSession.start, endOfDay)))
+        .orderBy(desc(shiftSession.start));
+
+      const [assistantLoggedIn] = await this.db
+        .select({ id: users.id })
+        .from(users)
+        .where(
+          and(
+            eq(users.role, "manager_assistant"),
+            gte(users.last_login, startOfDay),
+            lte(users.last_login, endOfDay)
+          )
+        )
+        .limit(1);
+
+      const hasAssistantLoggedInToday = !!assistantLoggedIn;
+
+      if (dbSessions.length === 0) {
+        return { success: true, sessions: [], hasAssistantLoggedInToday };
+      }
+
+      const sessionIds = dbSessions.map((s: any) => s.id) as string[];
+      const userIds = Array.from(new Set(dbSessions.map((s: any) => s.user))) as string[];
+
+      const dbUsers =
+        userIds.length > 0
+          ? await this.db.select().from(users).where(inArray(users.id, userIds))
+          : [];
+
+      const dbWorks =
+        sessionIds.length > 0
+          ? await this.db
+              .select()
+              .from(taskWork)
+              .where(inArray(taskWork.shift_session, sessionIds))
+          : [];
+
+      const taskIds = Array.from(new Set(dbWorks.map((w: any) => w.task))) as string[];
+      const allTasks =
+        taskIds.length > 0
+          ? await this.db.select().from(tasks).where(inArray(tasks.id, taskIds))
+          : [];
+
+      const branchIds = Array.from(new Set(dbSessions.map((s: any) => s.branch).filter(Boolean))) as string[];
+      const dbBranches =
+        branchIds.length > 0
+          ? await this.db.select({ id: branches.id, name: branches.name }).from(branches).where(inArray(branches.id, branchIds))
+          : [];
+
+      const summaries: ManagerShiftSummary[] = dbSessions.map((sess: any) => {
+        const user = dbUsers.find((u: any) => u.id === sess.user);
+        const sessionWorks = dbWorks.filter((w: any) => w.shift_session === sess.id);
+
+        const items = sessionWorks.map((work: any) => {
+          const t = allTasks.find((item: any) => item.id === work.task);
+          const timeRange = t?.start && t?.end ? `${t.start.slice(0, 5)} - ${t.end.slice(0, 5)}` : undefined;
+          let isLate = false;
+
+          if (work.timestamp && t?.end) {
+            const completedDate = new Date(work.timestamp);
+            const [endHour, endMinute] = t.end.split(":").map(Number);
+            const deadlineDate = new Date(sess.start);
+            deadlineDate.setHours(endHour, endMinute, 0, 0);
+
+            if (completedDate > deadlineDate) {
+              isLate = true;
+            }
+          }
+
+          return {
+            id: work.task,
+            label: t ? t.name : "รายการงาน",
+            category: timeRange ? `ช่วงเวลา ${timeRange}` : undefined,
+            completedAt: work.timestamp ? new Date(work.timestamp).toISOString() : null,
+            taskWorkId: work.id,
+            assistantApproved: work.manager_assistance_approve_timestamp !== null,
+            managerApproved: work.manager_approve_timestamp !== null,
+            isLate,
+          };
+        });
+
+        const totalItems = items.length;
+        const doneItems = items.filter((i: any) => i.completedAt !== null).length;
+        const isAllDone = totalItems > 0 && doneItems === totalItems;
+
+        const assistantApproved =
+          sessionWorks.length > 0 &&
+          sessionWorks.every((w: any) => w.manager_assistance_approve_timestamp !== null);
+
+        const managerApproved =
+          sessionWorks.length > 0 &&
+          sessionWorks.every((w: any) => w.manager_approve_timestamp !== null);
+
+        const latestAsstTime = sessionWorks
+          .map((w: any) => w.manager_assistance_approve_timestamp)
+          .filter((t: any): t is Date => t !== null)
+          .sort((a: any, b: any) => b.getTime() - a.getTime())[0];
+
+        const latestMgrTime = sessionWorks
+          .map((w: any) => w.manager_approve_timestamp)
+          .filter((t: any): t is Date => t !== null)
+          .sort((a: any, b: any) => b.getTime() - a.getTime())[0];
+
+        return {
+          id: sess.id,
+          userId: sess.user,
+          userName: user ? user.name : "พนักงานสาขา",
+          userPosition: mapTaskRoleToTitle(sess.task_role),
+          taskRole: sess.task_role,
+          shift: mapDbShiftToUi(sess.shift),
+          startedAt: new Date(sess.start).toISOString(),
+          completedAt: sess.end ? new Date(sess.end).toISOString() : null,
+          totalItems,
+          doneItems,
+          isAllDone,
+          assistantApproved,
+          managerApproved,
+          assistantApproveTime: latestAsstTime ? latestAsstTime.toISOString() : null,
+          managerApproveTime: latestMgrTime ? latestMgrTime.toISOString() : null,
+          items,
+          branchName: dbBranches.find((b: any) => b.id === sess.branch)?.name,
+        };
+      });
+
+      return { success: true, sessions: summaries, hasAssistantLoggedInToday };
+    } catch (err: any) {
+      console.error("ManagerService.getManagerShiftSessions error:", err);
+      return { success: false, error: err?.message || "เกิดข้อผิดพลาดในการดึงข้อมูลสำหรับผู้จัดการ" };
+    }
+  }
+
+  async getHistoryShiftSessions(
+    daysOffset: number = 14,
+    specificDate?: string
+  ): Promise<{
+    success: boolean;
+    sessions?: ManagerShiftSummary[];
+    error?: string;
+  }> {
+    try {
+      const today = new Date();
+      const { endOfDay: todayEndOfDay } = getThaiStartAndEndOfDay(today);
+
+      let queryStart: Date;
+      let queryEnd: Date;
+
+      if (specificDate) {
+        const targetDate = new Date(specificDate);
+        const bounds = getThaiStartAndEndOfDay(targetDate);
+        queryStart = bounds.startOfDay;
+        queryEnd = bounds.endOfDay;
+      } else {
+        const boundaryDate = new Date(today.getTime());
+        boundaryDate.setDate(boundaryDate.getDate() - daysOffset);
+        const { startOfDay: startOfBoundary } = getThaiStartAndEndOfDay(boundaryDate);
+        queryStart = startOfBoundary;
+        queryEnd = todayEndOfDay;
+      }
+
+      const dbSessions = await this.db
+        .select()
+        .from(shiftSession)
+        .where(and(gte(shiftSession.start, queryStart), lte(shiftSession.start, queryEnd)))
+        .orderBy(desc(shiftSession.start));
+
+      const dbUsers = await this.db.select({ id: users.id, name: users.name }).from(users);
+
+      const historySessionIds = dbSessions.map((s: any) => s.id) as string[];
+      const dbWorks =
+        historySessionIds.length > 0
+          ? await this.db
+              .select()
+              .from(taskWork)
+              .where(inArray(taskWork.shift_session, historySessionIds))
+          : [];
+
+      const taskIds = Array.from(new Set(dbWorks.map((w: any) => w.task))) as string[];
+      const allTasks =
+        taskIds.length > 0
+          ? await this.db.select().from(tasks).where(inArray(tasks.id, taskIds))
+          : [];
+
+      const branchIds = Array.from(new Set(dbSessions.map((s: any) => s.branch).filter(Boolean))) as string[];
+      const dbBranches =
+        branchIds.length > 0
+          ? await this.db.select({ id: branches.id, name: branches.name }).from(branches).where(inArray(branches.id, branchIds))
+          : [];
+
+      const summaries: ManagerShiftSummary[] = dbSessions.map((sess: any) => {
+        const user = dbUsers.find((u: any) => u.id === sess.user);
+        const sessionWorks = dbWorks.filter((w: any) => w.shift_session === sess.id);
+
+        const items = sessionWorks.map((work: any) => {
+          const t = allTasks.find((item: any) => item.id === work.task);
+          const timeRange = t?.start && t?.end ? `${t.start.slice(0, 5)} - ${t.end.slice(0, 5)}` : undefined;
+          let isLate = false;
+
+          if (work.timestamp && t?.end) {
+            const completedDate = new Date(work.timestamp);
+            const [endHour, endMinute] = t.end.split(":").map(Number);
+            const deadlineDate = new Date(sess.start);
+            deadlineDate.setHours(endHour, endMinute, 0, 0);
+
+            if (completedDate > deadlineDate) {
+              isLate = true;
+            }
+          }
+
+          return {
+            id: work.task,
+            label: t ? t.name : "รายการงาน",
+            category: timeRange ? `ช่วงเวลา ${timeRange}` : undefined,
+            completedAt: work.timestamp ? new Date(work.timestamp).toISOString() : null,
+            taskWorkId: work.id,
+            assistantApproved: work.manager_assistance_approve_timestamp !== null,
+            managerApproved: work.manager_approve_timestamp !== null,
+            isLate,
+          };
+        });
+
+        const totalItems = items.length;
+        const doneItems = items.filter((i: any) => i.completedAt !== null).length;
+        const isAllDone = totalItems > 0 && doneItems === totalItems;
+
+        const assistantApproved =
+          sessionWorks.length > 0 &&
+          sessionWorks.every((w: any) => w.manager_assistance_approve_timestamp !== null);
+
+        const managerApproved =
+          sessionWorks.length > 0 &&
+          sessionWorks.every((w: any) => w.manager_approve_timestamp !== null);
+
+        const latestAsstTime = sessionWorks
+          .map((w: any) => w.manager_assistance_approve_timestamp)
+          .filter((t: any): t is Date => t !== null)
+          .sort((a: any, b: any) => b.getTime() - a.getTime())[0];
+
+        const latestMgrTime = sessionWorks
+          .map((w: any) => w.manager_approve_timestamp)
+          .filter((t: any): t is Date => t !== null)
+          .sort((a: any, b: any) => b.getTime() - a.getTime())[0];
+
+        return {
+          id: sess.id,
+          userId: sess.user,
+          userName: user ? user.name : "พนักงานสาขา",
+          userPosition: mapTaskRoleToTitle(sess.task_role),
+          taskRole: sess.task_role,
+          shift: mapDbShiftToUi(sess.shift),
+          startedAt: new Date(sess.start).toISOString(),
+          completedAt: sess.end ? new Date(sess.end).toISOString() : null,
+          totalItems,
+          doneItems,
+          isAllDone,
+          assistantApproved,
+          managerApproved,
+          assistantApproveTime: latestAsstTime ? latestAsstTime.toISOString() : null,
+          managerApproveTime: latestMgrTime ? latestMgrTime.toISOString() : null,
+          items,
+          branchName: dbBranches.find((b: any) => b.id === sess.branch)?.name,
+        };
+      });
+
+      return { success: true, sessions: summaries };
+    } catch (err: any) {
+      console.error("ManagerService.getHistoryShiftSessions error:", err);
+      return { success: false, error: err?.message || "เกิดข้อผิดพลาดในการดึงข้อมูลประวัติ" };
+    }
+  }
+
+  async approveShiftSession(params: {
+    shiftSessionId: string;
+    role: "manager" | "manager_assistant" | "committee" | "general_manager" | Role;
+  }): Promise<{ success: boolean; error?: string }> {
+    try {
+      const { shiftSessionId, role } = params;
+
+      const [targetSession] = await this.db
+        .select({
+          task_role: shiftSession.task_role,
+          start: shiftSession.start,
+          user: shiftSession.user,
+          branch: shiftSession.branch,
+        })
+        .from(shiftSession)
+        .where(eq(shiftSession.id, shiftSessionId))
+        .limit(1);
+
+      if (!targetSession) {
+        return { success: false, error: "ไม่พบข้อมูลกะนี้" };
+      }
+
+      if (targetSession.task_role === "manager_assistant" && role === "manager_assistant") {
+        return {
+          success: false,
+          error: "ผู้ที่จะอนุมัติงานของผู้ช่วยผู้จัดการร้านได้จะต้องเป็นตำแหน่งผู้จัดการร้าน (Manager) หรือสูงกว่าเท่านั้น",
+        };
+      }
+
+      const sessionWorks = await this.db
+        .select()
+        .from(taskWork)
+        .where(eq(taskWork.shift_session, shiftSessionId));
+
+      const wasFullyApproved =
+        sessionWorks.length > 0 &&
+        sessionWorks.every(
+          (w: any) =>
+            w.manager_assistance_approve_timestamp !== null && w.manager_approve_timestamp !== null
+        );
+
+      const now = new Date();
+
+      if (role === "manager_assistant") {
+        await this.db
+          .update(taskWork)
+          .set({ manager_assistance_approve_timestamp: now })
+          .where(eq(taskWork.shift_session, shiftSessionId));
+      } else {
+        await this.db
+          .update(taskWork)
+          .set({ manager_approve_timestamp: now })
+          .where(eq(taskWork.shift_session, shiftSessionId));
+      }
+
+      let isNowFullyApproved = false;
+      if (sessionWorks.length > 0) {
+        if (role === "manager_assistant") {
+          isNowFullyApproved = sessionWorks.every((w: any) => w.manager_approve_timestamp !== null);
+        } else {
+          isNowFullyApproved = sessionWorks.every(
+            (w: any) => w.manager_assistance_approve_timestamp !== null
+          );
+        }
+      }
+
+      // Transition to fully approved -> Trigger PointService to award points and streak!
+      if (!wasFullyApproved && isNowFullyApproved && this.pointService) {
+        await this.pointService.evaluateShiftSession(shiftSessionId);
+      }
+
+      // Update branch last_update
+      if (targetSession.branch) {
+        await this.db
+          .update(branches)
+          .set({ last_update: new Date() })
+          .where(eq(branches.id, targetSession.branch));
+      }
+
+      return { success: true };
+    } catch (err: any) {
+      console.error("ManagerService.approveShiftSession error:", err);
+      return { success: false, error: err?.message || "เกิดข้อผิดพลาดในการรับรองผลงาน" };
+    }
+  }
+}

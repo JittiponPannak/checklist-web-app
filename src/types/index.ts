@@ -14,6 +14,11 @@ export interface User {
   role: Role;
   position?: string;
   branchName?: string;
+  branchId?: string;
+  point?: number;
+  pointStreak?: number;
+  pointStreakType?: "none" | "flawed" | "perfect";
+  longestStreak?: number;
 }
 
 export interface ChecklistItem {
@@ -41,12 +46,38 @@ export interface ShiftSession {
 
 export interface Notification {
   id: string;
-  shiftSessionId: string;
-  userName: string;
+  title: string;
+  message: string;
+  type: "shift_submitted" | "shift_approved" | "point_awarded" | "refrigerator_alert" | "system" | string;
+  shiftSessionId?: string;
+  userName?: string;
   userPosition?: string;
-  shift: ShiftType;
-  completedAt: string;
+  shift?: ShiftType;
+  completedAt?: string;
+  createdAt: string;
   read: boolean;
+  branchName?: string;
+}
+
+export interface PointTransaction {
+  id: string;
+  userId: string;
+  points: number;
+  type: "shift_completion" | "on_time_bonus" | "perfect_shift" | "streak_bonus" | "manager_award" | string;
+  shiftSessionId?: string;
+  description: string;
+  createdAt: string;
+}
+
+export interface LeaderboardEntry {
+  userId: string;
+  name: string;
+  role: Role;
+  position?: string;
+  branchName?: string;
+  point: number;
+  pointStreak: number;
+  pointStreakType: "none" | "flawed" | "perfect";
 }
 
 export const STAFF_POSITIONS = [

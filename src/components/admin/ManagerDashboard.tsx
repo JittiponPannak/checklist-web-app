@@ -18,6 +18,8 @@ import { Badge, getShiftBadge, getShiftName } from "../common/Badge";
 import { BrandLogo } from "../common/BrandLogo";
 import { AddStaffModal } from "./AddStaffModal";
 import { SessionDetailModal } from "./SessionDetailModal";
+import { NotificationCenter } from "../common/NotificationCenter";
+import { LeaderboardWidget } from "../manager/LeaderboardWidget";
 
 export function ManagerDashboard({
   user,
@@ -223,7 +225,8 @@ export function ManagerDashboard({
             </span>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <NotificationCenter />
             <button
               type="button"
               onClick={handleResetSampleData}
@@ -415,6 +418,9 @@ export function ManagerDashboard({
             </p>
           </div>
         </div>
+
+        {/* Team Leaderboard & Performance */}
+        <LeaderboardWidget branchId={user.branchId} />
 
         {/* Tab Navigation */}
         <div className="bg-slate-900/90 p-1 rounded-xl border border-slate-800 shadow-xl">
@@ -768,7 +774,7 @@ export function ManagerDashboard({
                             </span>
                           </div>
                           <span className="text-[10px] text-slate-500 mt-0.5 block font-mono">
-                            {fmtDate(notif.completedAt)} • {fmtTime(notif.completedAt)}
+                            {fmtDate(notif.completedAt || notif.createdAt)} • {fmtTime(notif.completedAt || notif.createdAt)}
                           </span>
                         </div>
                       </div>
@@ -874,12 +880,12 @@ export function ManagerDashboard({
                                 aria-checked={isDone}
                                 aria-label={`สถานะ: ${item.label}`}
                                 className={`w-5 h-5 rounded-md border flex items-center justify-center transition-colors flex-shrink-0 ${isDone
-                                  ? "bg-emerald-600 border-emerald-600 text-[var(--color-brown)] shadow-2xs"
+                                  ? "bg-emerald-600 border-emerald-600 text-white shadow-2xs"
                                   : "border-slate-300 bg-[var(--color-surface)] hover:border-slate-900"
                                   }`}
                               >
                                 {isDone && (
-                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                                     <polyline points="20 6 9 17 4 12" />
                                   </svg>
                                 )}

@@ -2,33 +2,30 @@
 
 import React, { createContext, useContext, useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Notification, Position, ShiftSession, ShiftType, User } from "../types";
+import { ShiftSession, ShiftType, User } from "../types";
 import { STAFF_POSITIONS } from "../types";
 import {
-  ensureDefaultManager,
   getActiveSession,
   getCurrentUser,
   getSelectedShift,
   getSessions,
-  getUsers,
   saveActiveSession,
   saveCurrentUser,
   saveSelectedShift,
   saveSessions,
-  saveUsers,
-  uid,
 } from "../data/storage";
 import {
   getOrCreateShiftSessionAction,
   toggleTaskWorkAction,
   endShiftSessionAction,
 } from "../actions/checklist";
-import { secureGetItem, secureSetItem, secureRemoveItem } from "../utils/crypto";
+import { getUserByIdAction, syncOAuthUserAction } from "../actions/auth";
+import { createClient } from "../db/supabase/client";
+import { secureGetItem, secureRemoveItem } from "../utils/crypto";
 
 interface AppContextType {
   currentUser: User | null;
   selectedShift: ShiftType | null;
-
   activeSession: ShiftSession | null;
   sessions: ShiftSession[];
   isReady: boolean;
@@ -40,8 +37,8 @@ interface AppContextType {
   endShift: (continueNextShift?: boolean) => void;
   setCurrentUser: (user: User | null) => void;
   setSelectedShift: (shift: ShiftType | null) => void;
-
   setActiveSession: (session: ShiftSession | null) => void;
+  refreshUserData: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -56,37 +53,56 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [activeSession, setActiveSessionState] = useState<ShiftSession | null>(null);
   const [sessions, setSessionsState] = useState<ShiftSession[]>([]);
 
+  const refreshUserData = async () => {
+    if (!currentUser?.id) return;
+    try {
+      const res = await getUserByIdAction(currentUser.id);
+      if (res.success && res.user) {
+        setCurrentUserState(res.user);
+        saveCurrentUser(res.user);
+      }
+    } catch (err) {
+      console.warn("Failed to refresh user data:", err);
+    }
+  };
+
   useEffect(() => {
-    ensureDefaultManager();
     const storedUser = getCurrentUser();
     const storedShift = getSelectedShift();
-
     const storedSession = getActiveSession();
     const storedSessions = getSessions();
 
     if (storedUser) setCurrentUserState(storedUser);
     if (storedShift) setSelectedShiftState(storedShift);
-
     if (storedSession) setActiveSessionState(storedSession);
     setSessionsState(storedSessions);
 
+    // Check Supabase Auth state for OAuth logins
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => {
+      if (data?.user) {
+        const authUser = data.user;
+        const name =
+          authUser.user_metadata?.full_name ||
+          authUser.user_metadata?.name ||
+          authUser.email?.split("@")[0] ||
+          "ผู้ใช้งาน";
+
+        syncOAuthUserAction({
+          id: authUser.id,
+          email: authUser.email!,
+          name,
+        }).then((syncRes) => {
+          if (syncRes.success && syncRes.user) {
+            setCurrentUserState(syncRes.user);
+            saveCurrentUser(syncRes.user);
+          }
+        }).catch(console.error);
+      }
+    });
+
     setIsReady(true);
   }, []);
-
-  // Keep currentUser synced if position gets updated in storage
-  useEffect(() => {
-    if (!currentUser) return;
-    const interval = setInterval(() => {
-      const users = getUsers();
-      const fresh = users.find((u) => u.id === currentUser.id);
-      if (fresh && fresh.position !== currentUser.position) {
-        const updatedUser = { ...fresh, branchName: currentUser.branchName };
-        setCurrentUserState(updatedUser);
-        saveCurrentUser(updatedUser);
-      }
-    }, 2000);
-    return () => clearInterval(interval);
-  }, [currentUser]);
 
   function setCurrentUser(user: User | null) {
     setCurrentUserState(user);
@@ -98,8 +114,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     saveSelectedShift(shift);
   }
 
-
-
   function setActiveSession(session: ShiftSession | null) {
     setActiveSessionState(session);
     saveActiveSession(session);
@@ -109,7 +123,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const targetPath = typeof redirectPath === "string" ? redirectPath : null;
 
     // Role verification for branch association
-    const requiresBranch = user.role === "employee" || user.role === "manager_assistant" || user.role === "manager";
+    const requiresBranch =
+      user.role === "employee" || user.role === "manager_assistant" || user.role === "manager";
     if (requiresBranch && !user.branchName) {
       setCurrentUser(user);
       startTransition(() => {
@@ -145,11 +160,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  function logout(redirectTo?: unknown) {
+  async function logout(redirectTo?: unknown) {
     const targetUrl = typeof redirectTo === "string" ? redirectTo : null;
     const prevRole = currentUser?.role;
 
-    // Clear all persistent local caches when changing users
+    try {
+      const supabase = createClient();
+      await supabase.auth.signOut();
+    } catch (err) {
+      console.warn("Supabase signOut error:", err);
+    }
+
+    // Clear local storage items
     secureRemoveItem("app_sessions");
     secureRemoveItem("app_manager_read_notifs");
     secureRemoveItem("app_queue_afternoon");
@@ -182,8 +204,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (position !== activeUser.position) {
       activeUser = { ...activeUser, position };
       setCurrentUser(activeUser);
-      const users = getUsers().map((u) => (u.id === activeUser.id ? { ...u, position } : u));
-      saveUsers(users);
     }
 
     startTransition(() => {
@@ -197,7 +217,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     const position = currentUser.position || STAFF_POSITIONS[0];
 
-    // Attempt to fetch or create session from Supabase DB
     try {
       const res = await getOrCreateShiftSessionAction({
         userId: currentUser.id,
@@ -222,7 +241,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           router.push(currentUser.role === "manager" ? "/admin/dashboard" : "/checklist");
         });
         return;
-        return;
       } else {
         alert("ดึงข้อมูลจากฐานข้อมูลไม่สำเร็จ: " + (res.error || ""));
       }
@@ -241,7 +259,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     saveSessions(next);
     setSessionsState(next);
 
-    // Sync toggle status with Supabase task_work
     const changedItem = updated.items.find((item) => {
       const prev = activeSession?.items.find((p) => p.id === item.id);
       return prev ? prev.completedAt !== item.completedAt : false;
@@ -274,7 +291,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       saveSessions(next);
       setSessionsState(next);
 
-      // Record shift end in Supabase shift_session
       endShiftSessionAction(activeSession.id).catch((err) =>
         console.error("Failed to end shift in DB:", err)
       );
@@ -312,7 +328,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       value={{
         currentUser,
         selectedShift,
-
         activeSession,
         sessions,
         isReady,
@@ -325,6 +340,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         setCurrentUser,
         setSelectedShift,
         setActiveSession,
+        refreshUserData,
       }}
     >
       {children}

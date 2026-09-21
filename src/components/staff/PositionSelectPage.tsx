@@ -123,22 +123,22 @@ export function PositionSelectPage({
                     {isCashier ? (
                       <>
                         <div className="flex items-center gap-2">
-                          <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-amber-glow)]0" aria-hidden="true" />
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500" aria-hidden="true" />
                           <span>ตรวจเงินสด ลิ้นชัก และอุปกรณ์รับชำระ</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-amber-glow)]0" aria-hidden="true" />
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500" aria-hidden="true" />
                           <span>ดูแลความสะอาดรอบจุดเคาน์เตอร์</span>
                         </div>
                       </>
                     ) : (
                       <>
                         <div className="flex items-center gap-2">
-                          <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-amber-glow)]0" aria-hidden="true" />
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500" aria-hidden="true" />
                           <span>ตรวจรับสินค้าสดและเติมตู้แช่</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-amber-glow)]0" aria-hidden="true" />
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500" aria-hidden="true" />
                           <span>ตรวจเช็คป้ายราคาและวันหมดอายุ</span>
                         </div>
                       </>

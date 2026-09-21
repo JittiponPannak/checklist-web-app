@@ -6,6 +6,8 @@ import { getSessions } from "../../data/storage";
 import { getPositionShiftsStatusAction, resetTodayChecklistDataAction } from "../../actions/checklist";
 import { secureSetItem, secureRemoveItem } from "../../utils/crypto";
 import { Confetti } from "../common/Confetti";
+import { NotificationCenter } from "../common/NotificationCenter";
+import { PointStreakBadge } from "../common/PointStreakBadge";
 
 export function ShiftSelectPage({
   user,
@@ -116,7 +118,7 @@ export function ShiftSelectPage({
       {showConfetti && <Confetti />}
 
       {/* Clean Top Profile Bar */}
-      <header className="w-full max-w-4xl mx-auto mb-6 flex items-center justify-between gap-4 p-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl shadow-sm relative z-10">
+      <header className="w-full max-w-4xl mx-auto mb-6 flex items-center justify-between gap-4 p-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl shadow-sm relative z-30">
         <div className="flex items-center gap-3">
           {onBack && (
             <button
@@ -133,7 +135,10 @@ export function ShiftSelectPage({
           <BrandLogo size={36} showText={true} isDark={false} />
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <PointStreakBadge />
+          <NotificationCenter />
+
           <div className="flex items-center gap-2 text-right hidden sm:flex">
             <div>
               {user.branchName && (
@@ -259,14 +264,14 @@ export function ShiftSelectPage({
                     <div className="flex items-center gap-3">
                       <div
                         className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all duration-200 ${isChecked
-                          ? "bg-[var(--color-amber-glow)]0 border-amber-500 text-[var(--color-brown)] shadow-sm scale-105"
+                          ? "bg-amber-500 border-amber-400 text-stone-950 shadow-md scale-105"
                           : isDisabled && checkStatus === "completed"
-                            ? "bg-emerald-500 border-emerald-500 text-[var(--color-brown)]"
-                            : "bg-[var(--color-surface)] border-[#C9B29F] group-hover:border-amber-400"
+                            ? "bg-emerald-600 border-emerald-500 text-white shadow-sm"
+                            : "bg-[var(--color-surface)] border-[var(--color-border)] group-hover:border-amber-400"
                           }`}
                       >
                         {(isChecked || (isDisabled && checkStatus === "completed")) && (
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                             <polyline points="20 6 9 17 4 12" />
                           </svg>
                         )}

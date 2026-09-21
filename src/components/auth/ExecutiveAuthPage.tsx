@@ -60,17 +60,16 @@ export function ExecutiveAuthPage({
             <div className="absolute top-1/4 -right-20 w-72 h-72 bg-[var(--color-amber-glow)]/30 rounded-full blur-3xl pointer-events-none" aria-hidden="true" />
             <div className="absolute bottom-1/4 -left-20 w-72 h-72 bg-[var(--color-amber-glow)]/40 rounded-full blur-3xl pointer-events-none" aria-hidden="true" />
 
-            <div className="w-full max-w-[400px] bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-7 sm:p-8 shadow-xl shadow-amber-900/5 space-y-5 relative z-10">
+            <div className="w-full max-w-[420px] bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-7 sm:p-8 shadow-xl shadow-amber-900/5 space-y-5 relative z-10">
                 <header className="mb-2 text-center flex flex-col items-center">
                     <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--color-amber-glow)] text-[var(--color-text)] text-[11px] font-semibold border border-[var(--color-amber)] mb-3">
-                        <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-amber-glow)]0" aria-hidden="true" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-amber-glow)]" aria-hidden="true" />
                         <span>ระบบบริหารสาขาและการจัดการ</span>
                     </div>
                     <BrandLogo size={48} showText={true} isDark={false} />
                 </header>
 
-                <form onSubmit={handleLogin} className="space-y-4 pt-4 border-t border-[var(--color-border)] focus-visible:outline-none">
-
+                <form onSubmit={handleLogin} className="space-y-4 pt-1 focus-visible:outline-none">
                     <div>
                         <label htmlFor="exec-email" className="block text-xs font-semibold text-[var(--color-text-muted)] mb-1.5">
                             อีเมลฝ่ายบริหาร
@@ -114,8 +113,6 @@ export function ExecutiveAuthPage({
                         <span>{loading ? "กำลังตรวจสอบข้อมูล..." : "เข้าสู่ระบบ (Executive) →"}</span>
                     </button>
                 </form>
-
-
 
                 <div className="mt-5 pt-4 border-t border-[var(--color-border)] text-center flex flex-col gap-2">
                     <Link href="/login/staff" className="text-[11px] text-[var(--color-text-muted)] hover:text-[var(--color-text)] font-medium transition-colors">

@@ -183,20 +183,28 @@ export function seedSampleData(force = false) {
     notifs = [
       {
         id: "notif-1",
+        title: "ส่งมอบงานกะเช้าสำเร็จ",
+        message: "สมศรี ใจดี ได้ส่งมอบงานกะเช้าเรียบร้อยแล้ว",
+        type: "shift_submitted",
         shiftSessionId: "sess-sample-1",
         userName: "สมศรี ใจดี",
         userPosition: "แคชเชียร์",
         shift: "morning",
         completedAt: new Date(now.getTime() - 15 * 60000).toISOString(),
+        createdAt: new Date(now.getTime() - 15 * 60000).toISOString(),
         read: false,
       },
       {
         id: "notif-2",
+        title: "ส่งมอบงานกะเช้าสำเร็จ",
+        message: "คุณธนากร เกียรติไพบูลย์ ได้ส่งมอบงานกะเช้าเรียบร้อยแล้ว",
+        type: "shift_submitted",
         shiftSessionId: "sess-sample-3",
         userName: "คุณธนากร เกียรติไพบูลย์",
         userPosition: "ผู้ช่วยผู้จัดการร้าน",
         shift: "morning",
         completedAt: new Date(now.getTime() - 24 * 3600000).toISOString(),
+        createdAt: new Date(now.getTime() - 24 * 3600000).toISOString(),
         read: true,
       },
     ];
