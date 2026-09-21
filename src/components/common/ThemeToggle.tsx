@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Moon, Sun } from "lucide-react";
 
-export function ThemeToggle() {
+export function ThemeToggle({ className = "" }: { className?: string }) {
     const [isDark, setIsDark] = useState(false);
 
     useEffect(() => {
@@ -28,12 +28,13 @@ export function ThemeToggle() {
 
     return (
         <button
+            type="button"
             onClick={toggleTheme}
-            className="p-2 rounded-xl transition-colors hover:bg-[var(--color-surface-2)] text-[var(--color-text-muted)] hover:text-[var(--color-primary)] active:scale-95 duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
-            aria-label="Toggle theme"
-            title={isDark ? "Switch to light mode" : "Switch to dark mode"}
+            className={`p-2 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] hover:bg-[var(--color-surface-2)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-all cursor-pointer min-h-[44px] min-w-[44px] sm:min-h-[36px] sm:min-w-[36px] flex items-center justify-center focus-visible:outline-hidden focus:ring-2 focus:ring-amber-400 active:scale-95 duration-150 ${className}`}
+            aria-label={isDark ? "เปลี่ยนเป็นโหมดสว่าง (Light mode)" : "เปลี่ยนเป็นโหมดมืด (Dark mode)"}
+            title={isDark ? "เปลี่ยนเป็นโหมดสว่าง (Light Mode)" : "เปลี่ยนเป็นโหมดมืด (Dark Mode)"}
         >
-            {isDark ? <Sun size={20} /> : <Moon size={20} />}
+            {isDark ? <Sun size={18} className="text-amber-400" /> : <Moon size={18} />}
         </button>
     );
 }

@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AppProvider } from "../context/AppContext";
-import { ThemeToggle } from "../components/common/ThemeToggle";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -49,9 +48,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           ข้ามไปยังเนื้อหาหลัก (Skip to main content)
         </a>
         <AppProvider>
-          <div className="fixed bottom-6 right-6 z-50">
-            <ThemeToggle />
-          </div>
           <main id="main-content" tabIndex={-1} className="min-h-full flex-1 focus-visible:outline-none">
             {children}
           </main>

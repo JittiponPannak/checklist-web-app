@@ -1,37 +1,37 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Prompt:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --font-sans: 'Plus Jakarta Sans', 'Prompt', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-sans: 'Prompt', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 
-  --color-background: #fffdf9;
+  --color-background: #f6f1e8;
   --color-surface: #ffffff;
-  --color-surface-2: #fcf8f2;
-  --color-border: #eadbce;
-  --color-border-subtle: #f2e7dc;
+  --color-surface-2: #ede4d5;
+  --color-border: #d4bfab;
+  --color-border-subtle: #e3d3c2;
 
-  --color-primary: #78483b;
-  --color-primary-dim: #5c352a;
-  --color-primary-glow: rgba(120, 72, 59, 0.12);
+  --color-primary: #6c3729;
+  --color-primary-dim: #4d2319;
+  --color-primary-glow: rgba(108, 55, 41, 0.18);
 
-  --color-amber: #f59e0b;
-  --color-amber-dim: #d97706;
-  --color-amber-glow: rgba(245, 158, 11, 0.15);
+  --color-amber: #d97706;
+  --color-amber-dim: #b45309;
+  --color-amber-glow: rgba(245, 158, 11, 0.22);
 
-  --color-yellow: #facc15;
-  --color-yellow-glow: rgba(250, 204, 21, 0.2);
+  --color-yellow: #eab308;
+  --color-yellow-glow: rgba(234, 179, 8, 0.25);
 
-  --color-brown: #2b1413;
-  --color-brown-light: #442220;
-  --color-brown-subtle: #f7ede8;
+  --color-brown: #240f0e;
+  --color-brown-light: #3b1c1a;
+  --color-brown-subtle: #f0e4dc;
 
-  --color-text: #2b1413;
-  --color-text-muted: #78483b;
-  --color-text-subtle: #9c6c60;
+  --color-text: #210d0c;
+  --color-text-muted: #5e3025;
+  --color-text-subtle: #79483c;
 
   --color-danger: #dc2626;
-  --color-danger-glow: rgba(220, 38, 38, 0.12);
+  --color-danger-glow: rgba(220, 38, 38, 0.15);
 }
 
 .dark {
@@ -102,6 +102,15 @@ body,
   outline-offset: 2px;
 }
 
+::selection {
+  background-color: rgba(245, 158, 11, 0.25);
+  color: var(--color-text);
+}
+
+input, textarea, select {
+  caret-color: var(--color-amber-dim);
+}
+
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
@@ -137,4 +146,40 @@ body,
 
 .animate-confetti-fall {
   animation: confetti-fall forwards cubic-bezier(.37, 0, .63, 1);
+}
+
+/* ─── Motion Sensitivity & Accessibility (WCAG 2.3.3 Level AAA) ───────────── */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  /* Disarm vestibular movement while preserving intentional visual feedback */
+  *,
+  *::before,
+  *::after {
+    /* Keep color and opacity changes so interactive state feedback is preserved */
+    transition-property: background-color, border-color, color, fill, stroke, opacity !important;
+    transition-duration: 100ms !important;
+    transform: none !important;
+  }
+
+  /* Replace disorienting 100vh confetti fall with zero-motion */
+  .animate-confetti-fall {
+    animation: none !important;
+    display: none !important;
+  }
+
+  /* Replace continuous spinning with steady loading indicator */
+  .animate-spin {
+    animation: none !important;
+    opacity: 0.75;
+  }
+
+  /* Dampen continuous pulsing/pinging */
+  .animate-pulse,
+  .animate-ping {
+    animation: none !important;
+    opacity: 0.9;
+  }
 }

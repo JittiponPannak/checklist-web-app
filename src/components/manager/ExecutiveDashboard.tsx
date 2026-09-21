@@ -27,7 +27,10 @@ import {
 } from "../../actions/checklist";
 import { RefrigeratorConfigView } from "./RefrigeratorConfigView";
 import { NotificationCenter } from "../common/NotificationCenter";
+import { ThemeToggle } from "../common/ThemeToggle";
 import { LeaderboardWidget } from "./LeaderboardWidget";
+import { ErrorBoundary } from "../common/ErrorBoundary";
+import { ClipboardCheck, ShieldCheck, Building2, Award, Snowflake, History, CheckCircle2, AlertCircle, LogOut } from "lucide-react";
 
 export type ExecutiveRole = "manager_assistant" | "manager" | "committee" | "general_manager";
 
@@ -73,10 +76,17 @@ export function ExecutiveDashboard({
   // Approval status tracking in client state (synced with Supabase task_work)
   const [approvals, setApprovals] = useState<Record<string, { assistantApproved?: boolean; managerApproved?: boolean }>>({});
   const [isResetting, setIsResetting] = useState(false);
+  const [showResetModal, setShowResetModal] = useState(false);
+
+  // Filters for Live Shift Handover & Approval Queue
+  const [shiftQueueStatusFilter, setShiftQueueStatusFilter] = useState<"all" | "pending" | "approved">("all");
+  const [shiftQueueTimeFilter, setShiftQueueTimeFilter] = useState<"all" | ShiftType>("all");
+  const [historyStatusFilter, setHistoryStatusFilter] = useState<"all" | "pending" | "approved">("all");
 
   // Checklist for Assistant Manager self-check (connected to Supabase)
   const [myChecklistShift, setMyChecklistShift] = useState<ShiftType>("morning");
   const [myChecklistItems, setMyChecklistItems] = useState<ChecklistItem[]>([]);
+  const [myChecklistFilter, setMyChecklistFilter] = useState<"all" | "pending" | "completed">("all");
   const [assistantSession, setAssistantSession] = useState<ShiftSession | null>(null);
   const [isLoadingChecklist, setIsLoadingChecklist] = useState(false);
 
@@ -171,10 +181,12 @@ export function ExecutiveDashboard({
 
   // Sync initial DB fetch on mount
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadDbSessions();
 
-    // Auto-refresh from Supabase DB every 6 seconds
+    // Auto-refresh from Supabase DB every 6 seconds (paused if tab is backgrounded)
     const interval = setInterval(() => {
+      if (typeof document !== "undefined" && document.hidden) return;
       loadDbSessions();
     }, 6000);
 
@@ -218,6 +230,7 @@ export function ExecutiveDashboard({
   // Fetch history when tab becomes active
   useEffect(() => {
     if (activeTab === "history" && historySessions.length === 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       loadHistorySessions();
     }
   }, [activeTab, loadHistorySessions, historySessions.length]);
@@ -290,6 +303,7 @@ export function ExecutiveDashboard({
 
   useEffect(() => {
     if (currentRole === "manager_assistant") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       loadAssistantChecklist(myChecklistShift);
     } else {
       setAssistantSession(null);
@@ -304,31 +318,31 @@ export function ExecutiveDashboard({
   const roleConfig = {
     manager_assistant: {
       title: "ผู้ช่วยผู้จัดการร้าน (Assistant Manager)",
-      badge: "bg-[var(--color-surface-2)] text-amber-200 border-[var(--color-border)] font-semibold shadow-sm",
+      badge: "bg-amber-100 text-amber-950 border-amber-300 font-bold shadow-2xs",
       description: "ตรวจสอบความเรียบร้อยหน้างาน รับรองกะพนักงานเบื้องต้น และรายงานสรุป",
       primaryDuty: "ตรวจรับรองกะงานพนักงาน (Morning / Afternoon Sign-off)",
-      icon: "📋",
+      Icon: ClipboardCheck,
     },
     manager: {
       title: "ผู้จัดการร้าน (Store Manager)",
-      badge: "bg-[var(--color-brown)] text-amber-300 border-[var(--color-text)]",
+      badge: "bg-[var(--color-brown)] text-amber-300 border-[var(--color-text)] font-bold shadow-2xs",
       description: "กำกับดูแลภาพรวมสาขา อนุมัติขั้นสุดท้าย และควบคุมมาตรฐานการปฏิบัติงาน",
       primaryDuty: "อนุมัติขั้นสุดท้าย (Manager Final Approval) & ควบคุมดัชนีร้าน",
-      icon: "👔",
+      Icon: ShieldCheck,
     },
     committee: {
       title: "กรรมการบริหาร (Executive Committee)",
-      badge: "bg-[var(--color-amber-glow)] text-[var(--color-text)] border-[var(--color-amber)] font-bold",
+      badge: "bg-amber-100 text-amber-950 border-amber-300 font-bold shadow-2xs",
       description: "ตรวจสอบนโยบาย ติดตาม KPI คุณภาพสาขา และดูรายงานสรุปประสิทธิภาพ",
       primaryDuty: "ตรวจสอบดัชนีคุณภาพ (Quality Audit) & สรุปผลการดำเนินงาน",
-      icon: "🏛️",
+      Icon: Building2,
     },
     general_manager: {
       title: "ผู้จัดการทั่วไป (General Manager)",
-      badge: "bg-amber-300 text-[var(--color-text)] border-amber-400 font-bold",
+      badge: "bg-amber-200 text-amber-950 border-amber-400 font-bold shadow-2xs",
       description: "บริหารระดับสูง กำหนดทิศทาง ระเบียบปฏิบัติของทุกสาขา มีอำนาจสูงสุดคล้ายกรรมการบริหาร",
       primaryDuty: "ตรวจสอบดัชนีภาพรวม และติดตามความก้าวหน้า",
-      icon: "🌟",
+      Icon: Award,
     },
   }[currentRole];
 
@@ -437,24 +451,23 @@ export function ExecutiveDashboard({
   }
 
   async function handleResetChecklistData() {
-    if (confirm("ต้องการรีเซ็ตข้อมูลประวัติเช็คลิสต์ทั้งหมดของวันนี้เป็นค่าว่างใช่หรือไม่?")) {
-      try {
-        setIsResetting(true);
-        await resetTodayChecklistDataAction();
-        secureSetItem("app_sessions", "[]");
-        secureRemoveItem("app_active_session");
-        secureRemoveItem("app_manager_read_notifs");
-        showToast("รีเซ็ตข้อมูลเช็คลิสต์ประจำวันเรียบร้อยแล้ว ✓");
-        await loadDbSessions(true);
-        if (currentRole === "manager_assistant") {
-          await loadAssistantChecklist(myChecklistShift);
-        }
-      } catch (err) {
-        console.error("Reset error:", err);
-        showToast("เกิดข้อผิดพลาดในการรีเซ็ตข้อมูล");
-      } finally {
-        setIsResetting(false);
+    try {
+      setIsResetting(true);
+      await resetTodayChecklistDataAction();
+      secureSetItem("app_sessions", "[]");
+      secureRemoveItem("app_active_session");
+      secureRemoveItem("app_manager_read_notifs");
+      showToast("รีเซ็ตข้อมูลเช็คลิสต์ประจำวันเรียบร้อยแล้ว ✓");
+      await loadDbSessions(true);
+      if (currentRole === "manager_assistant") {
+        await loadAssistantChecklist(myChecklistShift);
       }
+      setShowResetModal(false);
+    } catch (err) {
+      console.error("Reset error:", err);
+      showToast("เกิดข้อผิดพลาดในการรีเซ็ตข้อมูล");
+    } finally {
+      setIsResetting(false);
     }
   }
 
@@ -473,46 +486,57 @@ export function ExecutiveDashboard({
       s.userName.toLowerCase().includes(historySearch.toLowerCase()) ||
       (s.userPosition || "").toLowerCase().includes(historySearch.toLowerCase());
     const matchesShift = historyShiftFilter === "all" || s.shift === historyShiftFilter;
-    return matchesSearch && matchesShift;
+    if (!matchesSearch || !matchesShift) return false;
+
+    const app = approvals[s.id] || {};
+    const isAssistantSession = s.taskRole === "manager_assistant" || s.userPosition === "ผู้ช่วยผู้จัดการร้าน";
+    const isPending = currentRole === "manager_assistant"
+      ? (!isAssistantSession && !app.assistantApproved)
+      : !app.managerApproved;
+
+    if (historyStatusFilter === "pending") return isPending;
+    if (historyStatusFilter === "approved") {
+      return currentRole === "manager_assistant" ? !!app.assistantApproved : !!app.managerApproved;
+    }
+    return true;
   });
 
   return (
     <div className="min-h-screen bg-[var(--color-background)] text-[var(--color-text)] pb-16 font-sans">
       {/* ─── Top Brand Navigation Bar ────────────────────────────────────────────── */}
       <nav className="bg-[var(--color-surface)]/95 backdrop-blur-md border-b border-[var(--color-border)] sticky top-0 z-30 shadow-xs">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3.5">
-            <BrandLogo size={40} showText={false} isDark={false} />
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-extrabold text-sm sm:text-base text-[var(--color-text)] tracking-tight">
+        <div className="max-w-6xl mx-auto px-3 sm:px-6 h-16 flex items-center justify-between gap-2 sm:gap-4">
+          <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
+            <BrandLogo size={36} showText={false} isDark={false} />
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <span className="font-extrabold text-xs sm:text-base text-[var(--color-text)] tracking-tight truncate">
                   Eater Egg Fresh Mart
                 </span>
-                <span className="hidden sm:inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#FAF2EB] text-[var(--color-text-muted)] border border-[var(--color-border)]">
+                <span className="hidden sm:inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[var(--color-surface-2)] text-[var(--color-text-muted)] border border-[var(--color-border)] shrink-0">
                   {user.branchName || "ไม่ได้ระบุสาขา"}
                 </span>
               </div>
-              <p className="text-[11px] text-[var(--color-text-muted)] hidden sm:block">
+              <p className="text-[11px] text-[var(--color-text-muted)] hidden md:block">
                 ระบบกำกับดูแลและตรวจสอบมาตรฐานงานสาขา (Operations & Audit Portal)
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
             <NotificationCenter />
+            <ThemeToggle />
 
-            {/* Logout Button */}
+            {/* Logout Button: Responsive compact on mobile, labeled on tablet/desktop */}
             <button
               type="button"
               onClick={onLogout}
-              className="px-3 py-1.5 text-xs font-semibold text-rose-700 hover:text-rose-800 hover:bg-rose-50 border border-rose-200 rounded-xl transition-all cursor-pointer flex items-center gap-1.5"
+              title="ออกจากระบบ"
+              aria-label="ออกจากระบบ"
+              className="text-xs text-[var(--color-text-muted)] hover:text-rose-700 hover:bg-rose-50 hover:border-rose-200 dark:hover:bg-rose-950/40 dark:hover:border-rose-800 transition-all p-2 sm:px-3 sm:py-1.5 rounded-xl border border-[var(--color-border)] font-semibold cursor-pointer min-h-[36px] min-w-[36px] inline-flex items-center justify-center gap-1.5 shrink-0"
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                <polyline points="16 17 21 12 16 7" />
-                <line x1="21" y1="12" x2="9" y2="12" />
-              </svg>
-              <span>ออกจากระบบ</span>
+              <LogOut size={16} />
+              <span className="hidden sm:inline">ออกจากระบบ</span>
             </button>
           </div>
         </div>
@@ -541,11 +565,11 @@ export function ExecutiveDashboard({
         <header className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-5 sm:p-6 shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-4 relative overflow-hidden">
           <div className="space-y-1.5 z-10">
             <div className="flex items-center gap-2.5 flex-wrap">
-              <span className="text-xl sm:text-2xl font-extrabold text-[var(--color-text)] tracking-tight">
+              <span className="text-xl sm:text-2xl font-bold text-[var(--color-text)] tracking-tight">
                 สวัสดี, {user.name}
               </span>
-              <span className={`text-xs px-2.5 py-0.5 rounded-full border font-semibold flex items-center gap-1 ${roleConfig.badge}`}>
-                <span>{roleConfig.icon}</span>
+              <span className={`text-xs px-2.5 py-0.5 rounded-full border font-semibold flex items-center gap-1.5 ${roleConfig.badge}`}>
+                <roleConfig.Icon size={13} strokeWidth={2.5} />
                 <span>{roleConfig.title}</span>
               </span>
             </div>
@@ -562,7 +586,7 @@ export function ExecutiveDashboard({
               <button
                 type="button"
                 onClick={() => setActiveTab("checklist")}
-                className="px-4 py-2.5 bg-[var(--color-brown)] hover:bg-[#3D1D1B] active:bg-black text-amber-300 text-xs font-semibold rounded-xl shadow-sm transition-all flex items-center gap-2 cursor-pointer"
+                className="px-4 py-2.5 bg-[var(--color-brown)] hover:bg-[var(--color-brown-light)] active:bg-black text-amber-300 text-xs font-semibold rounded-xl shadow-sm transition-all flex items-center gap-2 cursor-pointer"
               >
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M9 11l3 3L22 4" />
@@ -581,7 +605,7 @@ export function ExecutiveDashboard({
               {
                 id: "overview" as DashboardTab,
                 label: "ภาพรวมและการรับรองกะ",
-                icon: "📋",
+                Icon: ClipboardCheck,
                 desc: "ตรวจรับรองกะและแจ้งเตือน",
               },
               ...(currentRole === "manager_assistant"
@@ -589,7 +613,7 @@ export function ExecutiveDashboard({
                   {
                     id: "checklist" as DashboardTab,
                     label: "เช็คลิสต์ตรวจงานของฉัน",
-                    icon: "✅",
+                    Icon: CheckCircle2,
                     desc: "บันทึกเช็คลิสต์ประจำกะ",
                   },
                 ]
@@ -597,13 +621,13 @@ export function ExecutiveDashboard({
               {
                 id: "refrigerator" as DashboardTab,
                 label: "ตั้งค่าตู้แช่",
-                icon: "❄️",
+                Icon: Snowflake,
                 desc: "จัดการและตั้งค่าตู้แช่",
               },
               {
                 id: "history" as DashboardTab,
                 label: "ประวัติการตรวจสอบย้อนหลัง",
-                icon: "🕒",
+                Icon: History,
                 desc: "ค้นหาและดูรายละเอียดทุกกะ",
               },
             ].map((tab) => (
@@ -617,10 +641,10 @@ export function ExecutiveDashboard({
                   }`}
               >
                 <div className="flex items-center gap-2">
-                  <span>{tab.icon}</span>
+                  <tab.Icon size={15} strokeWidth={2.2} />
                   <span className="text-xs sm:text-sm">{tab.label}</span>
                 </div>
-                <span className={`text-[10px] font-normal pl-5 hidden sm:block ${activeTab === tab.id ? "text-amber-200/80" : "text-[var(--color-text-subtle)]"}`}>
+                <span className={`text-[10px] font-normal pl-6 hidden sm:block ${activeTab === tab.id ? "text-amber-200/80" : "text-[var(--color-text-subtle)]"}`}>
                   {tab.desc}
                 </span>
               </button>
@@ -635,18 +659,126 @@ export function ExecutiveDashboard({
 
         {activeTab === "overview" && (
           <div className="space-y-6 animate-fade-in">
-            {/* Live Shift Handover & Approval Queue */}
-            <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-5 shadow-sm space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[var(--color-border)] pb-3">
-                <div>
+            {/* ─── Integrated Store Operations Cockpit (Non-generic, cohesive layout) ─── */}
+            <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-5 sm:p-6 shadow-xs grid grid-cols-1 md:grid-cols-3 gap-6 divide-y md:divide-y-0 md:divide-x divide-[var(--color-border)]">
+              {/* Zone 1: Store Shift Operations */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-amber-500" aria-hidden="true" />
+                  <span className="text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider">
+                    กะปฏิบัติงานวันนี้
+                  </span>
+                </div>
+                <div className="flex items-baseline gap-2 pt-0.5">
+                  <span className="text-2xl sm:text-3xl font-bold font-mono text-[var(--color-text)]">
+                    {sessions.length}
+                  </span>
+                  <span className="text-xs text-[var(--color-text-muted)] font-medium">
+                    กะงานทั้งหมด
+                  </span>
+                </div>
+                <p className="text-xs text-[var(--color-text-subtle)]">
+                  {completedSessions.length} กะส่งมอบเรียบร้อยแล้ว ({sessions.length > 0 ? Math.round((completedSessions.length / sessions.length) * 100) : 0}%)
+                </p>
+              </div>
+
+              {/* Zone 2: Store Compliance Rate */}
+              <div className="pt-4 md:pt-0 md:pl-6 space-y-2">
+                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-bold text-[var(--color-text)] flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500" aria-hidden="true" />
+                    <span className="text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider">
+                      ความสอดคล้องมาตรฐานสาขา
+                    </span>
+                  </div>
+                  <span className="text-xs font-mono font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
+                    {complianceRate}%
+                  </span>
+                </div>
+                <div className="w-full bg-[var(--color-surface-2)] h-2 rounded-full overflow-hidden border border-[var(--color-border-subtle)] mt-2">
+                  <div
+                    className="h-full bg-emerald-500 rounded-full transition-all duration-500"
+                    style={{ width: `${complianceRate}%` }}
+                  />
+                </div>
+                <p className="text-xs text-[var(--color-text-subtle)]">
+                  บันทึกแล้ว {completedChecklistItems} จาก {totalChecklistItems || 1} ข้อเช็คลิสต์
+                </p>
+              </div>
+
+              {/* Zone 3: Direct Approval Action Callout */}
+              <div
+                onClick={() => {
+                  if (pendingApprovalsCount > 0) {
+                    setShiftQueueStatusFilter((prev) => (prev === "pending" ? "all" : "pending"));
+                  }
+                }}
+                className={`pt-4 md:pt-0 md:pl-6 flex flex-col justify-between space-y-2 ${
+                  pendingApprovalsCount > 0
+                    ? `cursor-pointer group p-2.5 rounded-xl border transition-colors ${
+                        shiftQueueStatusFilter === "pending"
+                          ? "bg-amber-50 dark:bg-amber-950/40 border-amber-300 dark:border-amber-800 shadow-2xs"
+                          : "hover:bg-[var(--color-surface-2)]/60 border-transparent hover:border-[var(--color-border)]"
+                      }`
+                    : ""
+                }`}
+                title={pendingApprovalsCount > 0 ? "คลิกเพื่อกรองเฉพาะกะที่รอดำเนินการรับรอง" : undefined}
+              >
+                <div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className={`w-2 h-2 rounded-full ${pendingApprovalsCount > 0 ? "bg-amber-500 animate-pulse" : "bg-emerald-500"}`} aria-hidden="true" />
+                      <span className="text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider">
+                        สถานะการลงนามรับรอง
+                      </span>
+                    </div>
+                    {pendingApprovalsCount > 0 && (
+                      <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-md transition-colors ${
+                        shiftQueueStatusFilter === "pending"
+                          ? "bg-amber-200 text-amber-950 dark:bg-amber-900 dark:text-amber-200 font-bold"
+                          : "text-amber-900 bg-amber-100 dark:bg-amber-950 dark:text-amber-300 group-hover:bg-amber-200"
+                      }`}>
+                        {shiftQueueStatusFilter === "pending" ? "✓ กำลังกรองกะค้าง" : "คลิกเพื่อกรอง →"}
+                      </span>
+                    )}
+                  </div>
+                  <div className="mt-1 flex items-center gap-2">
+                    {pendingApprovalsCount > 0 ? (
+                      <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-900 dark:text-amber-300 bg-amber-100 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800 px-2.5 py-1 rounded-full shadow-2xs">
+                        <AlertCircle size={13} className="text-amber-700 dark:text-amber-400" />
+                        <span>ค้างรับรอง {pendingApprovalsCount} กะ</span>
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 px-2.5 py-1 rounded-full shadow-2xs">
+                        <CheckCircle2 size={13} className="text-emerald-600 dark:text-emerald-400" />
+                        <span>✨ รับรองครบถ้วนทุกกะ — มาตรฐาน 100%</span>
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <p className="text-[11px] text-[var(--color-text-subtle)]">
+                  {pendingApprovalsCount > 0
+                    ? shiftQueueStatusFilter === "pending"
+                      ? "กำลังแสดงเฉพาะกะที่รอดำเนินการ (คลิกการ์ดนี้เพื่อดูทั้งหมด)"
+                      : "คลิกเพื่อกรองดูเฉพาะกะที่รอการตรวจรับรองทันที"
+                    : "สาขาพร้อมเปิดทำการเต็มมาตรฐาน รับรองครบทุกกะงานแล้ว"}
+                </p>
+              </div>
+            </div>
+
+            {/* Live Shift Handover & Approval Queue */}
+            <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-4 sm:p-5 shadow-xs space-y-4">
+              {/* Header Toolbar */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[var(--color-border-subtle)] pb-3.5">
+                <div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="text-sm sm:text-base font-bold text-[var(--color-text)] flex items-center gap-2">
                       <span className="w-2 h-2 rounded-full bg-amber-500" />
-                      <span>รายการกะงานสาขา & สถานะการรับรอง (Shift Handover & Approval Queue)</span>
+                      <span>รายการกะงานสาขา & การรับรองกะ</span>
                     </h3>
                     {isLiveFromDb && (
-                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-bold bg-[var(--color-amber-glow)] text-[var(--color-text)] border border-[var(--color-amber)]">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-emerald-50 text-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
                         <span>Supabase Live DB</span>
                       </span>
                     )}
@@ -655,17 +787,18 @@ export function ExecutiveDashboard({
                     ตรวจสอบความเรียบร้อยของรายการเช็คลิสต์และกดรับรองกะงาน
                   </p>
                 </div>
-                <div className="flex items-center gap-2 self-start sm:self-auto">
+
+                <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
                   <button
                     type="button"
                     onClick={() => loadDbSessions(true)}
                     disabled={isLoadingDb}
-                    className="text-[11px] font-semibold text-[var(--color-text)] hover:text-[var(--color-amber)] bg-[var(--color-surface-2)] hover:bg-[var(--color-surface)] border border-[var(--color-border)] px-2.5 py-1 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                    className="text-xs font-semibold text-[var(--color-text)] hover:text-amber-950 bg-[var(--color-surface-2)] hover:bg-amber-100 border border-[var(--color-border)] min-h-[44px] sm:min-h-[34px] px-3.5 py-2 sm:px-3 sm:py-1.5 rounded-xl transition-all inline-flex items-center gap-1.5 cursor-pointer disabled:opacity-50 shadow-2xs"
                     title="โหลดข้อมูลล่าสุดจากฐานข้อมูล"
                   >
                     <svg
-                      width="12"
-                      height="12"
+                      width="13"
+                      height="13"
                       viewBox="0 0 24 24"
                       fill="none"
                       stroke="currentColor"
@@ -679,156 +812,363 @@ export function ExecutiveDashboard({
                     <span>{isLoadingDb ? "กำลังรีเฟรช..." : "รีเฟรชข้อมูล"}</span>
                   </button>
 
-                  <button
-                    type="button"
-                    onClick={handleResetChecklistData}
-                    disabled={isResetting}
-                    className="text-[11px] font-semibold text-rose-500 hover:text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 px-2.5 py-1 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-                    title="ล้างข้อมูลเช็คลิสต์ประจำวันทั้งหมดในฐานข้อมูลเพื่อเริ่มทดสอบใหม่"
-                  >
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-                      <path d="M3 3v5h5" />
-                    </svg>
-                    <span>{isResetting ? "กำลังรีเซ็ต..." : "รีเซ็ตข้อมูลเช็คลิสต์"}</span>
-                  </button>
-
-                  <span className="text-[11px] font-mono text-[var(--color-text-muted)] bg-[var(--color-surface-2)] border border-[var(--color-border)] px-2.5 py-1 rounded-lg">
+                  <span className="text-[11px] font-mono text-[var(--color-text-muted)] bg-[var(--color-surface-2)] border border-[var(--color-border)] px-2.5 py-1.5 rounded-xl">
                     วันนี้: {fmtDate(new Date().toISOString())}
                   </span>
                 </div>
               </div>
 
-              {/* Shifts Table */}
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
-                  <thead>
-                    <tr className="border-b border-[var(--color-border)] text-[var(--color-text-muted)] font-semibold bg-[var(--color-surface-2)]">
-                      <th className="py-2.5 px-3 rounded-l-lg">ผู้ปฏิบัติงาน</th>
-                      <th className="py-2.5 px-3">ตำแหน่ง / กะ</th>
-                      <th className="py-2.5 px-3">ความคืบหน้า</th>
-                      <th className="py-2.5 px-3">เวลาส่งกะ</th>
-                      <th className="py-2.5 px-3 text-center">การรับรองของผู้ช่วย</th>
-                      <th className="py-2.5 px-3 text-center">การอนุมัติของผู้จัดการ</th>
-                      <th className="py-2.5 px-3 text-right rounded-r-lg">การจัดการ</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[var(--color-border)]/70">
-                    {sessions.filter(sess => {
-                      if (currentRole === "manager_assistant") {
-                        return !(sess.taskRole === "manager_assistant" || sess.userPosition === "ผู้ช่วยผู้จัดการร้าน");
-                      }
-                      return true;
-                    })
-                      .sort((a, b) => {
-                        if (a.shift === "morning" && b.shift !== "morning") return -1;
-                        if (a.shift !== "morning" && b.shift === "morning") return 1;
-                        if (a.shift === "afternoon" && b.shift !== "afternoon") return -1;
-                        if (a.shift !== "afternoon" && b.shift === "afternoon") return 1;
-                        return 0;
-                      })
-                      .map((sess) => {
+              {/* ─── Usability Enhancement: Quick Filter Pills Toolbar ─── */}
+              {(() => {
+                const sessionsForRole = sessions.filter((sess) => {
+                  if (currentRole === "manager_assistant") {
+                    return !(sess.taskRole === "manager_assistant" || sess.userPosition === "ผู้ช่วยผู้จัดการร้าน");
+                  }
+                  return true;
+                });
+                const pendingCount = sessionsForRole.filter((s) => {
+                  const app = approvals[s.id] || {};
+                  const isAssistantSession = s.taskRole === "manager_assistant" || s.userPosition === "ผู้ช่วยผู้จัดการร้าน";
+                  if (currentRole === "manager_assistant") {
+                    if (isAssistantSession) return false;
+                    return !app.assistantApproved;
+                  }
+                  return !app.managerApproved;
+                }).length;
+                const approvedCount = sessionsForRole.length - pendingCount;
+
+                return (
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-1">
+                    {/* Status Tabs */}
+                    <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+                      <button
+                        type="button"
+                        onClick={() => setShiftQueueStatusFilter("all")}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${shiftQueueStatusFilter === "all"
+                          ? "bg-[var(--color-brown)] text-amber-300 shadow-2xs font-bold"
+                          : "bg-[var(--color-surface-2)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] border border-[var(--color-border)]"
+                          }`}
+                      >
+                        ทั้งหมด ({sessionsForRole.length})
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setShiftQueueStatusFilter("pending")}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer whitespace-nowrap inline-flex items-center gap-1.5 ${shiftQueueStatusFilter === "pending"
+                          ? "bg-amber-500 text-amber-950 font-bold shadow-2xs"
+                          : pendingCount > 0
+                            ? "bg-amber-100 text-amber-950 border border-amber-300 hover:bg-amber-200 dark:bg-amber-950/60 dark:text-amber-200 dark:border-amber-800"
+                            : "bg-[var(--color-surface-2)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] border border-[var(--color-border)]"
+                          }`}
+                      >
+                        <span>รอการตรวจรับรอง</span>
+                        {pendingCount > 0 && (
+                          <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-extrabold ${shiftQueueStatusFilter === "pending" ? "bg-amber-950 text-amber-300" : "bg-amber-400 text-amber-950"}`}>
+                            {pendingCount}
+                          </span>
+                        )}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setShiftQueueStatusFilter("approved")}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${shiftQueueStatusFilter === "approved"
+                          ? "bg-[var(--color-brown)] text-amber-300 shadow-2xs font-bold"
+                          : "bg-[var(--color-surface-2)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] border border-[var(--color-border)]"
+                          }`}
+                      >
+                        อนุมัติแล้ว ({approvedCount})
+                      </button>
+                    </div>
+
+                    {/* Shift Filter Dropdown / Pills */}
+                    <div className="flex items-center gap-1 self-start sm:self-auto">
+                      <span className="text-[11px] text-[var(--color-text-muted)] hidden lg:inline mr-1">กะ:</span>
+                      {(["all", "morning", "afternoon"] as const).map((sh) => (
+                        <button
+                          key={sh}
+                          type="button"
+                          onClick={() => setShiftQueueTimeFilter(sh)}
+                          className={`px-2.5 py-1 text-[11px] font-semibold rounded-lg transition-all cursor-pointer ${shiftQueueTimeFilter === sh
+                            ? "bg-[var(--color-text)] text-[var(--color-surface)] shadow-2xs"
+                            : "text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-2)]"
+                            }`}
+                        >
+                          {sh === "all" ? "ทุกกะ" : sh === "morning" ? "กะเช้า" : "กะบ่าย"}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* ─── Render Shifts: Responsive Dual View (Cards on Mobile, Table on Desktop) ─── */}
+              {(() => {
+                const sessionsForRole = sessions.filter((sess) => {
+                  if (currentRole === "manager_assistant") {
+                    return !(sess.taskRole === "manager_assistant" || sess.userPosition === "ผู้ช่วยผู้จัดการร้าน");
+                  }
+                  return true;
+                });
+
+                const filteredSessions = sessionsForRole
+                  .filter((sess) => {
+                    if (shiftQueueTimeFilter !== "all" && sess.shift !== shiftQueueTimeFilter) return false;
+                    const app = approvals[sess.id] || {};
+                    const isAssistantSession =
+                      sess.taskRole === "manager_assistant" || sess.userPosition === "ผู้ช่วยผู้จัดการร้าน";
+                    const isPending = currentRole === "manager_assistant"
+                      ? (!isAssistantSession && !app.assistantApproved)
+                      : !app.managerApproved;
+
+                    if (shiftQueueStatusFilter === "pending") return isPending;
+                    if (shiftQueueStatusFilter === "approved") {
+                      return currentRole === "manager_assistant" ? !!app.assistantApproved : !!app.managerApproved;
+                    }
+                    return true;
+                  })
+                  .sort((a, b) => {
+                    const aApp = approvals[a.id] || {};
+                    const bApp = approvals[b.id] || {};
+                    const aPending = currentRole === "manager_assistant" ? !aApp.assistantApproved : !aApp.managerApproved;
+                    const bPending = currentRole === "manager_assistant" ? !bApp.assistantApproved : !bApp.managerApproved;
+                    if (aPending && !bPending) return -1;
+                    if (!aPending && bPending) return 1;
+                    if (a.shift === "morning" && b.shift !== "morning") return -1;
+                    if (a.shift !== "morning" && b.shift === "morning") return 1;
+                    return 0;
+                  });
+
+                if (filteredSessions.length === 0) {
+                  return (
+                    <div className="py-10 text-center text-xs text-[var(--color-text-muted)] bg-[var(--color-surface-2)]/40 rounded-2xl border border-dashed border-[var(--color-border)] p-6">
+                      <p className="font-semibold text-[var(--color-text)]">
+                        {shiftQueueStatusFilter === "pending"
+                          ? "ไม่มีรายการกะที่ค้างการรับรองในขณะนี้ ✓"
+                          : shiftQueueStatusFilter === "approved"
+                            ? "ยังไม่มีกะที่ได้รับการอนุมัติ"
+                            : "ยังไม่มีข้อมูลกะการทำงานในวันนี้"}
+                      </p>
+                      <p className="text-[11px] text-[var(--color-text-subtle)] mt-1">
+                        {shiftQueueStatusFilter === "pending"
+                          ? "พนักงานทุกคนในเงื่อนไขได้รับการตรวจรับรองเรียบร้อยแล้ว"
+                          : "เมื่อพนักงานเริ่มเข้ากะ รายชื่อและเปอร์เซ็นต์ความคืบหน้าจะแสดงที่นี่แบบเรียลไทม์"}
+                      </p>
+                    </div>
+                  );
+                }
+
+                // Helper to render approval badge
+                const renderApprovalBadge = (sess: ShiftSession) => {
+                  const app = approvals[sess.id] || {};
+                  const isAssistantSession =
+                    sess.taskRole === "manager_assistant" || sess.userPosition === "ผู้ช่วยผู้จัดการร้าน";
+
+                  if (app.managerApproved) {
+                    return (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-2xs">
+                        <CheckCircle2 size={12} className="text-emerald-600" />
+                        <span>อนุมัติสมบูรณ์</span>
+                      </span>
+                    );
+                  }
+
+                  if (isAssistantSession) {
+                    return (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-100 text-amber-950 border border-amber-300">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-pulse" />
+                        <span>รอผู้จัดการอนุมัติ (งานผู้ช่วย)</span>
+                      </span>
+                    );
+                  }
+
+                  if (app.assistantApproved) {
+                    return (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-100 text-amber-950 border border-amber-300">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-pulse" />
+                        <span>ผู้ช่วยรับรองแล้ว → รอผู้จัดการ</span>
+                      </span>
+                    );
+                  }
+
+                  if (!hasAssistantLoggedInToday) {
+                    return (
+                      <span
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-amber-50 text-amber-900 border border-amber-200"
+                        title="ไม่มีผู้ช่วยเข้างานในวันนี้ จึงข้ามขั้นตอนนี้ให้ผู้จัดการพิจารณาโดยตรง"
+                      >
+                        <span>รอผู้จัดการอนุมัติ (ข้ามผู้ช่วย)</span>
+                      </span>
+                    );
+                  }
+
+                  return (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-[var(--color-surface-2)] text-[var(--color-text-muted)] border border-[var(--color-border)]">
+                      <span>รอผู้ช่วยรับรอง</span>
+                    </span>
+                  );
+                };
+
+                return (
+                  <>
+                    {/* 1. Mobile Cards View (< sm: 640px) */}
+                    <div className="block sm:hidden space-y-3">
+                      {filteredSessions.map((sess) => {
                         const completedCount = sess.items.filter((i) => i.completedAt).length;
                         const pct = Math.round((completedCount / (sess.items.length || 1)) * 100);
-                        const app = approvals[sess.id] || {};
                         const isAssistantSession =
                           sess.taskRole === "manager_assistant" || sess.userPosition === "ผู้ช่วยผู้จัดการร้าน";
 
                         return (
-                          <tr key={sess.id} className="hover:bg-[var(--color-background)] transition-colors">
-                            <td className="py-3 px-3 font-semibold text-[var(--color-text)]">
-                              {sess.userName}
-                            </td>
-                            <td className="py-3 px-3 space-y-1">
-                              <div className="flex items-center gap-1.5 flex-wrap">
-                                <span
-                                  className={`px-2 py-0.5 rounded-md font-medium text-[11px] ${isAssistantSession
-                                    ? "bg-[var(--color-amber-glow)] text-[var(--color-text)] border border-[var(--color-amber)]"
-                                    : "bg-[var(--color-surface-2)] text-[var(--color-text-muted)] border border-[var(--color-border)]"
-                                    }`}
-                                >
-                                  {sess.userPosition || "พนักงาน"}
+                          <div
+                            key={sess.id}
+                            className="p-4 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-xs space-y-3"
+                          >
+                            <div className="flex items-start justify-between gap-2">
+                              <div>
+                                <span className="font-bold text-sm text-[var(--color-text)]">
+                                  {sess.userName}
                                 </span>
-                                {getShiftBadge(sess.shift)}
-                              </div>
-                            </td>
-                            <td className="py-3 px-3">
-                              <div className="space-y-1">
-                                <div className="flex items-center justify-between text-[11px] font-mono text-[var(--color-text-muted)]">
-                                  <span>{completedCount}/{sess.items.length}</span>
-                                  <span className="font-bold text-[var(--color-text)]">{pct}%</span>
-                                </div>
-                                <div className="w-24 bg-[#F2E7DC] h-1.5 rounded-full overflow-hidden border border-[var(--color-border)]">
-                                  <div
-                                    className={`h-full rounded-full ${pct === 100 ? "bg-emerald-500" : "bg-amber-400"}`}
-                                    style={{ width: `${pct}%` }}
-                                  />
+                                <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                                  <span
+                                    className={`px-2 py-0.5 rounded-md font-medium text-[11px] ${isAssistantSession
+                                      ? "bg-[var(--color-amber-glow)] text-[var(--color-text)] border border-[var(--color-amber)]"
+                                      : "bg-[var(--color-surface-2)] text-[var(--color-text-muted)] border border-[var(--color-border)]"
+                                      }`}
+                                  >
+                                    {sess.userPosition || "พนักงาน"}
+                                  </span>
+                                  {getShiftBadge(sess.shift)}
                                 </div>
                               </div>
-                            </td>
-                            <td className="py-3 px-3 font-mono text-[var(--color-text-muted)] text-[11px]">
-                              {sess.completedAt ? fmtTime(sess.completedAt) : (
-                                <span className="text-[var(--color-amber)] bg-[var(--color-amber-glow)] border border-[var(--color-amber)] px-2 py-0.5 rounded-md font-semibold text-[10px]">
+                              {sess.completedAt ? (
+                                <span className="text-[11px] font-mono text-[var(--color-text-muted)] bg-[var(--color-surface-2)] px-2 py-1 rounded-lg border border-[var(--color-border)]">
+                                  {fmtTime(sess.completedAt)}
+                                </span>
+                              ) : (
+                                <span className="text-[10px] font-semibold text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-md">
                                   กำลังปฏิบัติงาน
                                 </span>
                               )}
-                            </td>
-                            {/* Assistant Approval */}
-                            <td className="py-3 px-3 text-center">
-                              {isAssistantSession ? (
-                                <span className="text-[10px] text-[var(--color-text-subtle)] font-medium">
-                                  - (งานผู้ช่วย)
+                            </div>
+
+                            {/* Progress bar */}
+                            <div className="space-y-1.5 bg-[var(--color-surface-2)]/60 p-2.5 rounded-xl border border-[var(--color-border)]">
+                              <div className="flex items-center justify-between text-xs font-mono">
+                                <span className="text-[var(--color-text-muted)]">ความคืบหน้า</span>
+                                <span className="font-bold text-[var(--color-text)]">
+                                  {completedCount}/{sess.items.length} ข้อ ({pct}%)
                                 </span>
-                              ) : app.assistantApproved ? (
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                  ✓ รับรองแล้ว
-                                </span>
-                              ) : !hasAssistantLoggedInToday ? (
-                                <span className="text-[10px] text-[var(--color-text-subtle)] font-medium tooltip" title="ไม่มีผู้ช่วยเข้างานในวันนี้ จึงข้ามขั้นตอนนี้ให้ผู้จัดการพิจารณาโดยตรง">
-                                  - (ข้าม)
-                                </span>
-                              ) : (
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-[var(--color-amber-glow)] text-[var(--color-amber)] border border-[var(--color-amber)]">
-                                  รอดำเนินการ
-                                </span>
-                              )}
-                            </td>
-                            {/* Manager Approval */}
-                            <td className="py-3 px-3 text-center">
-                              {app.managerApproved ? (
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                  ✓ อนุมัติแล้ว
-                                </span>
-                              ) : isAssistantSession ? (
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-[var(--color-amber-glow)] text-[var(--color-amber)] border border-[var(--color-amber)]">
-                                  รอผู้จัดการอนุมัติ
-                                </span>
-                              ) : app.assistantApproved || !hasAssistantLoggedInToday ? (
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-[var(--color-amber-glow)] text-[var(--color-amber)] border border-[var(--color-amber)]">
-                                  รอผู้จัดการอนุมัติ
-                                </span>
-                              ) : (
-                                <span className="text-[10px] text-[var(--color-text-subtle)] font-medium">
-                                  (รอผู้ช่วยรับรองก่อน)
-                                </span>
-                              )}
-                            </td>
-                            {/* Action button */}
-                            <td className="py-3 px-3 text-right">
+                              </div>
+                              <div className="w-full bg-[var(--color-border-subtle)] h-2 rounded-full overflow-hidden border border-[var(--color-border)]">
+                                <div
+                                  className={`h-full rounded-full transition-all duration-300 ${pct === 100 ? "bg-emerald-500" : "bg-amber-400"
+                                    }`}
+                                  style={{ width: `${pct}%` }}
+                                />
+                              </div>
+                            </div>
+
+                            {/* Status & Action */}
+                            <div className="flex items-center justify-between gap-2 pt-0.5">
+                              <div>{renderApprovalBadge(sess)}</div>
                               <button
                                 type="button"
                                 onClick={() => setSelectedSession(sess)}
-                                className="px-3 py-1.5 text-xs font-semibold text-[var(--color-text)] bg-amber-400 hover:bg-amber-300 active:bg-amber-500 rounded-lg transition-colors cursor-pointer shadow-sm shadow-amber-200/50"
+                                className="min-h-[44px] px-4 py-2 text-xs font-bold text-amber-950 bg-amber-400 hover:bg-amber-300 active:bg-amber-500 rounded-xl transition-all cursor-pointer shadow-xs inline-flex items-center gap-1.5"
                               >
-                                ตรวจรับรอง →
+                                <span>ตรวจรับรอง</span>
+                                <span>→</span>
                               </button>
-                            </td>
-                          </tr>
+                            </div>
+                          </div>
                         );
                       })}
-                  </tbody>
-                </table>
-              </div>
+                    </div>
+
+                    {/* 2. Desktop / Tablet Table View (>= sm: 640px) */}
+                    <div className="hidden sm:block overflow-x-auto">
+                      <table className="w-full text-left text-xs">
+                        <thead>
+                          <tr className="border-b border-[var(--color-border)] text-[var(--color-text-muted)] font-semibold bg-[var(--color-surface-2)]">
+                            <th className="py-2.5 px-3 rounded-l-lg">ผู้ปฏิบัติงาน</th>
+                            <th className="py-2.5 px-3">ตำแหน่ง / กะ</th>
+                            <th className="py-2.5 px-3">ความคืบหน้า</th>
+                            <th className="py-2.5 px-3">เวลาส่งกะ</th>
+                            <th className="py-2.5 px-3 text-center">สถานะการรับรอง</th>
+                            <th className="py-2.5 px-3 text-right rounded-r-lg">การจัดการ</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-[var(--color-border)]/70">
+                          {filteredSessions.map((sess) => {
+                            const completedCount = sess.items.filter((i) => i.completedAt).length;
+                            const pct = Math.round((completedCount / (sess.items.length || 1)) * 100);
+                            const isAssistantSession =
+                              sess.taskRole === "manager_assistant" || sess.userPosition === "ผู้ช่วยผู้จัดการร้าน";
+
+                            return (
+                              <tr key={sess.id} className="hover:bg-[var(--color-background)] transition-colors">
+                                <td className="py-3 px-3 font-semibold text-[var(--color-text)]">
+                                  {sess.userName}
+                                </td>
+                                <td className="py-3 px-3 space-y-1">
+                                  <div className="flex items-center gap-1.5 flex-wrap">
+                                    <span
+                                      className={`px-2 py-0.5 rounded-md font-medium text-[11px] ${isAssistantSession
+                                        ? "bg-[var(--color-amber-glow)] text-[var(--color-text)] border border-[var(--color-amber)]"
+                                        : "bg-[var(--color-surface-2)] text-[var(--color-text-muted)] border border-[var(--color-border)]"
+                                        }`}
+                                    >
+                                      {sess.userPosition || "พนักงาน"}
+                                    </span>
+                                    {getShiftBadge(sess.shift)}
+                                  </div>
+                                </td>
+                                <td className="py-3 px-3">
+                                  <div className="space-y-1">
+                                    <div className="flex items-center justify-between text-[11px] font-mono text-[var(--color-text-muted)]">
+                                      <span>{completedCount}/{sess.items.length}</span>
+                                      <span className="font-bold text-[var(--color-text)]">{pct}%</span>
+                                    </div>
+                                    <div className="w-24 bg-[var(--color-border-subtle)] h-1.5 rounded-full overflow-hidden border border-[var(--color-border)]">
+                                      <div
+                                        className={`h-full rounded-full ${pct === 100 ? "bg-emerald-500" : "bg-amber-400"}`}
+                                        style={{ width: `${pct}%` }}
+                                      />
+                                    </div>
+                                  </div>
+                                </td>
+                                <td className="py-3 px-3 font-mono text-[var(--color-text-muted)] text-[11px]">
+                                  {sess.completedAt ? (
+                                    fmtTime(sess.completedAt)
+                                  ) : (
+                                    <span className="text-[var(--color-amber)] bg-[var(--color-amber-glow)] border border-[var(--color-amber)] px-2 py-0.5 rounded-md font-semibold text-[10px]">
+                                      กำลังปฏิบัติงาน
+                                    </span>
+                                  )}
+                                </td>
+                                <td className="py-3 px-3 text-center">
+                                  {renderApprovalBadge(sess)}
+                                </td>
+                                <td className="py-3 px-3 text-right">
+                                  <button
+                                    type="button"
+                                    onClick={() => setSelectedSession(sess)}
+                                    className="min-h-[44px] min-w-[44px] sm:min-h-[34px] sm:min-w-0 inline-flex items-center justify-center px-4 py-2 sm:px-3.5 sm:py-1.5 text-xs font-bold text-amber-950 bg-amber-400 hover:bg-amber-300 active:bg-amber-500 rounded-xl transition-all cursor-pointer shadow-xs whitespace-nowrap"
+                                  >
+                                    ตรวจรับรอง →
+                                  </button>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </>
+                );
+              })()}
             </div>
 
             {/* Shift Notifications Log */}
@@ -874,7 +1214,7 @@ export function ExecutiveDashboard({
                       >
                         <div className="flex items-center gap-3">
                           <div
-                            className={`w-2 h-2 rounded-full ${notif.read ? "bg-[#B89B85]" : "bg-amber-500"
+                            className={`w-2 h-2 rounded-full ${notif.read ? "bg-[var(--color-text-subtle)]" : "bg-amber-500"
                               }`}
                           />
                           <div>
@@ -903,7 +1243,7 @@ export function ExecutiveDashboard({
                           onClick={() => {
                             if (target) setSelectedSession(target);
                           }}
-                          className="px-2.5 py-1 text-xs font-semibold text-[var(--color-text)] hover:text-[var(--color-brown-light)] bg-[var(--color-surface)] hover:bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-lg cursor-pointer transition-colors shadow-xs"
+                          className="min-h-[44px] min-w-[44px] sm:min-h-[32px] sm:min-w-0 inline-flex items-center justify-center px-3.5 py-2 sm:px-2.5 sm:py-1 text-xs font-semibold text-[var(--color-text)] hover:text-[var(--color-brown-light)] bg-[var(--color-surface)] hover:bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-lg cursor-pointer transition-colors shadow-xs whitespace-nowrap"
                         >
                           ดูรายงาน
                         </button>
@@ -915,27 +1255,30 @@ export function ExecutiveDashboard({
             </div>
 
             {/* Team Leaderboard & Performance */}
-            <LeaderboardWidget branchId={user.branchId} />
+            <ErrorBoundary fallbackTitle="ไม่สามารถโหลดข้อมูลอันดับผลงานได้">
+              <LeaderboardWidget branchId={user.branchId} />
+            </ErrorBoundary>
           </div>
         )}
 
         {/* ─── TAB 2: MY CHECKLIST (ASSISTANT MANAGER ONLY) ─────────────────── */}
         {activeTab === "checklist" && currentRole === "manager_assistant" && (
-          <div className="space-y-6 animate-fade-in">
-            <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-5 sm:p-6 shadow-sm space-y-5">
+          <div className="space-y-4 animate-fade-in">
+            <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-4 sm:p-6 shadow-sm space-y-4 sm:space-y-5">
+              {/* Header: Title, Description & Shift Toggle */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[var(--color-border)] pb-4">
                 <div>
                   <h3 className="text-sm sm:text-base font-bold text-[var(--color-text)] flex items-center gap-2">
-                    <span>{roleConfig.icon}</span>
-                    <span>เช็คลิสต์ตรวจงานประจำกะของ {roleConfig.title}</span>
+                    <roleConfig.Icon size={18} className="text-amber-700 shrink-0" />
+                    <span>เช็คลิสต์ตรวจงานประจำกะ</span>
                   </h3>
                   <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
-                    ติ๊กถูกเมื่อทำการตรวจสอบแต่ละขั้นตอนเสร็จสมบูรณ์ (เชื่อมต่อฐานข้อมูลจริง)
+                    บันทึกผลการตรวจสอบขั้นตอนการปฏิบัติงานของผู้ช่วยผู้จัดการร้าน
                   </p>
                 </div>
 
                 {/* Shift Selector */}
-                <div className="inline-flex bg-[var(--color-surface-2)] p-1 rounded-xl border border-[var(--color-border)]">
+                <div className="inline-flex items-center self-start sm:self-auto bg-[var(--color-surface-2)] p-1 rounded-xl border border-[var(--color-border)]">
                   {(["morning", "afternoon"] as ShiftType[]).map((sh) => (
                     <button
                       key={sh}
@@ -944,10 +1287,11 @@ export function ExecutiveDashboard({
                         setMyChecklistShift(sh);
                         loadAssistantChecklist(sh);
                       }}
-                      className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer ${myChecklistShift === sh
-                        ? "bg-[var(--color-brown)] text-amber-300 shadow-sm"
-                        : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
-                        }`}
+                      className={`min-h-[36px] px-3.5 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+                        myChecklistShift === sh
+                          ? "bg-[var(--color-brown)] text-amber-300 shadow-2xs font-bold"
+                          : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+                      }`}
                     >
                       {sh === "morning" ? "กะเช้า" : "กะบ่าย"}
                     </button>
@@ -962,116 +1306,259 @@ export function ExecutiveDashboard({
                 </div>
               ) : (
                 <>
-                  {/* Progress bar */}
+                  {/* Distilled Toolbar: Task Status Filters & Compact Progress Meter */}
                   {(() => {
-                    const done = myChecklistItems.filter((i) => i.completedAt).length;
-                    const total = myChecklistItems.length;
-                    const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+                    const doneCount = myChecklistItems.filter((i) => i.completedAt).length;
+                    const totalCount = myChecklistItems.length;
+                    const pendingCount = totalCount - doneCount;
+                    const pct = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
+
                     return (
-                      <div className="bg-[var(--color-surface-2)] p-3.5 rounded-xl border border-[var(--color-border)] space-y-2">
-                        <div className="flex justify-between text-xs font-semibold text-[var(--color-text)]">
-                          <span>ความคืบหน้าการตรวจเช็คลิสต์:</span>
-                          <span className="font-mono text-[var(--color-amber)]">
-                            {done} จาก {total} ข้อ ({pct}%)
-                          </span>
+                      <div className="space-y-3">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-[var(--color-surface-2)]/60 p-2.5 sm:p-3 rounded-xl border border-[var(--color-border)]">
+                          {/* Filter Tabs */}
+                          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+                            <button
+                              type="button"
+                              onClick={() => setMyChecklistFilter("all")}
+                              className={`min-h-[40px] px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+                                myChecklistFilter === "all"
+                                  ? "bg-[var(--color-brown)] text-amber-300 shadow-2xs font-bold"
+                                  : "bg-[var(--color-surface)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] border border-[var(--color-border)]"
+                              }`}
+                            >
+                              <span>ทั้งหมด</span>
+                              <span className="font-mono text-[11px] opacity-80">({totalCount})</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => setMyChecklistFilter("pending")}
+                              className={`min-h-[40px] px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+                                myChecklistFilter === "pending"
+                                  ? "bg-amber-400 text-amber-950 font-bold shadow-2xs"
+                                  : pendingCount > 0
+                                    ? "bg-amber-100 text-amber-950 border border-amber-300 hover:bg-amber-200/80 font-bold"
+                                    : "bg-[var(--color-surface)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] border border-[var(--color-border)]"
+                              }`}
+                            >
+                              <span>ยังไม่ตรวจ</span>
+                              <span
+                                className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold font-mono ${
+                                  myChecklistFilter === "pending"
+                                    ? "bg-amber-950 text-amber-300"
+                                    : pendingCount > 0
+                                      ? "bg-amber-400 text-amber-950"
+                                      : "bg-[var(--color-surface-2)] text-[var(--color-text-muted)]"
+                                }`}
+                              >
+                                {pendingCount}
+                              </span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => setMyChecklistFilter("completed")}
+                              className={`min-h-[40px] px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+                                myChecklistFilter === "completed"
+                                  ? "bg-[var(--color-brown)] text-amber-300 shadow-2xs font-bold"
+                                  : "bg-[var(--color-surface)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] border border-[var(--color-border)]"
+                              }`}
+                            >
+                              <span>ตรวจแล้ว</span>
+                              <span className="font-mono text-[11px] opacity-80">({doneCount})</span>
+                            </button>
+                          </div>
+
+                          {/* Slim Inline Progress Bar */}
+                          <div className="flex items-center gap-3 md:min-w-[200px] justify-end">
+                            <div className="flex-1 max-w-[140px] bg-[var(--color-border)] h-2 rounded-full overflow-hidden">
+                              <div
+                                className="bg-amber-400 h-full rounded-full transition-all duration-300"
+                                style={{ width: `${pct}%` }}
+                              />
+                            </div>
+                            <span className="text-xs font-mono font-bold text-[var(--color-text)] whitespace-nowrap">
+                              {doneCount}/{totalCount} <span className="text-[var(--color-text-muted)] font-normal font-sans">({pct}%)</span>
+                            </span>
+                          </div>
                         </div>
-                        <div className="w-full bg-[var(--color-border)] h-2 rounded-full overflow-hidden">
-                          <div
-                            className="bg-amber-400 h-full rounded-full transition-all duration-300"
-                            style={{ width: `${pct}%` }}
-                          />
-                        </div>
+
+                        {/* Checklist items list */}
+                        {(() => {
+                          const filteredItems = myChecklistItems.filter((item) => {
+                            if (myChecklistFilter === "pending") return !item.completedAt;
+                            if (myChecklistFilter === "completed") return !!item.completedAt;
+                            return true;
+                          });
+
+                          if (totalCount === 0) {
+                            return (
+                              <div className="py-10 text-center text-[var(--color-text-muted)] text-xs border border-dashed border-[var(--color-border)] rounded-xl bg-[var(--color-surface-2)]/40 p-4">
+                                ไม่พบรายการเช็คลิสต์ของตำแหน่งผู้ช่วยผู้จัดการร้านสำหรับกะนี้
+                              </div>
+                            );
+                          }
+
+                          if (filteredItems.length === 0) {
+                            if (myChecklistFilter === "pending") {
+                              return (
+                                <div className="py-10 px-4 text-center rounded-2xl border border-emerald-200 bg-emerald-50/60 flex flex-col items-center justify-center gap-2.5">
+                                  <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                                    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                      <polyline points="20 6 9 17 4 12" />
+                                    </svg>
+                                  </div>
+                                  <div>
+                                    <p className="text-sm font-bold text-emerald-950">
+                                      ตรวจเช็คลิสต์ครบถ้วนทุกข้อแล้ว!
+                                    </p>
+                                    <p className="text-xs text-emerald-800 mt-0.5">
+                                      ไม่มีงานที่ค้างตรวจสำหรับ{myChecklistShift === "morning" ? "กะเช้า" : "กะบ่าย"}
+                                    </p>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() => setMyChecklistFilter("completed")}
+                                    className="mt-1 px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600 text-white hover:bg-emerald-700 transition-colors cursor-pointer"
+                                  >
+                                    ดูรายการที่ตรวจแล้ว ({doneCount})
+                                  </button>
+                                </div>
+                              );
+                            }
+
+                            if (myChecklistFilter === "completed") {
+                              return (
+                                <div className="py-10 px-4 text-center rounded-2xl border border-dashed border-[var(--color-border)] bg-[var(--color-surface-2)]/40 flex flex-col items-center justify-center gap-2">
+                                  <div className="w-10 h-10 rounded-full bg-[var(--color-surface-2)] text-[var(--color-text-muted)] flex items-center justify-center">
+                                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                      <circle cx="12" cy="12" r="10" />
+                                      <polyline points="12 6 12 12 14 14" />
+                                    </svg>
+                                  </div>
+                                  <div>
+                                    <p className="text-xs sm:text-sm font-semibold text-[var(--color-text)]">
+                                      ยังไม่มีรายการที่ได้รับการตรวจเสร็จ
+                                    </p>
+                                    <p className="text-[11px] text-[var(--color-text-muted)] mt-0.5">
+                                      เลือกแท็บ &quot;ยังไม่ตรวจ&quot; เพื่อเริ่มติ๊กตรวจสอบขั้นตอนการทำงาน
+                                    </p>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() => setMyChecklistFilter("pending")}
+                                    className="mt-1 px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-400 text-amber-950 hover:bg-amber-500 transition-colors cursor-pointer"
+                                  >
+                                    ตรวจงานที่ค้างอยู่ ({pendingCount})
+                                  </button>
+                                </div>
+                              );
+                            }
+                          }
+
+                          return (
+                            <div className="space-y-2">
+                              {filteredItems.map((item, idx) => {
+                                const isDone = !!item.completedAt;
+                                return (
+                                  <div
+                                    key={item.id}
+                                    role="checkbox"
+                                    aria-checked={isDone}
+                                    tabIndex={0}
+                                    onClick={() => handleToggleMyItem(item.id)}
+                                    onKeyDown={(e) => {
+                                      if (e.key === " " || e.key === "Enter") {
+                                        e.preventDefault();
+                                        handleToggleMyItem(item.id);
+                                      }
+                                    }}
+                                    className={`p-3 sm:p-3.5 rounded-xl border flex items-start gap-3 cursor-pointer transition-all select-none min-h-[48px] focus:outline-hidden focus:ring-2 focus:ring-amber-500/50 ${
+                                      isDone
+                                        ? "bg-[var(--color-amber-glow)]/30 border-[var(--color-amber)]/40 hover:bg-[var(--color-amber-glow)]/50"
+                                        : "bg-[var(--color-surface)] border-[var(--color-border)] hover:border-amber-400 hover:bg-[var(--color-surface-2)]/50"
+                                    }`}
+                                  >
+                                    <div
+                                      className={`w-5 h-5 rounded-md border flex items-center justify-center mt-0.5 shrink-0 transition-colors ${
+                                        isDone
+                                          ? "bg-amber-500 border-amber-500 text-white"
+                                          : "border-[var(--color-border-strong)] bg-[var(--color-surface)]"
+                                      }`}
+                                    >
+                                      {isDone && (
+                                        <svg
+                                          width="12"
+                                          height="12"
+                                          viewBox="0 0 24 24"
+                                          fill="none"
+                                          stroke="currentColor"
+                                          strokeWidth="3"
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                        >
+                                          <polyline points="20 6 9 17 4 12" />
+                                        </svg>
+                                      )}
+                                    </div>
+
+                                    <div className="flex-1 min-w-0">
+                                      <div className="flex flex-wrap items-center gap-1.5">
+                                        <span className="text-[10px] font-mono text-[var(--color-text-muted)]">
+                                          {String(idx + 1).padStart(2, "0")}
+                                        </span>
+                                        {item.category && (
+                                          <span className="text-[10px] font-semibold text-[var(--color-text-muted)] bg-[var(--color-surface-2)] px-1.5 py-0.5 rounded border border-[var(--color-border)]">
+                                            {item.category}
+                                          </span>
+                                        )}
+                                      </div>
+                                      <p
+                                        className={`text-xs sm:text-sm font-medium mt-1 leading-snug ${
+                                          isDone
+                                            ? "text-[var(--color-text-subtle)] line-through opacity-75"
+                                            : "text-[var(--color-text)]"
+                                        }`}
+                                      >
+                                        {item.label}
+                                      </p>
+                                      {item.completedAt && (() => {
+                                        let isLate = item.isLate ?? false;
+                                        if (!isLate && item.category) {
+                                          const match = item.category.match(/(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})/);
+                                          if (match) {
+                                            const endStr = match[2];
+                                            const [endHr, endMin] = endStr.split(":").map(Number);
+                                            const completedDate = new Date(item.completedAt);
+                                            const deadlineDate = new Date(); // use today
+                                            deadlineDate.setHours(endHr, endMin, 0, 0);
+                                            if (completedDate > deadlineDate) {
+                                              isLate = true;
+                                            }
+                                          }
+                                        }
+                                        return (
+                                          <p className="text-[10px] font-mono text-emerald-600 mt-1 flex items-center gap-1">
+                                            <span>บันทึกเมื่อ: {fmtTime(item.completedAt)}</span>
+                                            {isLate && (
+                                              <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-100 text-amber-950 border border-amber-300">
+                                                ล่าช้า
+                                              </span>
+                                            )}
+                                          </p>
+                                        );
+                                      })()}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          );
+                        })()}
                       </div>
                     );
                   })()}
-
-                  {/* Checklist items */}
-                  {myChecklistItems.length === 0 ? (
-                    <div className="py-8 text-center text-[var(--color-text-muted)] text-xs border border-dashed border-[var(--color-border)] rounded-xl bg-[var(--color-surface-2)]/50">
-                      ไม่พบรายการเช็คลิสต์ของตำแหน่งผู้ช่วยผู้จัดการร้านในฐานข้อมูลสำหรับกะนี้
-                    </div>
-                  ) : (
-                    <div className="space-y-2.5">
-                      {myChecklistItems.map((item, idx) => {
-                        const isDone = !!item.completedAt;
-                        return (
-                          <div
-                            key={item.id}
-                            onClick={() => handleToggleMyItem(item.id)}
-                            className={`p-3.5 rounded-xl border flex items-start gap-3 cursor-pointer transition-all ${isDone
-                              ? "bg-[var(--color-amber-glow)]/50 border-[var(--color-amber)] hover:bg-[var(--color-amber-glow)]"
-                              : "bg-[var(--color-surface)] border-[var(--color-border)] hover:border-amber-400 hover:bg-[var(--color-background)]"
-                              }`}
-                          >
-                            <div
-                              className={`w-5 h-5 rounded-md border flex items-center justify-center mt-0.5 transition-colors ${isDone
-                                ? "bg-amber-500 border-amber-500 text-white"
-                                : "border-[#C9B29F] bg-[var(--color-surface)]"
-                                }`}
-                            >
-                              {isDone && (
-                                <svg
-                                  width="12"
-                                  height="12"
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  strokeWidth="3"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                >
-                                  <polyline points="20 6 9 17 4 12" />
-                                </svg>
-                              )}
-                            </div>
-
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2">
-                                <span className="text-[10px] font-mono text-[var(--color-text-muted)]">
-                                  {String(idx + 1).padStart(2, "0")}
-                                </span>
-                                {item.category && (
-                                  <span className="text-[10px] font-semibold text-[var(--color-text)] bg-[var(--color-surface-2)] px-1.5 py-0.5 rounded border border-[var(--color-border)]">
-                                    {item.category}
-                                  </span>
-                                )}
-                              </div>
-                              <p
-                                className={`text-xs sm:text-sm font-medium mt-1 ${isDone
-                                  ? "text-[var(--color-text-subtle)] line-through opacity-80"
-                                  : "text-[var(--color-text)]"
-                                  }`}
-                              >
-                                {item.label}
-                              </p>
-                              {item.completedAt && (() => {
-                                let isLate = item.isLate ?? false;
-                                if (!isLate && item.category) {
-                                  const match = item.category.match(/(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})/);
-                                  if (match) {
-                                    const endStr = match[2];
-                                    const [endHr, endMin] = endStr.split(':').map(Number);
-                                    const completedDate = new Date(item.completedAt);
-                                    const deadlineDate = new Date(); // use today
-                                    deadlineDate.setHours(endHr, endMin, 0, 0);
-                                    if (completedDate > deadlineDate) {
-                                      isLate = true;
-                                    }
-                                  }
-                                }
-                                return (
-                                  <p className="text-[10px] font-mono text-emerald-600 mt-0.5">
-                                    บันทึกเมื่อ: {fmtTime(item.completedAt)}
-                                    {isLate && <span className="text-amber-600 font-bold ml-1 font-sans">(ล่าช้า)</span>}
-                                  </p>
-                                );
-                              })()}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
                 </>
               )}
             </div>
@@ -1084,7 +1571,7 @@ export function ExecutiveDashboard({
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[var(--color-border)] pb-4">
               <div>
                 <h3 className="text-sm sm:text-base font-bold text-[var(--color-text)] flex items-center gap-2">
-                  <span>🕒</span>
+                  <History size={18} className="text-amber-700" />
                   <span>ประวัติและรายงานการตรวจสอบย้อนหลัง (Audit Inspection History)</span>
                 </h3>
                 <p className="text-xs text-[var(--color-text-muted)] mt-0.5 flex flex-wrap items-center gap-1.5">
@@ -1095,127 +1582,314 @@ export function ExecutiveDashboard({
                   </span>
                 </p>
               </div>
+            </div>
 
-              {/* Filter controls */}
-              <div className="flex flex-wrap items-center gap-2">
+            {/* ─── Audit History Quick Filters & Search ─── */}
+            {(() => {
+              const baseHistoryForRole = activeHistorySource.filter((sess) => {
+                if (currentRole === "manager_assistant") {
+                  return !(sess.taskRole === "manager_assistant" || sess.userPosition === "ผู้ช่วยผู้จัดการร้าน");
+                }
+                return true;
+              });
 
-                {/* Specific Date Fetcher */}
-                <div className="flex items-center gap-1.5 bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-xl px-2 py-1">
-                  <input
-                    type="date"
-                    value={selectedHistoryDate}
-                    onChange={handleDateSelection}
-                    className="bg-transparent text-xs text-[var(--color-text)] placeholder:text-[var(--color-text-subtle)] focus:outline-none cursor-pointer"
-                  />
-                  {selectedHistoryDate && (
-                    <button
-                      type="button"
-                      onClick={() => handleDateSelection({ target: { value: "" } } as React.ChangeEvent<HTMLInputElement>)}
-                      className="text-xs text-rose-500 hover:text-rose-700 font-bold px-2 py-0.5 rounded hover:bg-rose-50 transition-colors"
-                      title="Clear specific date and restore 14-days history"
-                    >
-                      ×
-                    </button>
-                  )}
+              const pendingHistoryCount = baseHistoryForRole.filter((s) => {
+                const app = approvals[s.id] || {};
+                const isAssistantSession = s.taskRole === "manager_assistant" || s.userPosition === "ผู้ช่วยผู้จัดการร้าน";
+                if (currentRole === "manager_assistant") {
+                  if (isAssistantSession) return false;
+                  return !app.assistantApproved;
+                }
+                return !app.managerApproved;
+              }).length;
+
+              const approvedHistoryCount = baseHistoryForRole.length - pendingHistoryCount;
+
+              return (
+                <div className="space-y-3 pt-1">
+                  {/* Row 1: Quick Status Filter Pills & Shift Selector */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                    {/* Status Tabs */}
+                    <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+                      <button
+                        type="button"
+                        onClick={() => setHistoryStatusFilter("all")}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${historyStatusFilter === "all"
+                          ? "bg-[var(--color-brown)] text-amber-300 shadow-2xs font-bold"
+                          : "bg-[var(--color-surface-2)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] border border-[var(--color-border)]"
+                          }`}
+                      >
+                        ทั้งหมด ({baseHistoryForRole.length})
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setHistoryStatusFilter("pending")}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer whitespace-nowrap inline-flex items-center gap-1.5 ${historyStatusFilter === "pending"
+                          ? "bg-amber-400 text-amber-950 font-bold shadow-2xs"
+                          : pendingHistoryCount > 0
+                            ? "bg-amber-100 text-amber-950 border border-amber-300 hover:bg-amber-200"
+                            : "bg-[var(--color-surface-2)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] border border-[var(--color-border)]"
+                          }`}
+                      >
+                        <span>รอการตรวจรับรอง</span>
+                        {pendingHistoryCount > 0 && (
+                          <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-extrabold ${historyStatusFilter === "pending" ? "bg-amber-950 text-amber-300" : "bg-amber-400 text-amber-950"}`}>
+                            {pendingHistoryCount}
+                          </span>
+                        )}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setHistoryStatusFilter("approved")}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${historyStatusFilter === "approved"
+                          ? "bg-[var(--color-brown)] text-amber-300 shadow-2xs font-bold"
+                          : "bg-[var(--color-surface-2)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] border border-[var(--color-border)]"
+                          }`}
+                      >
+                        อนุมัติแล้ว ({approvedHistoryCount})
+                      </button>
+                    </div>
+
+                    {/* Shift Filter Pills */}
+                    <div className="flex items-center gap-1 self-start sm:self-auto">
+                      <span className="text-[11px] text-[var(--color-text-muted)] hidden lg:inline mr-1">กะ:</span>
+                      {(["all", "morning", "afternoon"] as const).map((sh) => (
+                        <button
+                          key={sh}
+                          type="button"
+                          onClick={() => setHistoryShiftFilter(sh)}
+                          className={`px-2.5 py-1 text-[11px] font-semibold rounded-lg transition-all cursor-pointer ${historyShiftFilter === sh
+                            ? "bg-[var(--color-text)] text-[var(--color-surface)] shadow-2xs font-bold"
+                            : "text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-2)]"
+                            }`}
+                        >
+                          {sh === "all" ? "ทุกกะ" : sh === "morning" ? "กะเช้า" : "กะบ่าย"}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Row 2: Search Input & Specific Date Fetcher */}
+                  <div className="flex flex-wrap items-center gap-2 pt-0.5">
+                    <div className="flex-1 min-w-[200px]">
+                      <input
+                        type="text"
+                        placeholder="ค้นหาชื่อ หรือตำแหน่งในประวัติ..."
+                        value={historySearch}
+                        onChange={(e) => setHistorySearch(e.target.value)}
+                        className="w-full px-3 py-1.5 text-xs bg-[var(--color-surface-2)] border border-[var(--color-border)] text-[var(--color-text)] placeholder:text-[var(--color-text-subtle)] rounded-xl focus:border-amber-400 focus:outline-none"
+                      />
+                    </div>
+
+                    <div className="flex items-center gap-1.5 bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-xl px-2.5 py-1">
+                      <span className="text-[11px] text-[var(--color-text-muted)]">วันที่:</span>
+                      <input
+                        type="date"
+                        value={selectedHistoryDate}
+                        onChange={handleDateSelection}
+                        className="bg-transparent text-xs text-[var(--color-text)] placeholder:text-[var(--color-text-subtle)] focus:outline-none cursor-pointer"
+                      />
+                      {selectedHistoryDate && (
+                        <button
+                          type="button"
+                          onClick={() => handleDateSelection({ target: { value: "" } } as React.ChangeEvent<HTMLInputElement>)}
+                          className="text-xs text-rose-500 hover:text-rose-700 font-bold px-1.5 py-0.5 rounded hover:bg-rose-50 transition-colors cursor-pointer"
+                          title="ล้างวันที่เฉพาะเจาะจงและกลับไปแสดงย้อนหลัง 14 วัน"
+                        >
+                          ×
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 </div>
+              );
+            })()}
 
-                <input
-                  type="text"
-                  placeholder="ค้นหาชื่อ หรือตำแหน่ง..."
-                  value={historySearch}
-                  onChange={(e) => setHistorySearch(e.target.value)}
-                  className="px-3 py-1.5 text-xs bg-[var(--color-surface-2)] border border-[var(--color-border)] text-[var(--color-text)] placeholder:text-[var(--color-text-subtle)] rounded-xl focus:border-amber-400 focus:outline-none"
-                />
-                <select
-                  value={historyShiftFilter}
-                  onChange={(e) => setHistoryShiftFilter(e.target.value as "all" | ShiftType)}
-                  className="px-2.5 py-1.5 text-xs bg-[var(--color-surface-2)] border border-[var(--color-border)] text-[var(--color-text)] rounded-xl focus:border-amber-400 focus:outline-none cursor-pointer"
-                >
-                  <option value="all">ทุกกะงาน</option>
-                  <option value="morning">กะเช้า</option>
-                  <option value="afternoon">กะบ่าย</option>
-                </select>
-              </div>
-            </div>
+            {/* ─── Render History: Responsive Dual View (Cards on Mobile, Table on Desktop) ─── */}
+            {(() => {
+              const visibleHistory = filteredHistory.filter((sess) => {
+                if (currentRole === "manager_assistant") {
+                  return !(sess.taskRole === "manager_assistant" || sess.userPosition === "ผู้ช่วยผู้จัดการร้าน");
+                }
+                return true;
+              });
 
-            {/* History Table */}
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead>
-                  <tr className="border-b border-[var(--color-border)] text-[var(--color-text-muted)] font-semibold bg-[var(--color-surface-2)]">
-                    <th className="py-2.5 px-3 rounded-l-lg">รหัสกะ / วันที่</th>
-                    <th className="py-2.5 px-3">ผู้ปฏิบัติงาน</th>
-                    <th className="py-2.5 px-3">ตำแหน่ง</th>
-                    <th className="py-2.5 px-3">กะงาน</th>
-                    <th className="py-2.5 px-3">ข้อที่สำเร็จ</th>
-                    <th className="py-2.5 px-3 text-center">สถานะรับรอง</th>
-                    <th className="py-2.5 px-3 text-right rounded-r-lg">การจัดการ</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[var(--color-border)]/70">
-                  {filteredHistory.filter(sess => {
-                    if (currentRole === "manager_assistant") {
-                      return !(sess.taskRole === "manager_assistant" || sess.userPosition === "ผู้ช่วยผู้จัดการร้าน");
-                    }
-                    return true;
-                  }).map((sess) => {
-                    const doneCount = sess.items.filter((i) => i.completedAt).length;
-                    const pct = Math.round((doneCount / sess.items.length) * 100);
-                    const app = approvals[sess.id] || {};
+              if (visibleHistory.length === 0) {
+                return (
+                  <div className="py-10 text-center text-xs text-[var(--color-text-muted)] bg-[var(--color-surface-2)]/40 rounded-2xl border border-dashed border-[var(--color-border)] p-6">
+                    <p className="font-semibold text-[var(--color-text)]">ไม่พบประวัติการตรวจสอบตามเงื่อนไขที่เลือก</p>
+                    <p className="text-[11px] text-[var(--color-text-subtle)] mt-1">
+                      ลองเปลี่ยนคำค้นหา หรือเลือกวันที่อื่นเพื่อดูบันทึกย้อนหลัง
+                    </p>
+                  </div>
+                );
+              }
 
-                    return (
-                      <tr key={sess.id} className="hover:bg-[var(--color-background)] transition-colors">
-                        <td className="py-3 px-3 font-mono text-[var(--color-text-muted)]">
-                          <span className="font-semibold text-[var(--color-text)]">{sess.id}</span>
-                          <span className="block text-[10px] text-[var(--color-text-subtle)]">{fmtDate(sess.startedAt)}</span>
-                        </td>
-                        <td className="py-3 px-3 font-semibold text-[var(--color-text)]">
-                          {sess.userName}
-                        </td>
-                        <td className="py-3 px-3 text-[var(--color-text-muted)]">
-                          {sess.userPosition || "-"}
-                        </td>
-                        <td className="py-3 px-3">
-                          {getShiftBadge(sess.shift)}
-                        </td>
-                        <td className="py-3 px-3 font-mono">
-                          <span className="font-bold text-[var(--color-text)]">{doneCount}/{sess.items.length}</span>
-                          <span className="text-[10px] text-[var(--color-text-muted)] ml-1">({pct}%)</span>
-                        </td>
-                        <td className="py-3 px-3 text-center">
-                          {app.managerApproved ? (
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                              ✓ อนุมัติสมบูรณ์
-                            </span>
-                          ) : (sess.taskRole === "manager_assistant" || sess.userPosition === "ผู้ช่วยผู้จัดการร้าน") ? (
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-[var(--color-amber-glow)] text-[var(--color-amber)] border border-[var(--color-amber)]">
-                              รอผู้จัดการอนุมัติ
-                            </span>
-                          ) : app.assistantApproved ? (
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[var(--color-amber-glow)] text-[var(--color-text)] border border-[var(--color-amber)]">
-                              ผู้ช่วยตรวจแล้ว
-                            </span>
-                          ) : (
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-[var(--color-surface-2)] text-[var(--color-text-muted)] border border-[var(--color-border)]">
-                              รอดำเนินการ
-                            </span>
-                          )}
-                        </td>
-                        <td className="py-3 px-3 text-right">
-                          <button
-                            type="button"
-                            onClick={() => setSelectedSession(sess)}
-                            className="px-3 py-1.5 text-xs font-semibold text-[var(--color-text)] bg-amber-400 hover:bg-amber-300 active:bg-amber-500 rounded-lg transition-colors cursor-pointer shadow-sm shadow-amber-200/50"
-                          >
-                            เปิดดูข้อตรวจ →
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+              const renderHistoryStatusBadge = (sess: ShiftSession) => {
+                const app = approvals[sess.id] || {};
+                const isAssistantSession =
+                  sess.taskRole === "manager_assistant" || sess.userPosition === "ผู้ช่วยผู้จัดการร้าน";
+
+                if (app.managerApproved) {
+                  return (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-2xs">
+                      <CheckCircle2 size={12} className="text-emerald-600" />
+                      <span>อนุมัติสมบูรณ์</span>
+                    </span>
+                  );
+                }
+
+                if (isAssistantSession) {
+                  return (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-100 text-amber-950 border border-amber-300">
+                      <span>รอผู้จัดการอนุมัติ (งานผู้ช่วย)</span>
+                    </span>
+                  );
+                }
+
+                if (app.assistantApproved) {
+                  return (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-100 text-amber-950 border border-amber-300">
+                      <span>ผู้ช่วยตรวจแล้ว → รอผู้จัดการ</span>
+                    </span>
+                  );
+                }
+
+                return (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-[var(--color-surface-2)] text-[var(--color-text-muted)] border border-[var(--color-border)]">
+                    <span>รอดำเนินการ</span>
+                  </span>
+                );
+              };
+
+              return (
+                <>
+                  {/* 1. Mobile Cards View (< sm: 640px) */}
+                  <div className="block sm:hidden space-y-3">
+                    {visibleHistory.map((sess) => {
+                      const doneCount = sess.items.filter((i) => i.completedAt).length;
+                      const pct = Math.round((doneCount / (sess.items.length || 1)) * 100);
+
+                      return (
+                        <div
+                          key={sess.id}
+                          className="p-4 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-xs space-y-3"
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div>
+                              <span className="font-bold text-sm text-[var(--color-text)]">
+                                {sess.userName}
+                              </span>
+                              <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                                <span className="px-2 py-0.5 rounded-md font-medium text-[11px] bg-[var(--color-surface-2)] text-[var(--color-text-muted)] border border-[var(--color-border)]">
+                                  {sess.userPosition || "พนักงาน"}
+                                </span>
+                                {getShiftBadge(sess.shift)}
+                              </div>
+                            </div>
+                            <div className="text-right font-mono text-[11px] text-[var(--color-text-muted)]">
+                              <span className="font-semibold text-[var(--color-text)] block">{sess.id}</span>
+                              <span className="text-[10px] text-[var(--color-text-subtle)]">
+                                {fmtDate(sess.startedAt)}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Progress bar */}
+                          <div className="space-y-1.5 bg-[var(--color-surface-2)]/60 p-2.5 rounded-xl border border-[var(--color-border)]">
+                            <div className="flex items-center justify-between text-xs font-mono">
+                              <span className="text-[var(--color-text-muted)]">ข้อที่สำเร็จ</span>
+                              <span className="font-bold text-[var(--color-text)]">
+                                {doneCount}/{sess.items.length} ข้อ ({pct}%)
+                              </span>
+                            </div>
+                            <div className="w-full bg-[var(--color-border-subtle)] h-2 rounded-full overflow-hidden border border-[var(--color-border)]">
+                              <div
+                                className={`h-full rounded-full transition-all duration-300 ${pct === 100 ? "bg-emerald-500" : "bg-amber-400"
+                                  }`}
+                                style={{ width: `${pct}%` }}
+                              />
+                            </div>
+                          </div>
+
+                          {/* Status & Action */}
+                          <div className="flex items-center justify-between gap-2 pt-0.5">
+                            <div>{renderHistoryStatusBadge(sess)}</div>
+                            <button
+                              type="button"
+                              onClick={() => setSelectedSession(sess)}
+                              className="min-h-[44px] px-4 py-2 text-xs font-bold text-amber-950 bg-amber-400 hover:bg-amber-300 active:bg-amber-500 rounded-xl transition-all cursor-pointer shadow-xs inline-flex items-center gap-1.5"
+                            >
+                              <span>เปิดดูข้อตรวจ</span>
+                              <span>→</span>
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* 2. Desktop / Tablet Table View (>= sm: 640px) */}
+                  <div className="hidden sm:block overflow-x-auto">
+                    <table className="w-full text-left text-xs">
+                      <thead>
+                        <tr className="border-b border-[var(--color-border)] text-[var(--color-text-muted)] font-semibold bg-[var(--color-surface-2)]">
+                          <th className="py-2.5 px-3 rounded-l-lg">รหัสกะ / วันที่</th>
+                          <th className="py-2.5 px-3">ผู้ปฏิบัติงาน</th>
+                          <th className="py-2.5 px-3">ตำแหน่ง</th>
+                          <th className="py-2.5 px-3">กะงาน</th>
+                          <th className="py-2.5 px-3">ข้อที่สำเร็จ</th>
+                          <th className="py-2.5 px-3 text-center">สถานะรับรอง</th>
+                          <th className="py-2.5 px-3 text-right rounded-r-lg">การจัดการ</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-[var(--color-border)]/70">
+                        {visibleHistory.map((sess) => {
+                          const doneCount = sess.items.filter((i) => i.completedAt).length;
+                          const pct = Math.round((doneCount / sess.items.length) * 100);
+
+                          return (
+                            <tr key={sess.id} className="hover:bg-[var(--color-background)] transition-colors">
+                              <td className="py-3 px-3 font-mono text-[var(--color-text-muted)]">
+                                <span className="font-semibold text-[var(--color-text)]">{sess.id}</span>
+                                <span className="block text-[10px] text-[var(--color-text-subtle)]">{fmtDate(sess.startedAt)}</span>
+                              </td>
+                              <td className="py-3 px-3 font-semibold text-[var(--color-text)]">
+                                {sess.userName}
+                              </td>
+                              <td className="py-3 px-3 text-[var(--color-text-muted)]">
+                                {sess.userPosition || "-"}
+                              </td>
+                              <td className="py-3 px-3">
+                                {getShiftBadge(sess.shift)}
+                              </td>
+                              <td className="py-3 px-3 font-mono">
+                                <span className="font-bold text-[var(--color-text)]">{doneCount}/{sess.items.length}</span>
+                                <span className="text-[10px] text-[var(--color-text-muted)] ml-1">({pct}%)</span>
+                              </td>
+                              <td className="py-3 px-3 text-center">
+                                {renderHistoryStatusBadge(sess)}
+                              </td>
+                              <td className="py-3 px-3 text-right">
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedSession(sess)}
+                                  className="min-h-[44px] min-w-[44px] sm:min-h-[34px] sm:min-w-0 inline-flex items-center justify-center px-4 py-2 sm:px-3.5 sm:py-1.5 text-xs font-bold text-amber-950 bg-amber-400 hover:bg-amber-300 active:bg-amber-500 rounded-xl transition-all cursor-pointer shadow-xs whitespace-nowrap"
+                                >
+                                  เปิดดูข้อตรวจ →
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
+              );
+            })()}
           </div>
         )}
 
@@ -1264,6 +1938,57 @@ export function ExecutiveDashboard({
         );
       })()}
 
+      {/* ─── Accessible Reset Confirmation Modal ─────────────────────────────── */}
+      {showResetModal && (
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-50 px-4 animate-in fade-in duration-150"
+          onClick={() => !isResetting && setShowResetModal(false)}
+          onKeyDown={(e) => {
+            if (e.key === "Escape" && !isResetting) setShowResetModal(false);
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="reset-modal-title"
+            aria-describedby="reset-modal-desc"
+            tabIndex={-1}
+            className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-6 sm:p-7 w-full max-w-sm focus-visible:outline-none shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 flex items-center justify-center mb-3.5">
+              <AlertCircle size={22} />
+            </div>
+
+            <h2 id="reset-modal-title" className="text-base sm:text-lg font-bold text-[var(--color-text)] mb-2">
+              ต้องการรีเซ็ตข้อมูลเช็คลิสต์ประจำวัน?
+            </h2>
+            <p id="reset-modal-desc" className="text-sm text-[var(--color-text-muted)] mb-5 leading-relaxed">
+              ระบบจะล้างข้อมูลผลการตรวจงาน ความคืบหน้ากะ และประวัติการรับรองทั้งหมดของวันนี้ออกจากระบบเพื่อเริ่มต้นรอบใหม่ คุณแน่ใจหรือไม่ว่าต้องการดำเนินการต่อ?
+            </p>
+
+            <div className="flex gap-2.5">
+              <button
+                type="button"
+                disabled={isResetting}
+                onClick={() => setShowResetModal(false)}
+                className="flex-1 min-h-[44px] sm:min-h-[36px] py-2.5 rounded-xl border border-[var(--color-border)] text-xs sm:text-sm font-semibold text-[var(--color-text-muted)] hover:bg-[var(--color-surface-2)] transition-colors cursor-pointer disabled:opacity-50"
+              >
+                ยกเลิกโดยไม่ล้างข้อมูล
+              </button>
+              <button
+                type="button"
+                disabled={isResetting}
+                onClick={handleResetChecklistData}
+                className="flex-1 min-h-[44px] sm:min-h-[36px] py-2.5 rounded-xl bg-rose-700 hover:bg-rose-800 text-white text-xs sm:text-sm font-bold transition-all shadow-sm cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5"
+              >
+                <span>{isResetting ? "กำลังล้างข้อมูล..." : "ยืนยันล้างข้อมูลและเริ่มใหม่"}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ─── Footer with Reset Option (Same style as staff pages) ─────────────── */}
       <footer className="max-w-6xl mx-auto px-4 sm:px-6 pt-10 pb-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[var(--color-text-muted)] border-t border-[var(--color-border)] mt-12">
         <div className="flex items-center gap-2">
@@ -1275,7 +2000,7 @@ export function ExecutiveDashboard({
         <div className="flex items-center gap-4">
           <button
             type="button"
-            onClick={handleResetChecklistData}
+            onClick={() => setShowResetModal(true)}
             disabled={isResetting}
             className="text-xs text-[var(--color-text-muted)] hover:text-rose-700 font-medium inline-flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
             title="ล้างข้อมูลเช็คลิสต์ทั้งหมดเพื่อเริ่มทดสอบใหม่"

@@ -16,15 +16,12 @@ export default function Error({
   }, [error]);
 
   return (
-    <div className="min-h-screen bg-[var(--color-background)] text-[var(--color-text)] flex items-center justify-center p-4 relative overflow-hidden font-sans">
-      {/* Ambient background glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-rose-200/20 rounded-full blur-3xl pointer-events-none" aria-hidden="true" />
-
-      <div className="w-full max-w-md bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-6 sm:p-8 text-center shadow-lg relative z-10">
+    <main className="min-h-screen bg-[var(--color-background)] text-[var(--color-text)] flex items-center justify-center p-4 font-sans">
+      <div className="w-full max-w-md bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-6 sm:p-8 text-center shadow-lg">
         <div className="mb-4 flex justify-center">
           <BrandLogo size={44} showText={false} isDark={false} />
         </div>
-        <div className="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center mx-auto mb-4">
+        <div className="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 flex items-center justify-center mx-auto mb-4">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <circle cx="12" cy="12" r="10" />
             <line x1="12" y1="8" x2="12" y2="12" />
@@ -32,25 +29,32 @@ export default function Error({
           </svg>
         </div>
         <h1 className="text-xl font-bold text-[var(--color-text)] mb-2">เกิดข้อผิดพลาดในการทำงาน</h1>
-        <p className="text-xs sm:text-sm text-[var(--color-text-muted)] mb-6">
+        <p className="text-xs sm:text-sm text-[var(--color-text-muted)] mb-4 leading-relaxed">
           ระบบไม่สามารถโหลดข้อมูลหน้านี้ได้ กรุณาลองใหม่อีกครั้ง หรือกลับไปยังหน้าหลัก
         </p>
+
+        {error?.digest && (
+          <p className="text-[11px] font-mono text-[var(--color-text-subtle)] bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-lg py-1 px-2 mb-6 break-all">
+            รหัสอ้างอิง: {error.digest}
+          </p>
+        )}
+
         <div className="flex flex-col sm:flex-row gap-2.5">
           <button
             type="button"
             onClick={() => reset()}
-            className="flex-1 py-2.5 rounded-xl bg-[var(--color-brown)] hover:bg-[var(--color-brown-light)] text-amber-300 text-xs sm:text-sm font-semibold transition-colors cursor-pointer shadow-sm"
+            className="flex-1 py-2.5 min-h-[44px] rounded-xl bg-[var(--color-brown)] hover:bg-[var(--color-brown-light)] text-amber-300 text-xs sm:text-sm font-semibold transition-colors cursor-pointer shadow-sm flex items-center justify-center"
           >
             ลองใหม่อีกครั้ง
           </button>
           <Link
             href="/"
-            className="flex-1 py-2.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-2)] hover:bg-[#F2E7DC] text-[var(--color-text)] text-xs sm:text-sm font-semibold transition-colors flex items-center justify-center"
+            className="flex-1 py-2.5 min-h-[44px] rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-2)] hover:bg-amber-100 text-[var(--color-text)] text-xs sm:text-sm font-semibold transition-colors flex items-center justify-center"
           >
             กลับสู่หน้าหลัก
           </Link>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

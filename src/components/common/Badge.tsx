@@ -19,16 +19,16 @@ export function Badge({
       dot: "bg-[var(--color-amber)]",
     },
     blue: {
-      wrap: "bg-[#2563eb1f] text-[#2563eb] border-[#2563eb] font-semibold",
-      dot: "bg-[#2563eb]",
+      wrap: "bg-sky-50 text-sky-900 border-sky-300 font-semibold",
+      dot: "bg-sky-600",
     },
     muted: {
       wrap: "bg-[var(--color-surface-2)] text-[var(--color-text-muted)] border-[var(--color-border)] font-medium",
       dot: "bg-[var(--color-text-subtle)]",
     },
     red: {
-      wrap: "bg-[var(--color-danger-glow)] text-[var(--color-danger)] border-[var(--color-danger)] font-semibold",
-      dot: "bg-[var(--color-danger)]",
+      wrap: "bg-rose-50 text-rose-900 border-rose-300 font-semibold",
+      dot: "bg-rose-600",
     },
   }[color];
 

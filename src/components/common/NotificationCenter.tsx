@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Bell, CheckCheck, Clock, Award, AlertTriangle, ShieldCheck } from "lucide-react";
+import { Bell, CheckCheck, Clock, Award, AlertTriangle, ShieldCheck, X } from "lucide-react";
 import { Notification } from "../../types";
 import {
   getNotificationsAction,
@@ -125,7 +125,7 @@ export function NotificationCenter() {
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className="relative p-2 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] hover:bg-[var(--color-surface-2)] transition-all cursor-pointer text-[var(--color-text-muted)] hover:text-[var(--color-text)] focus-visible:outline-none focus:ring-2 focus:ring-amber-400"
-        aria-label="แจ้งเตือน"
+        aria-label={unreadCount > 0 ? `การแจ้งเตือน มี ${unreadCount} รายการใหม่ที่ยังไม่ได้อ่าน` : "การแจ้งเตือน ไม่มีรายการใหม่"}
       >
         <Bell className="w-5 h-5" />
         {unreadCount > 0 && (
@@ -136,35 +136,54 @@ export function NotificationCenter() {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl shadow-2xl shadow-amber-950/20 z-[60] overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-          <div className="p-3.5 border-b border-[var(--color-border)] flex items-center justify-between bg-[var(--color-surface-2)]">
-            <div className="flex items-center gap-2">
-              <Bell className="w-4 h-4 text-amber-600" />
-              <h3 className="text-xs font-bold text-[var(--color-text)]">การแจ้งเตือน</h3>
-              {unreadCount > 0 && (
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 font-semibold border border-amber-300">
-                  {unreadCount} ใหม่
-                </span>
-              )}
-            </div>
-            {unreadCount > 0 && (
-              <button
-                type="button"
-                onClick={handleMarkAllAsRead}
-                disabled={loading}
-                className="text-[11px] text-amber-700 hover:text-amber-800 font-semibold flex items-center gap-1 cursor-pointer transition-colors"
-              >
-                <CheckCheck className="w-3.5 h-3.5" />
-                <span>อ่านทั้งหมด</span>
-              </button>
-            )}
-          </div>
+        <>
+          {/* Mobile backdrop to dismiss cleanly and prevent background tap confusion */}
+          <div
+            className="fixed inset-0 bg-black/30 backdrop-blur-2xs z-[55] sm:hidden"
+            onClick={() => setIsOpen(false)}
+            aria-hidden="true"
+          />
 
-          <div className="max-h-80 overflow-y-auto divide-y divide-[var(--color-border)]">
+          <div className="fixed left-3 right-3 top-16 sm:top-full sm:left-auto sm:right-0 sm:mt-2 sm:absolute sm:w-96 max-w-md sm:max-w-none bg-[var(--color-surface)] border-2 border-[var(--color-border)] rounded-2xl shadow-2xl shadow-amber-950/20 z-[60] overflow-hidden animate-in fade-in zoom-in-95 duration-150 flex flex-col max-h-[75vh] sm:max-h-[32rem]">
+            <div className="p-3.5 border-b border-[var(--color-border)] flex items-center justify-between bg-[var(--color-surface-2)] shrink-0">
+              <div className="flex items-center gap-2">
+                <Bell className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                <h3 className="text-xs font-bold text-[var(--color-text)]">การแจ้งเตือน</h3>
+                {unreadCount > 0 && (
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 font-bold border border-amber-300 dark:border-amber-800">
+                    {unreadCount} ใหม่
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                {unreadCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={handleMarkAllAsRead}
+                    disabled={loading}
+                    className="text-[11px] text-amber-800 hover:text-amber-950 dark:text-amber-300 dark:hover:text-amber-200 font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                  >
+                    <CheckCheck className="w-3.5 h-3.5 shrink-0" />
+                    <span>อ่านทั้งหมด</span>
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setIsOpen(false)}
+                  className="p-1 text-[var(--color-text-muted)] hover:text-[var(--color-text)] rounded-lg cursor-pointer sm:hidden min-w-[32px] min-h-[32px] inline-flex items-center justify-center"
+                  aria-label="ปิดการแจ้งเตือน"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            <div className="overflow-y-auto divide-y divide-[var(--color-border)] flex-1">
             {notifications.length === 0 ? (
               <div className="p-8 text-center text-xs text-[var(--color-text-muted)] flex flex-col items-center gap-2">
                 <Bell className="w-8 h-8 opacity-30 stroke-1" />
-                <p>ไม่มีการแจ้งเตือนในขณะนี้</p>
+                <p className="font-bold text-[var(--color-text)]">ไม่มีการแจ้งเตือนใหม่ในขณะนี้</p>
+                <p className="text-[11px] text-[var(--color-text-subtle)] max-w-xs">เมื่อมีการส่งมอบกะ รายงานแจ้งเตือนอุณหภูมิตู้แช่ หรือการรับรองงาน ข้อมูลจะแสดงที่นี่แบบเรียลไทม์</p>
               </div>
             ) : (
               notifications.map((n) => (
@@ -177,7 +196,7 @@ export function NotificationCenter() {
                       : "bg-amber-500/5 hover:bg-amber-500/10 font-medium"
                   }`}
                 >
-                  <div className="mt-0.5 p-1.5 rounded-lg bg-[var(--color-surface)] border border-[var(--color-border)] shadow-xs">
+                  <div className="mt-0.5 p-1.5 rounded-lg bg-[var(--color-surface)] border border-[var(--color-border)] shadow-xs shrink-0">
                     {getTypeIcon(n.type)}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -187,7 +206,7 @@ export function NotificationCenter() {
                         <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
                       )}
                     </div>
-                    <p className="text-[11px] text-[var(--color-text-muted)] leading-relaxed">
+                    <p className="text-[11px] text-[var(--color-text-muted)] leading-relaxed break-words">
                       {n.message}
                     </p>
                     <div className="mt-1 flex items-center gap-2 text-[10px] text-[var(--color-text-subtle)]">
@@ -205,6 +224,7 @@ export function NotificationCenter() {
             )}
           </div>
         </div>
+      </>
       )}
     </div>
   );

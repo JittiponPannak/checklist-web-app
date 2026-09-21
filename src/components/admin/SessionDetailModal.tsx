@@ -27,7 +27,7 @@ export function SessionDetailModal({
 
   return (
     <div
-      className="fixed inset-0 bg-[var(--color-brown)]/40 backdrop-blur-xs flex items-center justify-center z-50 px-4"
+      className="fixed inset-0 bg-[var(--color-brown)]/40 backdrop-blur-xs flex items-center justify-center z-50 px-3 sm:px-4"
       onClick={onClose}
       onKeyDown={handleKeyDown}
     >
@@ -37,7 +37,7 @@ export function SessionDetailModal({
         aria-modal="true"
         aria-labelledby="session-detail-title"
         tabIndex={-1}
-        className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl w-full max-w-lg max-h-[85vh] overflow-y-auto shadow-2xl p-6 sm:p-8 focus-visible:outline-2 focus-visible:outline-amber-400 flex flex-col justify-between text-[var(--color-text)]"
+        className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl w-full max-w-lg max-h-[90vh] sm:max-h-[85vh] overflow-y-auto shadow-2xl p-5 sm:p-8 focus-visible:outline-2 focus-visible:outline-amber-400 flex flex-col justify-between text-[var(--color-text)]"
         onClick={(e) => e.stopPropagation()}
       >
         <div>
@@ -51,12 +51,12 @@ export function SessionDetailModal({
                 {getShiftBadge(session.shift)}
                 <span className="text-xs font-mono text-[var(--color-text-muted)]">{fmtDate(session.startedAt)}</span>
                 {isApproved ? (
-                  <span className="text-[10px] font-bold text-[var(--color-amber)] bg-[var(--color-amber-glow)] border border-[var(--color-amber)] px-2 py-0.5 rounded-full">
-                    ✓ รับรองผลแล้ว
+                  <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
+                    ✓ รับรองผลเรียบร้อยแล้ว
                   </span>
                 ) : (
-                  <span className="text-[10px] font-bold text-[var(--color-text-muted)] bg-[var(--color-surface-2)] border border-[var(--color-border)] px-2 py-0.5 rounded-full">
-                    รอรับรองผล
+                  <span className="text-[10px] font-bold text-amber-900 bg-amber-100 border border-amber-300 px-2.5 py-0.5 rounded-full">
+                    รอการตรวจสอบและรับรอง
                   </span>
                 )}
               </div>
@@ -65,7 +65,7 @@ export function SessionDetailModal({
               type="button"
               onClick={onClose}
               aria-label="ปิดรายละเอียดกะ"
-              className="p-2 -mr-2 text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-2)] rounded-lg min-w-[36px] min-h-[36px] flex items-center justify-center focus-visible:outline-2 focus-visible:outline-amber-400 cursor-pointer"
+              className="p-2 -mr-2 text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-2)] rounded-xl min-w-[44px] min-h-[44px] sm:min-w-[36px] sm:min-h-[36px] flex items-center justify-center focus-visible:outline-2 focus-visible:outline-amber-400 cursor-pointer"
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
@@ -151,7 +151,7 @@ export function SessionDetailModal({
             <button
               type="button"
               onClick={() => onApprove(session.id)}
-              className="w-full py-2.5 px-4 bg-[var(--color-brown)] hover:bg-[#3D1D1B] text-amber-300 rounded-xl text-xs sm:text-sm font-semibold transition-all shadow-sm cursor-pointer flex items-center justify-center gap-2"
+              className="w-full min-h-[44px] py-3 sm:py-2.5 px-4 bg-[var(--color-brown)] hover:bg-[var(--color-brown-light)] text-amber-300 rounded-xl text-xs sm:text-sm font-semibold transition-all shadow-sm cursor-pointer flex items-center justify-center gap-2"
             >
               <span>รับรองผลการตรวจงาน ({approveRoleTitle})</span>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">

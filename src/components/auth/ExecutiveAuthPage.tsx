@@ -2,6 +2,7 @@ import { useState } from "react";
 import { User } from "../../types";
 import { getUsers, saveUsers } from "../../data/storage";
 import { BrandLogo } from "../common/BrandLogo";
+import { ThemeToggle } from "../common/ThemeToggle";
 import { loginAction } from "../../actions/auth";
 import Link from "next/link";
 
@@ -39,7 +40,7 @@ export function ExecutiveAuthPage({
 
             const role = res.user.role;
             if (role !== "manager" && role !== "general_manager" && role !== "committee") {
-                setError("บทบาทนี้ไม่สามารถเข้าระบบระดับบริหารได้");
+                setError("บัญชีนี้มีสิทธิ์ระดับพนักงานร้าน กรุณาเข้าสู่ระบบผ่านหน้าพนักงานสาขา");
                 setLoading(false);
                 return;
             }
@@ -56,14 +57,14 @@ export function ExecutiveAuthPage({
         "w-full bg-[var(--color-surface-2)] hover:bg-[var(--color-surface-2)] focus:bg-[var(--color-surface)] border border-[var(--color-border)] focus:border-amber-400 rounded-xl px-4 py-2.5 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-subtle)] focus-visible:outline-none focus:ring-2 focus:ring-amber-400/40 transition-all";
 
     return (
-        <div className="min-h-screen bg-[var(--color-background)] text-[var(--color-text)] flex flex-col items-center justify-center px-4 py-8 sm:py-12 relative overflow-hidden">
-            <div className="absolute top-1/4 -right-20 w-72 h-72 bg-[var(--color-amber-glow)]/30 rounded-full blur-3xl pointer-events-none" aria-hidden="true" />
-            <div className="absolute bottom-1/4 -left-20 w-72 h-72 bg-[var(--color-amber-glow)]/40 rounded-full blur-3xl pointer-events-none" aria-hidden="true" />
-
-            <div className="w-full max-w-[420px] bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-7 sm:p-8 shadow-xl shadow-amber-900/5 space-y-5 relative z-10">
+        <div className="min-h-screen bg-[var(--color-background)] text-[var(--color-text)] flex flex-col items-center justify-center px-4 py-8 sm:py-12 relative font-sans">
+            <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-20">
+                <ThemeToggle />
+            </div>
+            <div className="w-full max-w-[420px] bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-5 sm:p-8 shadow-xl shadow-amber-900/5 space-y-5 relative z-10 font-sans">
                 <header className="mb-2 text-center flex flex-col items-center">
-                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--color-amber-glow)] text-[var(--color-text)] text-[11px] font-semibold border border-[var(--color-amber)] mb-3">
-                        <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-amber-glow)]" aria-hidden="true" />
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--color-amber-glow)] text-amber-900 text-xs font-semibold border border-amber-300 mb-3">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500" aria-hidden="true" />
                         <span>ระบบบริหารสาขาและการจัดการ</span>
                     </div>
                     <BrandLogo size={48} showText={true} isDark={false} />
@@ -107,19 +108,19 @@ export function ExecutiveAuthPage({
                     <button
                         type="submit"
                         disabled={loading}
-                        className={`w-full py-2.5 text-amber-300 text-sm font-semibold rounded-xl shadow-md transition-all mt-3 cursor-pointer flex items-center justify-center gap-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500 bg-[var(--color-brown)] hover:bg-[var(--color-brown-light)] active:bg-[#1f0d0c] shadow-amber-950/20 ${loading ? "opacity-70 cursor-not-allowed" : ""
+                        className={`w-full min-h-[44px] py-2.5 text-amber-300 text-sm font-semibold rounded-xl shadow-md transition-all mt-3 cursor-pointer flex items-center justify-center gap-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500 bg-[var(--color-brown)] hover:bg-[var(--color-brown-light)] active:bg-[#1f0d0c] shadow-amber-950/20 ${loading ? "opacity-70 cursor-not-allowed" : ""
                             }`}
                     >
-                        <span>{loading ? "กำลังตรวจสอบข้อมูล..." : "เข้าสู่ระบบ (Executive) →"}</span>
+                        <span>{loading ? "กำลังตรวจสอบข้อมูล..." : "เข้าสู่ระบบฝ่ายบริหารและตรวจสอบ →"}</span>
                     </button>
                 </form>
 
-                <div className="mt-5 pt-4 border-t border-[var(--color-border)] text-center flex flex-col gap-2">
-                    <Link href="/login/staff" className="text-[11px] text-[var(--color-text-muted)] hover:text-[var(--color-text)] font-medium transition-colors">
-                        สำหรับพนักงาน / ผู้ช่วยผู้จัดการ →
+                <div className="mt-5 pt-4 border-t border-[var(--color-border)] text-center flex flex-col gap-1.5">
+                    <Link href="/login/staff" className="inline-flex items-center justify-center min-h-[36px] text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)] font-medium transition-colors">
+                        สำหรับพนักงานหน้าร้านสาขา →
                     </Link>
-                    <Link href="/" className="text-[11px] text-[var(--color-text-subtle)] hover:text-[var(--color-text-muted)] font-medium transition-colors">
-                        ← กลับไปหน้าเลือกประเภทผู้ใช้งาน
+                    <Link href="/" className="inline-flex items-center justify-center min-h-[36px] text-xs text-[var(--color-text-subtle)] hover:text-[var(--color-text-muted)] font-medium transition-colors">
+                        ← กลับสู่หน้าหลักเลือกช่องทางเข้างาน
                     </Link>
                 </div>
             </div>

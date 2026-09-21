@@ -3,14 +3,16 @@ export function BrandLogo({
   showText = false,
   subtitle = "",
   isDark = false,
+  hideTextOnMobile = false,
 }: {
   size?: number;
   showText?: boolean;
   subtitle?: string;
   isDark?: boolean;
+  hideTextOnMobile?: boolean;
 }) {
   return (
-    <div className="inline-flex items-center gap-3 select-none">
+    <div className="inline-flex items-center gap-2.5 sm:gap-3 select-none shrink-0">
       <div
         style={{ width: size, height: size }}
         className="rounded-full shrink-0 relative overflow-hidden shadow-md ring-2 ring-amber-400/60 bg-[var(--color-brown)] flex items-center justify-center"
@@ -22,7 +24,7 @@ export function BrandLogo({
         />
       </div>
       {showText && (
-        <div className="text-left">
+        <div className={`text-left ${hideTextOnMobile ? "hidden sm:block" : ""}`}>
           <div className="flex items-center gap-2">
             <span
               className={`font-extrabold tracking-tight text-base sm:text-lg ${isDark ? "text-[var(--color-brown)]" : "text-[var(--color-text)]"

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { User } from "../../types";
 import { loginAction } from "../../actions/auth";
 import { BrandLogo } from "../common/BrandLogo";
+import { ThemeToggle } from "../common/ThemeToggle";
 import Link from "next/link";
 
 export function AdminAuthPage({ onLogin }: { onLogin: (user: User) => void }) {
@@ -43,16 +44,15 @@ export function AdminAuthPage({ onLogin }: { onLogin: (user: User) => void }) {
     "w-full bg-[var(--color-surface-2)] hover:bg-[var(--color-surface-2)] focus:bg-[var(--color-surface)] border border-[var(--color-border)] focus:border-amber-400 rounded-xl px-4 py-2.5 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-subtle)] focus-visible:outline-none focus:ring-2 focus:ring-amber-400/40 transition-all";
 
   return (
-    <div className="min-h-screen bg-[var(--color-background)] text-[var(--color-text)] flex flex-col items-center justify-center px-4 py-8 sm:py-12 relative overflow-hidden">
-      {/* Subtle Ambient Brand Glow */}
-      <div className="absolute top-1/4 -right-20 w-72 h-72 bg-[var(--color-amber-glow)]/30 rounded-full blur-3xl pointer-events-none" aria-hidden="true" />
-      <div className="absolute bottom-1/4 -left-20 w-72 h-72 bg-[var(--color-amber-glow)]/40 rounded-full blur-3xl pointer-events-none" aria-hidden="true" />
-
-      <div className="w-full max-w-[440px] bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-7 sm:p-8 shadow-xl shadow-amber-900/5 space-y-5 relative z-10">
+    <div className="min-h-screen bg-[var(--color-background)] text-[var(--color-text)] flex flex-col items-center justify-center px-4 py-8 sm:py-12 relative font-sans">
+      <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-20">
+        <ThemeToggle />
+      </div>
+      <div className="w-full max-w-[440px] bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-5 sm:p-8 shadow-xl shadow-amber-900/5 space-y-5 relative z-10 font-sans">
         {/* Brand Header */}
         <header className="text-center space-y-2 flex flex-col items-center">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--color-amber-glow)] text-[var(--color-text)] text-[11px] font-semibold border border-[var(--color-amber)] mb-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-amber-glow)]0" aria-hidden="true" />
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--color-amber-glow)] text-amber-900 dark:text-amber-300 text-xs font-semibold border border-amber-300 dark:border-amber-800 mb-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" aria-hidden="true" />
             <span>Admin Portal • ระบบฝ่ายบริหาร</span>
           </div>
           <BrandLogo size={48} showText={true} isDark={false} subtitle="ระบบควบคุมและตรวจสอบเช็คลิสต์การปฏิบัติงานสาขา" />
@@ -97,7 +97,7 @@ export function AdminAuthPage({ onLogin }: { onLogin: (user: User) => void }) {
           </div>
 
           {error && (
-            <div id="admin-auth-error" role="alert" className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700 text-center font-semibold flex items-center justify-center gap-1.5">
+            <div id="admin-auth-error" role="alert" className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 text-xs text-rose-800 dark:text-rose-300 text-center font-semibold flex items-center justify-center gap-1.5">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <circle cx="12" cy="12" r="10" />
                 <line x1="12" y1="8" x2="12" y2="12" />
@@ -111,7 +111,7 @@ export function AdminAuthPage({ onLogin }: { onLogin: (user: User) => void }) {
             type="button"
             disabled={loading}
             onClick={handleLogin}
-            className={`w-full py-2.5 bg-[var(--color-brown)] hover:bg-[var(--color-brown-light)] active:bg-[#1a0a09] text-amber-300 text-sm font-semibold rounded-xl shadow-sm transition-all cursor-pointer mt-1 flex items-center justify-center gap-2 focus-visible:outline-none ${loading ? "opacity-70 cursor-not-allowed" : ""
+            className={`w-full min-h-[44px] py-2.5 bg-[var(--color-brown)] hover:bg-[var(--color-brown-light)] active:bg-[#1a0a09] text-amber-300 text-sm font-semibold rounded-xl shadow-sm transition-all cursor-pointer mt-1 flex items-center justify-center gap-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500 ${loading ? "opacity-70 cursor-not-allowed" : ""
               }`}
           >
             <span>{loading ? "กำลังเข้าสู่ระบบ..." : "เข้าสู่ระบบผู้ดูแลระบบ (Admin)"}</span>
@@ -127,7 +127,7 @@ export function AdminAuthPage({ onLogin }: { onLogin: (user: User) => void }) {
         <div className="pt-2 border-t border-[var(--color-border)] text-center text-xs text-[var(--color-text-muted)]">
           <Link
             href="/"
-            className="hover:text-[var(--color-text)] font-medium transition-colors inline-flex items-center gap-1 cursor-pointer"
+            className="hover:text-[var(--color-text)] font-medium transition-colors inline-flex items-center justify-center min-h-[36px] gap-1 cursor-pointer focus-visible:outline-2 focus-visible:outline-amber-500"
           >
             ← กลับไปหน้าเลือกประเภทผู้ใช้งาน
           </Link>

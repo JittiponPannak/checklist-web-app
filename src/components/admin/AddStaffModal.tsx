@@ -82,7 +82,7 @@ export function AddStaffModal({
         </div>
 
         {error && (
-          <p role="alert" className="text-xs font-semibold text-rose-700 bg-rose-50 border border-rose-200 p-2 rounded-lg">
+          <p role="alert" className="text-xs font-semibold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 p-2 rounded-lg">
             {error}
           </p>
         )}
@@ -163,9 +163,9 @@ export function AddStaffModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 py-2.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-2)] hover:bg-[#F2E7DC] text-xs font-semibold text-[var(--color-text-muted)] transition-colors cursor-pointer"
+            className="flex-1 py-2.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-2)] hover:bg-[var(--color-border-subtle)] text-xs font-semibold text-[var(--color-text-muted)] transition-colors cursor-pointer"
           >
-            ยกเลิก
+            ยกเลิกการเพิ่มพนักงาน
           </button>
           <button
             type="button"

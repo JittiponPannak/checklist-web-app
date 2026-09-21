@@ -40,10 +40,10 @@ export function PointStreakBadge() {
   }, [currentUser?.id]);
 
   const getTier = (pts: number) => {
-    if (pts >= 500) return { name: "ระดับแพลตตินัม", icon: "💎", color: "text-cyan-600 bg-cyan-50 border-cyan-200" };
-    if (pts >= 250) return { name: "ระดับทอง", icon: "🥇", color: "text-amber-700 bg-amber-50 border-amber-300" };
-    if (pts >= 100) return { name: "ระดับเงิน", icon: "🥈", color: "text-slate-600 bg-slate-100 border-slate-300" };
-    return { name: "ระดับบรอนซ์", icon: "🥉", color: "text-amber-800 bg-orange-50 border-orange-200" };
+    if (pts >= 500) return { name: "ระดับแพลตตินัม", icon: "💎", color: "text-cyan-700 bg-cyan-50 border-cyan-200 dark:text-cyan-300 dark:bg-cyan-950/50 dark:border-cyan-800" };
+    if (pts >= 250) return { name: "ระดับทอง", icon: "🥇", color: "text-amber-800 bg-amber-50 border-amber-300 dark:text-amber-300 dark:bg-amber-950/50 dark:border-amber-800" };
+    if (pts >= 100) return { name: "ระดับเงิน", icon: "🥈", color: "text-slate-700 bg-slate-100 border-slate-300 dark:text-slate-200 dark:bg-slate-800 dark:border-slate-700" };
+    return { name: "ระดับบรอนซ์", icon: "🥉", color: "text-amber-900 bg-orange-50 border-orange-200 dark:text-amber-300 dark:bg-orange-950/50 dark:border-orange-800" };
   };
 
   const tier = getTier(points);
@@ -58,25 +58,25 @@ export function PointStreakBadge() {
           setIsModalOpen(true);
           fetchPointDetails();
         }}
-        className="flex items-center gap-2 p-1.5 sm:px-3 sm:py-1.5 rounded-xl bg-[var(--color-surface)] hover:bg-[var(--color-surface-2)] border border-[var(--color-border)] shadow-xs transition-all cursor-pointer group focus-visible:outline-none focus:ring-2 focus:ring-amber-400"
+        className="flex items-center gap-1.5 sm:gap-2 px-2 py-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-[var(--color-surface)] hover:bg-[var(--color-surface-2)] border border-[var(--color-border)] shadow-xs hover:shadow-sm active:scale-95 transition-all duration-150 cursor-pointer group focus-visible:outline-none focus:ring-2 focus:ring-amber-400 shrink-0 min-h-[36px]"
         title="คลิกเพื่อดูประวัติแต้มและสตรีค"
       >
         {/* Streak Flame */}
-        <div className="flex items-center gap-1 text-xs font-bold text-orange-600">
-          <Flame className={`w-4 h-4 text-orange-500 fill-orange-500 ${streak > 0 ? "animate-bounce" : "opacity-60"}`} />
+        <div className="flex items-center gap-1 text-xs font-bold text-orange-600 dark:text-orange-400">
+          <Flame className={`w-3.5 h-3.5 sm:w-4 sm:h-4 text-orange-500 fill-orange-500 transition-transform duration-200 group-hover:scale-125 ${streak > 0 ? "animate-pulse" : "opacity-60"}`} />
           <span>{streak}</span>
         </div>
 
-        <div className="w-px h-4 bg-[var(--color-border)]" />
+        <div className="w-px h-3.5 sm:h-4 bg-[var(--color-border)]" />
 
         {/* Total Points */}
-        <div className="flex items-center gap-1 text-xs font-bold text-amber-700">
-          <Award className="w-4 h-4 text-amber-500" />
+        <div className="flex items-center gap-1 text-xs font-bold text-amber-800 dark:text-amber-300">
+          <Award className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500" />
           <span>{points} <span className="text-[10px] font-medium text-[var(--color-text-muted)] hidden sm:inline">แต้ม</span></span>
         </div>
 
         {/* Tier badge icon */}
-        <span className="text-xs ml-0.5">{tier.icon}</span>
+        <span className="text-xs ml-0.5 hidden sm:inline">{tier.icon}</span>
       </button>
 
       {/* Point History & Streak Modal rendered via Portal to escape parent stacking contexts */}
@@ -102,7 +102,7 @@ export function PointStreakBadge() {
             </div>
 
             {/* Stats Summary Cards */}
-            <div className="p-4 sm:p-5 grid grid-cols-3 gap-2.5 bg-gradient-to-b from-[var(--color-surface-2)]/40 to-transparent">
+            <div className="p-4 sm:p-5 grid grid-cols-3 gap-2.5 bg-[var(--color-surface-2)]/30">
               <div className="p-3 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] text-center shadow-xs">
                 <span className="text-xs text-[var(--color-text-muted)] block mb-1">แต้มสะสม</span>
                 <span className="text-lg font-black text-amber-700">{points}</span>

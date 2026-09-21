@@ -21,11 +21,29 @@ export function LeaderboardWidget({ branchId }: { branchId?: string }) {
   }, [branchId]);
 
   const getRankBadge = (index: number) => {
-    if (index === 0) return <span className="text-base">🥇</span>;
-    if (index === 1) return <span className="text-base">🥈</span>;
-    if (index === 2) return <span className="text-base">🥉</span>;
+    if (index === 0) {
+      return (
+        <span className="w-5 h-5 rounded-full bg-amber-400 text-amber-950 text-[11px] font-mono font-black flex items-center justify-center shadow-xs">
+          1
+        </span>
+      );
+    }
+    if (index === 1) {
+      return (
+        <span className="w-5 h-5 rounded-full bg-slate-300 text-slate-800 text-[11px] font-mono font-black flex items-center justify-center shadow-xs">
+          2
+        </span>
+      );
+    }
+    if (index === 2) {
+      return (
+        <span className="w-5 h-5 rounded-full bg-amber-700 text-amber-100 text-[11px] font-mono font-black flex items-center justify-center shadow-xs">
+          3
+        </span>
+      );
+    }
     return (
-      <span className="w-5 h-5 rounded-full bg-[var(--color-surface-2)] text-[11px] font-bold text-[var(--color-text-muted)] flex items-center justify-center">
+      <span className="w-5 h-5 rounded-full bg-[var(--color-surface-2)] text-[11px] font-mono font-bold text-[var(--color-text-muted)] border border-[var(--color-border)] flex items-center justify-center">
         {index + 1}
       </span>
     );
@@ -55,7 +73,8 @@ export function LeaderboardWidget({ branchId }: { branchId?: string }) {
       ) : leaderboard.length === 0 ? (
         <div className="p-6 text-center text-xs text-[var(--color-text-muted)] flex flex-col items-center gap-1.5">
           <Users className="w-6 h-6 opacity-30" />
-          <p>ยังไม่มีข้อมูลคะแนนพนักงาน</p>
+          <p className="font-bold text-[var(--color-text)]">ยังไม่มีข้อมูลคะแนนสะสมในสาขานี้</p>
+          <p className="text-[11px] text-[var(--color-text-subtle)] max-w-xs">เมื่อพนักงานบันทึกและส่งมอบงานเช็คลิสต์ประจำวันเสร็จสมบูรณ์ คะแนนและสถิติสตรีคจะแสดงที่นี่</p>
         </div>
       ) : (
         <div className="divide-y divide-[var(--color-border)] max-h-72 overflow-y-auto">

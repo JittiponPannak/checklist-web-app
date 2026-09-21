@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { User } from "../../types";
 import { BrandLogo } from "../common/BrandLogo";
+import { ThemeToggle } from "../common/ThemeToggle";
+import { LogOut } from "lucide-react";
 
 import { getBranchesAction, createBranchAction, assignStaffToBranchAction, assignTasksToBranchAction, DashboardBranch as Branch } from "../../actions/branch";
 import { getAllUsersAction } from "../../actions/auth";
@@ -310,19 +312,19 @@ export function AdminDashboardView({
       )}
 
       {/* Top Navbar */}
-      <header className="border-b border-[var(--color-border)] bg-[var(--color-surface)]/95 backdrop-blur-md sticky top-0 z-40 px-4 sm:px-8 py-3.5 flex items-center justify-between shadow-xs">
-        <div className="flex items-center gap-4">
-          <BrandLogo size={36} showText={true} isDark={false} />
+      <header className="border-b border-[var(--color-border)] bg-[var(--color-surface)]/95 backdrop-blur-md sticky top-0 z-40 px-3 sm:px-8 py-3.5 flex items-center justify-between shadow-xs">
+        <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+          <BrandLogo size={36} showText={true} hideTextOnMobile={true} isDark={false} />
           <div className="hidden md:flex items-center gap-2 pl-4 border-l border-[var(--color-border)]">
-            <span className="text-[10px] font-mono font-bold tracking-widest uppercase bg-[var(--color-surface-2)] text-[var(--color-amber)] border border-[var(--color-amber-dim)] px-2.5 py-1 rounded-md">
+            <span className="text-[10px] font-mono font-bold tracking-wider uppercase bg-amber-100 text-amber-950 border border-amber-300 px-2.5 py-1 rounded-lg shadow-2xs">
               System Admin Portal
             </span>
-            <span className="text-xs text-[var(--color-text-muted)]">ระดับศูนย์กลางองค์กร</span>
+            <span className="text-xs text-[var(--color-text-muted)] font-medium">ระดับศูนย์กลางองค์กร</span>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2.5 pl-3 border-l border-[var(--color-border)]">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <div className="flex items-center gap-2.5 pl-2 sm:pl-3 border-l border-[var(--color-border)]">
             <div className="text-right hidden sm:block">
               <p className="text-xs font-bold text-[var(--color-text)]">{user.name}</p>
               <p className="text-[11px] text-[var(--color-text-muted)]">{user.position || "ผู้ดูแลระบบส่วนกลาง"}</p>
@@ -332,12 +334,16 @@ export function AdminDashboardView({
             </div>
           </div>
 
+          <ThemeToggle />
           <button
             type="button"
             onClick={onLogout}
-            className="text-xs text-[var(--color-text-muted)] hover:text-rose-700 hover:bg-rose-50 px-3 py-1.5 rounded-xl border border-[var(--color-border)] transition-all font-semibold cursor-pointer"
+            title="ออกจากระบบ"
+            aria-label="ออกจากระบบ"
+            className="text-xs text-[var(--color-text-muted)] hover:text-rose-700 hover:bg-rose-50 hover:border-rose-200 dark:hover:bg-rose-950/40 dark:hover:border-rose-800 transition-all p-2 sm:px-3 sm:py-1.5 rounded-xl border border-[var(--color-border)] font-semibold cursor-pointer min-h-[36px] min-w-[36px] inline-flex items-center justify-center gap-1.5 shrink-0"
           >
-            ออกจากระบบ
+            <LogOut size={16} />
+            <span className="hidden sm:inline">ออกจากระบบ</span>
           </button>
         </div>
       </header>
@@ -368,7 +374,7 @@ export function AdminDashboardView({
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+            <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-2xs" />
             <span className="text-xs text-[var(--color-text-muted)] font-mono">DB Pooler: Connected</span>
           </div>
         </div>
@@ -376,44 +382,60 @@ export function AdminDashboardView({
         {/* TAB 1: OVERVIEW */}
         {activeTab === "overview" && (
           <div className="space-y-6 animate-fade-in">
-            {/* 4 Stats Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              <div className="bg-[var(--color-surface)] border border-[var(--color-border)] p-5 rounded-2xl shadow-sm">
+            {/* ─── Enterprise Fleet Status Strip ─────────────────────────────────── */}
+            <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-5 sm:p-6 shadow-xs flex flex-col md:flex-row items-stretch md:items-center justify-between gap-6 divide-y md:divide-y-0 md:divide-x divide-[var(--color-border)]">
+              {/* Metric 1: Branch Network */}
+              <div className="flex-1 space-y-1">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium text-[var(--color-text-muted)]">สาขาที่เปิดทำการ</span>
-                  <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                  <span className="text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider">
+                    เครือข่ายสาขาทั่วประเทศ
+                  </span>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">
                     Online 100%
                   </span>
                 </div>
-                <div className="mt-3 flex items-baseline gap-2">
-                  <span className="text-3xl font-black text-[var(--color-text)] font-mono">{branches.filter(b => b.status === "active").length}</span>
-                  <span className="text-xs text-[var(--color-text-subtle)]">/ {branches.length} สาขาทั่วประเทศ</span>
+                <div className="flex items-baseline gap-2 pt-1">
+                  <span className="text-3xl font-extrabold font-mono text-[var(--color-text)]">
+                    {branches.filter(b => b.status === "active").length}
+                  </span>
+                  <span className="text-xs text-[var(--color-text-subtle)] font-medium">
+                    / {branches.length} สาขาเปิดทำการ
+                  </span>
                 </div>
               </div>
 
-              <div className="bg-[var(--color-surface)] border border-[var(--color-border)] p-5 rounded-2xl shadow-sm">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium text-[var(--color-text-muted)]">พนักงานในระบบทั้งหมด</span>
-                  <span className="text-[10px] font-bold text-[var(--color-text-muted)] bg-[var(--color-surface-2)] px-2 py-0.5 rounded-full border border-[var(--color-border)]">
-                    Active
+              {/* Metric 2: Personnel */}
+              <div className="flex-1 pt-4 md:pt-0 md:pl-6 space-y-1">
+                <span className="text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider">
+                  บุคลากรในระบบ
+                </span>
+                <div className="flex items-baseline gap-2 pt-1">
+                  <span className="text-3xl font-extrabold font-mono text-[var(--color-text)]">
+                    {usersList.length || 8}
                   </span>
-                </div>
-                <div className="mt-3 flex items-baseline gap-2">
-                  <span className="text-3xl font-black text-[var(--color-text)] font-mono">{usersList.length || 8}</span>
-                  <span className="text-xs text-[var(--color-text-subtle)]">บัญชีผู้ใช้งาน</span>
+                  <span className="text-xs text-[var(--color-text-subtle)] font-medium">
+                    บัญชีผู้ปฏิบัติงาน
+                  </span>
                 </div>
               </div>
 
-              <div className="bg-[var(--color-surface)] border border-[var(--color-border)] p-5 rounded-2xl shadow-sm">
+              {/* Metric 3: Standard Master Tasks */}
+              <div className="flex-1 pt-4 md:pt-0 md:pl-6 space-y-1">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium text-[var(--color-text-muted)]">ระบบฐานข้อมูล Supabase</span>
-                  <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
-                    Healthy
+                  <span className="text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider">
+                    แม่แบบงานมาตรฐานกลาง
+                  </span>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-950 border border-amber-300">
+                    SOP Master
                   </span>
                 </div>
-                <div className="mt-3 flex items-baseline gap-2">
-                  <span className="text-xl font-bold text-[var(--color-text)]">PostgreSQL 15</span>
-                  <span className="text-xs text-[var(--color-text-subtle)] font-mono">24ms Ping</span>
+                <div className="flex items-baseline gap-2 pt-1">
+                  <span className="text-3xl font-extrabold font-mono text-[var(--color-text)]">
+                    {tasksList.length || tasks.length}
+                  </span>
+                  <span className="text-xs text-[var(--color-text-subtle)] font-medium">
+                    ขั้นตอนการตรวจงาน
+                  </span>
                 </div>
               </div>
             </div>
@@ -449,7 +471,7 @@ export function AdminDashboardView({
                   <tbody className="divide-y divide-[var(--color-border)]/70">
                     {branches.map((b) => (
                       <tr key={b.id} className="hover:bg-[var(--color-background)] transition-colors">
-                        <td className="py-3 px-3 font-mono font-bold text-amber-700">{b.code}</td>
+                        <td className="py-3 px-3 font-mono font-bold text-amber-950">{b.code}</td>
                         <td className="py-3 px-3 font-semibold text-[var(--color-text)]">{b.name}</td>
                         <td className="py-3 px-3 text-[var(--color-text-muted)]">{b.managerName}</td>
                         <td className="py-3 px-3 text-[var(--color-text-muted)] font-mono">{b.staffCount} คน</td>
@@ -457,7 +479,7 @@ export function AdminDashboardView({
                           <span
                             className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${b.status === "active"
                               ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                              : "bg-[var(--color-amber-glow)] text-[var(--color-amber)] border border-[var(--color-amber)]"
+                              : "bg-amber-100 text-amber-950 border border-amber-300"
                               }`}
                           >
                             {b.status === "active" ? "เปิดปกติ" : "รอเปิด"}
@@ -465,13 +487,13 @@ export function AdminDashboardView({
                         </td>
                         <td className="py-3 px-3 text-right">
                           <div className="flex items-center justify-end gap-2">
-                            <div className="w-24 h-2 bg-[#F2E7DC] rounded-full overflow-hidden border border-[var(--color-border)]">
+                            <div className="w-24 h-2 bg-[var(--color-surface-2)] rounded-full overflow-hidden border border-[var(--color-border)]">
                               <div
                                 className={`h-full rounded-full ${b.todayCompletionRate === 100
                                   ? "bg-emerald-500"
                                   : b.todayCompletionRate > 80
                                     ? "bg-amber-400"
-                                    : "bg-[#C9B29F]"
+                                    : "bg-[var(--color-border)]"
                                   }`}
                                 style={{ width: `${b.todayCompletionRate}%` }}
                               />
@@ -495,10 +517,12 @@ export function AdminDashboardView({
           <div className="space-y-4 animate-fade-in">
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-[var(--color-surface)] border border-[var(--color-border)] p-4 rounded-2xl shadow-sm">
               <input
+                id="branch-search-input"
                 type="text"
                 value={branchSearch}
                 onChange={(e) => setBranchSearch(e.target.value)}
                 placeholder="ค้นหาชื่อสาขา หรือรหัสสาขา..."
+                aria-label="ค้นหาชื่อสาขา หรือรหัสสาขา"
                 className="bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-xl px-3.5 py-2 text-xs text-[var(--color-text)] placeholder:text-[var(--color-text-subtle)] focus:outline-none focus:border-amber-400 w-full sm:w-80"
               />
               <button
@@ -546,14 +570,14 @@ export function AdminDashboardView({
                     <button
                       type="button"
                       onClick={() => openManageStaffModal(b.id)}
-                      className="text-[11px] font-semibold text-[var(--color-text)] hover:text-[var(--color-brown-light)] bg-[var(--color-surface-2)] hover:bg-[#F2E7DC] px-2 py-1.5 rounded-lg border border-[var(--color-border)] transition-all cursor-pointer flex-1"
+                      className="text-[11px] font-bold text-[var(--color-text)] hover:text-amber-950 bg-[var(--color-surface-2)] hover:bg-amber-100 min-h-[44px] sm:min-h-[34px] inline-flex items-center justify-center px-3 py-2 sm:px-2 sm:py-1.5 rounded-xl border border-[var(--color-border)] transition-all cursor-pointer flex-1"
                     >
                       จัดการสาขา
                     </button>
                     <button
                       type="button"
                       onClick={() => openManageTasksModal(b.id)}
-                      className="text-[11px] font-semibold text-[var(--color-amber)] hover:text-amber-950 bg-[var(--color-amber-glow)] hover:bg-[var(--color-amber-glow)] px-2 py-1.5 rounded-lg border border-[var(--color-amber)] transition-all cursor-pointer flex-1"
+                      className="text-[11px] font-bold text-amber-950 bg-amber-100 hover:bg-amber-200 min-h-[44px] sm:min-h-[34px] inline-flex items-center justify-center px-3 py-2 sm:px-2 sm:py-1.5 rounded-xl border border-amber-300 transition-all cursor-pointer flex-1"
                     >
                       จัดการงาน
                     </button>
@@ -652,10 +676,12 @@ export function AdminDashboardView({
           <div className="space-y-4 animate-fade-in">
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-[var(--color-surface)] border border-[var(--color-border)] p-4 rounded-2xl shadow-sm">
               <input
+                id="user-search-input"
                 type="text"
                 value={userSearch}
                 onChange={(e) => setUserSearch(e.target.value)}
                 placeholder="ค้นหาชื่อผู้ใช้งาน, อีเมล หรือตำแหน่ง..."
+                aria-label="ค้นหาชื่อผู้ใช้งาน อีเมล หรือตำแหน่ง"
                 className="bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-xl px-3.5 py-2 text-xs text-[var(--color-text)] placeholder:text-[var(--color-text-subtle)] focus:outline-none focus:border-amber-400 w-full sm:w-80"
               />
 
@@ -699,7 +725,7 @@ export function AdminDashboardView({
                             <button
                               type="button"
                               onClick={() => togglePassword(u.id)}
-                              className="text-[var(--color-text-subtle)] hover:text-amber-700 cursor-pointer"
+                              className="text-[var(--color-text-subtle)] hover:text-amber-700 cursor-pointer min-h-[44px] min-w-[44px] sm:min-h-[28px] sm:min-w-[28px] inline-flex items-center justify-center rounded-lg"
                               title={visiblePasswords.has(u.id) ? "ซ่อนรหัสผ่าน" : "แสดงรหัสผ่าน"}
                             >
                               {visiblePasswords.has(u.id) ? (
@@ -712,10 +738,10 @@ export function AdminDashboardView({
                         </td>
                         <td className="py-3.5 px-3">
                           <span
-                            className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${u.role === "admin" || u.role === "committee"
-                              ? "bg-[var(--color-amber)] text-[var(--color-background)] border border-[var(--color-amber-dim)]"
-                              : u.role === "manager"
-                                ? "bg-[var(--color-surface-2)] text-[var(--color-amber)] border border-[var(--color-border)]"
+                            className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${u.role === "admin" || u.role === "committee"
+                              ? "bg-[var(--color-brown)] text-amber-300 border border-[var(--color-text)]"
+                              : u.role === "manager" || u.role === "general_manager"
+                                ? "bg-amber-100 text-amber-950 border border-amber-300"
                                 : "bg-[var(--color-surface-2)] text-[var(--color-text-muted)] border border-[var(--color-border)]"
                               }`}
                           >
@@ -728,7 +754,7 @@ export function AdminDashboardView({
                             value={u.role}
                             disabled={u.role === "admin"}
                             onChange={(e) => handlePromoteUser(u.id, e.target.value)}
-                            className="bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-lg px-2.5 py-1 text-xs text-[var(--color-text)] focus:outline-none focus:border-amber-400 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-xl min-h-[44px] sm:min-h-[34px] px-3 py-2 sm:px-2.5 sm:py-1 text-xs text-[var(--color-text)] focus:outline-none focus:border-amber-400 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             <option value="employee">Staff (พนักงานทั่วไป)</option>
                             <option value="manager_assistant">Assistant (ผู้ช่วยผู้จัดการร้าน)</option>
@@ -756,7 +782,9 @@ export function AdminDashboardView({
                 <button
                   type="button"
                   onClick={() => setIsNewBranchModalOpen(false)}
-                  className="text-[var(--color-text-muted)] hover:text-[var(--color-text)] cursor-pointer"
+                  aria-label="ปิดหน้าต่างเพิ่มสาขา"
+                  title="ปิดหน้าต่าง"
+                  className="text-[var(--color-text-muted)] hover:text-[var(--color-text)] min-w-[44px] min-h-[44px] flex items-center justify-center -mr-2 rounded-lg cursor-pointer"
                 >
                   ✕
                 </button>
@@ -764,8 +792,9 @@ export function AdminDashboardView({
               <div className="p-6">
                 <form onSubmit={handleCreateBranch} className="space-y-4">
                   <div>
-                    <label className="block text-xs font-semibold text-[var(--color-text-muted)] mb-1.5">ชื่อสาขา (อย่างน้อย 3 ตัวอักษร)</label>
+                    <label htmlFor="new-branch-name-input" className="block text-xs font-semibold text-[var(--color-text-muted)] mb-1.5">ชื่อสาขา (อย่างน้อย 3 ตัวอักษร)</label>
                     <input
+                      id="new-branch-name-input"
                       type="text"
                       required
                       value={newBranchName}
@@ -778,9 +807,9 @@ export function AdminDashboardView({
                     <button
                       type="button"
                       onClick={() => setIsNewBranchModalOpen(false)}
-                      className="flex-1 py-3 bg-[var(--color-surface-2)] hover:bg-[#F2E7DC] text-[var(--color-text-muted)] border border-[var(--color-border)] rounded-xl text-sm font-bold transition-all cursor-pointer"
+                      className="flex-1 py-3 bg-[var(--color-surface-2)] hover:bg-[var(--color-border-subtle)] text-[var(--color-text-muted)] border border-[var(--color-border)] rounded-xl text-sm font-bold transition-all cursor-pointer"
                     >
-                      ยกเลิก
+                      ยกเลิกการสร้างสาขา
                     </button>
                     <button
                       type="submit"
@@ -804,7 +833,9 @@ export function AdminDashboardView({
                 <button
                   type="button"
                   onClick={() => setIsManageStaffModalOpen(false)}
-                  className="text-[var(--color-text-muted)] hover:text-[var(--color-text)] cursor-pointer"
+                  aria-label="ปิดหน้าต่างจัดการพนักงาน"
+                  title="ปิดหน้าต่าง"
+                  className="text-[var(--color-text-muted)] hover:text-[var(--color-text)] min-w-[44px] min-h-[44px] flex items-center justify-center -mr-2 rounded-lg cursor-pointer"
                 >
                   ✕
                 </button>
@@ -833,7 +864,7 @@ export function AdminDashboardView({
                               <p className="text-sm font-bold text-[var(--color-text)] leading-tight">{user.name}</p>
                               <p className="text-[10px] text-[var(--color-text-subtle)] mt-0.5">{user.email}</p>
                             </div>
-                            <button onClick={() => setSelectedStaffIds(prev => prev.filter(id => id !== user.id))} className="text-rose-700 text-xs px-2 py-1 rounded bg-rose-50 hover:bg-rose-100 font-semibold cursor-pointer">นำออก</button>
+                            <button onClick={() => setSelectedStaffIds(prev => prev.filter(id => id !== user.id))} className="text-rose-700 text-xs min-h-[44px] min-w-[44px] sm:min-h-[28px] sm:min-w-0 inline-flex items-center justify-center px-3 py-2 sm:px-2 sm:py-1 rounded-lg bg-rose-50 hover:bg-rose-100 font-semibold cursor-pointer whitespace-nowrap transition-colors">นำออก</button>
                           </div>
                         ))}
                       </div>
@@ -853,7 +884,7 @@ export function AdminDashboardView({
                             <div>
                               <p className="text-sm font-bold text-[var(--color-text)] leading-tight">{user.name}</p>
                             </div>
-                            <button onClick={() => setSelectedStaffIds(prev => prev.filter(id => id !== user.id))} className="text-rose-700 text-xs px-2 py-1 rounded bg-rose-50 hover:bg-rose-100 font-semibold cursor-pointer">นำออก</button>
+                            <button onClick={() => setSelectedStaffIds(prev => prev.filter(id => id !== user.id))} className="text-rose-700 text-xs min-h-[44px] min-w-[44px] sm:min-h-[28px] sm:min-w-0 inline-flex items-center justify-center px-3 py-2 sm:px-2 sm:py-1 rounded-lg bg-rose-50 hover:bg-rose-100 font-semibold cursor-pointer whitespace-nowrap transition-colors">นำออก</button>
                           </div>
                         ))}
                       </div>
@@ -874,7 +905,7 @@ export function AdminDashboardView({
                               <p className="text-sm font-bold text-[var(--color-text)] leading-tight">{user.name}</p>
                               <p className="text-[10px] text-[var(--color-text-subtle)]">{user.position || "พนักงาน"}</p>
                             </div>
-                            <button onClick={() => setSelectedStaffIds(prev => prev.filter(id => id !== user.id))} className="text-rose-700 text-xs px-2 py-1 rounded bg-rose-50 hover:bg-rose-100 font-semibold cursor-pointer">นำออก</button>
+                            <button onClick={() => setSelectedStaffIds(prev => prev.filter(id => id !== user.id))} className="text-rose-700 text-xs min-h-[44px] min-w-[44px] sm:min-h-[28px] sm:min-w-0 inline-flex items-center justify-center px-3 py-2 sm:px-2 sm:py-1 rounded-lg bg-rose-50 hover:bg-rose-100 font-semibold cursor-pointer whitespace-nowrap transition-colors">นำออก</button>
                           </div>
                         ))}
                       </div>
@@ -887,8 +918,10 @@ export function AdminDashboardView({
                   <div className="p-4 border-b border-[var(--color-border)]">
                     <h4 className="font-semibold text-[var(--color-text)]">รายชื่อพนักงานในระบบ</h4>
                     <input
+                      id="staff-search-input"
                       type="text"
                       placeholder="ค้นหาชื่อ หรืออีเมล..."
+                      aria-label="ค้นหาชื่อหรืออีเมลพนักงานในระบบ"
                       value={staffSearchQuery}
                       onChange={(e) => setStaffSearchQuery(e.target.value)}
                       className="mt-2 w-full bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-amber-400 transition-colors"
@@ -914,7 +947,7 @@ export function AdminDashboardView({
                           <button
                             type="button"
                             onClick={() => setSelectedStaffIds(prev => [...prev, user.id])}
-                            className="bg-[var(--color-brown)] hover:bg-[var(--color-brown-light)] text-amber-300 text-[11px] font-bold px-3 py-1.5 rounded-lg cursor-pointer shadow-xs"
+                            className="bg-[var(--color-brown)] hover:bg-[var(--color-brown-light)] text-amber-300 text-[11px] font-bold min-h-[44px] min-w-[44px] sm:min-h-[32px] sm:min-w-0 inline-flex items-center justify-center px-3.5 py-2.5 sm:px-3 sm:py-1.5 rounded-lg cursor-pointer shadow-xs whitespace-nowrap"
                           >
                             + เพิ่มเข้าสาขา
                           </button>
@@ -937,9 +970,9 @@ export function AdminDashboardView({
                 <button
                   type="button"
                   onClick={() => setIsManageStaffModalOpen(false)}
-                  className="px-6 py-2.5 bg-[var(--color-surface)] hover:bg-[#F2E7DC] text-[var(--color-text-muted)] border border-[var(--color-border)] rounded-xl text-sm font-bold transition-all cursor-pointer"
+                  className="px-6 py-2.5 bg-[var(--color-surface)] hover:bg-[var(--color-border-subtle)] text-[var(--color-text-muted)] border border-[var(--color-border)] rounded-xl text-sm font-bold transition-all cursor-pointer"
                 >
-                  ยกเลิก
+                  ยกเลิกโดยไม่บันทึก
                 </button>
                 <button
                   type="button"
@@ -962,7 +995,9 @@ export function AdminDashboardView({
                 <button
                   type="button"
                   onClick={() => setIsManageTasksModalOpen(false)}
-                  className="text-[var(--color-text-muted)] hover:text-[var(--color-text)] cursor-pointer"
+                  aria-label="ปิดหน้าต่างกำหนดขอบเขตงาน"
+                  title="ปิดหน้าต่าง"
+                  className="text-[var(--color-text-muted)] hover:text-[var(--color-text)] min-w-[44px] min-h-[44px] flex items-center justify-center -mr-2 rounded-lg cursor-pointer"
                 >
                   ✕
                 </button>
@@ -974,8 +1009,10 @@ export function AdminDashboardView({
                   <div className="p-4 border-b border-[var(--color-border)]">
                     <h4 className="font-semibold text-emerald-700">งานที่สาขานี้ต้องทำ</h4>
                     <input
+                      id="assigned-task-search-input"
                       type="text"
                       placeholder="ค้นหาชื่องานที่มอบหมายแล้ว..."
+                      aria-label="ค้นหาชื่องานที่มอบหมายแล้ว"
                       value={assignedTaskSearchQuery}
                       onChange={(e) => setAssignedTaskSearchQuery(e.target.value)}
                       className="mt-2 w-full bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-subtle)] focus:outline-none focus:border-amber-400 transition-colors"
@@ -997,7 +1034,7 @@ export function AdminDashboardView({
                               <p className="text-sm font-bold text-[var(--color-text)] leading-tight">{t.name}</p>
                               <p className="text-[10px] text-[var(--color-text-subtle)] mt-0.5">{t.shift} | {t.start || "ตามกำหนด"}</p>
                             </div>
-                            <button onClick={() => setSelectedTaskIds(prev => prev.filter(id => id !== t.id))} className="text-rose-700 text-xs px-2 py-1 rounded bg-rose-50 hover:bg-rose-100 font-semibold cursor-pointer">นำออก</button>
+                            <button onClick={() => setSelectedTaskIds(prev => prev.filter(id => id !== t.id))} className="text-rose-700 text-xs min-h-[44px] min-w-[44px] sm:min-h-[28px] sm:min-w-0 inline-flex items-center justify-center px-3 py-2 sm:px-2 sm:py-1 rounded-lg bg-rose-50 hover:bg-rose-100 font-semibold cursor-pointer whitespace-nowrap transition-colors">นำออก</button>
                           </div>
                         ))}
                       </div>
@@ -1018,7 +1055,7 @@ export function AdminDashboardView({
                               <p className="text-sm font-bold text-[var(--color-text)] leading-tight">{t.name}</p>
                               <p className="text-[10px] text-[var(--color-text-subtle)] mt-0.5">{t.shift} | {t.start || "ตามกำหนด"}</p>
                             </div>
-                            <button onClick={() => setSelectedTaskIds(prev => prev.filter(id => id !== t.id))} className="text-rose-700 text-xs px-2 py-1 rounded bg-rose-50 hover:bg-rose-100 font-semibold cursor-pointer">นำออก</button>
+                            <button onClick={() => setSelectedTaskIds(prev => prev.filter(id => id !== t.id))} className="text-rose-700 text-xs min-h-[44px] min-w-[44px] sm:min-h-[28px] sm:min-w-0 inline-flex items-center justify-center px-3 py-2 sm:px-2 sm:py-1 rounded-lg bg-rose-50 hover:bg-rose-100 font-semibold cursor-pointer whitespace-nowrap transition-colors">นำออก</button>
                           </div>
                         ))}
                       </div>
@@ -1039,7 +1076,7 @@ export function AdminDashboardView({
                               <p className="text-sm font-bold text-[var(--color-text)] leading-tight">{t.name}</p>
                               <p className="text-[10px] text-[var(--color-text-subtle)] mt-0.5">{t.shift} | {t.start || "ตามกำหนด"}</p>
                             </div>
-                            <button onClick={() => setSelectedTaskIds(prev => prev.filter(id => id !== t.id))} className="text-rose-700 text-xs px-2 py-1 rounded bg-rose-50 hover:bg-rose-100 font-semibold cursor-pointer">นำออก</button>
+                            <button onClick={() => setSelectedTaskIds(prev => prev.filter(id => id !== t.id))} className="text-rose-700 text-xs min-h-[44px] min-w-[44px] sm:min-h-[28px] sm:min-w-0 inline-flex items-center justify-center px-3 py-2 sm:px-2 sm:py-1 rounded-lg bg-rose-50 hover:bg-rose-100 font-semibold cursor-pointer whitespace-nowrap transition-colors">นำออก</button>
                           </div>
                         ))}
                       </div>
@@ -1052,8 +1089,10 @@ export function AdminDashboardView({
                   <div className="p-4 border-b border-[var(--color-border)]">
                     <h4 className="font-semibold text-[var(--color-text)]">งานทั้งหมดในระบบกลาง</h4>
                     <input
+                      id="central-task-search-input"
                       type="text"
                       placeholder="ค้นหาชื่องาน..."
+                      aria-label="ค้นหาชื่องานทั้งหมดในระบบกลาง"
                       value={taskSearchQuery}
                       onChange={(e) => setTaskSearchQuery(e.target.value)}
                       className="mt-2 w-full bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-subtle)] focus:outline-none focus:border-amber-400 transition-colors"
@@ -1073,7 +1112,7 @@ export function AdminDashboardView({
                           <button
                             type="button"
                             onClick={() => setSelectedTaskIds(prev => [...prev, t.id])}
-                            className="bg-[var(--color-brown)] hover:bg-[var(--color-brown-light)] text-amber-300 text-[11px] font-bold px-3 py-1.5 rounded-lg cursor-pointer flex-shrink-0 ml-2 shadow-xs"
+                            className="bg-[var(--color-brown)] hover:bg-[var(--color-brown-light)] text-amber-300 text-[11px] font-bold min-h-[44px] min-w-[44px] sm:min-h-[32px] sm:min-w-0 inline-flex items-center justify-center px-3.5 py-2.5 sm:px-3 sm:py-1.5 rounded-lg cursor-pointer flex-shrink-0 ml-2 shadow-xs whitespace-nowrap"
                           >
                             + มอบหมาย
                           </button>
@@ -1095,9 +1134,9 @@ export function AdminDashboardView({
                 <button
                   type="button"
                   onClick={() => setIsManageTasksModalOpen(false)}
-                  className="px-6 py-2.5 bg-[var(--color-surface)] hover:bg-[#F2E7DC] text-[var(--color-text-muted)] border border-[var(--color-border)] rounded-xl text-sm font-bold transition-all cursor-pointer"
+                  className="px-6 py-2.5 bg-[var(--color-surface)] hover:bg-[var(--color-border-subtle)] text-[var(--color-text-muted)] border border-[var(--color-border)] rounded-xl text-sm font-bold transition-all cursor-pointer"
                 >
-                  ยกเลิก
+                  ยกเลิกโดยไม่บันทึก
                 </button>
                 <button
                   type="button"
@@ -1120,7 +1159,9 @@ export function AdminDashboardView({
                 <button
                   type="button"
                   onClick={() => setIsCreateTaskModalOpen(false)}
-                  className="text-[var(--color-text-muted)] hover:text-[var(--color-text)] cursor-pointer"
+                  aria-label="ปิดหน้าต่างเพิ่มงานใหม่"
+                  title="ปิดหน้าต่าง"
+                  className="text-[var(--color-text-muted)] hover:text-[var(--color-text)] min-w-[44px] min-h-[44px] flex items-center justify-center -mr-2 rounded-lg cursor-pointer"
                 >
                   ✕
                 </button>
@@ -1129,10 +1170,11 @@ export function AdminDashboardView({
               <form onSubmit={handleCreateTask}>
                 <div className="p-6 space-y-4">
                   <div>
-                    <label className="block text-xs font-semibold text-[var(--color-text-muted)] mb-1.5">
+                    <label htmlFor="create-task-name" className="block text-xs font-semibold text-[var(--color-text-muted)] mb-1.5">
                       ชื่อรายการงาน <span className="text-rose-500">*</span>
                     </label>
                     <input
+                      id="create-task-name"
                       type="text"
                       value={newTaskName}
                       onChange={(e) => setNewTaskName(e.target.value)}
@@ -1144,10 +1186,11 @@ export function AdminDashboardView({
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-semibold text-[var(--color-text-muted)] mb-1.5">
+                      <label htmlFor="create-task-role" className="block text-xs font-semibold text-[var(--color-text-muted)] mb-1.5">
                         ตำแหน่งงาน <span className="text-rose-500">*</span>
                       </label>
                       <select
+                        id="create-task-role"
                         value={newTaskRole}
                         onChange={(e) => setNewTaskRole(e.target.value as any)}
                         className="bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-xl px-4 py-2.5 text-sm text-[var(--color-text)] focus:outline-none focus:border-amber-400 w-full transition-all cursor-pointer"
@@ -1159,10 +1202,11 @@ export function AdminDashboardView({
                     </div>
 
                     <div>
-                      <label className="block text-xs font-semibold text-[var(--color-text-muted)] mb-1.5">
+                      <label htmlFor="create-task-shift" className="block text-xs font-semibold text-[var(--color-text-muted)] mb-1.5">
                         กะงาน <span className="text-rose-500">*</span>
                       </label>
                       <select
+                        id="create-task-shift"
                         value={newTaskShift}
                         onChange={(e) => setNewTaskShift(e.target.value as any)}
                         className="bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-xl px-4 py-2.5 text-sm text-[var(--color-text)] focus:outline-none focus:border-amber-400 w-full transition-all cursor-pointer"
@@ -1176,10 +1220,11 @@ export function AdminDashboardView({
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-semibold text-[var(--color-text-muted)] mb-1.5">
+                      <label htmlFor="create-task-start" className="block text-xs font-semibold text-[var(--color-text-muted)] mb-1.5">
                         เวลาเริ่ม (Optional)
                       </label>
                       <input
+                        id="create-task-start"
                         type="time"
                         value={newTaskStart}
                         onChange={(e) => setNewTaskStart(e.target.value)}
@@ -1188,10 +1233,11 @@ export function AdminDashboardView({
                     </div>
 
                     <div>
-                      <label className="block text-xs font-semibold text-[var(--color-text-muted)] mb-1.5">
+                      <label htmlFor="create-task-end" className="block text-xs font-semibold text-[var(--color-text-muted)] mb-1.5">
                         เวลาสิ้นสุด (Optional)
                       </label>
                       <input
+                        id="create-task-end"
                         type="time"
                         value={newTaskEnd}
                         onChange={(e) => setNewTaskEnd(e.target.value)}
@@ -1205,9 +1251,9 @@ export function AdminDashboardView({
                   <button
                     type="button"
                     onClick={() => setIsCreateTaskModalOpen(false)}
-                    className="px-6 py-2.5 bg-[var(--color-surface)] hover:bg-[#F2E7DC] text-[var(--color-text-muted)] border border-[var(--color-border)] rounded-xl text-sm font-bold transition-all cursor-pointer"
+                    className="px-6 py-2.5 bg-[var(--color-surface)] hover:bg-[var(--color-border-subtle)] text-[var(--color-text-muted)] border border-[var(--color-border)] rounded-xl text-sm font-bold transition-all cursor-pointer"
                   >
-                    ยกเลิก
+                    ยกเลิกการเพิ่มงาน
                   </button>
                   <button
                     type="submit"
