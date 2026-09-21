@@ -52,7 +52,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             {children}
           </main>
         </AppProvider>
-      </body>
+      {/* impeccable-live-start */}
+<script src="http://localhost:8400/live.js?token=7f79fb0d-9749-48c7-8cff-1324af62f707"></script>
+{/* impeccable-live-end */}
+</body>
     </html>
   );
 }

@@ -36,7 +36,8 @@ export default function PortalPage() {
                     <h2 className="text-lg sm:text-xl font-bold text-[var(--color-text)] tracking-tight">
                       พนักงานร้านสาขา (Floor Staff)
                     </h2>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-950 border border-amber-300 font-mono">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold leading-5 bg-amber-500 text-[#2b1413] border border-amber-600 shadow-xs">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#2b1413] shrink-0" aria-hidden="true" />
                       หน้าร้าน
                     </span>
                   </div>
@@ -75,7 +76,8 @@ export default function PortalPage() {
                     <h2 className="text-base sm:text-lg font-bold text-[var(--color-text)] tracking-tight">
                       ผู้จัดการ & กรรมการบริหาร (Management & Audit)
                     </h2>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[var(--color-surface-2)] text-[var(--color-primary)] dark:text-amber-300 border border-[var(--color-border)]">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold leading-5 bg-[var(--color-primary)] text-amber-200 dark:bg-amber-950 dark:text-amber-200 border border-[var(--color-primary-dim)] dark:border-amber-800 shadow-xs">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" aria-hidden="true" />
                       ตรวจรับรอง
                     </span>
                   </div>
