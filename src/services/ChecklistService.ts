@@ -404,7 +404,7 @@ export class ChecklistService implements IChecklistService {
     }
   }
 
-  async getPositionShiftsStatus(position: string): Promise<{
+  async getPositionShiftsStatus(position: string, userId?: string): Promise<{
     success: boolean;
     statuses?: Record<ShiftType, { status: "completed" | "incomplete" | "none"; total: number; done: number }>;
     error?: string;
@@ -415,16 +415,20 @@ export class ChecklistService implements IChecklistService {
       const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0);
       const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
 
+      const whereConditions = [
+        eq(shiftSession.task_role, taskRole),
+        gte(shiftSession.start, startOfDay),
+        lte(shiftSession.start, endOfDay),
+      ];
+
+      if (userId && isValidUuid(userId)) {
+        whereConditions.push(eq(shiftSession.user, userId));
+      }
+
       const todaySessions = await this.db
         .select()
         .from(shiftSession)
-        .where(
-          and(
-            eq(shiftSession.task_role, taskRole),
-            gte(shiftSession.start, startOfDay),
-            lte(shiftSession.start, endOfDay)
-          )
-        )
+        .where(and(...whereConditions))
         .orderBy(desc(shiftSession.start));
 
       const result: Record<ShiftType, { status: "completed" | "incomplete" | "none"; total: number; done: number }> = {

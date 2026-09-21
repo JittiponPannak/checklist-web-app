@@ -33,12 +33,15 @@ export function ShiftSelectPage({
   const [showConfetti, setShowConfetti] = useState(false);
 
   useEffect(() => {
-    setInternalSessions(getSessions());
-  }, []);
+    const rawSessions = getSessions();
+    setInternalSessions(rawSessions.filter((s) => s.userId === user.id));
+  }, [user.id]);
 
   useEffect(() => {
     if (user.position) {
-      getPositionShiftsStatusAction(user.position)
+      setDbStatuses(null);
+      setChosenShift(null);
+      getPositionShiftsStatusAction(user.position, user.id)
         .then((res) => {
           if (res.success && res.statuses) {
             setDbStatuses(res.statuses);
@@ -60,7 +63,7 @@ export function ShiftSelectPage({
         })
         .catch(console.error);
     }
-  }, [user.position]);
+  }, [user.position, user.id]);
 
   const sessions =
     propSessions && propSessions.length > 0
@@ -188,7 +191,8 @@ export function ShiftSelectPage({
             const positionSessions = sessions.filter(
               (sess) =>
                 sess.shift === s.id &&
-                sess.userPosition?.trim() === user.position?.trim()
+                sess.userPosition?.trim() === user.position?.trim() &&
+                sess.userId === user.id
             );
 
             const todaySession = positionSessions.find(
