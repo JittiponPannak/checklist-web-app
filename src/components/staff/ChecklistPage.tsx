@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { ShiftSession, ShiftType } from "../../types";
+import { useState, useEffect } from "react";
+import { ChecklistItem, ShiftSession, ShiftType } from "../../types";
 import { fmtTime, getSelectedShift } from "../../data/storage";
 import { secureGetItem, secureSetItem, secureRemoveItem } from "../../utils/crypto";
 import { getShiftBadge } from "../common/Badge";
@@ -96,29 +96,43 @@ export function ChecklistPage({
     () => setShowExitConfirm(false)
   );
 
+  const [items, setItems] = useState<ChecklistItem[]>(session.items || []);
   const [shiftCompleted, setShiftCompleted] = useState<boolean>(Boolean(session.completedAt));
 
-  const total = session.items.length;
-  const done = session.items.filter((i) => i.completedAt).length;
+  useEffect(() => {
+    if (session.items) {
+      setItems(session.items);
+    }
+  }, [session.items]);
+
+  useEffect(() => {
+    setShiftCompleted(Boolean(session.completedAt));
+  }, [session.completedAt]);
+
+  const total = items.length;
+  const done = items.filter((i) => i.completedAt).length;
   const progress = total > 0 ? Math.round((done / total) * 100) : 0;
   const allDone = progress === 100;
 
   const canContinueShift = hasNextShift && progress === 100 && !shiftCompleted;
   const canFinishShift = progress === 100 && !shiftCompleted;
 
-  const filteredItems = session.items.filter((i) => {
+  const filteredItems = items.filter((i) => {
     if (filter === "pending") return !i.completedAt;
     if (filter === "done") return !!i.completedAt;
     return true;
   });
 
   function toggleItem(id: string) {
-    if (shiftCompleted) return;
-    const updated = session.items.map((item) =>
+    const updated = items.map((item) =>
       item.id === id ? { ...item, completedAt: item.completedAt ? null : new Date().toISOString() } : item
     );
-    const allComplete = updated.every((i) => i.completedAt);
-    let updatedSession = { ...session, items: updated };
+    setItems(updated);
+    if (shiftCompleted) {
+      setShiftCompleted(false);
+    }
+    const allComplete = updated.length > 0 && updated.every((i) => i.completedAt);
+    let updatedSession = { ...session, completedAt: null, items: updated };
     if (allComplete && !session.notified) {
       updatedSession = { ...updatedSession, notified: true };
     }
@@ -298,11 +312,34 @@ export function ChecklistPage({
           )}
         </div>
 
+        {/* Shift Completed Notice Banner */}
+        {shiftCompleted && (
+          <div className="p-3.5 sm:p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+            <div className="flex items-center gap-2.5 text-xs sm:text-sm text-amber-950 dark:text-amber-200">
+              <Sparkles size={18} className="text-amber-600 shrink-0" />
+              <div>
+                <p className="font-extrabold">กะการทำงานนี้ได้รับการบันทึกจบกะแล้ว</p>
+                <p className="text-xs text-[var(--color-text-muted)] mt-0.5">คุณสามารถคลิกที่รายการด้านล่างเพื่อตรวจเช็คหรือแก้ไขต่อได้ตลอดเวลา</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setShiftCompleted(false);
+                onUpdate({ ...session, completedAt: null });
+              }}
+              className="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-amber-950 font-extrabold text-xs transition-colors cursor-pointer shrink-0 shadow-2xs"
+            >
+              ปลดล็อคเพื่อทำรายการต่อ
+            </button>
+          </div>
+        )}
+
         {/* Tactile Checklist Cards */}
         <div className="space-y-2.5" role="group" aria-label="รายการตรวจสอบประจำกะ">
           {filteredItems.map((item, idx) => {
             const isDone = !!item.completedAt;
-            const originalIndex = session.items.findIndex((i) => i.id === item.id);
+            const originalIndex = items.findIndex((i) => i.id === item.id);
             const prevItem = idx > 0 ? filteredItems[idx - 1] : null;
             const showCategoryHeader = item.category && (!prevItem || prevItem.category !== item.category);
 
@@ -325,11 +362,8 @@ export function ChecklistPage({
                   role="checkbox"
                   aria-checked={isDone}
                   onClick={() => toggleItem(item.id)}
-                  disabled={shiftCompleted}
                   className={`w-full group flex items-start gap-3.5 p-4 rounded-2xl border text-left transition-all duration-150 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/50 active:scale-[0.99] ${
-                    shiftCompleted
-                      ? "cursor-not-allowed bg-[var(--color-surface)] border-[var(--color-border)]"
-                      : isDone
+                    isDone
                       ? "bg-[var(--color-surface-2)]/80 border-[var(--color-border)] shadow-2xs"
                       : "bg-[var(--color-surface)] border-[var(--color-border)] hover:border-amber-400 hover:bg-amber-50/70 dark:hover:bg-amber-950/20 shadow-xs hover:shadow-sm"
                   }`}

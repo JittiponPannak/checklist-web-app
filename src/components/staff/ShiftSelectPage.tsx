@@ -241,7 +241,7 @@ export function ShiftSelectPage({
                     : "incomplete";
 
             const isLoading = dbStatuses === null;
-            const isDisabled = isLoading || checkStatus === "completed";
+            const isDisabled = isLoading;
             const isChecked = isDisabled ? false : chosenShift === s.id;
 
             const toggleSelect = () => {
@@ -249,17 +249,17 @@ export function ShiftSelectPage({
               setChosenShift(s.id as ShiftType);
             };
 
-            const containerTheme = isDisabled
-              ? checkStatus === "completed"
-                ? "border-2 border-emerald-400 bg-emerald-50 dark:border-emerald-700 dark:bg-emerald-950/40"
-                : "border-2 border-[var(--color-border)] bg-[var(--color-surface-2)] text-[var(--color-text-muted)]"
+            const containerTheme = isLoading
+              ? "border-2 border-[var(--color-border)] bg-[var(--color-surface-2)] text-[var(--color-text-muted)] opacity-60"
               : isChecked
                 ? isMorn
                   ? "border-2 border-amber-500 bg-[var(--color-surface)] shadow-sm ring-2 ring-amber-400/50"
                   : "border-2 border-orange-500 bg-[var(--color-surface)] shadow-sm ring-2 ring-orange-400/50"
-                : isMorn
-                  ? "border-2 border-amber-300 hover:border-amber-500 bg-[var(--color-surface)] dark:border-amber-700 dark:hover:border-amber-500"
-                  : "border-2 border-orange-300 hover:border-orange-500 bg-[var(--color-surface)] dark:border-orange-700 dark:hover:border-orange-500";
+                : checkStatus === "completed"
+                  ? "border-2 border-emerald-400 bg-emerald-50/50 dark:border-emerald-700 dark:bg-emerald-950/20 hover:border-emerald-500"
+                  : isMorn
+                    ? "border-2 border-amber-300 hover:border-amber-500 bg-[var(--color-surface)] dark:border-amber-700 dark:hover:border-amber-500"
+                    : "border-2 border-orange-300 hover:border-orange-500 bg-[var(--color-surface)] dark:border-orange-700 dark:hover:border-orange-500";
 
             return (
               <div
