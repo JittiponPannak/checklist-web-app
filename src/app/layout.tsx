@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AppProvider } from "../context/AppContext";
@@ -12,6 +12,17 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f6f1e8" },
+    { media: "(prefers-color-scheme: dark)", color: "#18100f" },
+  ],
+};
 
 export const metadata: Metadata = {
   title: "Eater Egg Fresh Mart - ระบบเช็คลิสต์ประจำกะ",
@@ -52,10 +63,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             {children}
           </main>
         </AppProvider>
-      {/* impeccable-live-start */}
-<script src="http://localhost:8400/live.js?token=7f79fb0d-9749-48c7-8cff-1324af62f707"></script>
-{/* impeccable-live-end */}
-</body>
+      </body>
     </html>
   );
 }

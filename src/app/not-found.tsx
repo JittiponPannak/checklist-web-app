@@ -21,7 +21,7 @@ export default function NotFound() {
         <div className="flex flex-col sm:flex-row gap-2.5">
           <Link
             href="/"
-            className="flex-1 py-2.5 min-h-[44px] rounded-xl bg-[var(--color-brown)] hover:bg-[var(--color-brown-light)] text-amber-300 text-xs sm:text-sm font-semibold transition-colors flex items-center justify-center cursor-pointer shadow-sm"
+            className="flex-1 py-2.5 min-h-[44px] rounded-xl bg-[var(--color-brown)] hover:bg-[var(--color-brown-light)] text-amber-100 text-xs sm:text-sm font-bold transition-colors flex items-center justify-center cursor-pointer shadow-sm"
           >
             ไปหน้าแรก / เข้าสู่ระบบ
           </Link>

@@ -25,32 +25,32 @@ import {
 function getCategoryColor(category?: string) {
   if (!category) {
     return {
-      dot: "bg-amber-500",
-      text: "text-amber-900 dark:text-amber-300",
+      dot: "bg-amber-600",
+      text: "text-[var(--color-text)] font-extrabold",
     };
   }
   const cat = category.toLowerCase();
   if (cat.includes("แช่") || cat.includes("เย็น") || cat.includes("ตู้") || cat.includes("chill") || cat.includes("temp")) {
     return {
-      dot: "bg-sky-500",
-      text: "text-sky-900 dark:text-sky-300",
+      dot: "bg-sky-600",
+      text: "text-sky-950 dark:text-sky-200 font-extrabold",
     };
   }
   if (cat.includes("สด") || cat.includes("สินค้า") || cat.includes("stock") || cat.includes("สต็อก") || cat.includes("เรียง")) {
     return {
       dot: "bg-emerald-600",
-      text: "text-emerald-900 dark:text-emerald-300",
+      text: "text-emerald-950 dark:text-emerald-200 font-extrabold",
     };
   }
   if (cat.includes("ปิด") || cat.includes("สรุป") || cat.includes("ปลอดภัย") || cat.includes("เงิน")) {
     return {
-      dot: "bg-orange-500",
-      text: "text-orange-900 dark:text-orange-300",
+      dot: "bg-orange-600",
+      text: "text-orange-950 dark:text-orange-300 font-extrabold",
     };
   }
   return {
-    dot: "bg-amber-500",
-    text: "text-amber-900 dark:text-amber-300",
+    dot: "bg-amber-600",
+    text: "text-[var(--color-text)] font-extrabold",
   };
 }
 
@@ -153,18 +153,18 @@ export function ChecklistPage({
 
       <div className="w-full max-w-2xl space-y-4">
         {/* Top App Bar */}
-        <nav aria-label="แถบข้อมูลผู้ใช้งานและเครื่องมือ" className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl px-3 sm:px-4 py-2.5 sm:py-3 shadow-xs flex items-center justify-between gap-2 sm:gap-4">
+        <nav aria-label="แถบข้อมูลผู้ใช้งานและเครื่องมือ" className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl px-2.5 sm:px-4 py-2 sm:py-3 shadow-xs flex items-center justify-between gap-1.5 sm:gap-4">
           <div className="flex items-center gap-2 sm:gap-2.5 min-w-0 flex-1">
-            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[var(--color-amber-glow)] border border-amber-300 text-amber-800 flex items-center justify-center shrink-0">
-              <Store size={17} strokeWidth={2.2} />
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[var(--color-amber-glow)] border border-amber-300 text-amber-950 dark:text-amber-300 flex items-center justify-center shrink-0">
+              <Store size={18} strokeWidth={2.2} />
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="text-xs font-bold text-amber-900 truncate max-w-[120px] sm:max-w-none">
+                <span className="text-xs sm:text-sm font-extrabold text-[var(--color-text)] truncate max-w-[120px] sm:max-w-none">
                   {session.branchName || "สาขาหลัก"}
                 </span>
                 {session.userPosition && (
-                  <span className="text-[10px] font-semibold text-[var(--color-text-muted)] bg-[var(--color-surface-2)] px-2 py-0.5 rounded-full border border-[var(--color-border)] shrink-0">
+                  <span className="text-[11px] sm:text-xs font-semibold text-[var(--color-text)] bg-[var(--color-surface-2)] px-1.5 sm:px-2 py-0.5 rounded-full border border-[var(--color-border)] shrink-0">
                     {session.userPosition}
                   </span>
                 )}
@@ -175,7 +175,7 @@ export function ChecklistPage({
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
             <PointStreakBadge />
             <NotificationCenter />
             <ThemeToggle />
@@ -185,21 +185,21 @@ export function ChecklistPage({
                 type="button"
                 onClick={onOpenDashboard}
                 aria-label="เปิดหน้าแดชบอร์ด"
-                className="p-2 rounded-xl bg-[var(--color-surface-2)] border border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-border-subtle)] transition-colors cursor-pointer min-w-[44px] min-h-[44px] sm:min-w-[36px] sm:min-h-[36px] inline-flex items-center justify-center"
+                className="p-1.5 sm:p-2 rounded-xl bg-[var(--color-surface-2)] border border-[var(--color-border)] text-[var(--color-text)] hover:text-[var(--color-text)] hover:bg-[var(--color-border-subtle)] transition-colors cursor-pointer min-w-[36px] min-h-[36px] inline-flex items-center justify-center"
                 title="เปิดหน้าแดชบอร์ด"
               >
-                <LayoutDashboard size={17} />
+                <LayoutDashboard size={16} />
               </button>
             )}
 
             <button
               type="button"
               onClick={() => setShowExitConfirm(true)}
-              className="p-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-2)] text-[var(--color-text-muted)] hover:text-rose-700 hover:border-rose-200 hover:bg-rose-50 transition-colors cursor-pointer min-w-[44px] min-h-[44px] sm:min-w-[36px] sm:min-h-[36px] inline-flex items-center justify-center"
+              className="p-1.5 sm:p-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-2)] text-[var(--color-text)] hover:text-rose-700 hover:border-rose-300 hover:bg-rose-50 dark:hover:bg-rose-950/40 dark:hover:border-rose-700 transition-colors cursor-pointer min-w-[36px] min-h-[36px] inline-flex items-center justify-center"
               title="ออกจากหน้าเช็คลิสต์"
               aria-label="ออกจากหน้าเช็คลิสต์"
             >
-              <LogOut size={17} />
+              <LogOut size={16} />
             </button>
           </div>
         </nav>
@@ -209,16 +209,16 @@ export function ChecklistPage({
           <div className="flex items-center justify-between gap-4 mb-3">
             <div className="flex items-center gap-2 flex-wrap">
               {getShiftBadge(session.shift)}
-              <span className="text-xs font-mono text-[var(--color-text-muted)] flex items-center gap-1 font-medium">
-                <Clock size={12} className="text-amber-600" />
+              <span className="text-xs sm:text-sm font-mono text-[var(--color-text)] flex items-center gap-1 font-semibold">
+                <Clock size={14} className="text-amber-600" />
                 เริ่ม {fmtTime(session.startedAt)}
               </span>
             </div>
 
             <div className="flex items-center gap-1.5">
-              <span className="text-xs font-semibold text-[var(--color-text-muted)]">เสร็จสิ้น</span>
-              <span className="text-base sm:text-lg font-bold font-mono text-[var(--color-text)]">
-                {done}<span className="text-xs text-[var(--color-text-subtle)] font-normal">/{total}</span>
+              <span className="text-xs sm:text-sm font-bold text-[var(--color-text)]">เสร็จสิ้น</span>
+              <span className="text-base sm:text-lg font-extrabold font-mono text-[var(--color-text)]">
+                {done}<span className="text-xs sm:text-sm text-[var(--color-text-muted)] font-bold">/{total}</span>
               </span>
             </div>
           </div>
@@ -233,21 +233,21 @@ export function ChecklistPage({
             />
           </div>
 
-          <div className="mt-2.5 flex items-center justify-between text-xs">
-            <span className="font-medium text-[var(--color-text-muted)] flex items-center gap-1.5">
+          <div className="mt-2.5 flex items-center justify-between text-xs sm:text-sm">
+            <span className="font-semibold text-[var(--color-text)] flex items-center gap-1.5">
               {allDone ? (
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 font-semibold text-xs shadow-2xs">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/80 border border-emerald-300 dark:border-emerald-800 text-emerald-950 dark:text-emerald-200 font-bold text-xs shadow-2xs">
                   <Sparkles size={13} className="text-emerald-600 dark:text-emerald-400" />
                   <span>ร้านสด สะอาด พร้อมบริการ 100% ครบทุกข้อ!</span>
                 </span>
               ) : (
                 <>
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                  <span className="w-2 h-2 rounded-full bg-amber-500" />
                   <span>เหลืออีก {total - done} ข้อในการปฏิบัติงาน</span>
                 </>
               )}
             </span>
-            <span className={`font-mono font-bold text-xs ${allDone ? "text-emerald-700 dark:text-emerald-300" : "text-amber-900 dark:text-amber-300"}`}>
+            <span className={`font-mono font-black text-xs sm:text-sm ${allDone ? "text-emerald-700 dark:text-emerald-300" : "text-[var(--color-text)]"}`}>
               {progress}%
             </span>
           </div>
@@ -279,10 +279,10 @@ export function ChecklistPage({
                 aria-selected={filter === t}
                 tabIndex={filter === t ? 0 : -1}
                 onClick={() => setFilter(t)}
-                className={`flex-1 sm:flex-initial px-3.5 py-2.5 sm:py-2 min-h-[44px] sm:min-h-[34px] rounded-lg transition-all text-center cursor-pointer inline-flex items-center justify-center ${
+                className={`flex-1 sm:flex-initial px-2 sm:px-3.5 py-2 min-h-[40px] sm:min-h-[34px] rounded-lg transition-all text-center cursor-pointer inline-flex items-center justify-center truncate ${
                   filter === t
-                    ? "bg-[var(--color-brown)] text-amber-300 shadow-xs font-bold"
-                    : "text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-black/5"
+                    ? "bg-[var(--color-brown)] text-amber-200 dark:bg-amber-400 dark:text-amber-950 shadow-xs font-bold"
+                    : "text-[var(--color-text)] hover:bg-black/5 dark:hover:bg-white/5 font-semibold"
                 }`}
               >
                 {t === "all" ? `ทั้งหมด (${total})` : t === "pending" ? `ที่ต้องทำ (${total - done})` : `เสร็จแล้ว (${done})`}
@@ -328,13 +328,13 @@ export function ChecklistPage({
                   disabled={shiftCompleted}
                   className={`w-full group flex items-start gap-3.5 p-4 rounded-2xl border text-left transition-all duration-150 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/50 active:scale-[0.99] ${
                     shiftCompleted
-                      ? "opacity-80 cursor-not-allowed bg-[var(--color-surface)] border-[var(--color-border)]"
+                      ? "cursor-not-allowed bg-[var(--color-surface)] border-[var(--color-border)]"
                       : isDone
                       ? "bg-[var(--color-surface-2)]/80 border-[var(--color-border)] shadow-2xs"
                       : "bg-[var(--color-surface)] border-[var(--color-border)] hover:border-amber-400 hover:bg-amber-50/70 dark:hover:bg-amber-950/20 shadow-xs hover:shadow-sm"
                   }`}
                 >
-                  {/* Checkbox Visual Toggle Target (min 44px hit region feel) */}
+                  {/* Checkbox Visual Toggle Target */}
                   <div
                     className={`mt-0.5 w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-transform duration-150 group-active:scale-90 ${
                       isDone
@@ -350,8 +350,8 @@ export function ChecklistPage({
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start gap-2">
                       <span
-                        className={`text-xs font-mono font-bold select-none pt-0.5 shrink-0 ${
-                          isDone ? "text-amber-800 dark:text-amber-300" : "text-[var(--color-text-subtle)]"
+                        className={`text-xs font-mono select-none pt-0.5 shrink-0 ${
+                          isDone ? "text-[var(--color-text-muted)] font-bold" : "text-[var(--color-text)] font-extrabold"
                         }`}
                         aria-hidden="true"
                       >
@@ -360,7 +360,7 @@ export function ChecklistPage({
                       <p
                         className={`text-sm sm:text-base leading-snug transition-all ${
                           isDone
-                            ? "text-[var(--color-text-muted)] line-through"
+                            ? "text-[var(--color-text-muted)] line-through font-medium"
                             : "text-[var(--color-text)] font-medium"
                         }`}
                       >
@@ -385,11 +385,11 @@ export function ChecklistPage({
                       }
 
                       return (
-                        <div className="flex items-center gap-1.5 mt-2 text-[11px] font-mono text-emerald-800 font-medium pl-6">
-                          <CheckCircle2 size={12} className="text-emerald-700" />
+                        <div className="flex flex-wrap items-center gap-1.5 mt-2 text-xs font-mono text-emerald-900 dark:text-emerald-300 font-bold pl-0 sm:pl-6">
+                          <CheckCircle2 size={13} className="text-emerald-700" />
                           <span>บันทึกเมื่อ {fmtTime(item.completedAt)}</span>
                           {isLate && (
-                            <span className="text-rose-800 dark:text-rose-300 font-bold bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 px-1.5 py-0.5 rounded-md ml-1">
+                            <span className="text-rose-950 dark:text-rose-200 font-bold bg-rose-100 dark:bg-rose-950/80 border border-rose-300 dark:border-rose-800 px-1.5 py-0.5 rounded-md ml-1">
                               (ล่าช้า)
                             </span>
                           )}
@@ -404,13 +404,13 @@ export function ChecklistPage({
 
           {filteredItems.length === 0 && (
             <div className="p-8 text-center bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl shadow-xs">
-              <div className="w-12 h-12 rounded-full bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto mb-2.5">
+              <div className="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-950/80 border border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 flex items-center justify-center mx-auto mb-2.5">
                 {filter === "pending" ? <Sparkles size={24} /> : <Check size={24} />}
               </div>
-              <p className="text-sm font-bold text-[var(--color-text)]">
+              <p className="text-sm sm:text-base font-extrabold text-[var(--color-text)]">
                 {filter === "pending" ? "ยอดเยี่ยม! ตรวจเช็คครบถ้วนทุกข้อแล้ว" : "ไม่มีรายการในหมวดนี้"}
               </p>
-              <p className="text-xs text-[var(--color-text-muted)] mt-1 max-w-sm mx-auto">
+              <p className="text-xs sm:text-sm text-[var(--color-text-muted)] mt-1.5 max-w-sm mx-auto leading-relaxed font-medium">
                 {filter === "pending"
                   ? "ไม่มีงานค้างในหมวดนี้แล้ว คุณสามารถตรวจทานข้ออื่นหรือกดส่งมอบงานจบกะได้ทันที"
                   : "ยังไม่มีรายการที่ได้รับการบันทึก"}
@@ -421,35 +421,35 @@ export function ChecklistPage({
       </div>
 
       {/* Sticky Bottom Ergonomic Action Dock (Floor Staff Thumb Zone) */}
-      <footer className="fixed bottom-0 left-0 right-0 z-40 bg-[var(--color-surface)]/95 backdrop-blur-md border-t border-[var(--color-border)] p-3 sm:p-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-md">
-        <div className="max-w-2xl mx-auto flex items-center justify-between gap-2.5 sm:gap-3">
+      <footer className="fixed bottom-0 left-0 right-0 z-40 bg-[var(--color-surface)]/95 backdrop-blur-md border-t border-[var(--color-border)] p-2.5 sm:p-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-md">
+        <div className="max-w-2xl mx-auto flex items-center justify-between gap-2 sm:gap-3">
           {/* Progress pill indicator */}
           <div className="flex flex-col shrink-0">
-            <span className="text-[10px] sm:text-[11px] font-semibold text-[var(--color-text-muted)]">
+            <span className="text-[11px] sm:text-xs font-bold text-[var(--color-text)] leading-tight">
               ความคืบหน้ารวม
             </span>
-            <span className="text-xs sm:text-sm font-bold font-mono text-[var(--color-text)]">
-              {progress}% <span className="text-[11px] text-[var(--color-text-subtle)] font-medium">({done}/{total})</span>
+            <span className="text-xs sm:text-sm font-extrabold font-mono text-[var(--color-text)]">
+              {progress}% <span className="text-[11px] sm:text-xs text-[var(--color-text-muted)] font-bold">({done}/{total})</span>
             </span>
           </div>
 
-          <div className="flex items-center gap-2 min-w-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1 justify-end">
             {/* Optional "ต่อกะ" Toggle for Morning Shift */}
             {hasNextShift && !shiftCompleted && (
               <button
                 type="button"
                 disabled={!canContinueShift}
                 onClick={handleToggleContinue}
-                className={`text-xs px-2.5 sm:px-3 py-2.5 rounded-xl border font-semibold flex items-center gap-1 transition-colors min-h-[44px] cursor-pointer shrink-0 ${
+                className={`text-xs sm:text-sm px-2 sm:px-3 py-2 sm:py-2.5 rounded-xl border font-bold flex items-center gap-1 transition-colors min-h-[40px] sm:min-h-[44px] cursor-pointer shrink-0 ${
                   !canContinueShift
-                    ? "bg-[var(--color-surface-2)] text-[var(--color-text-subtle)] border-[var(--color-border)] opacity-60 cursor-not-allowed"
+                    ? "bg-[var(--color-surface-2)] text-[var(--color-text-muted)] border-[var(--color-border)] cursor-not-allowed"
                     : continueShift
-                    ? "bg-[var(--color-brown)] text-amber-300 border-[var(--color-text)] shadow-xs"
-                    : "bg-[var(--color-surface)] text-amber-900 border-amber-300 hover:border-amber-400"
+                    ? "bg-[var(--color-brown)] text-amber-100 dark:bg-amber-400 dark:text-amber-950 border-[var(--color-text)] shadow-xs"
+                    : "bg-[var(--color-surface)] text-[var(--color-text)] border-[var(--color-border)] hover:border-amber-500"
                 }`}
                 title={canContinueShift ? "เลือกต่อกะบ่าย" : "ต้องครบ 100% ก่อนจึงจะเลือกต่อกะ"}
               >
-                <ArrowRight size={13} strokeWidth={2} />
+                <ArrowRight size={14} strokeWidth={2.2} />
                 <span className="hidden sm:inline">{continueShift ? "ต่อกะบ่าย (เลือกแล้ว)" : "ต่อกะบ่าย"}</span>
                 <span className="sm:hidden">{continueShift ? "ต่อกะ ✓" : "ต่อกะ"}</span>
               </button>
@@ -460,17 +460,18 @@ export function ChecklistPage({
               type="button"
               disabled={!canFinishShift}
               onClick={() => setShowConfirm(true)}
-              className={`text-xs sm:text-sm px-3.5 sm:px-5 py-2.5 rounded-xl font-bold flex items-center justify-center gap-1.5 min-h-[44px] transition-all cursor-pointer shadow-xs truncate ${
+              className={`text-xs sm:text-sm px-2.5 sm:px-5 py-2 sm:py-2.5 rounded-xl font-extrabold flex items-center justify-center gap-1.5 min-h-[40px] sm:min-h-[44px] transition-all cursor-pointer shadow-xs min-w-0 truncate ${
                 !canFinishShift
-                  ? "bg-[var(--color-surface-2)] text-[var(--color-text-subtle)] border border-[var(--color-border)] opacity-60 cursor-not-allowed shadow-none"
+                  ? "bg-[var(--color-surface-2)] text-[var(--color-text-muted)] font-bold border border-[var(--color-border)] cursor-not-allowed shadow-none"
                   : "bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm hover:shadow-md active:scale-95 ring-2 ring-emerald-400/40"
               }`}
             >
               {!canFinishShift ? (
                 <>
                   <Lock size={14} className="shrink-0" />
-                  <span className="hidden sm:inline">ตรวจให้ครบทุกข้อเพื่อจบกะ </span>
-                  <span>(เหลือ {total - done} ข้อ)</span>
+                  <span className="hidden md:inline">ตรวจให้ครบทุกข้อเพื่อจบกะ </span>
+                  <span className="hidden sm:inline md:hidden">ตรวจให้ครบ </span>
+                  <span className="truncate">(เหลือ {total - done} ข้อ)</span>
                 </>
               ) : (
                 <>
@@ -499,20 +500,20 @@ export function ChecklistPage({
             className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-6 sm:p-7 w-full max-w-sm focus-visible:outline-none shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center mb-3.5 border border-amber-300">
+            <div className="w-12 h-12 rounded-2xl bg-amber-500 text-amber-950 flex items-center justify-center mb-3.5 shadow-xs">
               <Sparkles size={22} />
             </div>
 
-            <h2 id="confirm-shift-title" className="text-base sm:text-lg font-bold text-[var(--color-text)] mb-2">
+            <h2 id="confirm-shift-title" className="text-lg sm:text-xl font-extrabold text-[var(--color-text)] mb-2">
               ยืนยันการส่งมอบงานจบกะ?
             </h2>
-            <p className="text-sm text-[var(--color-text-muted)] mb-4 leading-relaxed">
+            <p className="text-sm text-[var(--color-text-muted)] mb-4 leading-relaxed font-medium">
               คุณได้ตรวจสอบเช็คลิสต์ครบถ้วนสมบูรณ์ 100% แล้ว เมื่อกดยืนยัน ระบบจะบันทึกผลและส่งแจ้งเตือนไปยังผู้จัดการร้านเพื่อรอรับรองผล
             </p>
 
             {continueShift && (
-              <div className="mb-5 p-3 rounded-xl bg-amber-50 border border-amber-300 text-amber-900 text-xs font-semibold flex items-center gap-2">
-                <Check size={14} className="text-amber-700 shrink-0" />
+              <div className="mb-5 p-3 rounded-xl bg-amber-100 dark:bg-amber-950/80 border border-amber-300 dark:border-amber-700 text-amber-950 dark:text-amber-200 text-xs font-bold flex items-center gap-2">
+                <Check size={14} className="text-amber-800 shrink-0" />
                 <span>เลือกต่อกะไว้: ระบบจะเริ่มเช็คลิสต์ของกะบ่ายให้อัตโนมัติ</span>
               </div>
             )}
@@ -521,14 +522,14 @@ export function ChecklistPage({
               <button
                 type="button"
                 onClick={() => setShowConfirm(false)}
-                className="flex-1 min-h-[44px] sm:min-h-[36px] py-2.5 rounded-xl border border-[var(--color-border)] text-xs sm:text-sm font-semibold text-[var(--color-text-muted)] hover:bg-[var(--color-surface-2)] transition-colors cursor-pointer"
+                className="flex-1 min-h-[44px] sm:min-h-[36px] py-2.5 rounded-xl border border-[var(--color-border)] text-xs sm:text-sm font-bold text-[var(--color-text)] hover:bg-[var(--color-surface-2)] transition-colors cursor-pointer"
               >
                 กลับไปตรวจทาน
               </button>
               <button
                 type="button"
                 onClick={endShift}
-                className="flex-1 min-h-[44px] sm:min-h-[36px] py-2.5 rounded-xl bg-[var(--color-brown)] hover:bg-[var(--color-brown-light)] text-amber-300 text-xs sm:text-sm font-bold transition-all shadow-sm cursor-pointer"
+                className="flex-1 min-h-[44px] sm:min-h-[36px] py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 dark:bg-amber-400 text-amber-950 text-xs sm:text-sm font-extrabold transition-all shadow-sm cursor-pointer"
               >
                 ส่งมอบงานจบกะ
               </button>
@@ -553,14 +554,14 @@ export function ChecklistPage({
             className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-6 sm:p-7 w-full max-w-sm focus-visible:outline-none shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 flex items-center justify-center mb-3.5">
+            <div className="w-12 h-12 rounded-2xl bg-rose-100 dark:bg-rose-950 border border-rose-300 dark:border-rose-800 text-rose-800 dark:text-rose-200 flex items-center justify-center mb-3.5 shadow-xs">
               <AlertCircle size={22} />
             </div>
             
-            <h2 id="exit-modal-title" className="text-base sm:text-lg font-bold text-[var(--color-text)] mb-2">
+            <h2 id="exit-modal-title" className="text-lg sm:text-xl font-extrabold text-[var(--color-text)] mb-2">
               ต้องการออกจากหน้าเช็คลิสต์?
             </h2>
-            <p className="text-sm text-[var(--color-text-muted)] mb-5 leading-relaxed">
+            <p className="text-sm text-[var(--color-text-muted)] mb-5 leading-relaxed font-medium">
               ความคืบหน้าข้อที่ตรวจเสร็จแล้วได้รับการบันทึกลงฐานข้อมูลเรียบร้อย คุณสามารถกลับมาตรวจต่อได้ตลอดเวลาก่อนหมดเวลากะ
             </p>
 
@@ -568,7 +569,7 @@ export function ChecklistPage({
               <button
                 type="button"
                 onClick={() => setShowExitConfirm(false)}
-                className="flex-1 min-h-[44px] sm:min-h-[36px] py-2.5 rounded-xl border border-[var(--color-border)] text-xs sm:text-sm font-semibold text-[var(--color-text-muted)] hover:bg-[var(--color-surface-2)] transition-colors cursor-pointer"
+                className="flex-1 min-h-[44px] sm:min-h-[36px] py-2.5 rounded-xl border border-[var(--color-border)] text-xs sm:text-sm font-bold text-[var(--color-text)] hover:bg-[var(--color-surface-2)] transition-colors cursor-pointer"
               >
                 อยู่ตรวจเช็คลิสต์ต่อ
               </button>
@@ -582,9 +583,9 @@ export function ChecklistPage({
                     window.location.href = "/shift";
                   }
                 }}
-                className="flex-1 min-h-[44px] sm:min-h-[36px] py-2.5 rounded-xl bg-rose-700 hover:bg-rose-800 text-white text-xs sm:text-sm font-bold transition-all shadow-sm cursor-pointer"
+                className="flex-1 min-h-[44px] sm:min-h-[36px] py-2.5 rounded-xl bg-rose-700 hover:bg-rose-800 text-white text-xs sm:text-sm font-extrabold transition-all shadow-sm cursor-pointer"
               >
-                ยืนยันออกจากกะ
+                ออกจากหน้างาน
               </button>
             </div>
           </div>

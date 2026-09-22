@@ -226,13 +226,13 @@ export function RefrigeratorConfigView({ user }: { user: User }) {
                             <div
                                 key={ref.id}
                                 className={`p-4 rounded-xl border transition-all ${ref.disable_check
-                                    ? "bg-[var(--color-surface-2)] border-[var(--color-border)] opacity-70"
+                                    ? "bg-[var(--color-surface-2)] border-[var(--color-border)] text-[var(--color-text-muted)]"
                                     : "bg-[var(--color-surface)] border-sky-200 dark:border-sky-800/80 hover:border-sky-400 dark:hover:border-sky-600 shadow-xs"
                                     }`}
                             >
                                 <div className="flex justify-between items-start mb-3">
                                     <div className="flex items-center gap-2">
-                                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center border shadow-2xs ${ref.disable_check ? "bg-rose-50 dark:bg-rose-950/50 border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-300" : "bg-sky-100 dark:bg-sky-950/60 border-sky-300 dark:border-sky-800 text-sky-900 dark:text-sky-300"}`}>
+                                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center border shadow-2xs ${ref.disable_check ? "bg-rose-50 dark:bg-rose-950/50 border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-200" : "bg-sky-100 dark:bg-sky-950/60 border-sky-300 dark:border-sky-800 text-sky-950 dark:text-sky-200"}`}>
                                             {ref.disable_check ? <AlertOctagon className="w-4 h-4" /> : <Snowflake className="w-4 h-4" />}
                                         </div>
                                         <div>
@@ -243,7 +243,7 @@ export function RefrigeratorConfigView({ user }: { user: User }) {
                                     </div>
                                     <button
                                         onClick={() => handleOpenEdit(ref)}
-                                        className="p-1.5 text-[var(--color-text-muted)] hover:text-amber-900 hover:bg-amber-100/70 dark:hover:bg-amber-950/50 dark:hover:text-amber-300 rounded-lg transition-colors cursor-pointer"
+                                        className="p-1.5 text-[var(--color-text-muted)] hover:text-amber-950 hover:bg-amber-100/70 dark:hover:bg-amber-950/50 dark:hover:text-amber-200 rounded-lg transition-colors cursor-pointer"
                                         title="แก้ไขข้อมูล"
                                     >
                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -255,12 +255,12 @@ export function RefrigeratorConfigView({ user }: { user: User }) {
 
                                 <div className="flex items-center justify-between text-xs font-semibold">
                                     <span className="text-[var(--color-text-muted)]">อุณหภูมิเป้าหมาย:</span>
-                                    <span className={`px-2 py-0.5 rounded-full border font-mono font-bold ${ref.disable_check ? "bg-[var(--color-surface-2)] text-[var(--color-text-subtle)] border-[var(--color-border)]" : "bg-sky-50 dark:bg-sky-950/50 text-sky-900 dark:text-sky-300 border-sky-200 dark:border-sky-800"}`}>
+                                    <span className={`px-2 py-0.5 rounded-full border font-mono font-bold ${ref.disable_check ? "bg-[var(--color-surface-2)] text-[var(--color-text-subtle)] border-[var(--color-border)]" : "bg-sky-50 dark:bg-sky-950/50 text-sky-950 dark:text-sky-200 border-sky-200 dark:border-sky-800"}`}>
                                         ≤ {ref.target_temperature} °C
                                     </span>
                                 </div>
                                 {ref.disable_check && (
-                                    <div className="mt-2 text-[10px] font-bold text-rose-800 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 rounded-lg px-2 py-1 text-center">
+                                    <div className="mt-2 text-xs font-bold text-rose-900 dark:text-rose-200 bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 rounded-lg px-2 py-1 text-center">
                                         ปิดการตรวจสอบ/ซ่อมบำรุง
                                     </div>
                                 )}

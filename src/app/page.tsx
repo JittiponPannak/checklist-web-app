@@ -32,7 +32,7 @@ export default function PortalPage() {
                   <Users size={22} strokeWidth={2.4} />
                 </div>
                 <div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <h2 className="text-lg sm:text-xl font-bold text-[var(--color-text)] tracking-tight">
                       พนักงานร้านสาขา (Floor Staff)
                     </h2>
@@ -46,7 +46,7 @@ export default function PortalPage() {
                   </p>
                 </div>
               </div>
-              <div className="hidden sm:flex items-center justify-center w-10 h-10 rounded-xl bg-amber-100/70 dark:bg-amber-950/60 dark:border-amber-800 dark:text-amber-300 group-hover:bg-amber-500 group-hover:text-amber-950 text-amber-900 border border-amber-200 transition-colors shrink-0 mt-1">
+              <div className="hidden sm:flex items-center justify-center w-10 h-10 rounded-xl bg-amber-100/70 dark:bg-amber-950/60 dark:border-amber-800 dark:text-amber-200 group-hover:bg-amber-500 group-hover:text-amber-950 text-amber-900 border border-amber-200 transition-colors shrink-0 mt-1">
                 <ArrowRight size={18} className="group-hover:translate-x-0.5 transition-transform" />
               </div>
             </div>
@@ -55,7 +55,7 @@ export default function PortalPage() {
                 <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-2xs" />
                 ระบบเปิดรับรายงานประจำกะ
               </span>
-              <span className="text-amber-950 dark:text-amber-300 font-bold sm:hidden flex items-center gap-1">
+              <span className="text-amber-950 dark:text-amber-200 font-bold sm:hidden flex items-center gap-1">
                 เข้าสู่ระบบพนักงาน →
               </span>
             </div>
@@ -72,7 +72,7 @@ export default function PortalPage() {
                   <Briefcase size={20} strokeWidth={2.2} />
                 </div>
                 <div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <h2 className="text-base sm:text-lg font-bold text-[var(--color-text)] tracking-tight">
                       ผู้จัดการ & กรรมการบริหาร (Management & Audit)
                     </h2>
@@ -86,7 +86,7 @@ export default function PortalPage() {
                   </p>
                 </div>
               </div>
-              <div className="hidden sm:flex items-center justify-center w-9 h-9 rounded-xl bg-[var(--color-surface-2)] text-[var(--color-primary)] dark:text-amber-300 group-hover:bg-[var(--color-primary)] group-hover:text-amber-200 transition-colors shrink-0 mt-1">
+              <div className="hidden sm:flex items-center justify-center w-9 h-9 rounded-xl bg-[var(--color-surface-2)] text-[var(--color-primary)] dark:text-amber-200 group-hover:bg-[var(--color-primary)] group-hover:text-amber-200 transition-colors shrink-0 mt-1">
                 <ArrowRight size={16} className="group-hover:translate-x-0.5 transition-transform" />
               </div>
             </div>
@@ -94,12 +94,12 @@ export default function PortalPage() {
 
           {/* Tertiary Utility Row: Central Administration */}
           <div className="pt-2 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-1 px-2">
-            <span className="text-xs text-[var(--color-text-subtle)]">
+            <span className="text-xs text-[var(--color-text-muted)] font-medium">
               ระดับศูนย์กลางองค์กร
             </span>
             <Link
               href="/admin"
-              className="inline-flex items-center gap-1.5 text-xs text-[var(--color-text-muted)] hover:text-amber-950 dark:hover:text-amber-300 font-semibold min-h-[44px] sm:min-h-[32px] px-3 py-2 sm:px-2.5 sm:py-1 rounded-xl hover:bg-[var(--color-surface-2)] transition-colors focus-visible:outline-2 focus-visible:outline-amber-500"
+              className="inline-flex items-center gap-1.5 text-xs text-[var(--color-text-muted)] hover:text-amber-950 dark:hover:text-amber-200 font-semibold min-h-[44px] sm:min-h-[32px] px-3 py-2 sm:px-2.5 sm:py-1 rounded-xl hover:bg-[var(--color-surface-2)] transition-colors focus-visible:outline-2 focus-visible:outline-amber-500"
             >
               <ShieldCheck size={14} className="text-amber-700" />
               <span>เข้าสู่ระบบผู้ดูแลระบบส่วนกลาง (Central Admin) →</span>
@@ -108,7 +108,7 @@ export default function PortalPage() {
         </div>
       </div>
 
-      <footer className="mt-8 text-center text-xs text-[var(--color-text-subtle)]">
+      <footer className="mt-8 text-center text-xs text-[var(--color-text-muted)] font-medium">
         Eater Egg Fresh Mart • Checklist System
       </footer>
     </main>

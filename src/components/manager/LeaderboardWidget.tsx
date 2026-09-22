@@ -23,27 +23,27 @@ export function LeaderboardWidget({ branchId }: { branchId?: string }) {
   const getRankBadge = (index: number) => {
     if (index === 0) {
       return (
-        <span className="w-5 h-5 rounded-full bg-amber-400 text-amber-950 text-[11px] font-mono font-black flex items-center justify-center shadow-xs">
+        <span className="w-5 h-5 rounded-full bg-amber-400 text-amber-950 text-xs font-mono font-black flex items-center justify-center shadow-xs">
           1
         </span>
       );
     }
     if (index === 1) {
       return (
-        <span className="w-5 h-5 rounded-full bg-slate-300 text-slate-800 text-[11px] font-mono font-black flex items-center justify-center shadow-xs">
+        <span className="w-5 h-5 rounded-full bg-slate-300 text-slate-800 text-xs font-mono font-black flex items-center justify-center shadow-xs">
           2
         </span>
       );
     }
     if (index === 2) {
       return (
-        <span className="w-5 h-5 rounded-full bg-amber-700 text-amber-100 text-[11px] font-mono font-black flex items-center justify-center shadow-xs">
+        <span className="w-5 h-5 rounded-full bg-amber-700 text-amber-100 text-xs font-mono font-black flex items-center justify-center shadow-xs">
           3
         </span>
       );
     }
     return (
-      <span className="w-5 h-5 rounded-full bg-[var(--color-surface-2)] text-[11px] font-mono font-bold text-[var(--color-text-muted)] border border-[var(--color-border)] flex items-center justify-center">
+      <span className="w-5 h-5 rounded-full bg-[var(--color-surface-2)] text-xs font-mono font-bold text-[var(--color-text-muted)] border border-[var(--color-border)] flex items-center justify-center">
         {index + 1}
       </span>
     );
@@ -53,15 +53,15 @@ export function LeaderboardWidget({ branchId }: { branchId?: string }) {
     <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-5 shadow-sm space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="p-2 rounded-xl bg-amber-50 border border-amber-200 text-amber-600">
+          <div className="p-2 rounded-xl bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300">
             <Trophy className="w-4 h-4" />
           </div>
           <div>
             <h3 className="text-sm font-bold text-[var(--color-text)]">ตารางอันดับและผลงาน (Leaderboard)</h3>
-            <p className="text-[11px] text-[var(--color-text-muted)]">คะแนนสะสมและสตรีคการปฏิบัติงานของทีมงาน</p>
+            <p className="text-xs text-[var(--color-text-muted)]">คะแนนสะสมและสตรีคการปฏิบัติงานของทีมงาน</p>
           </div>
         </div>
-        <span className="text-[11px] px-2.5 py-1 rounded-full bg-[var(--color-surface-2)] text-[var(--color-text-muted)] font-semibold border border-[var(--color-border)]">
+        <span className="text-xs px-2.5 py-1 rounded-full bg-[var(--color-surface-2)] text-[var(--color-text)] font-bold border border-[var(--color-border)]">
           {leaderboard.length} คน
         </span>
       </div>
@@ -74,7 +74,7 @@ export function LeaderboardWidget({ branchId }: { branchId?: string }) {
         <div className="p-6 text-center text-xs text-[var(--color-text-muted)] flex flex-col items-center gap-1.5">
           <Users className="w-6 h-6 opacity-30" />
           <p className="font-bold text-[var(--color-text)]">ยังไม่มีข้อมูลคะแนนสะสมในสาขานี้</p>
-          <p className="text-[11px] text-[var(--color-text-subtle)] max-w-xs">เมื่อพนักงานบันทึกและส่งมอบงานเช็คลิสต์ประจำวันเสร็จสมบูรณ์ คะแนนและสถิติสตรีคจะแสดงที่นี่</p>
+          <p className="text-xs text-[var(--color-text-subtle)] max-w-xs">เมื่อพนักงานบันทึกและส่งมอบงานเช็คลิสต์ประจำวันเสร็จสมบูรณ์ คะแนนและสถิติสตรีคจะแสดงที่นี่</p>
         </div>
       ) : (
         <div className="divide-y divide-[var(--color-border)] max-h-72 overflow-y-auto">
@@ -89,7 +89,7 @@ export function LeaderboardWidget({ branchId }: { branchId?: string }) {
                 </div>
                 <div className="min-w-0">
                   <p className="text-xs font-bold text-[var(--color-text)] truncate">{user.name}</p>
-                  <p className="text-[10px] text-[var(--color-text-subtle)] truncate">
+                  <p className="text-xs text-[var(--color-text-subtle)] truncate">
                     {user.position || user.role} {user.branchName ? `• ${user.branchName}` : ""}
                   </p>
                 </div>
@@ -97,12 +97,12 @@ export function LeaderboardWidget({ branchId }: { branchId?: string }) {
 
               <div className="flex items-center gap-3 shrink-0">
                 {user.pointStreak > 0 && (
-                  <div className="flex items-center gap-0.5 text-[11px] font-bold text-orange-600 bg-orange-50 border border-orange-200 px-2 py-0.5 rounded-lg">
+                  <div className="flex items-center gap-0.5 text-xs font-bold text-orange-700 dark:text-orange-300 bg-orange-50 dark:bg-orange-950/60 border border-orange-200 dark:border-orange-800 px-2 py-0.5 rounded-lg">
                     <Flame className="w-3 h-3 fill-orange-500" />
                     <span>{user.pointStreak}</span>
                   </div>
                 )}
-                <div className="flex items-center gap-1 text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-lg">
+                <div className="flex items-center gap-1 text-xs font-bold text-amber-900 dark:text-amber-200 bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800 px-2.5 py-0.5 rounded-lg">
                   <Award className="w-3 h-3 text-amber-500" />
                   <span>{user.point}</span>
                 </div>

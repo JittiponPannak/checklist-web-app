@@ -111,7 +111,7 @@ export function AdminAuthPage({ onLogin }: { onLogin: (user: User) => void }) {
             type="button"
             disabled={loading}
             onClick={handleLogin}
-            className={`w-full min-h-[44px] py-2.5 bg-[var(--color-brown)] hover:bg-[var(--color-brown-light)] active:bg-[#1a0a09] text-amber-300 text-sm font-semibold rounded-xl shadow-sm transition-all cursor-pointer mt-1 flex items-center justify-center gap-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500 ${loading ? "opacity-70 cursor-not-allowed" : ""
+            className={`w-full min-h-[44px] py-2.5 bg-[var(--color-brown)] hover:bg-[var(--color-brown-light)] active:bg-[#1a0a09] text-amber-100 text-sm font-bold rounded-xl shadow-sm transition-all cursor-pointer mt-1 flex items-center justify-center gap-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500 ${loading ? "opacity-70 cursor-not-allowed" : ""
               }`}
           >
             <span>{loading ? "กำลังเข้าสู่ระบบ..." : "เข้าสู่ระบบผู้ดูแลระบบ (Admin)"}</span>

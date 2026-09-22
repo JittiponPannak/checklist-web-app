@@ -102,7 +102,7 @@ export function ManagerAuthPage({ onLogin }: { onLogin: (user: User) => void }) 
       <div className="w-full max-w-[440px] bg-slate-900/90 backdrop-blur-md border border-slate-800 rounded-2xl p-7 sm:p-8 shadow-2xl space-y-5 relative z-10">
         {/* Brand Header */}
         <header className="text-center space-y-2 flex flex-col items-center">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-950/80 text-indigo-300 text-[11px] font-bold border border-indigo-800/60 mb-1">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-950/80 text-indigo-300 text-xs font-bold border border-indigo-800/60 mb-1">
             <span className="w-1.5 h-1.5 rounded-full bg-indigo-400" aria-hidden="true" />
             <span>Manager Portal • ระบบฝ่ายบริหารและตรวจสอบสาขา</span>
           </div>
@@ -125,7 +125,7 @@ export function ManagerAuthPage({ onLogin }: { onLogin: (user: User) => void }) 
                 setTab(t);
                 setError("");
               }}
-              className={`flex-1 py-2 text-xs sm:text-sm font-semibold rounded-lg transition-all cursor-pointer ${tab === t ? "bg-indigo-600 text-[var(--color-brown)] shadow-md font-bold" : "text-slate-400 hover:text-slate-200"
+              className={`flex-1 py-2 text-xs sm:text-sm font-semibold rounded-lg transition-all cursor-pointer ${tab === t ? "bg-indigo-600 text-white shadow-md font-bold" : "text-slate-300 hover:text-white"
                 }`}
             >
               {t === "login" ? "เข้าสู่ระบบฝ่ายบริหาร" : "ลงทะเบียนใหม่"}
@@ -137,7 +137,7 @@ export function ManagerAuthPage({ onLogin }: { onLogin: (user: User) => void }) 
         <div className="space-y-3.5">
           {tab === "register" && (
             <div>
-              <label htmlFor="mgr-name" className="block text-xs font-semibold text-slate-300 mb-1">
+              <label htmlFor="mgr-name" className="block text-xs font-semibold text-slate-200 mb-1">
                 ชื่อ-นามสกุล
               </label>
               <input
@@ -151,7 +151,7 @@ export function ManagerAuthPage({ onLogin }: { onLogin: (user: User) => void }) 
           )}
 
           <div>
-            <label htmlFor="mgr-email" className="block text-xs font-semibold text-slate-300 mb-1">
+            <label htmlFor="mgr-email" className="block text-xs font-semibold text-slate-200 mb-1">
               อีเมลฝ่ายบริหาร
             </label>
             <input
@@ -165,7 +165,7 @@ export function ManagerAuthPage({ onLogin }: { onLogin: (user: User) => void }) 
           </div>
 
           <div>
-            <label htmlFor="mgr-password" className="block text-xs font-semibold text-slate-300 mb-1">
+            <label htmlFor="mgr-password" className="block text-xs font-semibold text-slate-200 mb-1">
               รหัสผ่าน
             </label>
             <input
@@ -181,7 +181,7 @@ export function ManagerAuthPage({ onLogin }: { onLogin: (user: User) => void }) 
 
           {tab === "register" && (
             <div>
-              <label htmlFor="mgr-pos" className="block text-xs font-semibold text-slate-300 mb-1">
+              <label htmlFor="mgr-pos" className="block text-xs font-semibold text-slate-200 mb-1">
                 ตำแหน่งฝ่ายบริหาร
               </label>
               <select
@@ -190,9 +190,9 @@ export function ManagerAuthPage({ onLogin }: { onLogin: (user: User) => void }) 
                 onChange={(e) => setForm({ ...form, position: e.target.value })}
                 className={inputStyle}
               >
-                <option value="ผู้ช่วยผู้จัดการร้าน" className="bg-slate-900 text-[var(--color-brown)]">ผู้ช่วยผู้จัดการร้าน (Assistant Manager)</option>
-                <option value="ผู้จัดการร้าน" className="bg-slate-900 text-[var(--color-brown)]">ผู้จัดการร้าน (Store Manager)</option>
-                <option value="กรรมการ" className="bg-slate-900 text-[var(--color-brown)]">กรรมการบริหาร (Executive Committee)</option>
+                <option value="ผู้ช่วยผู้จัดการร้าน" className="bg-slate-900 text-slate-100">ผู้ช่วยผู้จัดการร้าน (Assistant Manager)</option>
+                <option value="ผู้จัดการร้าน" className="bg-slate-900 text-slate-100">ผู้จัดการร้าน (Store Manager)</option>
+                <option value="กรรมการ" className="bg-slate-900 text-slate-100">กรรมการบริหาร (Executive Committee)</option>
               </select>
             </div>
           )}
@@ -207,7 +207,7 @@ export function ManagerAuthPage({ onLogin }: { onLogin: (user: User) => void }) 
             type="button"
             disabled={loading}
             onClick={tab === "login" ? handleLogin : handleRegister}
-            className={`w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-[var(--color-brown)] text-sm font-semibold rounded-xl shadow-lg transition-all cursor-pointer mt-1 flex items-center justify-center gap-2 shadow-indigo-950/50 ${loading ? "opacity-70 cursor-not-allowed" : ""
+            className={`w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white text-sm font-bold rounded-xl shadow-lg transition-all cursor-pointer mt-1 flex items-center justify-center gap-2 shadow-indigo-950/50 ${loading ? "opacity-70 cursor-not-allowed" : ""
               }`}
           >
             <span>{loading ? "กำลังตรวจสอบข้อมูล..." : (tab === "login" ? "เข้าสู่ระบบฝ่ายบริหาร →" : "ยืนยันการลงทะเบียน")}</span>
@@ -217,16 +217,16 @@ export function ManagerAuthPage({ onLogin }: { onLogin: (user: User) => void }) 
 
 
         {/* Portal Switching Links */}
-        <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
+        <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-300">
           <Link
             href="/"
-            className="hover:text-slate-200 font-medium transition-colors inline-flex items-center gap-1 cursor-pointer"
+            className="hover:text-white font-medium transition-colors inline-flex items-center gap-1 cursor-pointer"
           >
             <span>← สำหรับพนักงานทั่วไป (/)</span>
           </Link>
           <Link
             href="/admin"
-            className="hover:text-indigo-400 font-medium transition-colors inline-flex items-center gap-1 cursor-pointer"
+            className="hover:text-indigo-300 font-medium transition-colors inline-flex items-center gap-1 cursor-pointer"
           >
             <span>Admin Portal (/admin) →</span>
           </Link>

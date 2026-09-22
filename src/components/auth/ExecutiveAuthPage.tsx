@@ -63,7 +63,7 @@ export function ExecutiveAuthPage({
             </div>
             <div className="w-full max-w-[420px] bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-5 sm:p-8 shadow-xl shadow-amber-900/5 space-y-5 relative z-10 font-sans">
                 <header className="mb-2 text-center flex flex-col items-center">
-                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--color-amber-glow)] text-amber-900 text-xs font-semibold border border-amber-300 mb-3">
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 text-[var(--color-text)] text-xs font-extrabold border border-amber-500/30 mb-3">
                         <span className="w-1.5 h-1.5 rounded-full bg-amber-500" aria-hidden="true" />
                         <span>ระบบบริหารสาขาและการจัดการ</span>
                     </div>
@@ -72,7 +72,7 @@ export function ExecutiveAuthPage({
 
                 <form onSubmit={handleLogin} className="space-y-4 pt-1 focus-visible:outline-none">
                     <div>
-                        <label htmlFor="exec-email" className="block text-xs font-semibold text-[var(--color-text-muted)] mb-1.5">
+                        <label htmlFor="exec-email" className="block text-xs font-semibold text-[var(--color-text)] mb-1.5">
                             อีเมลฝ่ายบริหาร
                         </label>
                         <input
@@ -86,7 +86,7 @@ export function ExecutiveAuthPage({
                     </div>
 
                     <div>
-                        <label htmlFor="exec-password" className="block text-xs font-semibold text-[var(--color-text-muted)] mb-1.5">
+                        <label htmlFor="exec-password" className="block text-xs font-semibold text-[var(--color-text)] mb-1.5">
                             รหัสผ่าน
                         </label>
                         <input
@@ -100,7 +100,7 @@ export function ExecutiveAuthPage({
                     </div>
 
                     {error && (
-                        <div role="alert" className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700 text-center font-semibold">
+                        <div role="alert" className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 text-xs text-rose-800 dark:text-rose-300 text-center font-semibold">
                             {error}
                         </div>
                     )}
@@ -108,7 +108,7 @@ export function ExecutiveAuthPage({
                     <button
                         type="submit"
                         disabled={loading}
-                        className={`w-full min-h-[44px] py-2.5 text-amber-300 text-sm font-semibold rounded-xl shadow-md transition-all mt-3 cursor-pointer flex items-center justify-center gap-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500 bg-[var(--color-brown)] hover:bg-[var(--color-brown-light)] active:bg-[#1f0d0c] shadow-amber-950/20 ${loading ? "opacity-70 cursor-not-allowed" : ""
+                        className={`w-full min-h-[44px] py-2.5 text-amber-100 text-sm font-bold rounded-xl shadow-md transition-all mt-3 cursor-pointer flex items-center justify-center gap-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500 bg-[var(--color-brown)] hover:bg-[var(--color-brown-light)] active:bg-[#1f0d0c] shadow-amber-950/20 ${loading ? "opacity-70 cursor-not-allowed" : ""
                             }`}
                     >
                         <span>{loading ? "กำลังตรวจสอบข้อมูล..." : "เข้าสู่ระบบฝ่ายบริหารและตรวจสอบ →"}</span>
@@ -116,10 +116,10 @@ export function ExecutiveAuthPage({
                 </form>
 
                 <div className="mt-5 pt-4 border-t border-[var(--color-border)] text-center flex flex-col gap-1.5">
-                    <Link href="/login/staff" className="inline-flex items-center justify-center min-h-[36px] text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)] font-medium transition-colors">
+                    <Link href="/login/staff" className="inline-flex items-center justify-center min-h-[36px] text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)] font-semibold transition-colors">
                         สำหรับพนักงานหน้าร้านสาขา →
                     </Link>
-                    <Link href="/" className="inline-flex items-center justify-center min-h-[36px] text-xs text-[var(--color-text-subtle)] hover:text-[var(--color-text-muted)] font-medium transition-colors">
+                    <Link href="/" className="inline-flex items-center justify-center min-h-[36px] text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)] font-semibold transition-colors">
                         ← กลับสู่หน้าหลักเลือกช่องทางเข้างาน
                     </Link>
                 </div>

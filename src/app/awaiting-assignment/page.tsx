@@ -43,7 +43,7 @@ export default function AwaitingAssignmentPage() {
             <div className="w-full max-w-sm bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-7 sm:p-9 shadow-xl shadow-amber-900/5 text-center space-y-5">
                 <header className="flex flex-col items-center">
                     <BrandLogo size={44} showText={false} isDark={false} />
-                    <div className="w-14 h-14 rounded-2xl bg-[var(--color-amber-glow)] border border-amber-300 text-amber-800 flex items-center justify-center my-4 shadow-2xs">
+                    <div className="w-14 h-14 rounded-2xl bg-[var(--color-amber-glow)] border border-amber-300 dark:border-amber-700 text-amber-900 dark:text-amber-300 flex items-center justify-center my-4 shadow-2xs">
                         <Store size={26} strokeWidth={2.2} />
                     </div>
                     <h1 className="text-xl font-bold text-[var(--color-text)] tracking-tight">

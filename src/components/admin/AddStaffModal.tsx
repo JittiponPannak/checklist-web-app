@@ -62,7 +62,7 @@ export function AddStaffModal({
         aria-modal="true"
         aria-labelledby="add-staff-modal-title"
         tabIndex={-1}
-        className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl w-full max-w-md shadow-2xl p-6 sm:p-7 space-y-4 text-[var(--color-text)]"
+        className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl p-5 sm:p-7 space-y-4 text-[var(--color-text)]"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between pb-3 border-b border-[var(--color-border)]">
@@ -151,7 +151,7 @@ export function AddStaffModal({
             ) : (
               <div className="w-full bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-xl px-3.5 py-2 text-xs text-[var(--color-text-muted)] flex items-center justify-between">
                 <span>รอผู้จัดการกำหนดตำแหน่ง</span>
-                <span className="text-[10px] text-[var(--color-text)] font-semibold bg-[var(--color-amber-glow)] border border-[var(--color-amber)] px-1.5 py-0.5 rounded font-mono">
+                <span className="text-xs text-[var(--color-text)] font-semibold bg-[var(--color-amber-glow)] border border-[var(--color-amber)] px-1.5 py-0.5 rounded font-mono">
                   ผู้ช่วยไม่สามารถเลือกตำแหน่งได้
                 </span>
               </div>
@@ -163,14 +163,14 @@ export function AddStaffModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 py-2.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-2)] hover:bg-[var(--color-border-subtle)] text-xs font-semibold text-[var(--color-text-muted)] transition-colors cursor-pointer"
+            className="flex-1 min-h-[44px] py-2.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-2)] hover:bg-[var(--color-border-subtle)] text-xs font-semibold text-[var(--color-text-muted)] transition-colors cursor-pointer flex items-center justify-center"
           >
             ยกเลิกการเพิ่มพนักงาน
           </button>
           <button
             type="button"
             onClick={handleAddStaff}
-            className="flex-1 py-2.5 rounded-xl bg-[var(--color-brown)] hover:bg-[var(--color-brown-light)] text-amber-300 text-xs font-semibold shadow-sm transition-colors cursor-pointer"
+            className="flex-1 min-h-[44px] py-2.5 rounded-xl bg-[var(--color-brown)] hover:bg-[var(--color-brown-light)] text-amber-100 text-xs font-bold shadow-sm transition-colors cursor-pointer flex items-center justify-center"
           >
             บันทึกพนักงาน
           </button>

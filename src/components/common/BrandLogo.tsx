@@ -31,13 +31,15 @@ export function BrandLogo({
             >
               Eater Egg
             </span>
-            <span className="text-[11px] font-extrabold tracking-wider uppercase px-2 py-0.5 rounded-full bg-amber-500 text-[#2b1413] border border-amber-600 shadow-2xs">
+            <span className="text-xs font-black tracking-wider uppercase px-2 py-0.5 rounded-full bg-amber-500 text-amber-950 border border-amber-600 shadow-2xs">
               Fresh Mart
             </span>
           </div>
-          <p className={`text-[11px] font-medium ${isDark ? "text-amber-200/80" : "text-[var(--color-text-muted)]"}`}>
-            {subtitle || "ระบบตรวจเช็คลิสต์และมาตรฐานการปฏิบัติงานสาขา"}
-          </p>
+          {subtitle && (
+            <p className={`text-xs font-medium ${isDark ? "text-amber-200 font-semibold" : "text-[var(--color-text-muted)]"}`}>
+              {subtitle}
+            </p>
+          )}
         </div>
       )}
     </div>

@@ -107,7 +107,7 @@ export function StaffAuthPage({
       <div className="w-full max-w-[420px] bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-7 sm:p-8 shadow-xl shadow-amber-900/5 space-y-5 relative z-10">
         {/* Brand Header */}
         <header className="mb-4 text-center flex flex-col items-center">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--color-amber-glow)] text-amber-900 text-xs font-semibold border border-amber-300 mb-3">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--color-amber-glow)] text-[var(--color-text)] text-xs font-bold border border-amber-300 dark:border-amber-800 mb-3">
             <span className="w-1.5 h-1.5 rounded-full bg-amber-500" aria-hidden="true" />
             <span>เข้าสู่ระบบปฏิบัติงานพนักงานสาขา</span>
           </div>
@@ -138,7 +138,7 @@ export function StaffAuthPage({
               }}
               className={`flex-1 py-2 min-h-[36px] text-xs font-semibold rounded-lg transition-all cursor-pointer text-center ${
                 tab === t.id
-                  ? "bg-[var(--color-brown)] text-amber-300 shadow-2xs font-bold"
+                  ? "bg-[var(--color-brown)] text-amber-100 shadow-2xs font-bold"
                   : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
               }`}
             >
@@ -149,7 +149,7 @@ export function StaffAuthPage({
 
         {/* Manager Mode Banner Notification */}
         {tab === "manager" && (
-          <div className="mb-4 p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-950 flex items-center gap-2">
+          <div className="mb-4 p-3 rounded-xl bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800 text-xs text-[var(--color-text)] flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse shrink-0" />
             <span>เข้าสู่ระบบเพื่อไปยัง <strong>Manager Dashboard</strong> (ผู้ช่วยฯ, ผู้จัดการ, กรรมการ)</span>
           </div>
@@ -268,7 +268,7 @@ export function StaffAuthPage({
         <div className="mt-5 pt-4 border-t border-[var(--color-border)] text-center">
           <Link
             href="/admin"
-            className="text-xs text-[var(--color-text-muted)] hover:text-amber-950 font-medium transition-colors inline-flex items-center gap-1 cursor-pointer min-h-[44px] sm:min-h-[32px] px-2 rounded-lg"
+            className="text-xs text-[var(--color-text-muted)] hover:text-amber-950 dark:hover:text-amber-200 font-medium transition-colors inline-flex items-center gap-1 cursor-pointer min-h-[44px] sm:min-h-[32px] px-2 rounded-lg"
           >
             <span>สำหรับผู้ดูแลระบบส่วนกลาง (Admin Portal) →</span>
           </Link>

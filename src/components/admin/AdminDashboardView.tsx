@@ -303,7 +303,7 @@ export function AdminDashboardView({
     <div className="min-h-screen bg-[var(--color-background)] text-[var(--color-text)] flex flex-col justify-between">
       {/* Toast Notification */}
       {toastMsg && (
-        <div className="fixed top-6 right-6 z-50 bg-[var(--color-brown)] text-amber-300 border border-[var(--color-amber)]/40 text-xs font-semibold px-4 py-2.5 rounded-xl shadow-xl animate-fade-in flex items-center gap-2">
+        <div className="fixed top-6 right-6 z-50 bg-[var(--color-brown)] text-amber-100 border border-amber-500/40 text-xs font-bold px-4 py-2.5 rounded-xl shadow-xl animate-fade-in flex items-center gap-2">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="20 6 9 17 4 12" />
           </svg>
@@ -314,12 +314,12 @@ export function AdminDashboardView({
       {/* Top Navbar */}
       <header className="border-b border-[var(--color-border)] bg-[var(--color-surface)]/95 backdrop-blur-md sticky top-0 z-40 px-3 sm:px-8 py-3.5 flex items-center justify-between shadow-xs">
         <div className="flex items-center gap-2 sm:gap-4 min-w-0">
-          <BrandLogo size={36} showText={true} hideTextOnMobile={true} isDark={false} />
+          <BrandLogo size={38} showText={true} hideTextOnMobile={true} isDark={false} />
           <div className="hidden md:flex items-center gap-2 pl-4 border-l border-[var(--color-border)]">
-            <span className="text-[10px] font-mono font-bold tracking-wider uppercase bg-amber-100 text-amber-950 border border-amber-300 px-2.5 py-1 rounded-lg shadow-2xs">
+            <span className="text-xs font-mono font-bold tracking-wider uppercase bg-amber-100 text-amber-950 border border-amber-300 px-2.5 py-1 rounded-lg shadow-2xs">
               System Admin Portal
             </span>
-            <span className="text-xs text-[var(--color-text-muted)] font-medium">ระดับศูนย์กลางองค์กร</span>
+            <span className="text-xs text-[var(--color-text-muted)] font-semibold">ระดับศูนย์กลางองค์กร</span>
           </div>
         </div>
 
@@ -327,9 +327,9 @@ export function AdminDashboardView({
           <div className="flex items-center gap-2.5 pl-2 sm:pl-3 border-l border-[var(--color-border)]">
             <div className="text-right hidden sm:block">
               <p className="text-xs font-bold text-[var(--color-text)]">{user.name}</p>
-              <p className="text-[11px] text-[var(--color-text-muted)]">{user.position || "ผู้ดูแลระบบส่วนกลาง"}</p>
+              <p className="text-xs text-[var(--color-text-muted)] font-semibold">{user.position || "ผู้ดูแลระบบส่วนกลาง"}</p>
             </div>
-            <div className="w-8 h-8 rounded-xl bg-[var(--color-brown)] text-amber-300 flex items-center justify-center font-bold text-xs shadow-xs">
+            <div className="w-8 h-8 rounded-xl bg-[var(--color-brown)] text-amber-300 dark:bg-amber-400 dark:text-amber-950 flex items-center justify-center font-extrabold text-xs shadow-xs">
               AD
             </div>
           </div>
@@ -340,7 +340,7 @@ export function AdminDashboardView({
             onClick={onLogout}
             title="ออกจากระบบ"
             aria-label="ออกจากระบบ"
-            className="text-xs text-[var(--color-text-muted)] hover:text-rose-700 hover:bg-rose-50 hover:border-rose-200 dark:hover:bg-rose-950/40 dark:hover:border-rose-800 transition-all p-2 sm:px-3 sm:py-1.5 rounded-xl border border-[var(--color-border)] font-semibold cursor-pointer min-h-[36px] min-w-[36px] inline-flex items-center justify-center gap-1.5 shrink-0"
+            className="text-xs sm:text-sm text-[var(--color-text)] hover:text-rose-700 hover:bg-rose-50 hover:border-rose-300 dark:hover:bg-rose-950/40 dark:hover:border-rose-700 transition-all px-3 py-2 rounded-xl border border-[var(--color-border)] font-bold cursor-pointer min-h-[38px] inline-flex items-center justify-center gap-1.5 shrink-0"
           >
             <LogOut size={16} />
             <span className="hidden sm:inline">ออกจากระบบ</span>
@@ -352,7 +352,7 @@ export function AdminDashboardView({
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-8 py-6 space-y-6">
         {/* Navigation Tabs Bar */}
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--color-border)] pb-4">
-          <div className="flex items-center gap-1 bg-[var(--color-surface-2)] p-1.5 rounded-2xl border border-[var(--color-border)] text-xs font-semibold">
+          <div className="flex items-center gap-1 bg-[var(--color-surface-2)] p-1.5 rounded-2xl border border-[var(--color-border)] text-xs font-semibold max-w-full overflow-x-auto no-scrollbar">
             {[
               { id: "overview", label: "ภาพรวมระบบ (Overview)" },
               { id: "branches", label: `จัดการสาขา (${branches.length})` },
@@ -363,9 +363,9 @@ export function AdminDashboardView({
                 key={tab.id}
                 type="button"
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`px-3.5 py-2 rounded-xl transition-all cursor-pointer ${activeTab === tab.id
-                  ? "bg-[var(--color-brown)] text-amber-300 shadow-sm font-bold"
-                  : "text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface)]"
+                className={`px-3 sm:px-3.5 py-2 rounded-xl transition-all cursor-pointer whitespace-nowrap shrink-0 ${activeTab === tab.id
+                  ? "bg-[var(--color-brown)] text-amber-200 dark:bg-amber-400 dark:text-amber-950 shadow-sm font-bold"
+                  : "text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface)] font-semibold"
                   }`}
               >
                 {tab.label}
@@ -390,7 +390,7 @@ export function AdminDashboardView({
                   <span className="text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider">
                     เครือข่ายสาขาทั่วประเทศ
                   </span>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">
+                  <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/80 text-emerald-900 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-800">
                     Online 100%
                   </span>
                 </div>
@@ -425,7 +425,7 @@ export function AdminDashboardView({
                   <span className="text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider">
                     แม่แบบงานมาตรฐานกลาง
                   </span>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-950 border border-amber-300">
+                  <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/80 text-amber-950 dark:text-amber-200 border border-amber-300 dark:border-amber-800">
                     SOP Master
                   </span>
                 </div>
@@ -458,28 +458,28 @@ export function AdminDashboardView({
 
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
-                  <thead className="border-b border-[var(--color-border)] text-[var(--color-text-muted)] font-semibold bg-[var(--color-surface-2)]">
+                  <thead className="border-b border-[var(--color-border)] text-[var(--color-text)] font-bold bg-[var(--color-surface-2)]">
                     <tr>
-                      <th className="py-3 px-3 rounded-l-lg">รหัสสาขา</th>
-                      <th className="py-3 px-3">ชื่อสาขา</th>
-                      <th className="py-3 px-3">ผู้จัดการประจำสาขา</th>
-                      <th className="py-3 px-3">พนักงาน</th>
-                      <th className="py-3 px-3">สถานะ</th>
-                      <th className="py-3 px-3 text-right rounded-r-lg">ความคืบหน้า Checklist</th>
+                      <th className="py-3 px-3 rounded-l-lg font-bold">รหัสสาขา</th>
+                      <th className="py-3 px-3 font-bold">ชื่อสาขา</th>
+                      <th className="py-3 px-3 font-bold">ผู้จัดการประจำสาขา</th>
+                      <th className="py-3 px-3 font-bold">พนักงาน</th>
+                      <th className="py-3 px-3 font-bold">สถานะ</th>
+                      <th className="py-3 px-3 text-right rounded-r-lg font-bold">ความคืบหน้า Checklist</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[var(--color-border)]/70">
                     {branches.map((b) => (
                       <tr key={b.id} className="hover:bg-[var(--color-background)] transition-colors">
-                        <td className="py-3 px-3 font-mono font-bold text-amber-950">{b.code}</td>
+                        <td className="py-3 px-3 font-mono font-bold text-amber-950 dark:text-amber-200">{b.code}</td>
                         <td className="py-3 px-3 font-semibold text-[var(--color-text)]">{b.name}</td>
-                        <td className="py-3 px-3 text-[var(--color-text-muted)]">{b.managerName}</td>
-                        <td className="py-3 px-3 text-[var(--color-text-muted)] font-mono">{b.staffCount} คน</td>
+                        <td className="py-3 px-3 text-[var(--color-text-muted)] font-medium">{b.managerName}</td>
+                        <td className="py-3 px-3 text-[var(--color-text)] font-mono font-semibold">{b.staffCount} คน</td>
                         <td className="py-3 px-3">
                           <span
-                            className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${b.status === "active"
-                              ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                              : "bg-amber-100 text-amber-950 border border-amber-300"
+                            className={`text-xs font-bold px-2.5 py-0.5 rounded-full border shadow-2xs ${b.status === "active"
+                              ? "bg-emerald-100 text-emerald-950 border-emerald-300 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-800"
+                              : "bg-amber-100 text-amber-950 border-amber-300 dark:bg-amber-950/80 dark:text-amber-200 dark:border-amber-800"
                               }`}
                           >
                             {b.status === "active" ? "เปิดปกติ" : "รอเปิด"}
@@ -528,7 +528,7 @@ export function AdminDashboardView({
               <button
                 type="button"
                 onClick={() => setIsNewBranchModalOpen(true)}
-                className="bg-[var(--color-brown)] hover:bg-[var(--color-brown-light)] text-amber-300 text-xs font-semibold px-4 py-2 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
+                className="bg-[var(--color-brown)] hover:bg-[var(--color-brown-light)] text-amber-100 text-xs font-bold px-4 py-2 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
               >
                 <span>+ เพิ่มสาขาใหม่</span>
               </button>
@@ -539,14 +539,14 @@ export function AdminDashboardView({
                 <div key={b.id} className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-5 space-y-4 hover:border-amber-400 shadow-sm transition-all">
                   <div className="flex items-start justify-between">
                     <div>
-                      <span className="text-[10px] font-mono font-bold text-[var(--color-amber)] bg-[var(--color-amber-glow)] px-2 py-0.5 rounded border border-[var(--color-amber)]">
+                      <span className="text-xs font-mono font-bold text-amber-950 dark:text-amber-200 bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 rounded border border-[var(--color-amber)]">
                         {b.code}
                       </span>
                       <h4 className="text-base font-bold text-[var(--color-text)] mt-1.5">{b.name}</h4>
                       <p className="text-xs text-[var(--color-text-muted)]">{b.location}</p>
                     </div>
                     <span
-                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${b.status === "active"
+                      className={`text-xs font-bold px-2 py-0.5 rounded-full ${b.status === "active"
                         ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
                         : "bg-[var(--color-amber-glow)] text-[var(--color-amber)] border border-[var(--color-amber)]"
                         }`}
@@ -570,14 +570,14 @@ export function AdminDashboardView({
                     <button
                       type="button"
                       onClick={() => openManageStaffModal(b.id)}
-                      className="text-[11px] font-bold text-[var(--color-text)] hover:text-amber-950 bg-[var(--color-surface-2)] hover:bg-amber-100 min-h-[44px] sm:min-h-[34px] inline-flex items-center justify-center px-3 py-2 sm:px-2 sm:py-1.5 rounded-xl border border-[var(--color-border)] transition-all cursor-pointer flex-1"
+                      className="text-xs font-bold text-[var(--color-text)] hover:text-amber-950 bg-[var(--color-surface-2)] hover:bg-amber-100 min-h-[44px] sm:min-h-[34px] inline-flex items-center justify-center px-3 py-2 sm:px-2 sm:py-1.5 rounded-xl border border-[var(--color-border)] transition-all cursor-pointer flex-1"
                     >
                       จัดการสาขา
                     </button>
                     <button
                       type="button"
                       onClick={() => openManageTasksModal(b.id)}
-                      className="text-[11px] font-bold text-amber-950 bg-amber-100 hover:bg-amber-200 min-h-[44px] sm:min-h-[34px] inline-flex items-center justify-center px-3 py-2 sm:px-2 sm:py-1.5 rounded-xl border border-amber-300 transition-all cursor-pointer flex-1"
+                      className="text-xs font-bold text-amber-950 bg-amber-100 hover:bg-amber-200 min-h-[44px] sm:min-h-[34px] inline-flex items-center justify-center px-3 py-2 sm:px-2 sm:py-1.5 rounded-xl border border-amber-300 transition-all cursor-pointer flex-1"
                     >
                       จัดการงาน
                     </button>
@@ -592,7 +592,7 @@ export function AdminDashboardView({
         {activeTab === "tasks" && (
           <div className="space-y-4 animate-fade-in">
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-[var(--color-surface)] border border-[var(--color-border)] p-4 rounded-2xl shadow-sm">
-              <div className="flex items-center gap-1 bg-[var(--color-surface-2)] p-1 rounded-xl border border-[var(--color-border)] text-xs font-semibold">
+              <div className="flex items-center gap-1 bg-[var(--color-surface-2)] p-1 rounded-xl border border-[var(--color-border)] text-xs font-semibold max-w-full overflow-x-auto no-scrollbar">
                 {[
                   { id: "all", label: "ทั้งหมด" },
                   { id: "cashier", label: "แคชเชียร์" },
@@ -603,7 +603,7 @@ export function AdminDashboardView({
                     key={f.id}
                     type="button"
                     onClick={() => setTaskRoleFilter(f.id as any)}
-                    className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${taskRoleFilter === f.id ? "bg-[var(--color-brown)] text-amber-300 font-bold" : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+                    className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer whitespace-nowrap shrink-0 ${taskRoleFilter === f.id ? "bg-[var(--color-brown)] text-amber-100 font-bold" : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
                       }`}
                   >
                     {f.label}
@@ -614,7 +614,7 @@ export function AdminDashboardView({
               <button
                 type="button"
                 onClick={() => setIsCreateTaskModalOpen(true)}
-                className="bg-[var(--color-brown)] hover:bg-[var(--color-brown-light)] text-amber-300 text-xs font-semibold px-4 py-2 rounded-xl transition-all cursor-pointer shadow-sm"
+                className="bg-[var(--color-brown)] hover:bg-[var(--color-brown-light)] text-amber-100 text-xs font-bold px-4 py-2 rounded-xl transition-all cursor-pointer shadow-sm"
               >
                 + เพิ่มรายการงานใหม่
               </button>
@@ -688,7 +688,7 @@ export function AdminDashboardView({
               <button
                 type="button"
                 onClick={() => showToast("เปิดแบบฟอร์มสร้างบัญชีผู้ใช้งานใหม่")}
-                className="bg-[var(--color-brown)] hover:bg-[var(--color-brown-light)] text-amber-300 text-xs font-semibold px-4 py-2 rounded-xl transition-all cursor-pointer shadow-sm"
+                className="bg-[var(--color-brown)] hover:bg-[var(--color-brown-light)] text-amber-100 text-xs font-bold px-4 py-2 rounded-xl transition-all cursor-pointer shadow-sm"
               >
                 + เพิ่มผู้ใช้ใหม่
               </button>
@@ -841,9 +841,9 @@ export function AdminDashboardView({
                 </button>
               </div>
 
-              <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+              <div className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden divide-y md:divide-y-0 md:divide-x divide-[var(--color-border)]">
                 {/* Left Panel: Assigned Staff (Cards Stack) */}
-                <div className="w-full md:w-1/2 border-r border-[var(--color-border)] flex flex-col bg-[var(--color-background)]">
+                <div className="w-full md:w-1/2 flex flex-col bg-[var(--color-background)] shrink-0 md:shrink min-h-[280px] md:min-h-0">
                   <div className="p-4 border-b border-[var(--color-border)]">
                     <h4 className="font-semibold text-emerald-700">พนักงานประจำสาขานี้</h4>
                     <p className="text-xs text-[var(--color-text-muted)]">บุคลากรที่ถูกคัดเลือกและจัดตารางงานแล้ว</p>
@@ -914,7 +914,7 @@ export function AdminDashboardView({
                 </div>
 
                 {/* Right Panel: Available Users (Searchable) */}
-                <div className="w-full md:w-1/2 flex flex-col bg-[var(--color-surface)]">
+                <div className="w-full md:w-1/2 flex flex-col bg-[var(--color-surface)] shrink-0 md:shrink min-h-[300px] md:min-h-0">
                   <div className="p-4 border-b border-[var(--color-border)]">
                     <h4 className="font-semibold text-[var(--color-text)]">รายชื่อพนักงานในระบบ</h4>
                     <input
@@ -1003,9 +1003,9 @@ export function AdminDashboardView({
                 </button>
               </div>
 
-              <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+              <div className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden divide-y md:divide-y-0 md:divide-x divide-[var(--color-border)]">
                 {/* Left Panel: Assigned Tasks */}
-                <div className="w-full md:w-1/2 border-r border-[var(--color-border)] flex flex-col bg-[var(--color-background)]">
+                <div className="w-full md:w-1/2 flex flex-col bg-[var(--color-background)] shrink-0 md:shrink min-h-[280px] md:min-h-0">
                   <div className="p-4 border-b border-[var(--color-border)]">
                     <h4 className="font-semibold text-emerald-700">งานที่สาขานี้ต้องทำ</h4>
                     <input
@@ -1085,7 +1085,7 @@ export function AdminDashboardView({
                 </div>
 
                 {/* Right Panel: Available Tasks (Searchable) */}
-                <div className="w-full md:w-1/2 flex flex-col bg-[var(--color-surface)]">
+                <div className="w-full md:w-1/2 flex flex-col bg-[var(--color-surface)] shrink-0 md:shrink min-h-[300px] md:min-h-0">
                   <div className="p-4 border-b border-[var(--color-border)]">
                     <h4 className="font-semibold text-[var(--color-text)]">งานทั้งหมดในระบบกลาง</h4>
                     <input

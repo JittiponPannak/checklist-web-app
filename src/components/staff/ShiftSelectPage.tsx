@@ -9,7 +9,7 @@ import { Confetti } from "../common/Confetti";
 import { NotificationCenter } from "../common/NotificationCenter";
 import { PointStreakBadge } from "../common/PointStreakBadge";
 import { ThemeToggle } from "../common/ThemeToggle";
-import { LogOut } from "lucide-react";
+import { LogOut, Store } from "lucide-react";
 
 export function ShiftSelectPage({
   user,
@@ -120,14 +120,14 @@ export function ShiftSelectPage({
     <main className="min-h-screen bg-[var(--color-background)] text-[var(--color-text)] flex flex-col justify-between px-3 sm:px-4 py-4 sm:py-10 pb-[max(1rem,env(safe-area-inset-bottom))] font-sans">
       {showConfetti && <Confetti />}
 
-      {/* Clean Top Profile Bar */}
-      <header className="w-full max-w-4xl mx-auto mb-6 flex items-center justify-between gap-2 sm:gap-4 p-3 sm:p-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl shadow-xs">
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0 min-w-0">
+      {/* Unified Top Header Bar */}
+      <header className="w-full max-w-5xl mx-auto mb-6 flex items-center justify-between gap-2 sm:gap-4 p-2.5 sm:p-3.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl shadow-xs">
+        <div className="flex items-center gap-1.5 sm:gap-3 shrink-0 min-w-0">
           {onBack && (
             <button
               type="button"
               onClick={onBack}
-              className="w-9 h-9 rounded-xl border border-[var(--color-border)] hover:bg-[var(--color-surface-2)] flex items-center justify-center text-[var(--color-text-muted)] transition-all cursor-pointer shrink-0"
+              className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl border border-[var(--color-border)] hover:bg-[var(--color-surface-2)] flex items-center justify-center text-[var(--color-text)] transition-all cursor-pointer shrink-0"
               title="ย้อนกลับไปเลือกตำแหน่ง"
               aria-label="ย้อนกลับไปเลือกตำแหน่ง"
             >
@@ -136,7 +136,7 @@ export function ShiftSelectPage({
               </svg>
             </button>
           )}
-          <BrandLogo size={36} showText={true} hideTextOnMobile={true} isDark={false} />
+          <BrandLogo size={32} showText={true} hideTextOnMobile={true} isDark={false} />
         </div>
 
         <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
@@ -144,17 +144,27 @@ export function ShiftSelectPage({
           <NotificationCenter />
           <ThemeToggle />
 
-          <div className="flex items-center gap-2 text-right hidden lg:flex">
-            <div>
-              {user.branchName && (
-                <p className="text-[10px] font-bold text-amber-900 uppercase tracking-widest mb-0.5 leading-none">
-                  {user.branchName}
-                </p>
-              )}
-              <p className="text-xs font-bold text-[var(--color-text)] leading-tight">{user.name}</p>
-              <p className="text-[11px] text-[var(--color-text-muted)] font-medium">{user.position || "พนักงานสาขา"}</p>
+          {/* User Profile Block */}
+          <div className="flex items-center gap-2 pl-2 sm:pl-3 border-l border-[var(--color-border)]">
+            <div className="text-right hidden lg:block">
+              <p className="text-xs sm:text-sm font-extrabold text-[var(--color-text)] leading-tight truncate max-w-[150px]">
+                {user.name}
+              </p>
+              <div className="flex items-center justify-end gap-1 mt-0.5">
+                {user.branchName && (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[var(--color-text-muted)] bg-[var(--color-surface-2)] px-1.5 py-0.5 rounded-full border border-[var(--color-border)] leading-none shrink-0">
+                    <Store size={10} className="text-amber-600 dark:text-amber-400 shrink-0" />
+                    {user.branchName}
+                  </span>
+                )}
+                {user.position && (
+                  <span className="text-[10px] font-bold text-amber-900 dark:text-amber-200 bg-amber-100 dark:bg-amber-950/80 px-1.5 py-0.5 rounded-full border border-amber-300 dark:border-amber-700 leading-none shrink-0 truncate max-w-[110px]">
+                    {user.position}
+                  </span>
+                )}
+              </div>
             </div>
-            <div className="w-9 h-9 rounded-xl bg-[var(--color-brown)] text-amber-300 flex items-center justify-center font-bold text-xs shadow-xs">
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[var(--color-brown)] text-amber-100 font-extrabold flex items-center justify-center text-xs shadow-xs shrink-0 ring-1 ring-[var(--color-border)]" title={user.name}>
               {user.name.slice(0, 2)}
             </div>
           </div>
@@ -164,10 +174,10 @@ export function ShiftSelectPage({
             onClick={onLogout}
             title="ออกจากระบบ"
             aria-label="ออกจากระบบ"
-            className="text-xs text-[var(--color-text-muted)] hover:text-rose-700 hover:bg-rose-50 hover:border-rose-200 transition-all p-2 sm:px-3 sm:py-1.5 rounded-xl border border-[var(--color-border)] font-semibold cursor-pointer min-h-[36px] min-w-[36px] inline-flex items-center justify-center gap-1.5 shrink-0"
+            className="text-xs sm:text-sm text-[var(--color-text)] hover:text-rose-700 hover:bg-rose-50 hover:border-rose-300 dark:hover:bg-rose-950/40 dark:hover:border-rose-700 transition-all p-2 sm:px-2.5 sm:py-2 rounded-xl border border-[var(--color-border)] font-bold cursor-pointer min-h-[36px] min-w-[36px] inline-flex items-center justify-center gap-1.5 shrink-0"
           >
-            <LogOut size={16} />
-            <span className="hidden sm:inline">ออกจากระบบ</span>
+            <LogOut size={15} />
+            <span className="hidden xl:inline">ออกจากระบบ</span>
           </button>
         </div>
       </header>
@@ -176,11 +186,11 @@ export function ShiftSelectPage({
       <div className="w-full max-w-3xl mx-auto flex-1 flex flex-col items-center justify-center py-4">
         {/* Title */}
         <div className="text-center mb-8">
-          <h1 className="text-xl sm:text-2xl font-bold text-[var(--color-text)] tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[var(--color-text)] tracking-tight">
             เลือกกะการทำงาน
           </h1>
-          <p className="text-xs sm:text-sm text-[var(--color-text-muted)] mt-1.5 max-w-md mx-auto">
-            ติ๊กเลือกกะที่ต้องการปฏิบัติงานสำหรับตำแหน่ง <span className="font-bold text-[var(--color-text)]">{user.position || "พนักงาน"}</span>
+          <p className="text-sm sm:text-base text-[var(--color-text-muted)] mt-2 max-w-md mx-auto leading-relaxed font-medium">
+            ติ๊กเลือกกะที่ต้องการปฏิบัติงานสำหรับตำแหน่ง <span className="font-extrabold text-[var(--color-text)] underline decoration-amber-500/50 underline-offset-4">{user.position || "พนักงาน"}</span>
           </p>
         </div>
 
@@ -241,15 +251,15 @@ export function ShiftSelectPage({
 
             const containerTheme = isDisabled
               ? checkStatus === "completed"
-                ? "border-2 border-emerald-400 bg-emerald-50 dark:border-emerald-700 dark:bg-emerald-950/40 opacity-90"
-                : "border-2 border-[var(--color-border)] bg-[var(--color-surface-2)]/80 opacity-60"
+                ? "border-2 border-emerald-400 bg-emerald-50 dark:border-emerald-700 dark:bg-emerald-950/40"
+                : "border-2 border-[var(--color-border)] bg-[var(--color-surface-2)] text-[var(--color-text-muted)]"
               : isChecked
                 ? isMorn
-                  ? "border-2 border-amber-500 bg-[var(--color-surface)] shadow-xs ring-2 ring-amber-400/50"
-                  : "border-2 border-orange-500 bg-[var(--color-surface)] shadow-xs ring-2 ring-orange-400/50"
+                  ? "border-2 border-amber-500 bg-[var(--color-surface)] shadow-sm ring-2 ring-amber-400/50"
+                  : "border-2 border-orange-500 bg-[var(--color-surface)] shadow-sm ring-2 ring-orange-400/50"
                 : isMorn
-                  ? "border-2 border-amber-300 hover:border-amber-500 bg-[var(--color-surface)] dark:border-amber-800 dark:hover:border-amber-600"
-                  : "border-2 border-orange-300 hover:border-orange-500 bg-[var(--color-surface)] dark:border-orange-800 dark:hover:border-orange-600";
+                  ? "border-2 border-amber-300 hover:border-amber-500 bg-[var(--color-surface)] dark:border-amber-700 dark:hover:border-amber-500"
+                  : "border-2 border-orange-300 hover:border-orange-500 bg-[var(--color-surface)] dark:border-orange-700 dark:hover:border-orange-500";
 
             return (
               <div
@@ -265,22 +275,22 @@ export function ShiftSelectPage({
                     toggleSelect();
                   }
                 }}
-                className={`group border rounded-2xl p-6 shadow-xs hover:shadow-md ${containerTheme} focus-visible:outline-none focus:ring-2 focus:ring-amber-400/50 ${isDisabled ? "cursor-not-allowed" : "cursor-pointer active:scale-[0.99]"} transition-all duration-150 flex flex-col justify-between relative overflow-hidden`}
+                className={`group border rounded-2xl p-6 sm:p-7 shadow-xs hover:shadow-md ${containerTheme} focus-visible:outline-none focus:ring-2 focus:ring-amber-400/50 ${isDisabled ? "cursor-not-allowed" : "cursor-pointer active:scale-[0.99]"} transition-all duration-150 flex flex-col justify-between relative overflow-hidden`}
               >
                 <div>
                   {/* Top Header inside Card: Checkbox & Shift Icon / Badges */}
-                  <div className="flex items-center justify-between gap-3 mb-5">
+                  <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3 mb-4 sm:mb-5">
                     {/* Checkbox indicator */}
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
                       <div
-                        className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-colors duration-150 ${
+                        className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-colors duration-150 shrink-0 ${
                           isChecked
                             ? isMorn
                               ? "bg-amber-500 border-amber-500 text-amber-950 shadow-xs"
                               : "bg-orange-500 border-orange-500 text-white shadow-xs"
                             : isDisabled && checkStatus === "completed"
                               ? "bg-emerald-600 border-emerald-500 text-white shadow-2xs"
-                              : "bg-[var(--color-surface)] border-[var(--color-border)] group-hover:border-amber-300"
+                              : "bg-[var(--color-surface)] border-[var(--color-border)] group-hover:border-amber-400"
                         }`}
                       >
                         {(isChecked || (isDisabled && checkStatus === "completed")) && (
@@ -289,35 +299,35 @@ export function ShiftSelectPage({
                           </svg>
                         )}
                       </div>
-                      <span className={`text-sm font-bold transition-colors ${isChecked ? "text-[var(--color-text)]" : isDisabled ? (checkStatus === "completed" ? "text-emerald-700 dark:text-emerald-300" : "text-[var(--color-text-subtle)]") : "text-[var(--color-text-muted)]"}`}>
+                      <span className={`text-xs sm:text-sm font-bold transition-colors truncate ${isChecked ? "text-[var(--color-text)]" : isDisabled ? (checkStatus === "completed" ? "text-emerald-800 dark:text-emerald-300 font-extrabold" : "text-[var(--color-text-muted)] font-bold") : "text-[var(--color-text)] font-semibold"}`}>
                         {isChecked ? "เลือกกะนี้แล้ว" : isDisabled ? (checkStatus === "completed" ? "ตรวจครบทุกข้อแล้ว" : isLoading ? "กำลังตรวจสอบข้อมูล..." : "ไม่สามารถเลือกได้") : "แตะเพื่อเลือกกะนี้"}
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-1.5 flex-wrap justify-end">
+                    <div className="flex items-center gap-1.5 flex-wrap justify-end shrink-0">
                       {checkStatus === "completed" ? (
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800 flex items-center gap-1">
-                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+                        <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-950 border border-emerald-300 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-800 flex items-center gap-1 shadow-2xs">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
                             <polyline points="20 6 9 17 4 12" />
                           </svg>
                           <span>เสร็จสมบูรณ์</span>
                         </span>
                       ) : checkStatus === "incomplete" ? (
-                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-800 flex items-center gap-1">
+                        <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-amber-100 text-amber-950 border border-amber-300 dark:bg-amber-950/80 dark:text-amber-200 dark:border-amber-800 flex items-center gap-1 shadow-2xs">
                           <span>ค้าง {totalItems - doneItems} ข้อ</span>
                         </span>
                       ) : null}
 
                       {s.isCurrent && (
                         <span
-                          className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border font-mono shadow-2xs flex items-center gap-1 ${
+                          className={`text-xs font-extrabold px-2.5 py-1 rounded-full border font-mono shadow-2xs flex items-center gap-1.5 ${
                             isMorn
-                              ? "bg-amber-100 text-amber-900 border-amber-300 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800"
-                              : "bg-orange-100 text-orange-900 border-orange-300 dark:bg-orange-950/60 dark:text-orange-300 dark:border-orange-800"
+                              ? "bg-amber-200 text-amber-950 border-amber-400 dark:bg-amber-900/80 dark:text-amber-200 dark:border-amber-700"
+                              : "bg-orange-200 text-orange-950 border-orange-400 dark:bg-orange-900/80 dark:text-orange-200 dark:border-orange-700"
                           }`}
                         >
                           <span
-                            className={`w-1.5 h-1.5 rounded-full ${isMorn ? "bg-amber-600" : "bg-orange-600"}`}
+                            className={`w-2 h-2 rounded-full ${isMorn ? "bg-amber-600" : "bg-orange-600"}`}
                             aria-hidden="true"
                           />
                           เวลานี้
@@ -327,32 +337,32 @@ export function ShiftSelectPage({
                   </div>
 
                   {/* Title & Icon Header */}
-                  <div className="flex items-start gap-3.5 mb-2">
+                  <div className="flex items-start gap-3.5 mb-3">
                     <div
-                      className={`w-12 h-12 rounded-2xl border flex items-center justify-center shrink-0 transition-all duration-200 group-hover:scale-105 shadow-xs ${
+                      className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 transition-all duration-200 group-hover:scale-105 shadow-xs ${
                         isMorn
-                          ? "border-amber-400/50 bg-amber-500 text-amber-950 dark:bg-amber-500 dark:text-amber-950"
-                          : "border-orange-400/50 bg-orange-500 text-white dark:bg-orange-500 dark:text-white"
+                          ? "bg-amber-500 text-amber-950 dark:bg-amber-400 dark:text-amber-950"
+                          : "bg-orange-500 text-white dark:bg-orange-500 dark:text-white"
                       }`}
                     >
                       {isMorn ? (
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                           <circle cx="12" cy="12" r="4" />
                           <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
                         </svg>
                       ) : (
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                           <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
                         </svg>
                       )}
                     </div>
 
                     <div>
-                      <h3 className="text-xl font-bold text-[var(--color-text)] tracking-tight flex items-center gap-2">
+                      <h3 className="text-xl sm:text-2xl font-extrabold text-[var(--color-text)] tracking-tight flex items-center gap-2">
                         {s.title}
                       </h3>
-                      <p className="text-xs font-semibold text-[var(--color-text-muted)] mt-0.5 font-mono flex items-center gap-1.5">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <p className="text-xs sm:text-sm font-bold text-[var(--color-text)] mt-1 font-mono flex items-center gap-1.5">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                           <circle cx="12" cy="12" r="10" />
                           <polyline points="12 6 12 12 16 14" />
                         </svg>
@@ -361,18 +371,18 @@ export function ShiftSelectPage({
                     </div>
                   </div>
 
-                  <p className="text-xs text-[var(--color-text-muted)] mt-3 leading-relaxed">
+                  <p className="text-sm text-[var(--color-text)] mt-3 leading-relaxed font-normal">
                     {s.tagline}
                   </p>
                 </div>
 
-                <div className="mt-5 pt-3 border-t border-[var(--color-border)] flex items-center justify-between text-xs text-[var(--color-text-muted)] font-medium">
+                <div className="mt-5 pt-3 border-t border-[var(--color-border-subtle)] flex items-center justify-between text-xs sm:text-sm text-[var(--color-text)] font-semibold">
                   <span>{s.subTitle}</span>
                   {checkStatus === "completed" && (
-                    <span className="text-emerald-700 dark:text-emerald-300 font-mono text-[11px] font-bold">เช็คแล้ว ({doneItems}/{totalItems})</span>
+                    <span className="text-emerald-900 dark:text-emerald-200 font-mono text-xs font-bold">เช็คแล้ว ({doneItems}/{totalItems})</span>
                   )}
                   {checkStatus === "incomplete" && (
-                    <span className="text-amber-800 dark:text-amber-300 font-mono text-[11px] font-bold">ค้าง ({totalItems - doneItems})</span>
+                    <span className="text-amber-950 dark:text-amber-200 font-mono text-xs font-bold">ค้าง ({totalItems - doneItems})</span>
                   )}
                 </div>
               </div>
@@ -381,19 +391,19 @@ export function ShiftSelectPage({
         </div>
 
         {/* Selected Shifts Summary Text */}
-        <div className="w-full text-center mb-6 min-h-[32px] flex items-center justify-center">
+        <div className="w-full text-center mb-6 min-h-[36px] flex items-center justify-center">
           {chosenShift === "morning" ? (
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 text-amber-950 dark:text-amber-200 text-xs sm:text-sm font-semibold shadow-xs">
-              <span className="w-2 h-2 rounded-full bg-amber-500" aria-hidden="true" />
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-100 dark:bg-amber-950/80 border border-amber-300 dark:border-amber-700 text-amber-950 dark:text-amber-200 text-xs sm:text-sm font-bold shadow-xs">
+              <span className="w-2 h-2 rounded-full bg-amber-600" aria-hidden="true" />
               <span>เลือกปฏิบัติงาน: กะเช้า (06:00 – 16:30)</span>
             </div>
           ) : chosenShift === "afternoon" ? (
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-orange-50 dark:bg-orange-950/40 border border-orange-300 dark:border-orange-800 text-orange-950 dark:text-orange-200 text-xs sm:text-sm font-semibold shadow-xs">
-              <span className="w-2 h-2 rounded-full bg-orange-500" aria-hidden="true" />
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-orange-100 dark:bg-orange-950/80 border border-orange-300 dark:border-orange-700 text-orange-950 dark:text-orange-200 text-xs sm:text-sm font-bold shadow-xs">
+              <span className="w-2 h-2 rounded-full bg-orange-600" aria-hidden="true" />
               <span>เลือกปฏิบัติงาน: กะบ่าย (10:00 – 20:30)</span>
             </div>
           ) : (
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[var(--color-surface-2)] border border-[var(--color-border)] text-[var(--color-text-muted)] text-xs font-medium">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[var(--color-surface-2)] border border-[var(--color-border)] text-[var(--color-text)] font-semibold text-xs sm:text-sm">
               <span>แตะเลือกกะที่ท่านปฏิบัติงานในวันนี้</span>
             </div>
           )}
@@ -405,12 +415,12 @@ export function ShiftSelectPage({
             type="button"
             disabled={!hasSelection}
             onClick={handleStartWork}
-            className={`w-full py-3 px-6 rounded-xl font-bold text-sm sm:text-base shadow-xs hover:shadow-sm transition-all duration-150 flex items-center justify-center gap-2 cursor-pointer ${
+            className={`w-full py-3.5 px-6 rounded-xl font-extrabold text-sm sm:text-base shadow-xs hover:shadow-sm transition-all duration-150 flex items-center justify-center gap-2 cursor-pointer ${
               hasSelection
                 ? chosenShift === "morning"
                   ? "bg-amber-500 hover:bg-amber-600 text-amber-950 border border-amber-600 shadow-xs"
                   : "bg-orange-600 hover:bg-orange-700 text-white border border-orange-700 shadow-xs"
-                : "bg-[var(--color-surface-2)] text-[var(--color-text-subtle)] border border-[var(--color-border)] cursor-not-allowed opacity-60"
+                : "bg-[var(--color-surface-2)] text-[var(--color-text-muted)] font-bold border border-[var(--color-border)] cursor-not-allowed"
             }`}
           >
             <span>{hasSelection ? `เริ่มตรวจเช็คลิสต์ ${chosenShift === "morning" ? "กะเช้า" : "กะบ่าย"}` : "เลือกกะการทำงานเพื่อเริ่มตรวจงาน"}</span>
@@ -426,16 +436,16 @@ export function ShiftSelectPage({
             <button
               type="button"
               onClick={onBack}
-              className="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)] font-semibold inline-flex items-center gap-1.5 transition-colors cursor-pointer"
+              className="text-sm text-[var(--color-text)] hover:text-amber-600 font-semibold inline-flex items-center gap-2 transition-colors cursor-pointer p-2 rounded-xl"
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M19 12H5M12 19l-7-7 7-7" />
               </svg>
               <span>ต้องการเปลี่ยนตำแหน่ง? ย้อนกลับไปเลือกตำแหน่ง</span>
             </button>
           )}
 
-          {onBack && <span className="text-[#C9B29F] hidden sm:inline" aria-hidden="true">•</span>}
+          {onBack && <span className="text-[var(--color-border)] hidden sm:inline" aria-hidden="true">•</span>}
 
           <button
             type="button"
@@ -448,10 +458,10 @@ export function ShiftSelectPage({
                 window.location.reload();
               }
             }}
-            className="text-xs text-[var(--color-text-muted)] hover:text-rose-700 font-medium inline-flex items-center gap-1.5 transition-colors cursor-pointer"
+            className="text-xs sm:text-sm text-[var(--color-text-muted)] hover:text-rose-700 font-medium inline-flex items-center gap-1.5 transition-colors cursor-pointer p-1.5 rounded-lg"
             title="ล้างข้อมูลเช็คลิสต์ทั้งหมดเพื่อเริ่มทดสอบใหม่"
           >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
               <path d="M3 3v5h5" />
             </svg>
@@ -460,7 +470,7 @@ export function ShiftSelectPage({
         </div>
       </div>
 
-      <footer className="text-center text-[11px] text-[var(--color-text-subtle)] font-medium py-2 relative z-10">
+      <footer className="text-center text-xs sm:text-sm text-[var(--color-text-muted)] font-medium py-3 relative z-10">
         {user.branchName || "Eater Egg Fresh Mart"} • Checklist System
       </footer>
     </main>

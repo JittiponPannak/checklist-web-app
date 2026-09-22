@@ -37,7 +37,7 @@ export function SessionDetailModal({
         aria-modal="true"
         aria-labelledby="session-detail-title"
         tabIndex={-1}
-        className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl w-full max-w-lg max-h-[90vh] sm:max-h-[85vh] overflow-y-auto shadow-2xl p-5 sm:p-8 focus-visible:outline-2 focus-visible:outline-amber-400 flex flex-col justify-between text-[var(--color-text)]"
+        className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl w-full max-w-lg max-h-[90vh] sm:max-h-[85vh] overflow-y-auto shadow-2xl p-4 sm:p-6 focus-visible:outline-2 focus-visible:outline-amber-400 flex flex-col justify-between text-[var(--color-text)]"
         onClick={(e) => e.stopPropagation()}
       >
         <div>
@@ -51,11 +51,11 @@ export function SessionDetailModal({
                 {getShiftBadge(session.shift)}
                 <span className="text-xs font-mono text-[var(--color-text-muted)]">{fmtDate(session.startedAt)}</span>
                 {isApproved ? (
-                  <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
+                  <span className="text-xs font-bold text-emerald-900 bg-emerald-100 dark:bg-emerald-950/80 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-800 px-2.5 py-0.5 rounded-full">
                     ✓ รับรองผลเรียบร้อยแล้ว
                   </span>
                 ) : (
-                  <span className="text-[10px] font-bold text-amber-900 bg-amber-100 border border-amber-300 px-2.5 py-0.5 rounded-full">
+                  <span className="text-xs font-bold text-amber-950 bg-amber-100 dark:bg-amber-950/80 dark:text-amber-200 border border-amber-300 dark:border-amber-800 px-2.5 py-0.5 rounded-full">
                     รอการตรวจสอบและรับรอง
                   </span>
                 )}
@@ -86,7 +86,7 @@ export function SessionDetailModal({
               return (
                 <div key={item.id} className="space-y-1.5">
                   {showCat && (
-                    <p className="text-[11px] font-bold text-[var(--color-text-muted)] pt-2 pb-0.5">{item.category}</p>
+                    <p className="text-xs font-bold text-[var(--color-text-muted)] pt-2 pb-0.5">{item.category}</p>
                   )}
                   <div
                     className={`flex items-start gap-3 p-3 rounded-xl border transition-colors ${item.completedAt ? "bg-[var(--color-amber-glow)]/50 border-[var(--color-amber)]" : "bg-[var(--color-surface)] border-[var(--color-border)]"
@@ -110,7 +110,7 @@ export function SessionDetailModal({
                     </div>
                     <div className="flex-1">
                       <div className="flex gap-2">
-                        <span className="text-[10px] font-mono text-[var(--color-text-subtle)]">
+                        <span className="text-xs font-mono text-[var(--color-text-subtle)]">
                           {String(idx + 1).padStart(2, "0")}
                         </span>
                         <p className={`text-xs font-medium ${item.completedAt ? "text-[var(--color-text-muted)] line-through" : "text-[var(--color-text)]"}`}>{item.label}</p>
@@ -131,9 +131,9 @@ export function SessionDetailModal({
                           }
                         }
                         return (
-                          <p className="text-[10px] font-mono text-amber-700 font-semibold mt-0.5">
+                          <p className="text-xs font-mono text-amber-800 dark:text-amber-300 font-semibold mt-0.5">
                             เสร็จเมื่อ {fmtTime(item.completedAt)}
-                            {isLate && <span className="text-rose-600 font-bold ml-1 font-sans">(ล่าช้า)</span>}
+                            {isLate && <span className="text-rose-600 dark:text-rose-400 font-bold ml-1 font-sans">(ล่าช้า)</span>}
                           </p>
                         );
                       })()}
@@ -151,7 +151,7 @@ export function SessionDetailModal({
             <button
               type="button"
               onClick={() => onApprove(session.id)}
-              className="w-full min-h-[44px] py-3 sm:py-2.5 px-4 bg-[var(--color-brown)] hover:bg-[var(--color-brown-light)] text-amber-300 rounded-xl text-xs sm:text-sm font-semibold transition-all shadow-sm cursor-pointer flex items-center justify-center gap-2"
+              className="w-full min-h-[44px] py-3 sm:py-2.5 px-4 bg-[var(--color-brown)] hover:bg-[var(--color-brown-light)] text-amber-100 rounded-xl text-xs sm:text-sm font-bold transition-all shadow-sm cursor-pointer flex items-center justify-center gap-2"
             >
               <span>รับรองผลการตรวจงาน ({approveRoleTitle})</span>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">

@@ -1,11 +1,10 @@
 import { ShiftType, User } from "../../types";
 import { MANAGEMENT_POSITIONS, STAFF_POSITIONS } from "../../types";
-import { Badge } from "../common/Badge";
 import { ThemeToggle } from "../common/ThemeToggle";
 import { BrandLogo } from "../common/BrandLogo";
 import { PointStreakBadge } from "../common/PointStreakBadge";
 import { NotificationCenter } from "../common/NotificationCenter";
-import { CreditCard, Package, ArrowRight, ArrowLeft, LogOut } from "lucide-react";
+import { CreditCard, Package, ArrowLeft, LogOut, Store } from "lucide-react";
 
 export function PositionSelectPage({
   user,
@@ -30,20 +29,20 @@ export function PositionSelectPage({
   return (
     <main className="min-h-screen bg-[var(--color-background)] text-[var(--color-text)] flex flex-col justify-between px-3 sm:px-4 py-4 sm:py-10 pb-[max(1rem,env(safe-area-inset-bottom))] font-sans">
       {/* Unified Top Header Bar */}
-      <header className="w-full max-w-4xl mx-auto mb-6 flex items-center justify-between gap-2 sm:gap-4 p-3 sm:p-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl shadow-xs">
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0 min-w-0">
+      <header className="w-full max-w-5xl mx-auto mb-6 flex items-center justify-between gap-2 sm:gap-4 p-2.5 sm:p-3.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl shadow-xs">
+        <div className="flex items-center gap-1.5 sm:gap-3 shrink-0 min-w-0">
           {onBack && (
             <button
               type="button"
               onClick={onBack}
-              className="w-9 h-9 rounded-xl border border-[var(--color-border)] hover:bg-[var(--color-surface-2)] flex items-center justify-center text-[var(--color-text-muted)] transition-all cursor-pointer shrink-0"
+              className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl border border-[var(--color-border)] hover:bg-[var(--color-surface-2)] flex items-center justify-center text-[var(--color-text)] transition-all cursor-pointer shrink-0"
               title="ย้อนกลับ"
               aria-label="ย้อนกลับ"
             >
               <ArrowLeft size={18} strokeWidth={2.5} />
             </button>
           )}
-          <BrandLogo size={36} showText={true} hideTextOnMobile={true} isDark={false} />
+          <BrandLogo size={32} showText={true} hideTextOnMobile={true} isDark={false} />
         </div>
 
         <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
@@ -51,17 +50,25 @@ export function PositionSelectPage({
           <NotificationCenter />
           <ThemeToggle />
 
-          <div className="flex items-center gap-2 text-right hidden lg:flex">
-            <div>
-              {user.branchName && (
-                <p className="text-[10px] font-bold text-amber-900 dark:text-amber-300 uppercase tracking-widest mb-0.5 leading-none">
-                  {user.branchName}
-                </p>
-              )}
-              <p className="text-xs font-bold text-[var(--color-text)] leading-tight">{user.name}</p>
-              <p className="text-[11px] text-[var(--color-text-muted)] font-medium">ขั้นตอนที่ 1 • เลือกตำแหน่ง</p>
+          {/* User Profile Block */}
+          <div className="flex items-center gap-2 pl-2 sm:pl-3 border-l border-[var(--color-border)]">
+            <div className="text-right hidden lg:block">
+              <p className="text-xs sm:text-sm font-extrabold text-[var(--color-text)] leading-tight truncate max-w-[150px]">
+                {user.name}
+              </p>
+              <div className="flex items-center justify-end gap-1 mt-0.5">
+                {user.branchName && (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[var(--color-text-muted)] bg-[var(--color-surface-2)] px-1.5 py-0.5 rounded-full border border-[var(--color-border)] leading-none shrink-0">
+                    <Store size={10} className="text-amber-600 dark:text-amber-400 shrink-0" />
+                    {user.branchName}
+                  </span>
+                )}
+                <span className="text-[10px] font-semibold text-[var(--color-text-muted)] bg-[var(--color-surface-2)] px-1.5 py-0.5 rounded-full border border-[var(--color-border)] leading-none shrink-0">
+                  เลือกตำแหน่ง
+                </span>
+              </div>
             </div>
-            <div className="w-9 h-9 rounded-xl bg-[var(--color-brown)] text-amber-300 flex items-center justify-center font-bold text-xs shadow-xs">
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[var(--color-brown)] text-amber-100 font-extrabold flex items-center justify-center text-xs shadow-xs shrink-0 ring-1 ring-[var(--color-border)]" title={user.name}>
               {user.name.slice(0, 2)}
             </div>
           </div>
@@ -71,10 +78,10 @@ export function PositionSelectPage({
             onClick={onLogout}
             title="ออกจากระบบ"
             aria-label="ออกจากระบบ"
-            className="text-xs text-[var(--color-text-muted)] hover:text-rose-700 hover:bg-rose-50 hover:border-rose-200 dark:hover:bg-rose-950/40 dark:hover:border-rose-800 transition-all p-2 sm:px-3 sm:py-1.5 rounded-xl border border-[var(--color-border)] font-semibold cursor-pointer min-h-[36px] min-w-[36px] inline-flex items-center justify-center gap-1.5 shrink-0"
+            className="text-xs sm:text-sm text-[var(--color-text)] hover:text-rose-700 hover:bg-rose-50 hover:border-rose-300 dark:hover:bg-rose-950/40 dark:hover:border-rose-700 transition-all p-2 sm:px-2.5 sm:py-2 rounded-xl border border-[var(--color-border)] font-bold cursor-pointer min-h-[36px] min-w-[36px] inline-flex items-center justify-center gap-1.5 shrink-0"
           >
-            <LogOut size={16} />
-            <span className="hidden sm:inline">ออกจากระบบ</span>
+            <LogOut size={15} />
+            <span className="hidden xl:inline">ออกจากระบบ</span>
           </button>
         </div>
       </header>
@@ -83,15 +90,15 @@ export function PositionSelectPage({
       <div className="w-full max-w-4xl mx-auto flex-1 flex flex-col items-center justify-center py-4">
         {/* Title */}
         <div className="text-center mb-8">
-          <h2 className="text-xl sm:text-2xl font-bold text-[var(--color-text)] tracking-tight">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-[var(--color-text)] tracking-tight">
             เลือกตำแหน่งงานประจำวัน
           </h2>
-          <p className="text-xs sm:text-sm text-[var(--color-text-muted)] mt-1.5 max-w-md mx-auto">
+          <p className="text-sm sm:text-base text-[var(--color-text-muted)] mt-2 max-w-lg mx-auto leading-relaxed font-medium">
             เลือกหน้าที่ที่คุณปฏิบัติงาน เพื่อดำเนินการเลือกกะการทำงานในขั้นตอนถัดไป
           </p>
         </div>
 
-        {/* Position Cards Grid */}
+        {/* Position Cards Grid - Clean, un-nested cards with clear contrast and readable body typography */}
         <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
           {availablePositions.map((pos) => {
             const isCashier = pos === "แคชเชียร์";
@@ -109,89 +116,90 @@ export function PositionSelectPage({
                     onSelectPosition(pos);
                   }
                 }}
-                className={`group border-2 rounded-2xl p-6 sm:p-7 shadow-xs focus-visible:outline-none focus-visible:ring-2 transition-all duration-150 flex flex-col justify-between cursor-pointer active:scale-[0.99] hover:shadow-md bg-[var(--color-surface)] ${
+                className={`group rounded-2xl p-6 sm:p-7 shadow-sm hover:shadow-md focus-visible:outline-none focus-visible:ring-3 transition-all duration-150 flex flex-col justify-between cursor-pointer active:scale-[0.99] bg-[var(--color-surface)] border-2 ${
                   isCashier
                     ? "border-amber-400 hover:border-amber-500 dark:border-amber-600 dark:hover:border-amber-500 focus-visible:ring-amber-400/50"
                     : "border-emerald-500 hover:border-emerald-600 dark:border-emerald-600 dark:hover:border-emerald-500 focus-visible:ring-emerald-400/50"
                 }`}
               >
                 <div>
-                  <div className="flex items-start justify-between gap-3 mb-4">
+                  {/* Card Header: Icon + Category Badge */}
+                  <div className="flex items-center justify-between gap-3 mb-5">
                     <div
-                      className={`w-12 h-12 rounded-2xl border flex items-center justify-center transition-all duration-200 group-hover:scale-105 shadow-2xs ${
+                      className={`w-12 h-12 rounded-xl flex items-center justify-center transition-transform duration-200 group-hover:scale-105 shadow-xs ${
                         isCashier
-                          ? "bg-amber-500 text-amber-950 border-amber-600/40 shadow-xs dark:bg-amber-500 dark:text-amber-950"
-                          : "bg-emerald-600 text-white border-emerald-700/40 shadow-xs dark:bg-emerald-600 dark:text-white"
+                          ? "bg-amber-500 text-amber-950 dark:bg-amber-400 dark:text-amber-950"
+                          : "bg-emerald-600 text-white dark:bg-emerald-500 dark:text-emerald-950"
                       }`}
                     >
                       {isCashier ? (
-                        <CreditCard size={22} strokeWidth={2.2} />
+                        <CreditCard size={24} strokeWidth={2.3} />
                       ) : (
-                        <Package size={22} strokeWidth={2.2} />
+                        <Package size={24} strokeWidth={2.3} />
                       )}
                     </div>
 
                     <span
-                      className={`text-[11px] font-bold px-2.5 py-1 rounded-full border ${
+                      className={`inline-flex items-center gap-1.5 text-xs font-extrabold tracking-wide px-3 py-1 rounded-full border shadow-xs transition-colors ${
                         isCashier
-                          ? "bg-amber-100 text-amber-950 border-amber-300 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800"
-                          : "bg-emerald-100 text-emerald-950 border-emerald-300 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800"
+                          ? "bg-amber-500 text-amber-950 border-amber-600 dark:bg-amber-400 dark:text-amber-950 dark:border-amber-300"
+                          : "bg-emerald-500 text-emerald-950 border-emerald-600 dark:bg-emerald-400 dark:text-emerald-950 dark:border-emerald-300"
                       }`}
                     >
+                      <span className={`w-1.5 h-1.5 rounded-full ${isCashier ? "bg-amber-950" : "bg-emerald-950"}`} aria-hidden="true" />
                       {isCashier ? "จุดชำระเงิน & บริการ" : "สินค้าสด & ตู้แช่"}
                     </span>
                   </div>
 
-                  <h3 className="text-lg sm:text-xl font-bold text-[var(--color-text)] tracking-tight mb-2">
+                  {/* Position Title */}
+                  <h3 className="text-xl sm:text-2xl font-extrabold text-[var(--color-text)] tracking-tight mb-3">
                     {pos}
                   </h3>
 
-                  <p className="text-xs sm:text-sm text-[var(--color-text-muted)] leading-relaxed mb-4">
+                  {/* Body description - larger, highly readable Thai text */}
+                  <p className="text-sm sm:text-base text-[var(--color-text)] leading-relaxed mb-5 font-normal">
                     {isCashier
                       ? "รับผิดชอบงานจุดชำระเงิน ตรวจสอบระบบแคชเชียร์ นับเงินทอน และดูแลบริการลูกค้าหน้าร้าน"
                       : "รับผิดชอบการจัดเรียงสินค้า ตรวจนับสต็อก เติมสินค้าตู้แช่ และตรวจสอบความสดใหม่"}
                   </p>
 
-                  <div className="space-y-2 py-3 border-t border-[var(--color-border-subtle)] text-xs text-[var(--color-text-muted)]">
+                  {/* Key Tasks - Clean list without nested card borders */}
+                  <div className="space-y-2.5 pt-4 pb-2 border-t border-[var(--color-border-subtle)] text-sm text-[var(--color-text)]">
                     {isCashier ? (
                       <>
-                        <div className="flex items-center gap-2">
-                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500" aria-hidden="true" />
-                          <span>ตรวจเงินสด ลิ้นชัก และอุปกรณ์รับชำระ</span>
+                        <div className="flex items-start gap-2.5">
+                          <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0 mt-1.5" aria-hidden="true" />
+                          <span className="font-medium">ตรวจเงินสด ลิ้นชัก และอุปกรณ์รับชำระ</span>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500" aria-hidden="true" />
-                          <span>ดูแลความสะอาดรอบจุดเคาน์เตอร์</span>
+                        <div className="flex items-start gap-2.5">
+                          <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0 mt-1.5" aria-hidden="true" />
+                          <span className="font-medium">ดูแลความสะอาดรอบจุดเคาน์เตอร์บริการ</span>
                         </div>
                       </>
                     ) : (
                       <>
-                        <div className="flex items-center gap-2">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" aria-hidden="true" />
-                          <span>ตรวจรับสินค้าสดและเติมตู้แช่</span>
+                        <div className="flex items-start gap-2.5">
+                          <span className="w-2 h-2 rounded-full bg-emerald-600 shrink-0 mt-1.5" aria-hidden="true" />
+                          <span className="font-medium">ตรวจรับสินค้าสดและเติมตู้แช่ตามมาตรฐาน</span>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" aria-hidden="true" />
-                          <span>ตรวจเช็คป้ายราคาและวันหมดอายุ</span>
+                        <div className="flex items-start gap-2.5">
+                          <span className="w-2 h-2 rounded-full bg-emerald-600 shrink-0 mt-1.5" aria-hidden="true" />
+                          <span className="font-medium">ตรวจเช็คป้ายราคา ป้ายโปรโมชั่น และวันหมดอายุ</span>
                         </div>
                       </>
                     )}
                   </div>
                 </div>
 
-                {/* Bottom Action Indicator */}
-                <div className="mt-6 pt-4 border-t border-[var(--color-border-subtle)]">
-                  <div
-                    aria-hidden="true"
-                    className={`w-full py-2.5 px-4 rounded-xl border text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 select-none shadow-xs group-hover:shadow-sm ${
-                      isCashier
-                        ? "bg-amber-500 hover:bg-amber-600 text-amber-950 border-amber-600/40"
-                        : "bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-700/40"
-                    }`}
-                  >
-                    <span>เลือกหน้าที่{pos} และระบุกะงาน →</span>
-                    <ArrowRight size={15} className="group-hover:translate-x-0.5 transition-transform" />
-                  </div>
+                {/* Direct Action Affordance */}
+                <div className="mt-6 pt-4 border-t border-[var(--color-border-subtle)] flex items-center justify-end">
+                  <span className={`text-xs font-bold px-2.5 py-1 rounded-lg border font-mono transition-all ${
+                    isCashier
+                      ? "bg-[var(--color-surface-2)] text-[var(--color-text)] border-[var(--color-border)] group-hover:bg-amber-500 group-hover:text-amber-950 group-hover:border-amber-600"
+                      : "bg-[var(--color-surface-2)] text-[var(--color-text)] border-[var(--color-border)] group-hover:bg-emerald-600 group-hover:text-white group-hover:border-emerald-700"
+                  }`}>
+                    เลือก ↵
+                  </span>
                 </div>
               </div>
             );
@@ -200,20 +208,20 @@ export function PositionSelectPage({
 
         {/* Back link */}
         {onBack && (
-          <div className="mt-6 text-center">
+          <div className="mt-8 text-center">
             <button
               type="button"
               onClick={onBack}
-              className="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)] font-semibold inline-flex items-center gap-1.5 transition-colors cursor-pointer"
+              className="text-sm text-[var(--color-text)] hover:text-amber-600 font-semibold inline-flex items-center gap-2 transition-colors cursor-pointer p-2 rounded-xl"
             >
-              <ArrowLeft size={14} />
+              <ArrowLeft size={16} />
               <span>ย้อนกลับไปหน้าเลือกช่องทางเข้างาน</span>
             </button>
           </div>
         )}
       </div>
 
-      <footer className="text-center text-xs text-[var(--color-text-subtle)] font-medium py-2">
+      <footer className="text-center text-xs sm:text-sm text-[var(--color-text-muted)] font-medium py-3">
         {user.branchName || "Eater Egg Fresh Mart"} • Checklist System
       </footer>
     </main>

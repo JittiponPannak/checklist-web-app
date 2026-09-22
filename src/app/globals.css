@@ -1,6 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --font-sans: 'Prompt', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
@@ -26,18 +28,18 @@
   --color-brown-light: #3b1c1a;
   --color-brown-subtle: #f0e4dc;
 
-  --color-text: #210d0c;
-  --color-text-muted: #5e3025;
-  --color-text-subtle: #79483c;
+  --color-text: #140807;
+  --color-text-muted: #3b1c18;
+  --color-text-subtle: #542c26;
 
   --color-danger: #dc2626;
   --color-danger-glow: rgba(220, 38, 38, 0.15);
 }
 
 .dark {
-  --color-background: #1c1311;
-  --color-surface: #2b1413;
-  --color-surface-2: #3a221f;
+  --color-background: #18100f;
+  --color-surface: #241413;
+  --color-surface-2: #331c19;
   --color-border: #5c352a;
   --color-border-subtle: #442220;
 
@@ -56,9 +58,9 @@
   --color-brown-light: #1c1311;
   --color-brown-subtle: #2b1413;
 
-  --color-text: #fffdf9;
-  --color-text-muted: #eadbce;
-  --color-text-subtle: #f2e7dc;
+  --color-text: #fffaf2;
+  --color-text-muted: #d6c2b0;
+  --color-text-subtle: #a8937d;
 
   --color-danger: #f87171;
   --color-danger-glow: rgba(248, 113, 113, 0.15);

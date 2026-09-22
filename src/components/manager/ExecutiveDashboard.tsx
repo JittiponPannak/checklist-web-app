@@ -325,7 +325,7 @@ export function ExecutiveDashboard({
     },
     manager: {
       title: "ผู้จัดการร้าน (Store Manager)",
-      badge: "bg-[var(--color-brown)] text-amber-300 border-[var(--color-text)] font-bold shadow-2xs",
+      badge: "bg-[var(--color-brown)] text-amber-100 border-amber-500/40 font-bold shadow-2xs",
       description: "กำกับดูแลภาพรวมสาขา อนุมัติขั้นสุดท้าย และควบคุมมาตรฐานการปฏิบัติงาน",
       primaryDuty: "อนุมัติขั้นสุดท้าย (Manager Final Approval) & ควบคุมดัชนีร้าน",
       Icon: ShieldCheck,
@@ -513,11 +513,11 @@ export function ExecutiveDashboard({
                 <span className="font-extrabold text-xs sm:text-base text-[var(--color-text)] tracking-tight truncate">
                   Eater Egg Fresh Mart
                 </span>
-                <span className="hidden sm:inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[var(--color-surface-2)] text-[var(--color-text-muted)] border border-[var(--color-border)] shrink-0">
+                <span className="hidden sm:inline-flex px-2 py-0.5 rounded-full text-xs font-semibold bg-[var(--color-surface-2)] text-[var(--color-text)] border border-[var(--color-border)] shrink-0">
                   {user.branchName || "ไม่ได้ระบุสาขา"}
                 </span>
               </div>
-              <p className="text-[11px] text-[var(--color-text-muted)] hidden md:block">
+              <p className="text-xs text-[var(--color-text-muted)] hidden md:block">
                 ระบบกำกับดูแลและตรวจสอบมาตรฐานงานสาขา (Operations & Audit Portal)
               </p>
             </div>
@@ -576,7 +576,7 @@ export function ExecutiveDashboard({
             <p className="text-xs text-[var(--color-text-muted)] max-w-2xl leading-relaxed">
               {roleConfig.description}
             </p>
-            <p className="text-[11px] text-[var(--color-text-subtle)] font-mono pt-0.5">
+            <p className="text-xs text-[var(--color-text-muted)] font-mono pt-0.5">
               ภารกิจหลักวันนี้: <span className="font-semibold text-[var(--color-text)]">{roleConfig.primaryDuty}</span>
             </p>
           </div>
@@ -586,7 +586,7 @@ export function ExecutiveDashboard({
               <button
                 type="button"
                 onClick={() => setActiveTab("checklist")}
-                className="px-4 py-2.5 bg-[var(--color-brown)] hover:bg-[var(--color-brown-light)] active:bg-black text-amber-300 text-xs font-semibold rounded-xl shadow-sm transition-all flex items-center gap-2 cursor-pointer"
+                className="px-4 py-2.5 bg-[var(--color-brown)] hover:bg-[var(--color-brown-light)] active:bg-black text-amber-100 text-xs font-bold rounded-xl shadow-sm transition-all flex items-center gap-2 cursor-pointer"
               >
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M9 11l3 3L22 4" />
@@ -635,16 +635,16 @@ export function ExecutiveDashboard({
                 key={tab.id}
                 type="button"
                 onClick={() => setActiveTab(tab.id)}
-                className={`p-2.5 sm:p-3 rounded-xl text-left transition-all cursor-pointer flex flex-col ${activeTab === tab.id
-                  ? "bg-[var(--color-brown)] text-amber-300 shadow-sm font-bold"
+                className={`p-2 sm:p-3 rounded-xl text-left transition-all cursor-pointer flex flex-col justify-center min-h-[44px] sm:min-h-[54px] ${activeTab === tab.id
+                  ? "bg-[var(--color-brown)] text-amber-100 shadow-sm font-bold"
                   : "text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface)]/70"
                   }`}
               >
-                <div className="flex items-center gap-2">
-                  <tab.Icon size={15} strokeWidth={2.2} />
-                  <span className="text-xs sm:text-sm">{tab.label}</span>
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <tab.Icon size={16} strokeWidth={2.2} className="shrink-0" />
+                  <span className="text-xs sm:text-sm line-clamp-1">{tab.label}</span>
                 </div>
-                <span className={`text-[10px] font-normal pl-6 hidden sm:block ${activeTab === tab.id ? "text-amber-200/80" : "text-[var(--color-text-subtle)]"}`}>
+                <span className={`text-xs font-normal pl-6 hidden sm:block ${activeTab === tab.id ? "text-amber-200" : "text-[var(--color-text-muted)]"}`}>
                   {tab.desc}
                 </span>
               </button>
@@ -733,10 +733,10 @@ export function ExecutiveDashboard({
                       </span>
                     </div>
                     {pendingApprovalsCount > 0 && (
-                      <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-md transition-colors ${
+                      <span className={`text-xs font-semibold px-2 py-0.5 rounded-md transition-colors ${
                         shiftQueueStatusFilter === "pending"
                           ? "bg-amber-200 text-amber-950 dark:bg-amber-900 dark:text-amber-200 font-bold"
-                          : "text-amber-900 bg-amber-100 dark:bg-amber-950 dark:text-amber-300 group-hover:bg-amber-200"
+                          : "text-amber-950 bg-amber-100 dark:bg-amber-950 dark:text-amber-200 group-hover:bg-amber-200 font-bold"
                       }`}>
                         {shiftQueueStatusFilter === "pending" ? "✓ กำลังกรองกะค้าง" : "คลิกเพื่อกรอง →"}
                       </span>
@@ -744,19 +744,19 @@ export function ExecutiveDashboard({
                   </div>
                   <div className="mt-1 flex items-center gap-2">
                     {pendingApprovalsCount > 0 ? (
-                      <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-900 dark:text-amber-300 bg-amber-100 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800 px-2.5 py-1 rounded-full shadow-2xs">
+                      <span className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-950 dark:text-amber-200 bg-amber-100 dark:bg-amber-950/80 border border-amber-300 dark:border-amber-800 px-2.5 py-1 rounded-full shadow-2xs">
                         <AlertCircle size={13} className="text-amber-700 dark:text-amber-400" />
                         <span>ค้างรับรอง {pendingApprovalsCount} กะ</span>
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 px-2.5 py-1 rounded-full shadow-2xs">
+                      <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-900 dark:text-emerald-200 bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-300 dark:border-emerald-800 px-2.5 py-1 rounded-full shadow-2xs">
                         <CheckCircle2 size={13} className="text-emerald-600 dark:text-emerald-400" />
                         <span>✨ รับรองครบถ้วนทุกกะ — มาตรฐาน 100%</span>
                       </span>
                     )}
                   </div>
                 </div>
-                <p className="text-[11px] text-[var(--color-text-subtle)]">
+                <p className="text-xs text-[var(--color-text-muted)]">
                   {pendingApprovalsCount > 0
                     ? shiftQueueStatusFilter === "pending"
                       ? "กำลังแสดงเฉพาะกะที่รอดำเนินการ (คลิกการ์ดนี้เพื่อดูทั้งหมด)"
@@ -777,7 +777,7 @@ export function ExecutiveDashboard({
                       <span>รายการกะงานสาขา & การรับรองกะ</span>
                     </h3>
                     {isLiveFromDb && (
-                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-emerald-50 text-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-bold bg-emerald-50 text-emerald-950 dark:bg-emerald-950/60 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-800">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
                         <span>Supabase Live DB</span>
                       </span>
@@ -812,7 +812,7 @@ export function ExecutiveDashboard({
                     <span>{isLoadingDb ? "กำลังรีเฟรช..." : "รีเฟรชข้อมูล"}</span>
                   </button>
 
-                  <span className="text-[11px] font-mono text-[var(--color-text-muted)] bg-[var(--color-surface-2)] border border-[var(--color-border)] px-2.5 py-1.5 rounded-xl">
+                  <span className="text-xs font-mono text-[var(--color-text-muted)] bg-[var(--color-surface-2)] border border-[var(--color-border)] px-2.5 py-1.5 rounded-xl">
                     วันนี้: {fmtDate(new Date().toISOString())}
                   </span>
                 </div>
@@ -840,12 +840,12 @@ export function ExecutiveDashboard({
                 return (
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-1">
                     {/* Status Tabs */}
-                    <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+                    <div className="flex items-center gap-1.5 overflow-x-auto max-w-full no-scrollbar pb-1 sm:pb-0">
                       <button
                         type="button"
                         onClick={() => setShiftQueueStatusFilter("all")}
                         className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${shiftQueueStatusFilter === "all"
-                          ? "bg-[var(--color-brown)] text-amber-300 shadow-2xs font-bold"
+                          ? "bg-[var(--color-brown)] text-amber-100 shadow-2xs font-bold"
                           : "bg-[var(--color-surface-2)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] border border-[var(--color-border)]"
                           }`}
                       >
@@ -864,7 +864,7 @@ export function ExecutiveDashboard({
                       >
                         <span>รอการตรวจรับรอง</span>
                         {pendingCount > 0 && (
-                          <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-extrabold ${shiftQueueStatusFilter === "pending" ? "bg-amber-950 text-amber-300" : "bg-amber-400 text-amber-950"}`}>
+                          <span className={`px-1.5 py-0.2 rounded-full text-xs font-extrabold ${shiftQueueStatusFilter === "pending" ? "bg-amber-950 text-amber-200" : "bg-amber-400 text-amber-950"}`}>
                             {pendingCount}
                           </span>
                         )}
@@ -874,7 +874,7 @@ export function ExecutiveDashboard({
                         type="button"
                         onClick={() => setShiftQueueStatusFilter("approved")}
                         className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${shiftQueueStatusFilter === "approved"
-                          ? "bg-[var(--color-brown)] text-amber-300 shadow-2xs font-bold"
+                          ? "bg-[var(--color-brown)] text-amber-100 shadow-2xs font-bold"
                           : "bg-[var(--color-surface-2)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] border border-[var(--color-border)]"
                           }`}
                       >
@@ -884,14 +884,14 @@ export function ExecutiveDashboard({
 
                     {/* Shift Filter Dropdown / Pills */}
                     <div className="flex items-center gap-1 self-start sm:self-auto">
-                      <span className="text-[11px] text-[var(--color-text-muted)] hidden lg:inline mr-1">กะ:</span>
+                      <span className="text-xs text-[var(--color-text-muted)] hidden lg:inline mr-1">กะ:</span>
                       {(["all", "morning", "afternoon"] as const).map((sh) => (
                         <button
                           key={sh}
                           type="button"
                           onClick={() => setShiftQueueTimeFilter(sh)}
-                          className={`px-2.5 py-1 text-[11px] font-semibold rounded-lg transition-all cursor-pointer ${shiftQueueTimeFilter === sh
-                            ? "bg-[var(--color-text)] text-[var(--color-surface)] shadow-2xs"
+                          className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer ${shiftQueueTimeFilter === sh
+                            ? "bg-[var(--color-text)] text-[var(--color-surface)] shadow-2xs font-bold"
                             : "text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-2)]"
                             }`}
                         >
@@ -950,7 +950,7 @@ export function ExecutiveDashboard({
                             ? "ยังไม่มีกะที่ได้รับการอนุมัติ"
                             : "ยังไม่มีข้อมูลกะการทำงานในวันนี้"}
                       </p>
-                      <p className="text-[11px] text-[var(--color-text-subtle)] mt-1">
+                      <p className="text-xs text-[var(--color-text-subtle)] mt-1">
                         {shiftQueueStatusFilter === "pending"
                           ? "พนักงานทุกคนในเงื่อนไขได้รับการตรวจรับรองเรียบร้อยแล้ว"
                           : "เมื่อพนักงานเริ่มเข้ากะ รายชื่อและเปอร์เซ็นต์ความคืบหน้าจะแสดงที่นี่แบบเรียลไทม์"}
@@ -967,8 +967,8 @@ export function ExecutiveDashboard({
 
                   if (app.managerApproved) {
                     return (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-2xs">
-                        <CheckCircle2 size={12} className="text-emerald-600" />
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-900 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-800 shadow-2xs">
+                        <CheckCircle2 size={13} className="text-emerald-600 dark:text-emerald-400" />
                         <span>อนุมัติสมบูรณ์</span>
                       </span>
                     );
@@ -976,7 +976,7 @@ export function ExecutiveDashboard({
 
                   if (isAssistantSession) {
                     return (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-100 text-amber-950 border border-amber-300">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 dark:bg-amber-950/60 text-amber-950 dark:text-amber-200 border border-amber-300 dark:border-amber-800">
                         <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-pulse" />
                         <span>รอผู้จัดการอนุมัติ (งานผู้ช่วย)</span>
                       </span>
@@ -985,7 +985,7 @@ export function ExecutiveDashboard({
 
                   if (app.assistantApproved) {
                     return (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-100 text-amber-950 border border-amber-300">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 dark:bg-amber-950/60 text-amber-950 dark:text-amber-200 border border-amber-300 dark:border-amber-800">
                         <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-pulse" />
                         <span>ผู้ช่วยรับรองแล้ว → รอผู้จัดการ</span>
                       </span>
@@ -995,7 +995,7 @@ export function ExecutiveDashboard({
                   if (!hasAssistantLoggedInToday) {
                     return (
                       <span
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-amber-50 text-amber-900 border border-amber-200"
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 dark:bg-amber-950/60 text-amber-950 dark:text-amber-200 border border-amber-200 dark:border-amber-800"
                         title="ไม่มีผู้ช่วยเข้างานในวันนี้ จึงข้ามขั้นตอนนี้ให้ผู้จัดการพิจารณาโดยตรง"
                       >
                         <span>รอผู้จัดการอนุมัติ (ข้ามผู้ช่วย)</span>
@@ -1004,7 +1004,7 @@ export function ExecutiveDashboard({
                   }
 
                   return (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-[var(--color-surface-2)] text-[var(--color-text-muted)] border border-[var(--color-border)]">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-[var(--color-surface-2)] text-[var(--color-text-muted)] border border-[var(--color-border)]">
                       <span>รอผู้ช่วยรับรอง</span>
                     </span>
                   );
@@ -1032,7 +1032,7 @@ export function ExecutiveDashboard({
                                 </span>
                                 <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                                   <span
-                                    className={`px-2 py-0.5 rounded-md font-medium text-[11px] ${isAssistantSession
+                                    className={`px-2 py-0.5 rounded-md font-bold text-xs ${isAssistantSession
                                       ? "bg-[var(--color-amber-glow)] text-[var(--color-text)] border border-[var(--color-amber)]"
                                       : "bg-[var(--color-surface-2)] text-[var(--color-text-muted)] border border-[var(--color-border)]"
                                       }`}
@@ -1043,11 +1043,11 @@ export function ExecutiveDashboard({
                                 </div>
                               </div>
                               {sess.completedAt ? (
-                                <span className="text-[11px] font-mono text-[var(--color-text-muted)] bg-[var(--color-surface-2)] px-2 py-1 rounded-lg border border-[var(--color-border)]">
+                                <span className="text-xs font-mono text-[var(--color-text-muted)] bg-[var(--color-surface-2)] px-2 py-1 rounded-lg border border-[var(--color-border)]">
                                   {fmtTime(sess.completedAt)}
                                 </span>
                               ) : (
-                                <span className="text-[10px] font-semibold text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-md">
+                                <span className="text-xs font-bold text-amber-950 dark:text-amber-200 bg-amber-100 dark:bg-amber-950/80 border border-amber-300 dark:border-amber-800 px-2 py-0.5 rounded-md">
                                   กำลังปฏิบัติงาน
                                 </span>
                               )}
@@ -1071,12 +1071,12 @@ export function ExecutiveDashboard({
                             </div>
 
                             {/* Status & Action */}
-                            <div className="flex items-center justify-between gap-2 pt-0.5">
-                              <div>{renderApprovalBadge(sess)}</div>
+                            <div className="flex flex-wrap items-center justify-between gap-2 pt-0.5">
+                              <div className="min-w-0">{renderApprovalBadge(sess)}</div>
                               <button
                                 type="button"
                                 onClick={() => setSelectedSession(sess)}
-                                className="min-h-[44px] px-4 py-2 text-xs font-bold text-amber-950 bg-amber-400 hover:bg-amber-300 active:bg-amber-500 rounded-xl transition-all cursor-pointer shadow-xs inline-flex items-center gap-1.5"
+                                className="min-h-[44px] px-4 py-2 shrink-0 text-xs font-bold text-amber-950 bg-amber-400 hover:bg-amber-300 active:bg-amber-500 rounded-xl transition-all cursor-pointer shadow-xs inline-flex items-center gap-1.5"
                               >
                                 <span>ตรวจรับรอง</span>
                                 <span>→</span>
@@ -1091,7 +1091,7 @@ export function ExecutiveDashboard({
                     <div className="hidden sm:block overflow-x-auto">
                       <table className="w-full text-left text-xs">
                         <thead>
-                          <tr className="border-b border-[var(--color-border)] text-[var(--color-text-muted)] font-semibold bg-[var(--color-surface-2)]">
+                          <tr className="border-b border-[var(--color-border)] text-[var(--color-text)] font-bold bg-[var(--color-surface-2)]">
                             <th className="py-2.5 px-3 rounded-l-lg">ผู้ปฏิบัติงาน</th>
                             <th className="py-2.5 px-3">ตำแหน่ง / กะ</th>
                             <th className="py-2.5 px-3">ความคืบหน้า</th>
@@ -1115,7 +1115,7 @@ export function ExecutiveDashboard({
                                 <td className="py-3 px-3 space-y-1">
                                   <div className="flex items-center gap-1.5 flex-wrap">
                                     <span
-                                      className={`px-2 py-0.5 rounded-md font-medium text-[11px] ${isAssistantSession
+                                      className={`px-2 py-0.5 rounded-md font-bold text-xs ${isAssistantSession
                                         ? "bg-[var(--color-amber-glow)] text-[var(--color-text)] border border-[var(--color-amber)]"
                                         : "bg-[var(--color-surface-2)] text-[var(--color-text-muted)] border border-[var(--color-border)]"
                                         }`}
@@ -1127,7 +1127,7 @@ export function ExecutiveDashboard({
                                 </td>
                                 <td className="py-3 px-3">
                                   <div className="space-y-1">
-                                    <div className="flex items-center justify-between text-[11px] font-mono text-[var(--color-text-muted)]">
+                                    <div className="flex items-center justify-between text-xs font-mono text-[var(--color-text-muted)]">
                                       <span>{completedCount}/{sess.items.length}</span>
                                       <span className="font-bold text-[var(--color-text)]">{pct}%</span>
                                     </div>
@@ -1139,11 +1139,11 @@ export function ExecutiveDashboard({
                                     </div>
                                   </div>
                                 </td>
-                                <td className="py-3 px-3 font-mono text-[var(--color-text-muted)] text-[11px]">
+                                <td className="py-3 px-3 font-mono text-[var(--color-text-muted)] text-xs">
                                   {sess.completedAt ? (
                                     fmtTime(sess.completedAt)
                                   ) : (
-                                    <span className="text-[var(--color-amber)] bg-[var(--color-amber-glow)] border border-[var(--color-amber)] px-2 py-0.5 rounded-md font-semibold text-[10px]">
+                                    <span className="text-amber-950 dark:text-amber-200 bg-amber-100 dark:bg-amber-950/80 border border-amber-300 dark:border-amber-800 px-2 py-0.5 rounded-md font-bold text-xs">
                                       กำลังปฏิบัติงาน
                                     </span>
                                   )}
@@ -1289,7 +1289,7 @@ export function ExecutiveDashboard({
                       }}
                       className={`min-h-[36px] px-3.5 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
                         myChecklistShift === sh
-                          ? "bg-[var(--color-brown)] text-amber-300 shadow-2xs font-bold"
+                          ? "bg-[var(--color-brown)] text-amber-100 shadow-2xs font-bold"
                           : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
                       }`}
                     >
@@ -1323,12 +1323,12 @@ export function ExecutiveDashboard({
                               onClick={() => setMyChecklistFilter("all")}
                               className={`min-h-[40px] px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
                                 myChecklistFilter === "all"
-                                  ? "bg-[var(--color-brown)] text-amber-300 shadow-2xs font-bold"
+                                  ? "bg-[var(--color-brown)] text-amber-100 shadow-2xs font-bold"
                                   : "bg-[var(--color-surface)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] border border-[var(--color-border)]"
                               }`}
                             >
                               <span>ทั้งหมด</span>
-                              <span className="font-mono text-[11px] opacity-80">({totalCount})</span>
+                              <span className="font-mono text-xs font-bold">({totalCount})</span>
                             </button>
 
                             <button
@@ -1344,9 +1344,9 @@ export function ExecutiveDashboard({
                             >
                               <span>ยังไม่ตรวจ</span>
                               <span
-                                className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold font-mono ${
+                                className={`px-2 py-0.5 rounded-full text-xs font-bold font-mono ${
                                   myChecklistFilter === "pending"
-                                    ? "bg-amber-950 text-amber-300"
+                                    ? "bg-amber-950 text-amber-200"
                                     : pendingCount > 0
                                       ? "bg-amber-400 text-amber-950"
                                       : "bg-[var(--color-surface-2)] text-[var(--color-text-muted)]"
@@ -1361,12 +1361,12 @@ export function ExecutiveDashboard({
                               onClick={() => setMyChecklistFilter("completed")}
                               className={`min-h-[40px] px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
                                 myChecklistFilter === "completed"
-                                  ? "bg-[var(--color-brown)] text-amber-300 shadow-2xs font-bold"
+                                  ? "bg-[var(--color-brown)] text-amber-100 shadow-2xs font-bold"
                                   : "bg-[var(--color-surface)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] border border-[var(--color-border)]"
                               }`}
                             >
                               <span>ตรวจแล้ว</span>
-                              <span className="font-mono text-[11px] opacity-80">({doneCount})</span>
+                              <span className="font-mono text-xs font-bold">({doneCount})</span>
                             </button>
                           </div>
 
@@ -1505,11 +1505,11 @@ export function ExecutiveDashboard({
 
                                     <div className="flex-1 min-w-0">
                                       <div className="flex flex-wrap items-center gap-1.5">
-                                        <span className="text-[10px] font-mono text-[var(--color-text-muted)]">
+                                        <span className="text-xs font-mono text-[var(--color-text-muted)]">
                                           {String(idx + 1).padStart(2, "0")}
                                         </span>
                                         {item.category && (
-                                          <span className="text-[10px] font-semibold text-[var(--color-text-muted)] bg-[var(--color-surface-2)] px-1.5 py-0.5 rounded border border-[var(--color-border)]">
+                                          <span className="text-xs font-semibold text-[var(--color-text)] bg-[var(--color-surface-2)] px-1.5 py-0.5 rounded border border-[var(--color-border)]">
                                             {item.category}
                                           </span>
                                         )}
@@ -1517,7 +1517,7 @@ export function ExecutiveDashboard({
                                       <p
                                         className={`text-xs sm:text-sm font-medium mt-1 leading-snug ${
                                           isDone
-                                            ? "text-[var(--color-text-subtle)] line-through opacity-75"
+                                            ? "text-[var(--color-text-muted)] line-through"
                                             : "text-[var(--color-text)]"
                                         }`}
                                       >
@@ -1539,10 +1539,10 @@ export function ExecutiveDashboard({
                                           }
                                         }
                                         return (
-                                          <p className="text-[10px] font-mono text-emerald-600 mt-1 flex items-center gap-1">
+                                          <p className="text-xs font-mono text-emerald-800 dark:text-emerald-300 font-semibold mt-1 flex items-center gap-1">
                                             <span>บันทึกเมื่อ: {fmtTime(item.completedAt)}</span>
                                             {isLate && (
-                                              <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-100 text-amber-950 border border-amber-300">
+                                              <span className="inline-flex items-center px-1.5 py-0.2 rounded text-xs font-bold bg-amber-100 text-amber-950 border border-amber-300">
                                                 ล่าช้า
                                               </span>
                                             )}
@@ -1576,7 +1576,7 @@ export function ExecutiveDashboard({
                 </h3>
                 <p className="text-xs text-[var(--color-text-muted)] mt-0.5 flex flex-wrap items-center gap-1.5">
                   <span>ค้นหาและเรียกดูรายละเอียดของแต่ละกะที่ปฏิบัติงานแล้ว</span>
-                  <span className="inline-flex items-center text-[10px] bg-[var(--color-amber-glow)] text-[var(--color-amber)] font-semibold px-2 py-0.5 rounded border border-[var(--color-amber)]">
+                  <span className="inline-flex items-center text-xs bg-amber-500/15 text-amber-950 dark:text-amber-200 font-bold px-2 py-0.5 rounded border border-amber-500/30">
                     <svg className="w-3 h-3 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 8v4l3 3M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                     แสดงข้อมูลย้อนหลัง 14 วัน (2 สัปดาห์)
                   </span>
@@ -1610,7 +1610,7 @@ export function ExecutiveDashboard({
                   {/* Row 1: Quick Status Filter Pills & Shift Selector */}
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
                     {/* Status Tabs */}
-                    <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+                    <div className="flex items-center gap-1.5 overflow-x-auto max-w-full no-scrollbar pb-1 sm:pb-0">
                       <button
                         type="button"
                         onClick={() => setHistoryStatusFilter("all")}
@@ -1634,7 +1634,7 @@ export function ExecutiveDashboard({
                       >
                         <span>รอการตรวจรับรอง</span>
                         {pendingHistoryCount > 0 && (
-                          <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-extrabold ${historyStatusFilter === "pending" ? "bg-amber-950 text-amber-300" : "bg-amber-400 text-amber-950"}`}>
+                          <span className={`px-1.5 py-0.2 rounded-full text-xs font-extrabold ${historyStatusFilter === "pending" ? "bg-amber-950 text-amber-200" : "bg-amber-400 text-amber-950"}`}>
                             {pendingHistoryCount}
                           </span>
                         )}
@@ -1653,14 +1653,14 @@ export function ExecutiveDashboard({
                     </div>
 
                     {/* Shift Filter Pills */}
-                    <div className="flex items-center gap-1 self-start sm:self-auto">
-                      <span className="text-[11px] text-[var(--color-text-muted)] hidden lg:inline mr-1">กะ:</span>
+                    <div className="flex items-center gap-1 self-start sm:self-auto overflow-x-auto max-w-full no-scrollbar pb-1 sm:pb-0">
+                      <span className="text-xs text-[var(--color-text-muted)] hidden lg:inline mr-1">กะ:</span>
                       {(["all", "morning", "afternoon"] as const).map((sh) => (
                         <button
                           key={sh}
                           type="button"
                           onClick={() => setHistoryShiftFilter(sh)}
-                          className={`px-2.5 py-1 text-[11px] font-semibold rounded-lg transition-all cursor-pointer ${historyShiftFilter === sh
+                          className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer shrink-0 ${historyShiftFilter === sh
                             ? "bg-[var(--color-text)] text-[var(--color-surface)] shadow-2xs font-bold"
                             : "text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-2)]"
                             }`}
@@ -1673,7 +1673,7 @@ export function ExecutiveDashboard({
 
                   {/* Row 2: Search Input & Specific Date Fetcher */}
                   <div className="flex flex-wrap items-center gap-2 pt-0.5">
-                    <div className="flex-1 min-w-[200px]">
+                    <div className="flex-1 min-w-[180px]">
                       <input
                         type="text"
                         placeholder="ค้นหาชื่อ หรือตำแหน่งในประวัติ..."
@@ -1683,8 +1683,8 @@ export function ExecutiveDashboard({
                       />
                     </div>
 
-                    <div className="flex items-center gap-1.5 bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-xl px-2.5 py-1">
-                      <span className="text-[11px] text-[var(--color-text-muted)]">วันที่:</span>
+                    <div className="flex items-center justify-between sm:justify-start gap-1.5 bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-xl px-2.5 py-1 w-full sm:w-auto">
+                      <span className="text-xs text-[var(--color-text-muted)]">วันที่:</span>
                       <input
                         type="date"
                         value={selectedHistoryDate}
@@ -1720,7 +1720,7 @@ export function ExecutiveDashboard({
                 return (
                   <div className="py-10 text-center text-xs text-[var(--color-text-muted)] bg-[var(--color-surface-2)]/40 rounded-2xl border border-dashed border-[var(--color-border)] p-6">
                     <p className="font-semibold text-[var(--color-text)]">ไม่พบประวัติการตรวจสอบตามเงื่อนไขที่เลือก</p>
-                    <p className="text-[11px] text-[var(--color-text-subtle)] mt-1">
+                    <p className="text-xs text-[var(--color-text-muted)] mt-1">
                       ลองเปลี่ยนคำค้นหา หรือเลือกวันที่อื่นเพื่อดูบันทึกย้อนหลัง
                     </p>
                   </div>
@@ -1734,7 +1734,7 @@ export function ExecutiveDashboard({
 
                 if (app.managerApproved) {
                   return (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-2xs">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-900 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-800 shadow-2xs">
                       <CheckCircle2 size={12} className="text-emerald-600" />
                       <span>อนุมัติสมบูรณ์</span>
                     </span>
@@ -1743,7 +1743,7 @@ export function ExecutiveDashboard({
 
                 if (isAssistantSession) {
                   return (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-100 text-amber-950 border border-amber-300">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 dark:bg-amber-950/60 text-amber-950 dark:text-amber-200 border border-amber-300 dark:border-amber-800">
                       <span>รอผู้จัดการอนุมัติ (งานผู้ช่วย)</span>
                     </span>
                   );
@@ -1751,14 +1751,14 @@ export function ExecutiveDashboard({
 
                 if (app.assistantApproved) {
                   return (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-100 text-amber-950 border border-amber-300">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 dark:bg-amber-950/60 text-amber-950 dark:text-amber-200 border border-amber-300 dark:border-amber-800">
                       <span>ผู้ช่วยตรวจแล้ว → รอผู้จัดการ</span>
                     </span>
                   );
                 }
 
                 return (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-[var(--color-surface-2)] text-[var(--color-text-muted)] border border-[var(--color-border)]">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-[var(--color-surface-2)] text-[var(--color-text-muted)] border border-[var(--color-border)]">
                     <span>รอดำเนินการ</span>
                   </span>
                 );
@@ -1783,13 +1783,13 @@ export function ExecutiveDashboard({
                                 {sess.userName}
                               </span>
                               <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                                <span className="px-2 py-0.5 rounded-md font-medium text-[11px] bg-[var(--color-surface-2)] text-[var(--color-text-muted)] border border-[var(--color-border)]">
+                                <span className="px-2 py-0.5 rounded-md font-semibold text-xs bg-[var(--color-surface-2)] text-[var(--color-text-muted)] border border-[var(--color-border)]">
                                   {sess.userPosition || "พนักงาน"}
                                 </span>
                                 {getShiftBadge(sess.shift)}
                               </div>
                             </div>
-                            <div className="text-right font-mono text-[11px] text-[var(--color-text-muted)]">
+                            <div className="text-right font-mono text-xs text-[var(--color-text-muted)]">
                               <span className="font-semibold text-[var(--color-text)] block">{sess.id}</span>
                               <span className="text-[10px] text-[var(--color-text-subtle)]">
                                 {fmtDate(sess.startedAt)}
@@ -1815,12 +1815,12 @@ export function ExecutiveDashboard({
                           </div>
 
                           {/* Status & Action */}
-                          <div className="flex items-center justify-between gap-2 pt-0.5">
-                            <div>{renderHistoryStatusBadge(sess)}</div>
+                          <div className="flex flex-wrap items-center justify-between gap-2 pt-0.5">
+                            <div className="min-w-0">{renderHistoryStatusBadge(sess)}</div>
                             <button
                               type="button"
                               onClick={() => setSelectedSession(sess)}
-                              className="min-h-[44px] px-4 py-2 text-xs font-bold text-amber-950 bg-amber-400 hover:bg-amber-300 active:bg-amber-500 rounded-xl transition-all cursor-pointer shadow-xs inline-flex items-center gap-1.5"
+                              className="min-h-[44px] px-4 py-2 shrink-0 text-xs font-bold text-amber-950 bg-amber-400 hover:bg-amber-300 active:bg-amber-500 rounded-xl transition-all cursor-pointer shadow-xs inline-flex items-center gap-1.5"
                             >
                               <span>เปิดดูข้อตรวจ</span>
                               <span>→</span>
@@ -1854,7 +1854,7 @@ export function ExecutiveDashboard({
                             <tr key={sess.id} className="hover:bg-[var(--color-background)] transition-colors">
                               <td className="py-3 px-3 font-mono text-[var(--color-text-muted)]">
                                 <span className="font-semibold text-[var(--color-text)]">{sess.id}</span>
-                                <span className="block text-[10px] text-[var(--color-text-subtle)]">{fmtDate(sess.startedAt)}</span>
+                                <span className="block text-xs text-[var(--color-text-muted)]">{fmtDate(sess.startedAt)}</span>
                               </td>
                               <td className="py-3 px-3 font-semibold text-[var(--color-text)]">
                                 {sess.userName}
@@ -1867,7 +1867,7 @@ export function ExecutiveDashboard({
                               </td>
                               <td className="py-3 px-3 font-mono">
                                 <span className="font-bold text-[var(--color-text)]">{doneCount}/{sess.items.length}</span>
-                                <span className="text-[10px] text-[var(--color-text-muted)] ml-1">({pct}%)</span>
+                                <span className="text-xs font-semibold text-[var(--color-text-muted)] ml-1">({pct}%)</span>
                               </td>
                               <td className="py-3 px-3 text-center">
                                 {renderHistoryStatusBadge(sess)}

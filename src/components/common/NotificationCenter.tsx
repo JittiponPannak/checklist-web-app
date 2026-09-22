@@ -129,7 +129,7 @@ export function NotificationCenter() {
       >
         <Bell className="w-5 h-5" />
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 bg-rose-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center animate-pulse shadow-sm">
+          <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 bg-rose-600 text-white text-[10px] font-black rounded-full flex items-center justify-center shadow-sm">
             {unreadCount > 99 ? "99+" : unreadCount}
           </span>
         )}
@@ -150,7 +150,7 @@ export function NotificationCenter() {
                 <Bell className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
                 <h3 className="text-xs font-bold text-[var(--color-text)]">การแจ้งเตือน</h3>
                 {unreadCount > 0 && (
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 font-bold border border-amber-300 dark:border-amber-800">
+                  <span className="text-xs px-2.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/80 text-amber-950 dark:text-amber-200 font-bold border border-amber-300 dark:border-amber-800">
                     {unreadCount} ใหม่
                   </span>
                 )}
@@ -161,7 +161,7 @@ export function NotificationCenter() {
                     type="button"
                     onClick={handleMarkAllAsRead}
                     disabled={loading}
-                    className="text-[11px] text-amber-800 hover:text-amber-950 dark:text-amber-300 dark:hover:text-amber-200 font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                    className="text-xs text-amber-900 hover:text-amber-950 dark:text-amber-200 dark:hover:text-amber-100 font-bold flex items-center gap-1 cursor-pointer transition-colors"
                   >
                     <CheckCheck className="w-3.5 h-3.5 shrink-0" />
                     <span>อ่านทั้งหมด</span>
@@ -183,7 +183,7 @@ export function NotificationCenter() {
               <div className="p-8 text-center text-xs text-[var(--color-text-muted)] flex flex-col items-center gap-2">
                 <Bell className="w-8 h-8 opacity-30 stroke-1" />
                 <p className="font-bold text-[var(--color-text)]">ไม่มีการแจ้งเตือนใหม่ในขณะนี้</p>
-                <p className="text-[11px] text-[var(--color-text-subtle)] max-w-xs">เมื่อมีการส่งมอบกะ รายงานแจ้งเตือนอุณหภูมิตู้แช่ หรือการรับรองงาน ข้อมูลจะแสดงที่นี่แบบเรียลไทม์</p>
+                <p className="text-xs text-[var(--color-text-subtle)] max-w-xs">เมื่อมีการส่งมอบกะ รายงานแจ้งเตือนอุณหภูมิตู้แช่ หรือการรับรองงาน ข้อมูลจะแสดงที่นี่แบบเรียลไทม์</p>
               </div>
             ) : (
               notifications.map((n) => (
@@ -192,7 +192,7 @@ export function NotificationCenter() {
                   onClick={() => !n.read && handleMarkAsRead(n.id)}
                   className={`p-3 sm:p-3.5 transition-colors flex items-start gap-3 cursor-pointer ${
                     n.read
-                      ? "hover:bg-[var(--color-surface-2)]/50 opacity-75"
+                      ? "hover:bg-[var(--color-surface-2)]/50 text-[var(--color-text-muted)]"
                       : "bg-amber-500/5 hover:bg-amber-500/10 font-medium"
                   }`}
                 >
@@ -206,10 +206,10 @@ export function NotificationCenter() {
                         <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
                       )}
                     </div>
-                    <p className="text-[11px] text-[var(--color-text-muted)] leading-relaxed break-words">
+                    <p className="text-xs text-[var(--color-text-muted)] leading-relaxed break-words">
                       {n.message}
                     </p>
-                    <div className="mt-1 flex items-center gap-2 text-[10px] text-[var(--color-text-subtle)]">
+                    <div className="mt-1 flex items-center gap-2 text-xs text-[var(--color-text-subtle)]">
                       <span>
                         {new Date(n.createdAt).toLocaleTimeString("th-TH", {
                           hour: "2-digit",

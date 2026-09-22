@@ -34,7 +34,7 @@ export default function Error({
         </p>
 
         {error?.digest && (
-          <p className="text-[11px] font-mono text-[var(--color-text-subtle)] bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-lg py-1 px-2 mb-6 break-all">
+          <p className="text-xs font-mono text-[var(--color-text-muted)] bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-lg py-1 px-2 mb-6 break-all">
             รหัสอ้างอิง: {error.digest}
           </p>
         )}
@@ -43,7 +43,7 @@ export default function Error({
           <button
             type="button"
             onClick={() => reset()}
-            className="flex-1 py-2.5 min-h-[44px] rounded-xl bg-[var(--color-brown)] hover:bg-[var(--color-brown-light)] text-amber-300 text-xs sm:text-sm font-semibold transition-colors cursor-pointer shadow-sm flex items-center justify-center"
+            className="flex-1 py-2.5 min-h-[44px] rounded-xl bg-[var(--color-brown)] hover:bg-[var(--color-brown-light)] text-amber-100 text-xs sm:text-sm font-bold transition-colors cursor-pointer shadow-sm flex items-center justify-center"
           >
             ลองใหม่อีกครั้ง
           </button>

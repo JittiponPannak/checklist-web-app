@@ -58,21 +58,21 @@ export function PointStreakBadge() {
           setIsModalOpen(true);
           fetchPointDetails();
         }}
-        className="flex items-center gap-1.5 sm:gap-2 px-2 py-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-[var(--color-surface)] hover:bg-[var(--color-surface-2)] border border-[var(--color-border)] shadow-xs hover:shadow-sm active:scale-95 transition-all duration-150 cursor-pointer group focus-visible:outline-none focus:ring-2 focus:ring-amber-400 shrink-0 min-h-[36px]"
+        className="flex items-center gap-1 sm:gap-2 px-1.5 sm:px-2.5 py-1 sm:py-1.5 rounded-xl bg-[var(--color-surface)] hover:bg-[var(--color-surface-2)] border border-[var(--color-border)] shadow-xs hover:shadow-sm active:scale-95 transition-all duration-150 cursor-pointer group focus-visible:outline-none focus:ring-2 focus:ring-amber-400 shrink-0 min-h-[36px]"
         title="คลิกเพื่อดูประวัติแต้มและสตรีค"
       >
         {/* Streak Flame */}
-        <div className="flex items-center gap-1 text-xs font-bold text-orange-600 dark:text-orange-400">
-          <Flame className={`w-3.5 h-3.5 sm:w-4 sm:h-4 text-orange-500 fill-orange-500 transition-transform duration-200 group-hover:scale-125 ${streak > 0 ? "animate-pulse" : "opacity-60"}`} />
+        <div className="flex items-center gap-1 text-xs font-extrabold text-orange-700 dark:text-orange-400">
+          <Flame className={`w-3.5 h-3.5 sm:w-4 sm:h-4 text-orange-600 fill-orange-600 transition-transform duration-200 group-hover:scale-125 ${streak > 0 ? "animate-pulse" : "opacity-75"}`} />
           <span>{streak}</span>
         </div>
 
         <div className="w-px h-3.5 sm:h-4 bg-[var(--color-border)]" />
 
         {/* Total Points */}
-        <div className="flex items-center gap-1 text-xs font-bold text-amber-800 dark:text-amber-300">
-          <Award className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500" />
-          <span>{points} <span className="text-[10px] font-medium text-[var(--color-text-muted)] hidden sm:inline">แต้ม</span></span>
+        <div className="flex items-center gap-1 text-xs font-extrabold text-amber-900 dark:text-amber-300">
+          <Award className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-700 dark:text-amber-400" />
+          <span>{points} <span className="text-xs font-semibold text-[var(--color-text-muted)] hidden sm:inline">แต้ม</span></span>
         </div>
 
         {/* Tier badge icon */}
@@ -89,7 +89,7 @@ export function PointStreakBadge() {
                 <Trophy className="w-5 h-5 text-amber-600" />
                 <div>
                   <h3 className="text-sm font-bold text-[var(--color-text)]">แต้มสะสมและสตรีคของคุณ</h3>
-                  <p className="text-[11px] text-[var(--color-text-muted)]">{currentUser.name}</p>
+                  <p className="text-xs text-[var(--color-text-muted)]">{currentUser.name}</p>
                 </div>
               </div>
               <button
@@ -105,17 +105,17 @@ export function PointStreakBadge() {
             <div className="p-4 sm:p-5 grid grid-cols-3 gap-2.5 bg-[var(--color-surface-2)]/30">
               <div className="p-3 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] text-center shadow-xs">
                 <span className="text-xs text-[var(--color-text-muted)] block mb-1">แต้มสะสม</span>
-                <span className="text-lg font-black text-amber-700">{points}</span>
+                <span className="text-lg font-black text-amber-800 dark:text-amber-300">{points}</span>
               </div>
               <div className="p-3 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] text-center shadow-xs">
                 <span className="text-xs text-[var(--color-text-muted)] block mb-1">สตรีคปัจจุบัน</span>
-                <span className="text-lg font-black text-orange-600 flex items-center justify-center gap-1">
+                <span className="text-lg font-black text-orange-600 dark:text-orange-400 flex items-center justify-center gap-1">
                   <Flame className="w-4 h-4 fill-orange-500" /> {streak}
                 </span>
               </div>
               <div className="p-3 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] text-center shadow-xs">
                 <span className="text-xs text-[var(--color-text-muted)] block mb-1">สตรีคสูงสุด</span>
-                <span className="text-lg font-black text-indigo-600">🏆 {longestStreak}</span>
+                <span className="text-lg font-black text-indigo-700 dark:text-indigo-300">🏆 {longestStreak}</span>
               </div>
             </div>
 
@@ -126,10 +126,10 @@ export function PointStreakBadge() {
                   <span className="text-xl">{tier.icon}</span>
                   <div>
                     <span className="text-xs font-bold block">{tier.name}</span>
-                    <span className="text-[10px] opacity-80">ปฏิบัติงานตรงเวลาเพื่อรับโบนัสสตรีคสูงสุด!</span>
+                    <span className="text-xs font-medium">ปฏิบัติงานตรงเวลาเพื่อรับโบนัสสตรีคสูงสุด!</span>
                   </div>
                 </div>
-                <Sparkles className="w-4 h-4 opacity-70" />
+                <Sparkles className="w-4 h-4" />
               </div>
             </div>
 
@@ -153,7 +153,7 @@ export function PointStreakBadge() {
                     >
                       <div>
                         <p className="text-xs font-semibold text-[var(--color-text)]">{t.description}</p>
-                        <p className="text-[10px] text-[var(--color-text-subtle)] mt-0.5">
+                        <p className="text-xs text-[var(--color-text-subtle)] mt-0.5">
                           {new Date(t.createdAt).toLocaleDateString("th-TH", {
                             day: "2-digit",
                             month: "short",
@@ -163,7 +163,7 @@ export function PointStreakBadge() {
                           })}
                         </p>
                       </div>
-                      <span className="text-xs font-bold px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">
+                      <span className="text-xs font-bold px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 shrink-0">
                         +{t.points}
                       </span>
                     </div>
@@ -177,7 +177,7 @@ export function PointStreakBadge() {
               <button
                 type="button"
                 onClick={() => setIsModalOpen(false)}
-                className="w-full py-2.5 bg-[var(--color-brown)] hover:bg-[var(--color-brown-light)] text-amber-300 font-bold text-xs rounded-xl transition-colors cursor-pointer shadow-sm"
+                className="w-full py-2.5 bg-[var(--color-brown)] hover:bg-[var(--color-brown-light)] text-amber-100 font-bold text-xs rounded-xl transition-colors cursor-pointer shadow-sm"
               >
                 ปิดหน้าต่าง
               </button>

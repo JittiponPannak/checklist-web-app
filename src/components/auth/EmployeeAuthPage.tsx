@@ -117,7 +117,7 @@ export function EmployeeAuthPage({
             </div>
             <div className="w-full max-w-[420px] bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-5 sm:p-8 shadow-xl shadow-amber-900/5 space-y-5 relative z-10 font-sans">
                 <header className="mb-2 text-center flex flex-col items-center">
-                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--color-amber-glow)] text-amber-900 dark:text-amber-300 text-xs font-semibold border border-amber-300 dark:border-amber-800 mb-3">
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 text-[var(--color-text)] text-xs font-extrabold border border-amber-500/30 mb-3">
                         <span className="w-1.5 h-1.5 rounded-full bg-amber-500" aria-hidden="true" />
                         <span>ระบบพนักงานและผู้ช่วยผู้จัดการร้าน</span>
                     </div>
@@ -139,7 +139,7 @@ export function EmployeeAuthPage({
                                 setError("");
                             }}
                             className={`flex-1 py-2.5 sm:py-2 min-h-[44px] sm:min-h-[36px] text-xs font-semibold rounded-lg transition-all cursor-pointer text-center inline-flex items-center justify-center ${tab === t
-                                ? "bg-[var(--color-brown)] text-amber-300 shadow-sm font-bold"
+                                ? "bg-[var(--color-brown)] text-amber-100 shadow-sm font-bold"
                                 : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
                                 }`}
                         >
@@ -256,7 +256,7 @@ export function EmployeeAuthPage({
                         type="button"
                         disabled={loading}
                         onClick={tab === "register" ? handleRegister : handleLogin}
-                        className={`w-full min-h-[44px] py-2.5 text-amber-300 text-sm font-semibold rounded-xl shadow-md transition-all mt-2 cursor-pointer flex items-center justify-center gap-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500 bg-[var(--color-brown)] hover:bg-[var(--color-brown-light)] active:bg-[#1f0d0c] shadow-amber-950/20 ${loading ? "opacity-70 cursor-not-allowed" : ""
+                        className={`w-full min-h-[44px] py-2.5 text-amber-100 text-sm font-bold rounded-xl shadow-md transition-all mt-2 cursor-pointer flex items-center justify-center gap-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500 bg-[var(--color-brown)] hover:bg-[var(--color-brown-light)] active:bg-[#1f0d0c] shadow-amber-950/20 ${loading ? "opacity-70 cursor-not-allowed" : ""
                             }`}
                     >
                         <span>{loading ? "กำลังตรวจสอบข้อมูล..." : tab === "login" ? "เข้าสู่ระบบพนักงาน →" : "บันทึกและสร้างบัญชีพนักงาน"}</span>
@@ -264,10 +264,10 @@ export function EmployeeAuthPage({
                 </div>
 
                 <div className="mt-4 pt-4 border-t border-[var(--color-border)] text-center flex flex-col gap-1.5">
-                    <Link href="/login/executive" className="inline-flex items-center justify-center min-h-[36px] text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)] font-medium transition-colors">
+                    <Link href="/login/executive" className="inline-flex items-center justify-center min-h-[36px] text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)] font-semibold transition-colors">
                         สำหรับระดับผู้จัดการและฝ่ายบริหาร →
                     </Link>
-                    <Link href="/" className="inline-flex items-center justify-center min-h-[36px] text-xs text-[var(--color-text-subtle)] hover:text-[var(--color-text-muted)] font-medium transition-colors">
+                    <Link href="/" className="inline-flex items-center justify-center min-h-[36px] text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)] font-semibold transition-colors">
                         ← กลับสู่หน้าหลักเลือกช่องทางเข้างาน
                     </Link>
                 </div>
