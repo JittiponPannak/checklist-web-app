@@ -1,4 +1,4 @@
-import { eq, and, gte, lte, desc, inArray, sql } from "drizzle-orm";
+import { eq, and, gte, lte, desc, inArray } from "drizzle-orm";
 import { tasks, taskWork, shiftSession, users, branches } from "../db/schema";
 import { IManagerService, IPointService, INotificationService } from "./types";
 import { ShiftType, Role } from "../types";
@@ -372,11 +372,12 @@ export class ManagerService implements IManagerService {
           .where(eq(shiftSession.id, shiftSessionId));
       } else {
         // Manager or higher approval: approve manager level, and also fulfill assistant approval if missing
+        const assistantTimestamp = targetSession.manager_assistance_approve_timestamp || now;
         await this.db
           .update(shiftSession)
           .set({
             manager_approve_timestamp: now,
-            manager_assistance_approve_timestamp: sql`COALESCE(${shiftSession.manager_assistance_approve_timestamp}, ${now})`,
+            manager_assistance_approve_timestamp: assistantTimestamp,
           })
           .where(eq(shiftSession.id, shiftSessionId));
       }

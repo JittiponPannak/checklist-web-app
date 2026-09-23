@@ -524,11 +524,11 @@ export function ExecutiveDashboard({
       prev.map((i) =>
         i.id === itemId
           ? {
-              ...i,
-              completedAt: newCompletedAt,
-              comment: willBeDone ? (comment ?? i.comment) : null,
-              isLate: willBeDone ? (comment ? true : i.isLate) : false,
-            }
+            ...i,
+            completedAt: newCompletedAt,
+            comment: willBeDone ? (comment ?? i.comment) : null,
+            isLate: willBeDone ? (comment ? true : i.isLate) : false,
+          }
           : i
       )
     );
@@ -883,15 +883,13 @@ export function ExecutiveDashboard({
                     setShiftQueueStatusFilter((prev) => (prev === "pending" ? "all" : "pending"));
                   }
                 }}
-                className={`rounded-2xl p-5 sm:p-6 shadow-xs flex flex-col justify-between space-y-4 transition-all ${
-                  pendingApprovalsCount > 0
-                    ? `cursor-pointer group hover:shadow-md border ${
-                        shiftQueueStatusFilter === "pending"
-                          ? "bg-amber-50 dark:bg-amber-950/40 border-amber-400 dark:border-amber-600 ring-2 ring-amber-400/30"
-                          : "bg-[var(--color-surface)] border-[var(--color-border)] hover:border-amber-400"
-                      }`
+                className={`rounded-2xl p-5 sm:p-6 shadow-xs flex flex-col justify-between space-y-4 transition-all ${pendingApprovalsCount > 0
+                    ? `cursor-pointer group hover:shadow-md border ${shiftQueueStatusFilter === "pending"
+                      ? "bg-amber-50 dark:bg-amber-950/40 border-amber-400 dark:border-amber-600 ring-2 ring-amber-400/30"
+                      : "bg-[var(--color-surface)] border-[var(--color-border)] hover:border-amber-400"
+                    }`
                     : "bg-[var(--color-surface)] border border-[var(--color-border)]"
-                }`}
+                  }`}
                 title={pendingApprovalsCount > 0 ? "คลิกเพื่อกรองเฉพาะกะที่รอดำเนินการรับรอง" : undefined}
               >
                 <div className="space-y-3">
@@ -903,11 +901,10 @@ export function ExecutiveDashboard({
                       </span>
                     </div>
                     {pendingApprovalsCount > 0 && (
-                      <span className={`text-xs font-bold px-2.5 py-1 rounded-full transition-colors flex items-center gap-1 ${
-                        shiftQueueStatusFilter === "pending"
+                      <span className={`text-xs font-bold px-2.5 py-1 rounded-full transition-colors flex items-center gap-1 ${shiftQueueStatusFilter === "pending"
                           ? "bg-amber-300 text-amber-950 dark:bg-amber-800 dark:text-amber-100"
                           : "text-amber-950 bg-amber-100 dark:bg-amber-950 dark:text-amber-200 group-hover:bg-amber-200 border border-amber-300 dark:border-amber-800"
-                      }`}>
+                        }`}>
                         <span>{shiftQueueStatusFilter === "pending" ? "✓ กำลังกรองกะค้าง" : "คลิกเพื่อกรอง"}</span>
                         <span>→</span>
                       </span>
@@ -1299,18 +1296,17 @@ export function ExecutiveDashboard({
                                   <button
                                     type="button"
                                     onClick={() => setSelectedSession(sess)}
-                                    className={`min-h-[44px] px-4 py-2 shrink-0 text-xs font-bold rounded-xl transition-all cursor-pointer shadow-xs inline-flex items-center gap-1.5 ${
-                                      isPendingForMe
+                                    className={`min-h-[44px] px-4 py-2 shrink-0 text-xs font-bold rounded-xl transition-all cursor-pointer shadow-xs inline-flex items-center gap-1.5 ${isPendingForMe
                                         ? "text-amber-950 bg-amber-400 hover:bg-amber-300 active:bg-amber-500"
                                         : "text-[var(--color-text)] bg-[var(--color-surface-2)] hover:bg-[var(--color-surface-2)]/80 border border-[var(--color-border)]"
-                                    }`}
+                                      }`}
                                   >
                                     <span>
                                       {isPendingForMe
                                         ? "ตรวจรับรอง"
                                         : currentRole === "manager_assistant" && app.assistantApproved && !app.managerApproved
-                                        ? "รับรองแล้ว (รอผู้จัดการ)"
-                                        : "ดูรายละเอียด"}
+                                          ? "รับรองแล้ว (รอผู้จัดการ)"
+                                          : "ดูรายละเอียด"}
                                     </span>
                                     {isPendingForMe && <span>→</span>}
                                   </button>
@@ -1425,17 +1421,16 @@ export function ExecutiveDashboard({
                                       <button
                                         type="button"
                                         onClick={() => setSelectedSession(sess)}
-                                        className={`min-h-[44px] min-w-[44px] sm:min-h-[34px] sm:min-w-0 inline-flex items-center justify-center px-4 py-2 sm:px-3.5 sm:py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer shadow-xs whitespace-nowrap ${
-                                          isPendingForMe
+                                        className={`min-h-[44px] min-w-[44px] sm:min-h-[34px] sm:min-w-0 inline-flex items-center justify-center px-4 py-2 sm:px-3.5 sm:py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer shadow-xs whitespace-nowrap ${isPendingForMe
                                             ? "text-amber-950 bg-amber-400 hover:bg-amber-300 active:bg-amber-500"
                                             : "text-[var(--color-text)] bg-[var(--color-surface-2)] hover:bg-[var(--color-surface-2)]/80 border border-[var(--color-border)]"
-                                        }`}
+                                          }`}
                                       >
                                         {isPendingForMe
                                           ? "ตรวจรับรอง →"
                                           : currentRole === "manager_assistant" && app.assistantApproved && !app.managerApproved
-                                          ? "รับรองแล้ว (รอผู้จัดการ)"
-                                          : "ดูรายละเอียด"}
+                                            ? "รับรองแล้ว (รอผู้จัดการ)"
+                                            : "ดูรายละเอียด"}
                                       </button>
                                     );
                                   })()}
@@ -1567,11 +1562,10 @@ export function ExecutiveDashboard({
                         setMyChecklistShift(sh);
                         loadAssistantChecklist(sh);
                       }}
-                      className={`min-h-[36px] px-3.5 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
-                        myChecklistShift === sh
+                      className={`min-h-[36px] px-3.5 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer ${myChecklistShift === sh
                           ? "bg-[var(--color-brown)] text-amber-100 shadow-2xs font-bold"
                           : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
-                      }`}
+                        }`}
                     >
                       {sh === "morning" ? "กะเช้า" : "กะบ่าย"}
                     </button>
@@ -1601,11 +1595,10 @@ export function ExecutiveDashboard({
                             <button
                               type="button"
                               onClick={() => setMyChecklistFilter("all")}
-                              className={`min-h-[40px] px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
-                                myChecklistFilter === "all"
+                              className={`min-h-[40px] px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${myChecklistFilter === "all"
                                   ? "bg-[var(--color-brown)] text-amber-100 shadow-2xs font-bold"
                                   : "bg-[var(--color-surface)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] border border-[var(--color-border)]"
-                              }`}
+                                }`}
                             >
                               <span>ทั้งหมด</span>
                               <span className="font-mono text-xs font-bold">({totalCount})</span>
@@ -1614,23 +1607,21 @@ export function ExecutiveDashboard({
                             <button
                               type="button"
                               onClick={() => setMyChecklistFilter("pending")}
-                              className={`min-h-[40px] px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
-                                myChecklistFilter === "pending"
+                              className={`min-h-[40px] px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${myChecklistFilter === "pending"
                                   ? "bg-amber-400 text-amber-950 font-bold shadow-2xs"
                                   : pendingCount > 0
                                     ? "bg-amber-100 text-amber-950 border border-amber-300 hover:bg-amber-200/80 font-bold"
                                     : "bg-[var(--color-surface)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] border border-[var(--color-border)]"
-                              }`}
+                                }`}
                             >
                               <span>ยังไม่ตรวจ</span>
                               <span
-                                className={`px-2 py-0.5 rounded-full text-xs font-bold font-mono ${
-                                  myChecklistFilter === "pending"
+                                className={`px-2 py-0.5 rounded-full text-xs font-bold font-mono ${myChecklistFilter === "pending"
                                     ? "bg-amber-950 text-amber-200"
                                     : pendingCount > 0
                                       ? "bg-amber-400 text-amber-950"
                                       : "bg-[var(--color-surface-2)] text-[var(--color-text-muted)]"
-                                }`}
+                                  }`}
                               >
                                 {pendingCount}
                               </span>
@@ -1639,11 +1630,10 @@ export function ExecutiveDashboard({
                             <button
                               type="button"
                               onClick={() => setMyChecklistFilter("completed")}
-                              className={`min-h-[40px] px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
-                                myChecklistFilter === "completed"
+                              className={`min-h-[40px] px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${myChecklistFilter === "completed"
                                   ? "bg-[var(--color-brown)] text-amber-100 shadow-2xs font-bold"
                                   : "bg-[var(--color-surface)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] border border-[var(--color-border)]"
-                              }`}
+                                }`}
                             >
                               <span>ตรวจแล้ว</span>
                               <span className="font-mono text-xs font-bold">({doneCount})</span>
@@ -1754,18 +1744,16 @@ export function ExecutiveDashboard({
                                         handleToggleMyItem(item.id);
                                       }
                                     }}
-                                    className={`p-3 sm:p-3.5 rounded-xl border flex items-start gap-3 cursor-pointer transition-all select-none min-h-[48px] focus:outline-hidden focus:ring-2 focus:ring-amber-500/50 ${
-                                      isDone
+                                    className={`p-3 sm:p-3.5 rounded-xl border flex items-start gap-3 cursor-pointer transition-all select-none min-h-[48px] focus:outline-hidden focus:ring-2 focus:ring-amber-500/50 ${isDone
                                         ? "bg-[var(--color-amber-glow)]/30 border-[var(--color-amber)]/40 hover:bg-[var(--color-amber-glow)]/50"
                                         : "bg-[var(--color-surface)] border-[var(--color-border)] hover:border-amber-400 hover:bg-[var(--color-surface-2)]/50"
-                                    }`}
+                                      }`}
                                   >
                                     <div
-                                      className={`w-5 h-5 rounded-md border flex items-center justify-center mt-0.5 shrink-0 transition-colors ${
-                                        isDone
+                                      className={`w-5 h-5 rounded-md border flex items-center justify-center mt-0.5 shrink-0 transition-colors ${isDone
                                           ? "bg-amber-500 border-amber-500 text-white"
                                           : "border-[var(--color-border-strong)] bg-[var(--color-surface)]"
-                                      }`}
+                                        }`}
                                     >
                                       {isDone && (
                                         <svg
@@ -1795,11 +1783,10 @@ export function ExecutiveDashboard({
                                         )}
                                       </div>
                                       <p
-                                        className={`text-xs sm:text-sm font-medium mt-1 leading-snug ${
-                                          isDone
+                                        className={`text-xs sm:text-sm font-medium mt-1 leading-snug ${isDone
                                             ? "text-[var(--color-text-muted)] line-through"
                                             : "text-[var(--color-text)]"
-                                        }`}
+                                          }`}
                                       >
                                         {item.label}
                                       </p>
