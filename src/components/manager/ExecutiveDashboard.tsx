@@ -28,6 +28,8 @@ import {
 import { RefrigeratorConfigView } from "./RefrigeratorConfigView";
 import { NotificationCenter } from "../common/NotificationCenter";
 import { ThemeToggle } from "../common/ThemeToggle";
+import { NavbarRefreshControl } from "../common/NavbarRefreshControl";
+import { invalidateBranchCache } from "../../utils/cache";
 import { LeaderboardWidget } from "./LeaderboardWidget";
 import { ErrorBoundary } from "../common/ErrorBoundary";
 import { ClipboardCheck, ShieldCheck, Building2, Award, Snowflake, History, CheckCircle2, AlertCircle, LogOut } from "lucide-react";
@@ -73,6 +75,10 @@ export function ExecutiveDashboard({
   const [isLiveFromDb, setIsLiveFromDb] = useState(false);
   const [isLoadingDb, setIsLoadingDb] = useState(false);
   const [hasAssistantLoggedInToday, setHasAssistantLoggedInToday] = useState(true);
+  const [isNavbarRefreshing, setIsNavbarRefreshing] = useState(false);
+  const [isNavbarDbRefreshing, setIsNavbarDbRefreshing] = useState(false);
+  const [navbarLastRefreshedAt, setNavbarLastRefreshedAt] = useState<Date | null>(new Date());
+  const [navbarLastRefreshType, setNavbarLastRefreshType] = useState<"cache" | "db">("cache");
 
   // Approval status tracking in client state (synced with Supabase task_work)
   const [approvals, setApprovals] = useState<Record<string, { assistantApproved?: boolean; managerApproved?: boolean }>>({});
@@ -339,6 +345,51 @@ export function ExecutiveDashboard({
       }
     }
   }, [currentRole, myChecklistShift, loadAssistantChecklist, activeTab]);
+
+  const handleNavbarRefresh = useCallback(async () => {
+    try {
+      setIsNavbarRefreshing(true);
+      await Promise.all([
+        loadDbSessions(true),
+        currentRole === "manager_assistant" ? loadAssistantChecklist(myChecklistShift, false) : Promise.resolve(),
+        activeTab === "history" ? loadHistorySessions() : Promise.resolve(),
+      ]);
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("refresh-dashboard-data", { detail: { forceDb: false } }));
+      }
+      setNavbarLastRefreshedAt(new Date());
+      setNavbarLastRefreshType("cache");
+      setActionFeedback("รีเฟรชข้อมูลล่าสุดเรียบร้อยแล้ว");
+      setTimeout(() => setActionFeedback(null), 3000);
+    } catch (err) {
+      console.error("Navbar refresh error:", err);
+    } finally {
+      setIsNavbarRefreshing(false);
+    }
+  }, [loadDbSessions, currentRole, loadAssistantChecklist, myChecklistShift, activeTab, loadHistorySessions]);
+
+  const handleNavbarRefreshFromDb = useCallback(async () => {
+    try {
+      setIsNavbarDbRefreshing(true);
+      invalidateBranchCache();
+      await Promise.all([
+        loadDbSessions(true),
+        currentRole === "manager_assistant" ? loadAssistantChecklist(myChecklistShift, false) : Promise.resolve(),
+        activeTab === "history" ? loadHistorySessions() : Promise.resolve(),
+      ]);
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("refresh-dashboard-data", { detail: { forceDb: true } }));
+      }
+      setNavbarLastRefreshedAt(new Date());
+      setNavbarLastRefreshType("db");
+      setActionFeedback("ดึงข้อมูลสดจากฐานข้อมูลเรียบร้อย (Bypass Cache)");
+      setTimeout(() => setActionFeedback(null), 3500);
+    } catch (err) {
+      console.error("Navbar refresh from DB error:", err);
+    } finally {
+      setIsNavbarDbRefreshing(false);
+    }
+  }, [loadDbSessions, currentRole, loadAssistantChecklist, myChecklistShift, activeTab, loadHistorySessions]);
 
   // Role metadata configurations
   const roleConfig = {
@@ -608,6 +659,14 @@ export function ExecutiveDashboard({
           </div>
 
           <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+            <NavbarRefreshControl
+              onRefresh={handleNavbarRefresh}
+              onRefreshFromDb={handleNavbarRefreshFromDb}
+              isLoading={isNavbarRefreshing}
+              isDbLoading={isNavbarDbRefreshing}
+              lastRefreshedAt={navbarLastRefreshedAt}
+              lastRefreshType={navbarLastRefreshType}
+            />
             <NotificationCenter />
             <ThemeToggle />
 

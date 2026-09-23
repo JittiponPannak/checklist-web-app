@@ -43,23 +43,25 @@ export function BranchRefrigeratorLiveView({ user }: { user: User }) {
   const total = tasks.length;
   const done = tasks.filter((t) => t.completed).length;
   const pending = total - done;
-  const issues = tasks.filter(
-    (t) =>
-      t.completed &&
-      (!t.isOkay || (t.temperature !== null && t.temperature !== undefined && t.temperature > t.targetTemperature))
-  ).length;
+
+  const isTaskIssue = (t: RefrigeratorTaskItem) => {
+    if (!t.completed) return false;
+    if (!t.isOkay) return true;
+    if (t.temperature !== null && t.temperature !== undefined) {
+      if (t.temperature > t.maxTemperature) return true;
+      if (t.minTemperature !== undefined && t.temperature < t.minTemperature) return true;
+    }
+    return false;
+  };
+
+  const issues = tasks.filter(isTaskIssue).length;
 
   const completionRate = total > 0 ? Math.round((done / total) * 100) : 0;
 
   const filteredTasks = tasks.filter((t) => {
     if (filter === "done") return t.completed;
     if (filter === "pending") return !t.completed;
-    if (filter === "issues") {
-      return (
-        t.completed &&
-        (!t.isOkay || (t.temperature !== null && t.temperature !== undefined && t.temperature > t.targetTemperature))
-      );
-    }
+    if (filter === "issues") return isTaskIssue(t);
     return true;
   });
 
@@ -243,14 +245,20 @@ export function BranchRefrigeratorLiveView({ user }: { user: User }) {
             const isTempHigh =
               task.temperature !== null &&
               task.temperature !== undefined &&
-              task.temperature > task.targetTemperature;
+              task.temperature > task.maxTemperature;
+            const isTempLow =
+              task.temperature !== null &&
+              task.temperature !== undefined &&
+              task.minTemperature !== undefined &&
+              task.temperature < task.minTemperature;
+            const isTempAbnormal = isTempHigh || isTempLow;
 
             return (
               <div
                 key={task.taskId}
                 className={`p-4 rounded-2xl border transition-all ${
                   isDone
-                    ? isTempHigh || !task.isOkay
+                    ? isTempAbnormal || !task.isOkay
                       ? "bg-rose-50/50 dark:bg-rose-950/20 border-rose-300 dark:border-rose-800"
                       : "bg-[var(--color-surface)] border-[var(--color-border)]"
                     : "bg-[var(--color-surface-2)]/60 border-dashed border-[var(--color-border)]"
@@ -261,7 +269,7 @@ export function BranchRefrigeratorLiveView({ user }: { user: User }) {
                     <div
                       className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border ${
                         isDone
-                          ? isTempHigh || !task.isOkay
+                          ? isTempAbnormal || !task.isOkay
                             ? "bg-rose-100 text-rose-700 border-rose-300 dark:bg-rose-950 dark:text-rose-300"
                             : "bg-emerald-100 text-emerald-700 border-emerald-300 dark:bg-emerald-950 dark:text-emerald-300"
                           : "bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-950 dark:text-amber-300"
@@ -276,17 +284,17 @@ export function BranchRefrigeratorLiveView({ user }: { user: User }) {
                           {task.name}
                         </h3>
                         <span className="text-[11px] font-mono font-semibold px-2 py-0.5 rounded-full bg-[var(--color-surface-2)] border border-[var(--color-border)] text-[var(--color-text-muted)]">
-                          เกณฑ์: ≤ {task.targetTemperature}°C
+                          เกณฑ์: {task.minTemperature}°C ~ {task.maxTemperature}°C
                         </span>
                         {isDone ? (
                           <span
                             className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${
-                              isTempHigh || !task.isOkay
+                              isTempAbnormal || !task.isOkay
                                 ? "bg-rose-100 text-rose-800 border-rose-300 dark:bg-rose-950/80 dark:text-rose-200"
                                 : "bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950/80 dark:text-emerald-200"
                             }`}
                           >
-                            {isTempHigh ? "อุณหภูมิเกินเกณฑ์" : !task.isOkay ? "พบสิ่งผิดปกติ" : "ปกติเรียบร้อย"}
+                            {isTempHigh ? "อุณหภูมิเกินเกณฑ์" : isTempLow ? "อุณหภูมิต่ำกว่าเกณฑ์" : !task.isOkay ? "พบสิ่งผิดปกติ" : "ปกติเรียบร้อย"}
                           </span>
                         ) : (
                           <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 dark:bg-amber-950/80 dark:text-amber-200">
@@ -330,7 +338,7 @@ export function BranchRefrigeratorLiveView({ user }: { user: User }) {
                   {isDone && task.temperature !== null && task.temperature !== undefined && (
                     <div
                       className={`shrink-0 px-3.5 py-2 rounded-xl border flex items-center gap-2 self-start sm:self-auto ${
-                        isTempHigh
+                        isTempAbnormal || !task.isOkay
                           ? "bg-rose-100 text-rose-950 border-rose-300 dark:bg-rose-950/80 dark:text-rose-200"
                           : "bg-emerald-100 text-emerald-950 border-emerald-300 dark:bg-emerald-950/80 dark:text-emerald-200"
                       }`}
@@ -341,7 +349,11 @@ export function BranchRefrigeratorLiveView({ user }: { user: User }) {
                           {task.temperature}°C
                         </div>
                         <div className="text-[10px] font-bold">
-                          {isTempHigh ? `เกิน +${task.temperature - task.targetTemperature}°C` : "อยู่ในเกณฑ์"}
+                          {isTempHigh
+                            ? `เกิน +${task.temperature - task.maxTemperature}°C`
+                            : isTempLow
+                            ? `ต่ำกว่า -${task.minTemperature - task.temperature}°C`
+                            : "อยู่ในเกณฑ์"}
                         </div>
                       </div>
                     </div>

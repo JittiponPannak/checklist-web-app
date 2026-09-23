@@ -22,7 +22,8 @@ export function RefrigeratorConfigView({ user }: { user: User }) {
 
     // Form State
     const [formName, setFormName] = useState("ตู้แช่");
-    const [formTemp, setFormTemp] = useState(4);
+    const [formMinTemp, setFormMinTemp] = useState(0);
+    const [formMaxTemp, setFormMaxTemp] = useState(4);
     const [formDisable, setFormDisable] = useState(false);
     const [saving, setSaving] = useState(false);
 
@@ -41,14 +42,23 @@ export function RefrigeratorConfigView({ user }: { user: User }) {
     }
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         loadData();
+        const handleExternalRefresh = () => {
+            loadData();
+            setLiveRefreshKey((k) => k + 1);
+        };
+        window.addEventListener("refresh-dashboard-data", handleExternalRefresh);
+        return () => window.removeEventListener("refresh-dashboard-data", handleExternalRefresh);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     function handleOpenAdd() {
         setIsAdding(true);
         setEditId(null);
         setFormName("ตู้แช่");
-        setFormTemp(4);
+        setFormMinTemp(0);
+        setFormMaxTemp(4);
         setFormDisable(false);
         setFormError("");
     }
@@ -57,7 +67,8 @@ export function RefrigeratorConfigView({ user }: { user: User }) {
         setIsAdding(false);
         setEditId(ref.id);
         setFormName(ref.name);
-        setFormTemp(ref.target_temperature);
+        setFormMinTemp(ref.min_temperature ?? 0);
+        setFormMaxTemp(ref.max_temperature ?? 4);
         setFormDisable(ref.disable_check);
         setFormError("");
     }
@@ -74,13 +85,19 @@ export function RefrigeratorConfigView({ user }: { user: User }) {
             return;
         }
 
+        if (formMinTemp > formMaxTemp) {
+            setFormError("อุณหภูมิต่ำสุดต้องไม่เกินอุณหภูมิสูงสุด");
+            return;
+        }
+
         setSaving(true);
         setFormError("");
         if (isAdding) {
             const res = await createRefrigeratorAction({
                 userId: user.id,
                 name: formName,
-                targetTemperature: formTemp,
+                minTemperature: formMinTemp,
+                maxTemperature: formMaxTemp,
                 disableCheck: formDisable,
             });
             if (res.success && res.data) {
@@ -94,14 +111,15 @@ export function RefrigeratorConfigView({ user }: { user: User }) {
             const res = await updateRefrigeratorAction({
                 id: editId,
                 name: formName,
-                targetTemperature: formTemp,
+                minTemperature: formMinTemp,
+                maxTemperature: formMaxTemp,
                 disableCheck: formDisable,
             });
             if (res.success) {
                 setRefrigerators(
                     refrigerators.map((r) =>
                         r.id === editId
-                            ? { ...r, name: formName, target_temperature: formTemp, disable_check: formDisable }
+                            ? { ...r, name: formName, min_temperature: formMinTemp, max_temperature: formMaxTemp, disable_check: formDisable }
                             : r
                     )
                 );
@@ -186,7 +204,7 @@ export function RefrigeratorConfigView({ user }: { user: User }) {
                             </div>
                         )}
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                             <div>
                                 <label htmlFor="ref-name" className="block text-xs font-semibold text-[var(--color-text-muted)] mb-1">
                                     ชื่อตู้แช่ (เช่น ตู้เบียร์, ตู้นม, ตู้ 1)
@@ -200,14 +218,26 @@ export function RefrigeratorConfigView({ user }: { user: User }) {
                                 />
                             </div>
                             <div>
-                                <label htmlFor="ref-temp" className="block text-xs font-semibold text-[var(--color-text-muted)] mb-1">
-                                    อุณหภูมิเป้าหมายสูงสุด (องศาเซลเซียส)
+                                <label htmlFor="ref-min-temp" className="block text-xs font-semibold text-[var(--color-text-muted)] mb-1">
+                                    อุณหภูมิต่ำสุด (°C)
                                 </label>
                                 <input
-                                    id="ref-temp"
+                                    id="ref-min-temp"
                                     type="number"
-                                    value={formTemp}
-                                    onChange={(e) => setFormTemp(Number(e.target.value))}
+                                    value={formMinTemp}
+                                    onChange={(e) => setFormMinTemp(Number(e.target.value))}
+                                    className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] focus:border-amber-400 rounded-lg px-3 py-2 text-sm text-[var(--color-text)] focus:outline-hidden"
+                                />
+                            </div>
+                            <div>
+                                <label htmlFor="ref-max-temp" className="block text-xs font-semibold text-[var(--color-text-muted)] mb-1">
+                                    อุณหภูมิสูงสุด (°C)
+                                </label>
+                                <input
+                                    id="ref-max-temp"
+                                    type="number"
+                                    value={formMaxTemp}
+                                    onChange={(e) => setFormMaxTemp(Number(e.target.value))}
                                     className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] focus:border-amber-400 rounded-lg px-3 py-2 text-sm text-[var(--color-text)] focus:outline-hidden"
                                 />
                             </div>
@@ -252,7 +282,7 @@ export function RefrigeratorConfigView({ user }: { user: User }) {
                             <Snowflake className="w-5 h-5" />
                         </div>
                         <p className="text-sm font-bold text-[var(--color-text)] mb-1">ยังไม่มีรายการตู้แช่ในระบบสาขานี้</p>
-                        <p className="text-xs text-[var(--color-text-subtle)] max-w-sm mx-auto">กดปุ่ม "+ เพิ่มตู้แช่ใหม่" ด้านบน เพื่อระบุชื่อตู้และกำหนดอุณหภูมิเป้าหมายสำหรับให้พนักงานตรวจสอบประจำวัน</p>
+                        <p className="text-xs text-[var(--color-text-subtle)] max-w-sm mx-auto">กดปุ่ม &quot;+ เพิ่มตู้แช่ใหม่&quot; ด้านบน เพื่อระบุชื่อตู้และกำหนดอุณหภูมิเป้าหมายสำหรับให้พนักงานตรวจสอบประจำวัน</p>
                     </div>
                 )}
 
@@ -290,9 +320,9 @@ export function RefrigeratorConfigView({ user }: { user: User }) {
                                 </div>
 
                                 <div className="flex items-center justify-between text-xs font-semibold">
-                                    <span className="text-[var(--color-text-muted)]">อุณหภูมิเป้าหมาย:</span>
+                                    <span className="text-[var(--color-text-muted)]">เกณฑ์อุณหภูมิ:</span>
                                     <span className={`px-2 py-0.5 rounded-full border font-mono font-bold ${ref.disable_check ? "bg-[var(--color-surface-2)] text-[var(--color-text-subtle)] border-[var(--color-border)]" : "bg-sky-50 dark:bg-sky-950/50 text-sky-950 dark:text-sky-200 border-sky-200 dark:border-sky-800"}`}>
-                                        ≤ {ref.target_temperature} °C
+                                        {ref.min_temperature} °C ~ {ref.max_temperature} °C
                                     </span>
                                 </div>
                                 {ref.disable_check && (

@@ -57,7 +57,7 @@ export function BranchRefrigeratorChecklist({
 
   function handleOpenCheck(task: RefrigeratorTaskItem) {
     setActiveTask(task);
-    setTempValue(task.temperature ?? task.targetTemperature);
+    setTempValue(task.temperature ?? task.maxTemperature ?? 4);
     setIsOkayValue(task.isOkay ?? true);
     setCommentValue(task.comment || "");
   }
@@ -202,7 +202,9 @@ export function BranchRefrigeratorChecklist({
         <div className="space-y-2.5" role="group" aria-label="รายการเช็คลิสต์ตู้แช่">
           {tasks.map((task) => {
             const isDone = task.completed;
-            const isTempWarning = task.temperature !== null && task.temperature !== undefined && task.temperature > task.targetTemperature;
+            const isTempHigh = task.temperature !== null && task.temperature !== undefined && task.temperature > task.maxTemperature;
+            const isTempLow = task.temperature !== null && task.temperature !== undefined && task.minTemperature !== undefined && task.temperature < task.minTemperature;
+            const isTempWarning = isTempHigh || isTempLow;
 
             return (
               <div
@@ -236,7 +238,7 @@ export function BranchRefrigeratorChecklist({
                           {task.name}
                         </h3>
                         <span className="text-[11px] font-mono font-semibold px-2 py-0.5 rounded-full bg-[var(--color-surface-2)] border border-[var(--color-border)] text-[var(--color-text-muted)]">
-                          เกณฑ์: ≤ {task.targetTemperature}°C
+                          เกณฑ์: {task.minTemperature}°C ~ {task.maxTemperature}°C
                         </span>
                       </div>
 
@@ -346,7 +348,7 @@ export function BranchRefrigeratorChecklist({
                     {activeTask.name}
                   </h3>
                   <p className="text-xs text-[var(--color-text-muted)]">
-                    เกณฑ์อุณหภูมิเป้าหมาย: ≤ {activeTask.targetTemperature}°C
+                    เกณฑ์อุณหภูมิ: {activeTask.minTemperature}°C ถึง {activeTask.maxTemperature}°C
                   </p>
                 </div>
               </div>
@@ -380,10 +382,16 @@ export function BranchRefrigeratorChecklist({
                     +
                   </button>
                 </div>
-                {tempValue > activeTask.targetTemperature && (
+                {tempValue > activeTask.maxTemperature && (
                   <p className="text-[11px] font-bold text-rose-600 dark:text-rose-400 mt-1 flex items-center gap-1">
                     <AlertTriangle size={12} />
-                    อุณหภูมิสูงกว่าเกณฑ์ที่กำหนด ({activeTask.targetTemperature}°C)
+                    อุณหภูมิสูงกว่าเกณฑ์ที่กำหนด (เกิน {activeTask.maxTemperature}°C)
+                  </p>
+                )}
+                {tempValue < activeTask.minTemperature && (
+                  <p className="text-[11px] font-bold text-amber-600 dark:text-amber-400 mt-1 flex items-center gap-1">
+                    <AlertTriangle size={12} />
+                    อุณหภูมิต่ำกว่าเกณฑ์ที่กำหนด (ต่ำกว่า {activeTask.minTemperature}°C)
                   </p>
                 )}
               </div>

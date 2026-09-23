@@ -68,18 +68,9 @@ export const taskWork = pgTable.withRLS("task_work", {
 export const refrigerators = pgTable.withRLS("refrigerators", {
     id: uuid("id").primaryKey().defaultRandom(),
     name: text("name").notNull().default(""),
-    target_temperature: integer("target_temperature").notNull(),
+    min_temperature: integer("min_temperature").notNull().default(0),
+    max_temperature: integer("max_temperature").notNull().default(4),
     disable_check: boolean("disable_check").notNull().default(false),
-});
-
-export const refrigeratorCheck = pgTable.withRLS("refrigerator_check", {
-    id: uuid("id").primaryKey().defaultRandom(),
-    refrigerator: uuid("task_id").notNull().references(() => refrigerators.id),
-    shift_session: uuid("shift_session_id").notNull().references(() => shiftSession.id),
-    is_okay: boolean("is_okay").notNull(),
-    comment: text("comment"),
-
-    timestamp: timestamp("timestamp"),
 });
 
 export const refrigeratorTasks = pgTable.withRLS("refrigerator_tasks", {

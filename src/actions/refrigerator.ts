@@ -16,7 +16,8 @@ export async function getRefrigeratorsAction(
 export async function createRefrigeratorAction(params: {
   userId: string;
   name: string;
-  targetTemperature: number;
+  minTemperature: number;
+  maxTemperature: number;
   disableCheck: boolean;
 }): Promise<{ success: boolean; data?: RefrigeratorConfig; error?: string }> {
   const services = getServices();
@@ -26,7 +27,8 @@ export async function createRefrigeratorAction(params: {
 export async function updateRefrigeratorAction(params: {
   id: string;
   name: string;
-  targetTemperature: number;
+  minTemperature: number;
+  maxTemperature: number;
   disableCheck: boolean;
 }): Promise<{ success: boolean; error?: string }> {
   const services = getServices();

@@ -147,7 +147,9 @@ export interface RefrigeratorTaskItem {
   taskId: string;
   refrigeratorId: string;
   name: string;
-  targetTemperature: number;
+  minTemperature: number;
+  maxTemperature: number;
+  targetTemperature?: number;
   taskDate: string;
   completed: boolean;
   completedAt?: string | null;
@@ -163,13 +165,15 @@ export interface IRefrigeratorService {
   createRefrigerator(params: {
     userId: string;
     name: string;
-    targetTemperature: number;
+    minTemperature: number;
+    maxTemperature: number;
     disableCheck: boolean;
   }): Promise<{ success: boolean; data?: any; error?: string }>;
   updateRefrigerator(params: {
     id: string;
     name: string;
-    targetTemperature: number;
+    minTemperature: number;
+    maxTemperature: number;
     disableCheck: boolean;
   }): Promise<{ success: boolean; error?: string }>;
   ensureDailyRefrigeratorTasks(branchId: string, dateStr?: string): Promise<{ success: boolean; error?: string }>;

@@ -27,6 +27,11 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: "Eater Egg Fresh Mart - ระบบเช็คลิสต์ประจำกะ",
   description: "ระบบจัดการและตรวจสอบเช็คลิสต์การปฏิบัติงานประจำกะ",
+  icons: {
+    icon: "/logo.png",
+    shortcut: "/logo.png",
+    apple: "/logo.png",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

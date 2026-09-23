@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { User } from "../../types";
 import { BrandLogo } from "../common/BrandLogo";
 import { ThemeToggle } from "../common/ThemeToggle";
+import { NavbarRefreshControl } from "../common/NavbarRefreshControl";
 import { LogOut, RefreshCw } from "lucide-react";
 
 import { createBranchAction, assignStaffToBranchAction, assignTasksToBranchAction, DashboardBranch as Branch } from "../../actions/branch";
@@ -180,6 +181,48 @@ export function AdminDashboardView({
     loadBranches();
   }, []);
 
+  const [isAdminRefreshing, setIsAdminRefreshing] = useState(false);
+  const [isAdminDbRefreshing, setIsAdminDbRefreshing] = useState(false);
+  const [adminLastRefreshedAt, setAdminLastRefreshedAt] = useState<Date | null>(new Date());
+  const [adminLastRefreshType, setAdminLastRefreshType] = useState<"cache" | "db">("cache");
+
+  const handleAdminNavbarRefresh = async () => {
+    try {
+      setIsAdminRefreshing(true);
+      await Promise.all([
+        loadBranches(false),
+        loadUsers(),
+        loadTasks(),
+      ]);
+      setAdminLastRefreshedAt(new Date());
+      setAdminLastRefreshType("cache");
+      showToast("รีเฟรชข้อมูลระบบเรียบร้อยแล้ว");
+    } catch (err) {
+      console.error("Admin refresh error:", err);
+    } finally {
+      setIsAdminRefreshing(false);
+    }
+  };
+
+  const handleAdminNavbarRefreshFromDb = async () => {
+    try {
+      setIsAdminDbRefreshing(true);
+      invalidateBranchCache();
+      await Promise.all([
+        loadBranches(true),
+        loadUsers(),
+        loadTasks(),
+      ]);
+      setAdminLastRefreshedAt(new Date());
+      setAdminLastRefreshType("db");
+      showToast("ดึงข้อมูลสดจากฐานข้อมูลเรียบร้อย (Bypass Cache)");
+    } catch (err) {
+      console.error("Admin refresh from DB error:", err);
+    } finally {
+      setIsAdminDbRefreshing(false);
+    }
+  };
+
   function showToast(msg: string) {
     setToastMsg(msg);
     setTimeout(() => setToastMsg(null), 3000);
@@ -349,6 +392,14 @@ export function AdminDashboardView({
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <NavbarRefreshControl
+            onRefresh={handleAdminNavbarRefresh}
+            onRefreshFromDb={handleAdminNavbarRefreshFromDb}
+            isLoading={isAdminRefreshing}
+            isDbLoading={isAdminDbRefreshing}
+            lastRefreshedAt={adminLastRefreshedAt}
+            lastRefreshType={adminLastRefreshType}
+          />
           <div className="flex items-center gap-2.5 pl-2 sm:pl-3 border-l border-[var(--color-border)]">
             <div className="text-right hidden sm:block">
               <p className="text-xs font-bold text-[var(--color-text)]">{user.name}</p>

@@ -6,7 +6,8 @@ import { ShiftType } from "../types";
 export interface RefrigeratorConfig {
   id: string;
   name: string;
-  target_temperature: number;
+  min_temperature: number;
+  max_temperature: number;
   disable_check: boolean;
 }
 
@@ -21,11 +22,18 @@ export class RefrigeratorService implements IRefrigeratorService {
   constructor(private db: any) {}
 
   private async getBranchForUser(userId: string) {
-    const [branch] = await this.db
+    let [branch] = await this.db
       .select({ id: branches.id, name: branches.name, refrigerators: branches.refrigerators })
       .from(branches)
       .where(sql`${userId} = ANY(${branches.members})`)
       .limit(1);
+
+    if (!branch) {
+      [branch] = await this.db
+        .select({ id: branches.id, name: branches.name, refrigerators: branches.refrigerators })
+        .from(branches)
+        .limit(1);
+    }
 
     return branch;
   }
@@ -34,16 +42,41 @@ export class RefrigeratorService implements IRefrigeratorService {
     try {
       const branch = await this.getBranchForUser(userId);
 
-      if (!branch || !branch.refrigerators || branch.refrigerators.length === 0) {
+      if (!branch) {
         return { success: true, data: [] };
       }
 
-      const refs = await this.db
-        .select()
-        .from(refrigerators)
-        .where(inArray(refrigerators.id, branch.refrigerators as string[]));
+      // Fetch all refrigerators in the database
+      const allDbRefs = await this.db.select().from(refrigerators);
+      if (allDbRefs.length === 0) {
+        return { success: true, data: [] };
+      }
 
-      return { success: true, data: refs.map((r: any) => ({ ...r, disable_check: r.disable_check })) };
+      // Automatically sync any newly added refrigerators to the branch's refrigerator list
+      const branchRefIds: string[] = Array.isArray(branch.refrigerators) ? branch.refrigerators : [];
+      const branchRefSet = new Set(branchRefIds);
+      const allDbRefIds = allDbRefs.map((r: any) => r.id);
+      const missingFromBranch = allDbRefIds.filter((id: string) => !branchRefSet.has(id));
+
+      if (missingFromBranch.length > 0) {
+        const merged = Array.from(new Set([...branchRefIds, ...allDbRefIds]));
+        await this.db
+          .update(branches)
+          .set({
+            refrigerators: merged,
+            last_update: new Date(),
+          })
+          .where(eq(branches.id, branch.id));
+
+        branch.refrigerators = merged;
+        await this.ensureDailyRefrigeratorTasks(branch.id);
+      }
+
+      const activeRefSet = new Set(branch.refrigerators);
+      const refs = allDbRefs.filter((r: any) => activeRefSet.has(r.id));
+      refs.sort((a: any, b: any) => a.name.localeCompare(b.name, "th", { numeric: true }));
+
+      return { success: true, data: refs.map((r: any) => ({ ...r, disable_check: !!r.disable_check })) };
     } catch (err: any) {
       console.error("RefrigeratorService.getRefrigerators error:", err);
       return { success: false, error: err?.message || "เกิดข้อผิดพลาดในการดึงข้อมูลตู้แช่" };
@@ -53,11 +86,12 @@ export class RefrigeratorService implements IRefrigeratorService {
   async createRefrigerator(params: {
     userId: string;
     name: string;
-    targetTemperature: number;
+    minTemperature: number;
+    maxTemperature: number;
     disableCheck: boolean;
   }): Promise<{ success: boolean; data?: RefrigeratorConfig; error?: string }> {
     try {
-      const { userId, name, targetTemperature, disableCheck } = params;
+      const { userId, name, minTemperature, maxTemperature, disableCheck } = params;
 
       const branch = await this.getBranchForUser(userId);
       if (!branch) {
@@ -68,7 +102,8 @@ export class RefrigeratorService implements IRefrigeratorService {
         .insert(refrigerators)
         .values({
           name,
-          target_temperature: targetTemperature,
+          min_temperature: minTemperature,
+          max_temperature: maxTemperature,
           disable_check: disableCheck,
         })
         .returning();
@@ -96,17 +131,19 @@ export class RefrigeratorService implements IRefrigeratorService {
   async updateRefrigerator(params: {
     id: string;
     name: string;
-    targetTemperature: number;
+    minTemperature: number;
+    maxTemperature: number;
     disableCheck: boolean;
   }): Promise<{ success: boolean; error?: string }> {
     try {
-      const { id, name, targetTemperature, disableCheck } = params;
+      const { id, name, minTemperature, maxTemperature, disableCheck } = params;
 
       await this.db
         .update(refrigerators)
         .set({
           name,
-          target_temperature: targetTemperature,
+          min_temperature: minTemperature,
+          max_temperature: maxTemperature,
           disable_check: disableCheck,
         })
         .where(eq(refrigerators.id, id));
@@ -322,7 +359,9 @@ export class RefrigeratorService implements IRefrigeratorService {
           taskId: t.id,
           refrigeratorId: t.refrigerator_id,
           name: ref?.name || "ตู้แช่",
-          targetTemperature: ref?.target_temperature ?? 4,
+          minTemperature: ref?.min_temperature ?? 0,
+          maxTemperature: ref?.max_temperature ?? 4,
+          targetTemperature: ref?.max_temperature ?? 4,
           taskDate: t.task_date,
           completed,
           completedAt: t.completed_at ? new Date(t.completed_at).toISOString() : null,
@@ -409,7 +448,9 @@ export class RefrigeratorService implements IRefrigeratorService {
         taskId: updatedTask.id,
         refrigeratorId: updatedTask.refrigerator_id,
         name: ref?.name || "ตู้แช่",
-        targetTemperature: ref?.target_temperature ?? 4,
+        minTemperature: ref?.min_temperature ?? 0,
+        maxTemperature: ref?.max_temperature ?? 4,
+        targetTemperature: ref?.max_temperature ?? 4,
         taskDate: updatedTask.task_date,
         completed: Boolean(updatedTask.completed_at),
         completedAt: updatedTask.completed_at ? new Date(updatedTask.completed_at).toISOString() : null,
