@@ -165,13 +165,14 @@ export class ManagerService implements IManagerService {
         const doneItems = items.filter((i: any) => i.completedAt !== null).length;
         const isAllDone = totalItems > 0 && doneItems === totalItems;
 
-        const assistantApproved =
-          sessionWorks.length > 0 &&
-          sessionWorks.every((w: any) => w.manager_assistance_approve_timestamp !== null);
-
         const managerApproved =
           sessionWorks.length > 0 &&
           sessionWorks.every((w: any) => w.manager_approve_timestamp !== null);
+
+        const assistantApproved =
+          managerApproved ||
+          (sessionWorks.length > 0 &&
+            sessionWorks.every((w: any) => w.manager_assistance_approve_timestamp !== null));
 
         const latestAsstTime = sessionWorks
           .map((w: any) => w.manager_assistance_approve_timestamp)
@@ -305,13 +306,14 @@ export class ManagerService implements IManagerService {
         const doneItems = items.filter((i: any) => i.completedAt !== null).length;
         const isAllDone = totalItems > 0 && doneItems === totalItems;
 
-        const assistantApproved =
-          sessionWorks.length > 0 &&
-          sessionWorks.every((w: any) => w.manager_assistance_approve_timestamp !== null);
-
         const managerApproved =
           sessionWorks.length > 0 &&
           sessionWorks.every((w: any) => w.manager_approve_timestamp !== null);
+
+        const assistantApproved =
+          managerApproved ||
+          (sessionWorks.length > 0 &&
+            sessionWorks.every((w: any) => w.manager_assistance_approve_timestamp !== null));
 
         const latestAsstTime = sessionWorks
           .map((w: any) => w.manager_assistance_approve_timestamp)
@@ -450,13 +452,15 @@ export class ManagerService implements IManagerService {
         .from(taskWork)
         .where(eq(taskWork.shift_session, shiftSessionId));
 
+      // Fully approved if manager approved (or assistant approved in assistant-only flow)
       const isNowFullyApproved =
-        updatedWorks.length > 0 &&
-        updatedWorks.every(
-          (w: any) =>
-            w.manager_approve_timestamp !== null &&
-            (role === "manager_assistant" ? true : w.manager_assistance_approve_timestamp !== null)
-        );
+        updatedWorks.length > 0
+          ? updatedWorks.every((w: any) =>
+              role === "manager_assistant"
+                ? w.manager_assistance_approve_timestamp !== null && w.manager_approve_timestamp !== null
+                : w.manager_approve_timestamp !== null
+            )
+          : role !== "manager_assistant";
 
       // Transition to fully approved -> Trigger PointService to award points and streak!
       if (!wasFullyApproved && isNowFullyApproved && this.pointService) {

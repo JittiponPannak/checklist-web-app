@@ -126,6 +126,8 @@ export function ExecutiveDashboard({
             category: it.category,
             completedAt: it.completedAt,
             taskWorkId: it.taskWorkId,
+            isLate: it.isLate,
+            comment: it.comment,
           })),
           notified: true,
           branchName: s.branchName,
@@ -135,9 +137,10 @@ export function ExecutiveDashboard({
         setApprovals((prev) => {
           const merged: Record<string, { assistantApproved?: boolean; managerApproved?: boolean }> = { ...prev };
           (res.sessions || []).forEach((s) => {
+            const isMgr = Boolean(s.managerApproved || prev[s.id]?.managerApproved);
             merged[s.id] = {
-              assistantApproved: Boolean(s.assistantApproved || prev[s.id]?.assistantApproved),
-              managerApproved: Boolean(s.managerApproved || prev[s.id]?.managerApproved),
+              assistantApproved: isMgr || Boolean(s.assistantApproved || prev[s.id]?.assistantApproved),
+              managerApproved: isMgr,
             };
           });
           return merged;
@@ -464,14 +467,17 @@ export function ExecutiveDashboard({
     }
 
     // Optimistic UI update
-    setApprovals((prev) => ({
-      ...prev,
-      [sessionId]: {
-        ...prev[sessionId],
-        assistantApproved: type === "assistant" ? true : Boolean(prev[sessionId]?.assistantApproved ?? true),
-        managerApproved: type !== "assistant" ? true : Boolean(prev[sessionId]?.managerApproved ?? false),
-      },
-    }));
+    setApprovals((prev) => {
+      const isMgr = type !== "assistant";
+      return {
+        ...prev,
+        [sessionId]: {
+          ...prev[sessionId],
+          assistantApproved: isMgr ? true : Boolean(prev[sessionId]?.assistantApproved ?? true),
+          managerApproved: isMgr ? true : Boolean(prev[sessionId]?.managerApproved ?? false),
+        },
+      };
+    });
 
     try {
       const roleForDb =
@@ -629,12 +635,14 @@ export function ExecutiveDashboard({
     const app = approvals[s.id] || {};
     const isAssistantSession = s.taskRole === "manager_assistant" || s.userPosition === "ผู้ช่วยผู้จัดการร้าน";
     const isPending = currentRole === "manager_assistant"
-      ? (!isAssistantSession && !app.assistantApproved)
+      ? (!isAssistantSession && !app.assistantApproved && !app.managerApproved)
       : !app.managerApproved;
 
     if (historyStatusFilter === "pending") return isPending;
     if (historyStatusFilter === "approved") {
-      return currentRole === "manager_assistant" ? !!app.assistantApproved : !!app.managerApproved;
+      return currentRole === "manager_assistant"
+        ? (!!app.assistantApproved || !!app.managerApproved)
+        : !!app.managerApproved;
     }
     return true;
   });
@@ -977,7 +985,7 @@ export function ExecutiveDashboard({
                   const isAssistantSession = s.taskRole === "manager_assistant" || s.userPosition === "ผู้ช่วยผู้จัดการร้าน";
                   if (currentRole === "manager_assistant") {
                     if (isAssistantSession) return false;
-                    return !app.assistantApproved;
+                    return !app.assistantApproved && !app.managerApproved;
                   }
                   return !app.managerApproved;
                 }).length;
@@ -1065,20 +1073,26 @@ export function ExecutiveDashboard({
                     const isAssistantSession =
                       sess.taskRole === "manager_assistant" || sess.userPosition === "ผู้ช่วยผู้จัดการร้าน";
                     const isPending = currentRole === "manager_assistant"
-                      ? (!isAssistantSession && !app.assistantApproved)
+                      ? (!isAssistantSession && !app.assistantApproved && !app.managerApproved)
                       : !app.managerApproved;
 
                     if (shiftQueueStatusFilter === "pending") return isPending;
                     if (shiftQueueStatusFilter === "approved") {
-                      return currentRole === "manager_assistant" ? !!app.assistantApproved : !!app.managerApproved;
+                      return currentRole === "manager_assistant"
+                        ? (!!app.assistantApproved || !!app.managerApproved)
+                        : !!app.managerApproved;
                     }
                     return true;
                   })
                   .sort((a, b) => {
                     const aApp = approvals[a.id] || {};
                     const bApp = approvals[b.id] || {};
-                    const aPending = currentRole === "manager_assistant" ? !aApp.assistantApproved : !aApp.managerApproved;
-                    const bPending = currentRole === "manager_assistant" ? !bApp.assistantApproved : !bApp.managerApproved;
+                    const aPending = currentRole === "manager_assistant"
+                      ? (!aApp.assistantApproved && !aApp.managerApproved)
+                      : !aApp.managerApproved;
+                    const bPending = currentRole === "manager_assistant"
+                      ? (!bApp.assistantApproved && !bApp.managerApproved)
+                      : !bApp.managerApproved;
                     if (aPending && !bPending) return -1;
                     if (!aPending && bPending) return 1;
                     if (a.shift === "morning" && b.shift !== "morning") return -1;
@@ -2004,10 +2018,10 @@ export function ExecutiveDashboard({
                                 {getShiftBadge(sess.shift)}
                               </div>
                             </div>
-                            <div className="text-right font-mono text-xs text-[var(--color-text-muted)]">
-                              <span className="font-semibold text-[var(--color-text)] block">{sess.id}</span>
-                              <span className="text-[10px] text-[var(--color-text-subtle)]">
-                                {fmtDate(sess.startedAt)}
+                            <div className="text-right text-xs text-[var(--color-text-muted)]">
+                              <span className="font-semibold text-[var(--color-text)] block">{fmtDate(sess.startedAt)}</span>
+                              <span className="text-[10px] text-[var(--color-text-subtle)] font-mono">
+                                {fmtTime(sess.startedAt)}
                               </span>
                             </div>
                           </div>
@@ -2051,7 +2065,7 @@ export function ExecutiveDashboard({
                     <table className="w-full text-left text-xs">
                       <thead>
                         <tr className="border-b border-[var(--color-border)] text-[var(--color-text-muted)] font-semibold bg-[var(--color-surface-2)]">
-                          <th className="py-2.5 px-3 rounded-l-lg">รหัสกะ / วันที่</th>
+                          <th className="py-2.5 px-3 rounded-l-lg">วันที่ / เวลาเริ่ม</th>
                           <th className="py-2.5 px-3">ผู้ปฏิบัติงาน</th>
                           <th className="py-2.5 px-3">ตำแหน่ง</th>
                           <th className="py-2.5 px-3">กะงาน</th>
@@ -2067,9 +2081,9 @@ export function ExecutiveDashboard({
 
                           return (
                             <tr key={sess.id} className="hover:bg-[var(--color-background)] transition-colors">
-                              <td className="py-3 px-3 font-mono text-[var(--color-text-muted)]">
-                                <span className="font-semibold text-[var(--color-text)]">{sess.id}</span>
-                                <span className="block text-xs text-[var(--color-text-muted)]">{fmtDate(sess.startedAt)}</span>
+                              <td className="py-3 px-3 text-[var(--color-text-muted)]">
+                                <span className="font-semibold text-[var(--color-text)] block">{fmtDate(sess.startedAt)}</span>
+                                <span className="text-xs text-[var(--color-text-subtle)] font-mono">{fmtTime(sess.startedAt)}</span>
                               </td>
                               <td className="py-3 px-3 font-semibold text-[var(--color-text)]">
                                 {sess.userName}
@@ -2121,13 +2135,13 @@ export function ExecutiveDashboard({
         const canApprove = isAssistantSess
           ? isMgrOrHigher && !approvals[selectedSession.id]?.managerApproved
           : currentRole === "manager_assistant"
-            ? !approvals[selectedSession.id]?.assistantApproved
+            ? !approvals[selectedSession.id]?.assistantApproved && !approvals[selectedSession.id]?.managerApproved
             : !approvals[selectedSession.id]?.managerApproved;
 
         const isApproved = isAssistantSess
           ? !!approvals[selectedSession.id]?.managerApproved
           : currentRole === "manager_assistant"
-            ? !!approvals[selectedSession.id]?.assistantApproved
+            ? (!!approvals[selectedSession.id]?.assistantApproved || !!approvals[selectedSession.id]?.managerApproved)
             : !!approvals[selectedSession.id]?.managerApproved;
 
         const approveTitle = isAssistantSess

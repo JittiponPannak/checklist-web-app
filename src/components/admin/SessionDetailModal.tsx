@@ -195,7 +195,7 @@ export function SessionDetailModal({
                           {isLate && (
                             <div className="text-xs text-rose-950 dark:text-rose-200 bg-rose-100/80 dark:bg-rose-950/70 border border-rose-300 dark:border-rose-800/80 rounded-lg p-2 mt-1 flex items-start gap-1.5 font-sans">
                               <span className="font-bold text-rose-700 dark:text-rose-400 shrink-0">เหตุผลที่ล่าช้า:</span>
-                              <span className="break-words font-medium">{item.comment || "ไม่มีการระบุเหตุผล"}</span>
+                              <span className="break-words font-medium">{item.comment ? item.comment : "ผู้ปฏิบัติงานไม่ได้ระบุเหตุผล"}</span>
                             </div>
                           )}
                         </div>

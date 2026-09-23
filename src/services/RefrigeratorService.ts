@@ -369,12 +369,10 @@ export class RefrigeratorService implements IRefrigeratorService {
 
       const userIds = tasksRows.map((t: any) => t.completed_by).filter(Boolean);
 
-      // Filter out tasks for refrigerators that are disabled and uncompleted
+      // Include all refrigerator tasks for the branch (disabled units have disableCheck: true)
       const activeTasksRows = tasksRows.filter((t: any) => {
         const ref = refMap.get(t.refrigerator_id);
-        if (!ref) return false;
-        if (ref.disable_check && !t.completed_at) return false;
-        return true;
+        return Boolean(ref);
       });
 
       let userMap = new Map<string, string>();

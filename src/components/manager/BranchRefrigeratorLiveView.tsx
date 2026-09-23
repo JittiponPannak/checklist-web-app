@@ -15,7 +15,7 @@ export function BranchRefrigeratorLiveView({ user }: { user: User }) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [filter, setFilter] = useState<"all" | "done" | "pending" | "issues">("all");
+  const [filter, setFilter] = useState<"all" | "done" | "pending" | "disabled" | "issues">("all");
 
   const loadData = useCallback(async (isSilent = false) => {
     try {
@@ -48,10 +48,11 @@ export function BranchRefrigeratorLiveView({ user }: { user: User }) {
 
   const total = tasks.length;
   const done = tasks.filter((t) => t.completed).length;
-  const pending = total - done;
+  const disabledCount = tasks.filter((t) => t.disableCheck).length;
+  const pending = tasks.filter((t) => !t.completed && !t.disableCheck).length;
 
   const isTaskIssue = (t: RefrigeratorTaskItem) => {
-    if (!t.completed) return false;
+    if (!t.completed || t.disableCheck) return false;
     if (!t.isOkay) return true;
     if (t.temperature !== null && t.temperature !== undefined) {
       if (t.temperature > t.maxTemperature) return true;
@@ -66,7 +67,8 @@ export function BranchRefrigeratorLiveView({ user }: { user: User }) {
 
   const filteredTasks = tasks.filter((t) => {
     if (filter === "done") return t.completed;
-    if (filter === "pending") return !t.completed;
+    if (filter === "pending") return !t.completed && !t.disableCheck;
+    if (filter === "disabled") return Boolean(t.disableCheck);
     if (filter === "issues") return isTaskIssue(t);
     return true;
   });
@@ -214,6 +216,19 @@ export function BranchRefrigeratorLiveView({ user }: { user: User }) {
         >
           ยังไม่ได้ตรวจ ({pending})
         </button>
+        {disabledCount > 0 && (
+          <button
+            type="button"
+            onClick={() => setFilter("disabled")}
+            className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer whitespace-nowrap ${
+              filter === "disabled"
+                ? "bg-rose-700 text-white font-bold shadow-xs"
+                : "text-rose-700 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-950/40"
+            }`}
+          >
+            🚫 ปิดใช้งาน ({disabledCount})
+          </button>
+        )}
         {issues > 0 && (
           <button
             type="button"
@@ -247,6 +262,7 @@ export function BranchRefrigeratorLiveView({ user }: { user: User }) {
       ) : (
         <div className="space-y-3">
           {filteredTasks.map((task) => {
+            const isDisabled = Boolean(task.disableCheck);
             const isDone = task.completed;
             const isTempHigh =
               task.temperature !== null &&
@@ -263,7 +279,9 @@ export function BranchRefrigeratorLiveView({ user }: { user: User }) {
               <div
                 key={task.taskId}
                 className={`p-4 rounded-2xl border transition-all ${
-                  isDone
+                  isDisabled
+                    ? "bg-rose-50/25 dark:bg-rose-950/20 border-dashed border-rose-300/90 dark:border-rose-800/80 shadow-xs"
+                    : isDone
                     ? isTempAbnormal || !task.isOkay
                       ? "bg-rose-50/50 dark:bg-rose-950/20 border-rose-300 dark:border-rose-800"
                       : "bg-[var(--color-surface)] border-[var(--color-border)]"
@@ -274,25 +292,31 @@ export function BranchRefrigeratorLiveView({ user }: { user: User }) {
                   <div className="flex items-start gap-3">
                     <div
                       className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border ${
-                        isDone
+                        isDisabled
+                          ? "bg-rose-100 text-rose-700 border-rose-300 dark:bg-rose-950/80 dark:text-rose-300 dark:border-rose-800"
+                          : isDone
                           ? isTempAbnormal || !task.isOkay
                             ? "bg-rose-100 text-rose-700 border-rose-300 dark:bg-rose-950 dark:text-rose-300"
                             : "bg-emerald-100 text-emerald-700 border-emerald-300 dark:bg-emerald-950 dark:text-emerald-300"
                           : "bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-950 dark:text-amber-300"
                       }`}
                     >
-                      <Snowflake size={18} />
+                      {isDisabled ? <Ban size={18} /> : <Snowflake size={18} />}
                     </div>
 
                     <div>
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="text-sm sm:text-base font-bold text-[var(--color-text)]">
+                        <h3 className={`text-sm sm:text-base font-bold text-[var(--color-text)] ${isDisabled ? "line-through opacity-85" : ""}`}>
                           {task.name}
                         </h3>
                         <span className="text-[11px] font-mono font-semibold px-2 py-0.5 rounded-full bg-[var(--color-surface-2)] border border-[var(--color-border)] text-[var(--color-text-muted)]">
-                          เกณฑ์: {task.minTemperature}°C ~ {task.maxTemperature}°C
+                          เกณฑ์ปกติ: {task.minTemperature}°C ~ {task.maxTemperature}°C
                         </span>
-                        {isDone ? (
+                        {isDisabled ? (
+                          <span className="text-[11px] font-extrabold px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-900 border border-rose-300 dark:bg-rose-950/90 dark:text-rose-200 dark:border-rose-800 flex items-center gap-1">
+                            🚫 ปิดใช้งานชั่วคราว
+                          </span>
+                        ) : isDone ? (
                           <span
                             className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${
                               isTempAbnormal || !task.isOkay
@@ -310,7 +334,11 @@ export function BranchRefrigeratorLiveView({ user }: { user: User }) {
                       </div>
 
                       {/* Details row */}
-                      {isDone ? (
+                      {isDisabled ? (
+                        <p className="text-xs text-rose-800 dark:text-rose-300 mt-1 font-medium flex items-center gap-1.5">
+                          <span>ตู้แช่นี้ถูกตั้งค่าปิดการตรวจสอบไว้ในระบบ (อยู่ระหว่างซ่อมบำรุงหรืองดใช้งานชั่วคราว)</span>
+                        </p>
+                      ) : isDone ? (
                         <div className="flex items-center gap-3 flex-wrap mt-2 text-xs">
                           {task.completedByUserName && (
                             <span className="inline-flex items-center gap-1 font-semibold text-[var(--color-text)] bg-[var(--color-surface-2)] px-2 py-0.5 rounded-lg border border-[var(--color-border)]">
@@ -340,8 +368,13 @@ export function BranchRefrigeratorLiveView({ user }: { user: User }) {
                     </div>
                   </div>
 
-                  {/* Temperature Readout Pill */}
-                  {isDone && task.temperature !== null && task.temperature !== undefined && (
+                  {/* Status / Temperature Readout Pill */}
+                  {isDisabled ? (
+                    <div className="shrink-0 px-3 py-1.5 rounded-xl border border-rose-200 dark:border-rose-800 bg-rose-100/70 dark:bg-rose-950/60 text-rose-900 dark:text-rose-200 text-xs font-bold self-start sm:self-auto flex items-center gap-1.5">
+                      <Ban size={13} />
+                      <span>งดตรวจเช็ค</span>
+                    </div>
+                  ) : isDone && task.temperature !== null && task.temperature !== undefined ? (
                     <div
                       className={`shrink-0 px-3.5 py-2 rounded-xl border flex items-center gap-2 self-start sm:self-auto ${
                         isTempAbnormal || !task.isOkay
@@ -363,64 +396,11 @@ export function BranchRefrigeratorLiveView({ user }: { user: User }) {
                         </div>
                       </div>
                     </div>
-                  )}
+                  ) : null}
                 </div>
               </div>
             );
           })}
-        </div>
-      )}
-
-      {/* ─── Paper / Notice Sheet: Disabled Refrigerator Units ─── */}
-      {disabledRefrigerators.length > 0 && (
-        <div className="relative mt-8 rounded-2xl border-2 border-dashed border-rose-300 dark:border-rose-900/60 bg-[var(--color-surface)] shadow-md p-5 sm:p-6 overflow-hidden">
-          {/* Paper aesthetic tape/clip badge */}
-          <div className="absolute top-0 left-8 transform -translate-y-1/2 bg-rose-700 text-white text-[11px] font-extrabold uppercase px-3 py-0.5 rounded-full shadow-xs tracking-wider flex items-center gap-1">
-            <FileText size={12} />
-            <span>เอกสารบันทึกงดตรวจประจำวัน</span>
-          </div>
-
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[var(--color-border)] pb-3 pt-1">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-rose-100 dark:bg-rose-950/80 border border-rose-300 dark:border-rose-800 text-rose-800 dark:text-rose-300 flex items-center justify-center shrink-0">
-                <Ban size={16} />
-              </div>
-              <div>
-                <h3 className="text-sm font-bold text-[var(--color-text)]">
-                  ตู้แช่ที่ปิดใช้งาน / อยู่ระหว่างการซ่อมบำรุง ({disabledRefrigerators.length} ตู้)
-                </h3>
-                <p className="text-xs text-[var(--color-text-muted)]">
-                  รายการตู้แช่ต่อไปนี้ถูกตั้งค่าปิดการตรวจสอบไว้ในระบบ พนักงานสต็อกจะไม่สามารถบันทึกผลได้
-                </p>
-              </div>
-            </div>
-            <span className="text-[11px] font-bold text-rose-800 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 px-2.5 py-1 rounded-full self-start sm:self-auto">
-              🚫 ปิดการตรวจสอบแล้ว
-            </span>
-          </div>
-
-          <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-            {disabledRefrigerators.map((ref) => (
-              <div
-                key={ref.id}
-                className="p-3.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-2)]/70 flex items-center justify-between gap-2"
-              >
-                <div className="min-w-0">
-                  <div className="flex items-center gap-1.5">
-                    <span className="font-bold text-xs text-[var(--color-text)] line-through truncate">
-                      {ref.name}
-                    </span>
-                    <span className="text-[10px] font-extrabold text-rose-700 bg-rose-100 dark:bg-rose-950 dark:text-rose-300 px-1.5 py-0.5 rounded-md border border-rose-200 dark:border-rose-800">
-                      ปิดใช้งาน
-                    </span>
-                  </div>
-                  <span className="text-[11px] font-mono text-[var(--color-text-subtle)] block mt-0.5">
-                    เกณฑ์ปกติ: {ref.minTemperature}°C ~ {ref.maxTemperature}°C
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
         </div>
       )}
     </div>
