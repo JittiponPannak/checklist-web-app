@@ -1,7 +1,11 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Suspense } from "react";
 import "./globals.css";
 import { AppProvider } from "../context/AppContext";
+import { LoadingProvider } from "../context/LoadingContext";
+import { PageTransitionWatcher } from "../components/common/PageTransitionWatcher";
+import { GlobalLoadingOverlay } from "../components/common/GlobalLoadingOverlay";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -84,11 +88,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         >
           ข้ามไปยังเนื้อหาหลัก (Skip to main content)
         </a>
-        <AppProvider>
-          <main id="main-content" tabIndex={-1} className="min-h-full flex-1 focus-visible:outline-none">
-            {children}
-          </main>
-        </AppProvider>
+        <LoadingProvider>
+          <Suspense fallback={null}>
+            <PageTransitionWatcher />
+          </Suspense>
+          <GlobalLoadingOverlay />
+          <AppProvider>
+            <main id="main-content" tabIndex={-1} className="min-h-full flex-1 focus-visible:outline-none">
+              {children}
+            </main>
+          </AppProvider>
+        </LoadingProvider>
       </body>
     </html>
   );

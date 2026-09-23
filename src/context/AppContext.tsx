@@ -23,6 +23,7 @@ import { getUserByIdAction, syncOAuthUserAction } from "../actions/auth";
 import { createClient } from "../db/supabase/client";
 import { secureGetItem, secureRemoveItem } from "../utils/crypto";
 import { invalidateBranchCache } from "../utils/cache";
+import { useLoading } from "./LoadingContext";
 
 interface AppContextType {
   currentUser: User | null;
@@ -46,7 +47,8 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const [isPending, startTransition] = useTransition();
+  const { startLoading, withLoading } = useLoading();
+  const [, startTransition] = useTransition();
   const [isReady, setIsReady] = useState(false);
   const [currentUser, setCurrentUserState] = useState<User | null>(null);
   const [selectedShift, setSelectedShiftState] = useState<ShiftType | null>(null);
@@ -93,6 +95,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const storedSession = getActiveSession();
     const storedSessions = getSessions();
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (storedUser) setCurrentUserState(storedUser);
     if (storedShift) setSelectedShiftState(storedShift);
 
@@ -154,6 +157,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }
 
   function login(user: User, shift?: ShiftType, redirectPath?: unknown) {
+    startLoading("กำลังเข้าสู่ระบบ...", true);
     const targetPath = typeof redirectPath === "string" ? redirectPath : null;
 
     // Role verification for branch association
@@ -213,6 +217,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function logout(redirectTo?: unknown) {
+    startLoading("กำลังออกจากระบบ...", true);
     const targetUrl = typeof redirectTo === "string" ? redirectTo : null;
     const prevRole = currentUser?.role;
 
@@ -251,6 +256,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   function selectPosition(position: string) {
     if (!currentUser) return;
+    startLoading("กำลังเลือกตำแหน่ง...", true);
 
     let activeUser = currentUser;
     if (position !== activeUser.position) {
@@ -265,41 +271,44 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   async function selectShift(shift: ShiftType) {
     if (!currentUser) return;
-    setSelectedShift(shift);
 
-    const position = currentUser.position || STAFF_POSITIONS[0];
+    await withLoading(async () => {
+      setSelectedShift(shift);
 
-    try {
-      const res = await getOrCreateShiftSessionAction({
-        userId: currentUser.id,
-        userName: currentUser.name,
-        position,
-        shift,
-      });
+      const position = currentUser.position || STAFF_POSITIONS[0];
 
-      if (res.success && res.session) {
-        const session = res.session;
-        const allSessions = getSessions();
-        const existingIdx = allSessions.findIndex((s) => s.id === session.id);
-        const next =
-          existingIdx >= 0
-            ? allSessions.map((s) => (s.id === session.id ? session : s))
-            : [...allSessions, session];
-        saveSessions(next);
-        setSessionsState(next);
-        setActiveSession(session);
-
-        startTransition(() => {
-          router.push(currentUser.role === "manager" ? "/admin/dashboard" : "/checklist");
+      try {
+        const res = await getOrCreateShiftSessionAction({
+          userId: currentUser.id,
+          userName: currentUser.name,
+          position,
+          shift,
         });
-        return;
-      } else {
-        alert("ดึงข้อมูลจากฐานข้อมูลไม่สำเร็จ: " + (res.error || ""));
+
+        if (res.success && res.session) {
+          const session = res.session;
+          const allSessions = getSessions();
+          const existingIdx = allSessions.findIndex((s) => s.id === session.id);
+          const next =
+            existingIdx >= 0
+              ? allSessions.map((s) => (s.id === session.id ? session : s))
+              : [...allSessions, session];
+          saveSessions(next);
+          setSessionsState(next);
+          setActiveSession(session);
+
+          startTransition(() => {
+            router.push(currentUser.role === "manager" ? "/admin/dashboard" : "/checklist");
+          });
+          return;
+        } else {
+          alert("ดึงข้อมูลจากฐานข้อมูลไม่สำเร็จ: " + (res.error || ""));
+        }
+      } catch (err) {
+        console.warn("Could not sync shift session from DB:", err);
+        alert("เกิดข้อผิดพลาดในการดึงข้อมูลจากระบบ กรุณาลองใหม่อีกครั้ง");
       }
-    } catch (err) {
-      console.warn("Could not sync shift session from DB:", err);
-      alert("เกิดข้อผิดพลาดในการดึงข้อมูลจากระบบ กรุณาลองใหม่อีกครั้ง");
-    }
+    }, "กำลังเตรียมเช็คลิสต์ประจำกะ...");
   }
 
   function updateSession(updated: ShiftSession) {
@@ -329,51 +338,55 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setActiveSession(updated);
   }
 
-  function endShift(continueNextShift?: boolean) {
-    if (activeSession) {
-      const endedAt = new Date().toISOString();
-      const updated: ShiftSession = {
-        ...activeSession,
-        completedAt: activeSession.completedAt || endedAt,
-      };
-      const allSessions = getSessions();
-      const hasSess = allSessions.some((s) => s.id === updated.id);
-      const next = hasSess
-        ? allSessions.map((s) => (s.id === updated.id ? updated : s))
-        : [...allSessions, updated];
-      saveSessions(next);
-      setSessionsState(next);
+  async function endShift(continueNextShift?: boolean) {
+    await withLoading(async () => {
+      if (activeSession) {
+        const endedAt = new Date().toISOString();
+        const updated: ShiftSession = {
+          ...activeSession,
+          completedAt: activeSession.completedAt || endedAt,
+        };
+        const allSessions = getSessions();
+        const hasSess = allSessions.some((s) => s.id === updated.id);
+        const next = hasSess
+          ? allSessions.map((s) => (s.id === updated.id ? updated : s))
+          : [...allSessions, updated];
+        saveSessions(next);
+        setSessionsState(next);
 
-      endShiftSessionAction(activeSession.id).catch((err) =>
-        console.error("Failed to end shift in DB:", err)
-      );
-    }
-    const wasManager = currentUser?.role === "manager";
-    const currentShift = activeSession?.shift || selectedShift;
-    const nextShiftToRun = currentShift === "morning" ? "afternoon" : null;
-
-    const hadAfternoonQueue =
-      continueNextShift ||
-      (typeof window !== "undefined" && secureGetItem("app_queue_afternoon") === "true");
-    if (typeof window !== "undefined") {
-      secureRemoveItem("app_queue_afternoon");
-    }
-
-    setActiveSession(null);
-    setSelectedShift(null);
-
-    if (hadAfternoonQueue && !wasManager && nextShiftToRun) {
-      selectShift(nextShiftToRun);
-      return;
-    }
-
-    startTransition(() => {
-      if (wasManager) {
-        router.push("/admin/dashboard");
-      } else {
-        router.push("/shift");
+        try {
+          await endShiftSessionAction(activeSession.id);
+        } catch (err) {
+          console.error("Failed to end shift in DB:", err);
+        }
       }
-    });
+      const wasManager = currentUser?.role === "manager";
+      const currentShift = activeSession?.shift || selectedShift;
+      const nextShiftToRun = currentShift === "morning" ? "afternoon" : null;
+
+      const hadAfternoonQueue =
+        continueNextShift ||
+        (typeof window !== "undefined" && secureGetItem("app_queue_afternoon") === "true");
+      if (typeof window !== "undefined") {
+        secureRemoveItem("app_queue_afternoon");
+      }
+
+      setActiveSession(null);
+      setSelectedShift(null);
+
+      if (hadAfternoonQueue && !wasManager && nextShiftToRun) {
+        await selectShift(nextShiftToRun);
+        return;
+      }
+
+      startTransition(() => {
+        if (wasManager) {
+          router.push("/admin/dashboard");
+        } else {
+          router.push("/shift");
+        }
+      });
+    }, "กำลังบันทึกและส่งรายงานกะ...");
   }
 
   return (

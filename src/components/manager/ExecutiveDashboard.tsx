@@ -473,7 +473,7 @@ export function ExecutiveDashboard({
         ...prev,
         [sessionId]: {
           ...prev[sessionId],
-          assistantApproved: isMgr ? true : Boolean(prev[sessionId]?.assistantApproved ?? true),
+          assistantApproved: true,
           managerApproved: isMgr ? true : Boolean(prev[sessionId]?.managerApproved ?? false),
         },
       };
@@ -813,110 +813,129 @@ export function ExecutiveDashboard({
 
         {activeTab === "overview" && (
           <div className="space-y-6 animate-fade-in">
-            {/* ─── Integrated Store Operations Cockpit (Non-generic, cohesive layout) ─── */}
-            <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-5 sm:p-6 shadow-xs grid grid-cols-1 md:grid-cols-3 gap-6 divide-y md:divide-y-0 md:divide-x divide-[var(--color-border)]">
-              {/* Zone 1: Store Shift Operations */}
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-amber-500" aria-hidden="true" />
-                  <span className="text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider">
-                    กะปฏิบัติงานวันนี้
-                  </span>
-                </div>
-                <div className="flex items-baseline gap-2 pt-0.5">
-                  <span className="text-2xl sm:text-3xl font-bold font-mono text-[var(--color-text)]">
-                    {sessions.length}
-                  </span>
-                  <span className="text-xs text-[var(--color-text-muted)] font-medium">
-                    กะงานทั้งหมด
-                  </span>
-                </div>
-                <p className="text-xs text-[var(--color-text-subtle)]">
-                  {completedSessions.length} กะส่งมอบเรียบร้อยแล้ว ({sessions.length > 0 ? Math.round((completedSessions.length / sessions.length) * 100) : 0}%)
-                </p>
-              </div>
-
-              {/* Zone 2: Store Compliance Rate */}
-              <div className="pt-4 md:pt-0 md:pl-6 space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500" aria-hidden="true" />
-                    <span className="text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider">
-                      ความสอดคล้องมาตรฐานสาขา
+            {/* ─── Integrated Store Operations Cards (Separated columns) ─── */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5">
+              {/* Card 1: Store Shift Operations */}
+              <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-5 sm:p-6 shadow-xs hover:shadow-sm transition-shadow flex flex-col justify-between space-y-4">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-xs" aria-hidden="true" />
+                      <span className="text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider">
+                        กะปฏิบัติงานวันนี้
+                      </span>
+                    </div>
+                    <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/80 text-amber-950 dark:text-amber-200 border border-amber-300 dark:border-amber-800">
+                      วันนี้
                     </span>
                   </div>
-                  <span className="text-xs font-mono font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
-                    {complianceRate}%
+                  <div className="flex items-baseline gap-2 pt-1">
+                    <span className="text-3xl sm:text-4xl font-extrabold font-mono text-[var(--color-text)] tracking-tight">
+                      {sessions.length}
+                    </span>
+                    <span className="text-xs sm:text-sm text-[var(--color-text-muted)] font-semibold">
+                      กะงานทั้งหมด
+                    </span>
+                  </div>
+                </div>
+                <div className="pt-3 border-t border-[var(--color-border-subtle)] flex items-center justify-between">
+                  <p className="text-xs text-[var(--color-text-subtle)] font-medium">
+                    {completedSessions.length} กะส่งมอบเรียบร้อยแล้ว
+                  </p>
+                  <span className="text-xs font-mono font-bold text-[var(--color-text)] bg-[var(--color-surface-2)] px-2 py-0.5 rounded-md border border-[var(--color-border)]">
+                    {sessions.length > 0 ? Math.round((completedSessions.length / sessions.length) * 100) : 0}%
                   </span>
                 </div>
-                <div className="w-full bg-[var(--color-surface-2)] h-2 rounded-full overflow-hidden border border-[var(--color-border-subtle)] mt-2">
-                  <div
-                    className="h-full bg-emerald-500 rounded-full transition-all duration-500"
-                    style={{ width: `${complianceRate}%` }}
-                  />
-                </div>
-                <p className="text-xs text-[var(--color-text-subtle)]">
-                  บันทึกแล้ว {completedChecklistItems} จาก {totalChecklistItems || 1} ข้อเช็คลิสต์
-                </p>
               </div>
 
-              {/* Zone 3: Direct Approval Action Callout */}
+              {/* Card 2: Store Compliance Rate */}
+              <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-5 sm:p-6 shadow-xs hover:shadow-sm transition-shadow flex flex-col justify-between space-y-4">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-xs" aria-hidden="true" />
+                      <span className="text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider">
+                        ความสอดคล้องมาตรฐานสาขา
+                      </span>
+                    </div>
+                    <span className="text-xs font-mono font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 px-2.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
+                      {complianceRate}%
+                    </span>
+                  </div>
+                  <div className="w-full bg-[var(--color-surface-2)] h-2.5 rounded-full overflow-hidden border border-[var(--color-border-subtle)] mt-2">
+                    <div
+                      className="h-full bg-emerald-500 rounded-full transition-all duration-500 shadow-xs"
+                      style={{ width: `${complianceRate}%` }}
+                    />
+                  </div>
+                </div>
+                <div className="pt-3 border-t border-[var(--color-border-subtle)] flex items-center justify-between">
+                  <p className="text-xs text-[var(--color-text-subtle)] font-medium">
+                    บันทึกแล้ว {completedChecklistItems} จาก {totalChecklistItems || 1} ข้อเช็คลิสต์
+                  </p>
+                </div>
+              </div>
+
+              {/* Card 3: Direct Approval Action Callout */}
               <div
                 onClick={() => {
                   if (pendingApprovalsCount > 0) {
                     setShiftQueueStatusFilter((prev) => (prev === "pending" ? "all" : "pending"));
                   }
                 }}
-                className={`pt-4 md:pt-0 md:pl-6 flex flex-col justify-between space-y-2 ${
+                className={`rounded-2xl p-5 sm:p-6 shadow-xs flex flex-col justify-between space-y-4 transition-all ${
                   pendingApprovalsCount > 0
-                    ? `cursor-pointer group p-2.5 rounded-xl border transition-colors ${
+                    ? `cursor-pointer group hover:shadow-md border ${
                         shiftQueueStatusFilter === "pending"
-                          ? "bg-amber-50 dark:bg-amber-950/40 border-amber-300 dark:border-amber-800 shadow-2xs"
-                          : "hover:bg-[var(--color-surface-2)]/60 border-transparent hover:border-[var(--color-border)]"
+                          ? "bg-amber-50 dark:bg-amber-950/40 border-amber-400 dark:border-amber-600 ring-2 ring-amber-400/30"
+                          : "bg-[var(--color-surface)] border-[var(--color-border)] hover:border-amber-400"
                       }`
-                    : ""
+                    : "bg-[var(--color-surface)] border border-[var(--color-border)]"
                 }`}
                 title={pendingApprovalsCount > 0 ? "คลิกเพื่อกรองเฉพาะกะที่รอดำเนินการรับรอง" : undefined}
               >
-                <div>
+                <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <span className={`w-2 h-2 rounded-full ${pendingApprovalsCount > 0 ? "bg-amber-500 animate-pulse" : "bg-emerald-500"}`} aria-hidden="true" />
+                      <span className={`w-2.5 h-2.5 rounded-full ${pendingApprovalsCount > 0 ? "bg-amber-500 animate-pulse" : "bg-emerald-500"}`} aria-hidden="true" />
                       <span className="text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider">
                         สถานะการลงนามรับรอง
                       </span>
                     </div>
                     {pendingApprovalsCount > 0 && (
-                      <span className={`text-xs font-semibold px-2 py-0.5 rounded-md transition-colors ${
+                      <span className={`text-xs font-bold px-2.5 py-1 rounded-full transition-colors flex items-center gap-1 ${
                         shiftQueueStatusFilter === "pending"
-                          ? "bg-amber-200 text-amber-950 dark:bg-amber-900 dark:text-amber-200 font-bold"
-                          : "text-amber-950 bg-amber-100 dark:bg-amber-950 dark:text-amber-200 group-hover:bg-amber-200 font-bold"
+                          ? "bg-amber-300 text-amber-950 dark:bg-amber-800 dark:text-amber-100"
+                          : "text-amber-950 bg-amber-100 dark:bg-amber-950 dark:text-amber-200 group-hover:bg-amber-200 border border-amber-300 dark:border-amber-800"
                       }`}>
-                        {shiftQueueStatusFilter === "pending" ? "✓ กำลังกรองกะค้าง" : "คลิกเพื่อกรอง →"}
+                        <span>{shiftQueueStatusFilter === "pending" ? "✓ กำลังกรองกะค้าง" : "คลิกเพื่อกรอง"}</span>
+                        <span>→</span>
                       </span>
                     )}
                   </div>
                   <div className="mt-1 flex items-center gap-2">
                     {pendingApprovalsCount > 0 ? (
-                      <span className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-950 dark:text-amber-200 bg-amber-100 dark:bg-amber-950/80 border border-amber-300 dark:border-amber-800 px-2.5 py-1 rounded-full shadow-2xs">
-                        <AlertCircle size={13} className="text-amber-700 dark:text-amber-400" />
+                      <span className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-950 dark:text-amber-200 bg-amber-100 dark:bg-amber-950/80 border border-amber-300 dark:border-amber-800 px-3 py-1.5 rounded-full shadow-2xs">
+                        <AlertCircle size={14} className="text-amber-700 dark:text-amber-400" />
                         <span>ค้างรับรอง {pendingApprovalsCount} กะ</span>
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-900 dark:text-emerald-200 bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-300 dark:border-emerald-800 px-2.5 py-1 rounded-full shadow-2xs">
-                        <CheckCircle2 size={13} className="text-emerald-600 dark:text-emerald-400" />
+                      <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-900 dark:text-emerald-200 bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-300 dark:border-emerald-800 px-3 py-1.5 rounded-full shadow-2xs">
+                        <CheckCircle2 size={14} className="text-emerald-600 dark:text-emerald-400" />
                         <span>✨ รับรองครบถ้วนทุกกะ — มาตรฐาน 100%</span>
                       </span>
                     )}
                   </div>
                 </div>
-                <p className="text-xs text-[var(--color-text-muted)]">
-                  {pendingApprovalsCount > 0
-                    ? shiftQueueStatusFilter === "pending"
-                      ? "กำลังแสดงเฉพาะกะที่รอดำเนินการ (คลิกการ์ดนี้เพื่อดูทั้งหมด)"
-                      : "คลิกเพื่อกรองดูเฉพาะกะที่รอการตรวจรับรองทันที"
-                    : "สาขาพร้อมเปิดทำการเต็มมาตรฐาน รับรองครบทุกกะงานแล้ว"}
-                </p>
+                <div className="pt-3 border-t border-[var(--color-border-subtle)]">
+                  <p className="text-xs text-[var(--color-text-muted)] font-medium">
+                    {pendingApprovalsCount > 0
+                      ? shiftQueueStatusFilter === "pending"
+                        ? "กำลังแสดงเฉพาะกะที่รอดำเนินการ (คลิกการ์ดนี้เพื่อดูทั้งหมด)"
+                        : "คลิกเพื่อกรองดูเฉพาะกะที่รอการตรวจรับรองทันที"
+                      : "สาขาพร้อมเปิดทำการเต็มมาตรฐาน รับรองครบทุกกะงานแล้ว"}
+                  </p>
+                </div>
               </div>
             </div>
 
@@ -1266,17 +1285,38 @@ export function ExecutiveDashboard({
                             )}
 
                             {/* Status & Action */}
-                            <div className="flex flex-wrap items-center justify-between gap-2 pt-0.5">
-                              <div className="min-w-0">{renderApprovalBadge(sess)}</div>
-                              <button
-                                type="button"
-                                onClick={() => setSelectedSession(sess)}
-                                className="min-h-[44px] px-4 py-2 shrink-0 text-xs font-bold text-amber-950 bg-amber-400 hover:bg-amber-300 active:bg-amber-500 rounded-xl transition-all cursor-pointer shadow-xs inline-flex items-center gap-1.5"
-                              >
-                                <span>ตรวจรับรอง</span>
-                                <span>→</span>
-                              </button>
-                            </div>
+                            {(() => {
+                              const app = approvals[sess.id] || {};
+                              const isAssistantSession =
+                                sess.taskRole === "manager_assistant" || sess.userPosition === "ผู้ช่วยผู้จัดการร้าน";
+                              const isPendingForMe = currentRole === "manager_assistant"
+                                ? (!isAssistantSession && !app.assistantApproved && !app.managerApproved)
+                                : !app.managerApproved;
+
+                              return (
+                                <div className="flex flex-wrap items-center justify-between gap-2 pt-0.5">
+                                  <div className="min-w-0">{renderApprovalBadge(sess)}</div>
+                                  <button
+                                    type="button"
+                                    onClick={() => setSelectedSession(sess)}
+                                    className={`min-h-[44px] px-4 py-2 shrink-0 text-xs font-bold rounded-xl transition-all cursor-pointer shadow-xs inline-flex items-center gap-1.5 ${
+                                      isPendingForMe
+                                        ? "text-amber-950 bg-amber-400 hover:bg-amber-300 active:bg-amber-500"
+                                        : "text-[var(--color-text)] bg-[var(--color-surface-2)] hover:bg-[var(--color-surface-2)]/80 border border-[var(--color-border)]"
+                                    }`}
+                                  >
+                                    <span>
+                                      {isPendingForMe
+                                        ? "ตรวจรับรอง"
+                                        : currentRole === "manager_assistant" && app.assistantApproved && !app.managerApproved
+                                        ? "รับรองแล้ว (รอผู้จัดการ)"
+                                        : "ดูรายละเอียด"}
+                                    </span>
+                                    {isPendingForMe && <span>→</span>}
+                                  </button>
+                                </div>
+                              );
+                            })()}
                           </div>
                         );
                       })}
@@ -1373,13 +1413,32 @@ export function ExecutiveDashboard({
                                   {renderApprovalBadge(sess)}
                                 </td>
                                 <td className="py-3 px-3 text-right">
-                                  <button
-                                    type="button"
-                                    onClick={() => setSelectedSession(sess)}
-                                    className="min-h-[44px] min-w-[44px] sm:min-h-[34px] sm:min-w-0 inline-flex items-center justify-center px-4 py-2 sm:px-3.5 sm:py-1.5 text-xs font-bold text-amber-950 bg-amber-400 hover:bg-amber-300 active:bg-amber-500 rounded-xl transition-all cursor-pointer shadow-xs whitespace-nowrap"
-                                  >
-                                    ตรวจรับรอง →
-                                  </button>
+                                  {(() => {
+                                    const app = approvals[sess.id] || {};
+                                    const isAssistantSession =
+                                      sess.taskRole === "manager_assistant" || sess.userPosition === "ผู้ช่วยผู้จัดการร้าน";
+                                    const isPendingForMe = currentRole === "manager_assistant"
+                                      ? (!isAssistantSession && !app.assistantApproved && !app.managerApproved)
+                                      : !app.managerApproved;
+
+                                    return (
+                                      <button
+                                        type="button"
+                                        onClick={() => setSelectedSession(sess)}
+                                        className={`min-h-[44px] min-w-[44px] sm:min-h-[34px] sm:min-w-0 inline-flex items-center justify-center px-4 py-2 sm:px-3.5 sm:py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer shadow-xs whitespace-nowrap ${
+                                          isPendingForMe
+                                            ? "text-amber-950 bg-amber-400 hover:bg-amber-300 active:bg-amber-500"
+                                            : "text-[var(--color-text)] bg-[var(--color-surface-2)] hover:bg-[var(--color-surface-2)]/80 border border-[var(--color-border)]"
+                                        }`}
+                                      >
+                                        {isPendingForMe
+                                          ? "ตรวจรับรอง →"
+                                          : currentRole === "manager_assistant" && app.assistantApproved && !app.managerApproved
+                                          ? "รับรองแล้ว (รอผู้จัดการ)"
+                                          : "ดูรายละเอียด"}
+                                      </button>
+                                    );
+                                  })()}
                                 </td>
                               </tr>
                             );

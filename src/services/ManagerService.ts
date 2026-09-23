@@ -132,6 +132,10 @@ export class ManagerService implements IManagerService {
         const user = dbUsers.find((u: any) => u.id === sess.user);
         const sessionWorks = dbWorks.filter((w: any) => w.shift_session === sess.id);
 
+        const managerApproved = sess.manager_approve_timestamp !== null;
+        const assistantApproved =
+          managerApproved || sess.manager_assistance_approve_timestamp !== null;
+
         const items = sessionWorks.map((work: any) => {
           const t = allTasks.find((item: any) => item.id === work.task);
           const timeRange = t?.start && t?.end ? `${t.start.slice(0, 5)} - ${t.end.slice(0, 5)}` : undefined;
@@ -154,8 +158,8 @@ export class ManagerService implements IManagerService {
             category: timeRange ? `ช่วงเวลา ${timeRange}` : undefined,
             completedAt: work.timestamp ? new Date(work.timestamp).toISOString() : null,
             taskWorkId: work.id,
-            assistantApproved: work.manager_assistance_approve_timestamp !== null,
-            managerApproved: work.manager_approve_timestamp !== null,
+            assistantApproved,
+            managerApproved,
             isLate,
             comment: work.comment ?? null,
           };
@@ -164,25 +168,6 @@ export class ManagerService implements IManagerService {
         const totalItems = items.length;
         const doneItems = items.filter((i: any) => i.completedAt !== null).length;
         const isAllDone = totalItems > 0 && doneItems === totalItems;
-
-        const managerApproved =
-          sessionWorks.length > 0 &&
-          sessionWorks.every((w: any) => w.manager_approve_timestamp !== null);
-
-        const assistantApproved =
-          managerApproved ||
-          (sessionWorks.length > 0 &&
-            sessionWorks.every((w: any) => w.manager_assistance_approve_timestamp !== null));
-
-        const latestAsstTime = sessionWorks
-          .map((w: any) => w.manager_assistance_approve_timestamp)
-          .filter((t: any): t is Date => t !== null)
-          .sort((a: any, b: any) => b.getTime() - a.getTime())[0];
-
-        const latestMgrTime = sessionWorks
-          .map((w: any) => w.manager_approve_timestamp)
-          .filter((t: any): t is Date => t !== null)
-          .sort((a: any, b: any) => b.getTime() - a.getTime())[0];
 
         return {
           id: sess.id,
@@ -198,8 +183,12 @@ export class ManagerService implements IManagerService {
           isAllDone,
           assistantApproved,
           managerApproved,
-          assistantApproveTime: latestAsstTime ? latestAsstTime.toISOString() : null,
-          managerApproveTime: latestMgrTime ? latestMgrTime.toISOString() : null,
+          assistantApproveTime: sess.manager_assistance_approve_timestamp
+            ? new Date(sess.manager_assistance_approve_timestamp).toISOString()
+            : null,
+          managerApproveTime: sess.manager_approve_timestamp
+            ? new Date(sess.manager_approve_timestamp).toISOString()
+            : null,
           items,
           branchName: dbBranches.find((b: any) => b.id === sess.branch)?.name,
         };
@@ -306,24 +295,9 @@ export class ManagerService implements IManagerService {
         const doneItems = items.filter((i: any) => i.completedAt !== null).length;
         const isAllDone = totalItems > 0 && doneItems === totalItems;
 
-        const managerApproved =
-          sessionWorks.length > 0 &&
-          sessionWorks.every((w: any) => w.manager_approve_timestamp !== null);
-
+        const managerApproved = sess.manager_approve_timestamp !== null;
         const assistantApproved =
-          managerApproved ||
-          (sessionWorks.length > 0 &&
-            sessionWorks.every((w: any) => w.manager_assistance_approve_timestamp !== null));
-
-        const latestAsstTime = sessionWorks
-          .map((w: any) => w.manager_assistance_approve_timestamp)
-          .filter((t: any): t is Date => t !== null)
-          .sort((a: any, b: any) => b.getTime() - a.getTime())[0];
-
-        const latestMgrTime = sessionWorks
-          .map((w: any) => w.manager_approve_timestamp)
-          .filter((t: any): t is Date => t !== null)
-          .sort((a: any, b: any) => b.getTime() - a.getTime())[0];
+          managerApproved || sess.manager_assistance_approve_timestamp !== null;
 
         return {
           id: sess.id,
@@ -339,8 +313,12 @@ export class ManagerService implements IManagerService {
           isAllDone,
           assistantApproved,
           managerApproved,
-          assistantApproveTime: latestAsstTime ? latestAsstTime.toISOString() : null,
-          managerApproveTime: latestMgrTime ? latestMgrTime.toISOString() : null,
+          assistantApproveTime: sess.manager_assistance_approve_timestamp
+            ? new Date(sess.manager_assistance_approve_timestamp).toISOString()
+            : null,
+          managerApproveTime: sess.manager_approve_timestamp
+            ? new Date(sess.manager_approve_timestamp).toISOString()
+            : null,
           items,
           branchName: dbBranches.find((b: any) => b.id === sess.branch)?.name,
         };
@@ -366,6 +344,8 @@ export class ManagerService implements IManagerService {
           start: shiftSession.start,
           user: shiftSession.user,
           branch: shiftSession.branch,
+          manager_assistance_approve_timestamp: shiftSession.manager_assistance_approve_timestamp,
+          manager_approve_timestamp: shiftSession.manager_approve_timestamp,
         })
         .from(shiftSession)
         .where(eq(shiftSession.id, shiftSessionId))
@@ -382,85 +362,26 @@ export class ManagerService implements IManagerService {
         };
       }
 
-      let sessionWorks = await this.db
-        .select()
-        .from(taskWork)
-        .where(eq(taskWork.shift_session, shiftSessionId));
-
+      const wasFullyApproved = targetSession.manager_approve_timestamp !== null;
       const now = new Date();
-
-      // If no taskWorks exist for this session, seed them so approval can be tracked
-      if (sessionWorks.length === 0 && targetSession.branch) {
-        const [branchRow] = await this.db
-          .select({ tasks: branches.tasks })
-          .from(branches)
-          .where(eq(branches.id, targetSession.branch))
-          .limit(1);
-
-        const branchTaskIds: string[] = branchRow?.tasks || [];
-        if (branchTaskIds.length > 0) {
-          const matchingTasks = await this.db
-            .select({ id: tasks.id })
-            .from(tasks)
-            .where(
-              and(
-                inArray(tasks.id, branchTaskIds),
-                eq(tasks.task_role, targetSession.task_role),
-                eq(tasks.disabled, false)
-              )
-            );
-
-          if (matchingTasks.length > 0) {
-            const inserts = matchingTasks.map((t: any) => ({
-              task: t.id,
-              shift_session: shiftSessionId,
-              timestamp: now,
-              manager_assistance_approve_timestamp: now,
-              manager_approve_timestamp: role !== "manager_assistant" ? now : null,
-            }));
-            sessionWorks = await this.db.insert(taskWork).values(inserts).returning();
-          }
-        }
-      }
-
-      const wasFullyApproved =
-        sessionWorks.length > 0 &&
-        sessionWorks.every(
-          (w: any) =>
-            w.manager_assistance_approve_timestamp !== null && w.manager_approve_timestamp !== null
-        );
 
       if (role === "manager_assistant") {
         await this.db
-          .update(taskWork)
+          .update(shiftSession)
           .set({ manager_assistance_approve_timestamp: now })
-          .where(eq(taskWork.shift_session, shiftSessionId));
+          .where(eq(shiftSession.id, shiftSessionId));
       } else {
         // Manager or higher approval: approve manager level, and also fulfill assistant approval if missing
         await this.db
-          .update(taskWork)
+          .update(shiftSession)
           .set({
             manager_approve_timestamp: now,
-            manager_assistance_approve_timestamp: sql`COALESCE(${taskWork.manager_assistance_approve_timestamp}, ${now})`,
+            manager_assistance_approve_timestamp: sql`COALESCE(${shiftSession.manager_assistance_approve_timestamp}, ${now})`,
           })
-          .where(eq(taskWork.shift_session, shiftSessionId));
+          .where(eq(shiftSession.id, shiftSessionId));
       }
 
-      // Re-fetch updated works to accurately verify full approval
-      const updatedWorks = await this.db
-        .select()
-        .from(taskWork)
-        .where(eq(taskWork.shift_session, shiftSessionId));
-
-      // Fully approved if manager approved (or assistant approved in assistant-only flow)
-      const isNowFullyApproved =
-        updatedWorks.length > 0
-          ? updatedWorks.every((w: any) =>
-              role === "manager_assistant"
-                ? w.manager_assistance_approve_timestamp !== null && w.manager_approve_timestamp !== null
-                : w.manager_approve_timestamp !== null
-            )
-          : role !== "manager_assistant";
+      const isNowFullyApproved = role !== "manager_assistant";
 
       // Transition to fully approved -> Trigger PointService to award points and streak!
       if (!wasFullyApproved && isNowFullyApproved && this.pointService) {
