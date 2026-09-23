@@ -8,9 +8,11 @@ import {
     createRefrigeratorAction,
     updateRefrigeratorAction,
 } from "../../actions/refrigerator";
-import { Snowflake, AlertOctagon } from "lucide-react";
+import { Snowflake, AlertOctagon, ClipboardCheck, Settings } from "lucide-react";
+import { BranchRefrigeratorLiveView } from "./BranchRefrigeratorLiveView";
 
 export function RefrigeratorConfigView({ user }: { user: User }) {
+    const [subTab, setSubTab] = useState<"live" | "config">("live");
     const [refrigerators, setRefrigerators] = useState<RefrigeratorConfig[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
@@ -25,6 +27,7 @@ export function RefrigeratorConfigView({ user }: { user: User }) {
     const [saving, setSaving] = useState(false);
 
     const [formError, setFormError] = useState("");
+    const [liveRefreshKey, setLiveRefreshKey] = useState(0);
 
     async function loadData() {
         setLoading(true);
@@ -82,6 +85,7 @@ export function RefrigeratorConfigView({ user }: { user: User }) {
             });
             if (res.success && res.data) {
                 setRefrigerators([...refrigerators, res.data]);
+                setLiveRefreshKey((k) => k + 1);
                 handleCancel();
             } else {
                 setFormError(res.error || "บันทึกไม่สำเร็จ");
@@ -101,6 +105,7 @@ export function RefrigeratorConfigView({ user }: { user: User }) {
                             : r
                     )
                 );
+                setLiveRefreshKey((k) => k + 1);
                 handleCancel();
             } else {
                 setFormError(res.error || "อัปเดตไม่สำเร็จ");
@@ -111,7 +116,38 @@ export function RefrigeratorConfigView({ user }: { user: User }) {
 
     return (
         <div className="space-y-6 animate-fade-in">
-            <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-5 shadow-sm space-y-4">
+            {/* Sub-tab Navigation */}
+            <div className="flex bg-[var(--color-surface-2)] p-1 rounded-2xl border border-[var(--color-border)] text-xs font-bold gap-1 shadow-2xs max-w-md">
+                <button
+                    type="button"
+                    onClick={() => setSubTab("live")}
+                    className={`flex-1 py-2 sm:py-2.5 px-3 rounded-xl text-center cursor-pointer transition-all flex items-center justify-center gap-1.5 ${
+                        subTab === "live"
+                            ? "bg-[var(--color-brown)] text-amber-100 dark:bg-amber-400 dark:text-amber-950 shadow-xs font-extrabold"
+                            : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+                    }`}
+                >
+                    <ClipboardCheck size={14} />
+                    <span>ตรวจเช็ควันนี้ (Live Tasks)</span>
+                </button>
+                <button
+                    type="button"
+                    onClick={() => setSubTab("config")}
+                    className={`flex-1 py-2 sm:py-2.5 px-3 rounded-xl text-center cursor-pointer transition-all flex items-center justify-center gap-1.5 ${
+                        subTab === "config"
+                            ? "bg-[var(--color-brown)] text-amber-100 dark:bg-amber-400 dark:text-amber-950 shadow-xs font-extrabold"
+                            : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+                    }`}
+                >
+                    <Settings size={14} />
+                    <span>จัดการตู้แช่ ({refrigerators.length})</span>
+                </button>
+            </div>
+
+            {subTab === "live" ? (
+                <BranchRefrigeratorLiveView key={liveRefreshKey} user={user} />
+            ) : (
+                <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-5 shadow-sm space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[var(--color-border)] pb-3">
                     <div>
                         <h3 className="text-sm font-bold text-[var(--color-text)] flex items-center gap-2">
@@ -269,6 +305,7 @@ export function RefrigeratorConfigView({ user }: { user: User }) {
                     </div>
                 )}
             </div>
+            )}
         </div>
     );
 }

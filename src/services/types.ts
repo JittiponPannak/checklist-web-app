@@ -89,6 +89,7 @@ export interface IChecklistService {
     shiftSessionId?: string;
     taskId?: string;
     completed: boolean;
+    comment?: string;
   }): Promise<{ success: boolean; completedAt?: string | null; error?: string }>;
 
   endShiftSession(shiftSessionId: string): Promise<{ success: boolean; error?: string }>;
@@ -123,10 +124,38 @@ export interface IManagerService {
 }
 
 export interface IBranchService {
-  getBranches(): Promise<{ success: boolean; branches?: any[]; error?: string }>;
+  getBranches(options?: { forceRefresh?: boolean }): Promise<{
+    success: boolean;
+    branches?: any[];
+    lastUpdate?: string;
+    error?: string;
+  }>;
+  checkBranchesUpdated(clientLastUpdate?: string, branchId?: string): Promise<{
+    success: boolean;
+    updated: boolean;
+    lastUpdate?: string;
+    branches?: any[];
+    error?: string;
+  }>;
   createBranch(name: string): Promise<{ success: boolean; error?: string }>;
   assignStaffToBranch(branchId: string, userIds: string[]): Promise<{ success: boolean; error?: string }>;
   assignTasksToBranch(branchId: string, taskIds: string[]): Promise<{ success: boolean; error?: string }>;
+  invalidateCache(): void;
+}
+
+export interface RefrigeratorTaskItem {
+  taskId: string;
+  refrigeratorId: string;
+  name: string;
+  targetTemperature: number;
+  taskDate: string;
+  completed: boolean;
+  completedAt?: string | null;
+  completedByUserId?: string | null;
+  completedByUserName?: string | null;
+  temperature?: number | null;
+  isOkay?: boolean;
+  comment?: string | null;
 }
 
 export interface IRefrigeratorService {
@@ -143,6 +172,22 @@ export interface IRefrigeratorService {
     targetTemperature: number;
     disableCheck: boolean;
   }): Promise<{ success: boolean; error?: string }>;
+  ensureDailyRefrigeratorTasks(branchId: string, dateStr?: string): Promise<{ success: boolean; error?: string }>;
+  getBranchRefrigeratorTasks(params: {
+    userId?: string;
+    branchId?: string;
+    dateStr?: string;
+  }): Promise<{ success: boolean; data?: RefrigeratorTaskItem[]; branchName?: string; error?: string }>;
+  updateRefrigeratorTask(params: {
+    taskId: string;
+    userId: string;
+    completed: boolean;
+    temperature?: number;
+    isOkay?: boolean;
+    comment?: string;
+    shiftSessionId?: string;
+    shift?: ShiftType;
+  }): Promise<{ success: boolean; data?: RefrigeratorTaskItem; error?: string }>;
 }
 
 export interface IServiceContainer {

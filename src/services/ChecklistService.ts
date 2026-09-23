@@ -1,5 +1,5 @@
 import { eq, and, gte, lte, desc, asc, inArray, sql } from "drizzle-orm";
-import { tasks, taskWork, shiftSession, users, branches } from "../db/schema";
+import { tasks, taskWork, shiftSession, users, branches, refrigerators, refrigeratorTasks } from "../db/schema";
 import { IChecklistService, INotificationService } from "./types";
 import { ShiftSession, ShiftType, ChecklistItem } from "../types";
 
@@ -31,6 +31,7 @@ function getThaiStartAndEndOfDay(baseDate = new Date()) {
   return {
     startOfDay: new Date(startStr),
     endOfDay: new Date(endStr),
+    dateStr: `${yElement}-${mElement}-${dElement}`,
   };
 }
 
@@ -65,7 +66,7 @@ export class ChecklistService implements IChecklistService {
         }
       }
 
-      const { startOfDay, endOfDay } = getThaiStartAndEndOfDay();
+      const { startOfDay, endOfDay, dateStr } = getThaiStartAndEndOfDay();
 
       const branchForUser = await this.db
         .select({ id: branches.id, name: branches.name, tasks: branches.tasks })
@@ -190,6 +191,55 @@ export class ChecklistService implements IChecklistService {
         }
       }
 
+      if (taskRole === "stock" && branchId) {
+        try {
+          const [branchRow] = await this.db
+            .select({ refrigerators: branches.refrigerators })
+            .from(branches)
+            .where(eq(branches.id, branchId))
+            .limit(1);
+
+          if (branchRow?.refrigerators && branchRow.refrigerators.length > 0) {
+            const activeRefs = await this.db
+              .select({ id: refrigerators.id })
+              .from(refrigerators)
+              .where(
+                and(
+                  inArray(refrigerators.id, branchRow.refrigerators as string[]),
+                  eq(refrigerators.disable_check, false)
+                )
+              );
+
+            if (activeRefs.length > 0) {
+              const existingTasks = await this.db
+                .select({ refrigerator_id: refrigeratorTasks.refrigerator_id })
+                .from(refrigeratorTasks)
+                .where(
+                  and(
+                    eq(refrigeratorTasks.branch_id, branchId),
+                    eq(refrigeratorTasks.task_date, dateStr)
+                  )
+                );
+
+              const existingRefIds = new Set(existingTasks.map((t: any) => t.refrigerator_id));
+              const missingRefs = activeRefs.filter((r: any) => !existingRefIds.has(r.id));
+              if (missingRefs.length > 0) {
+                await this.db.insert(refrigeratorTasks).values(
+                  missingRefs.map((r: any) => ({
+                    branch_id: branchId,
+                    refrigerator_id: r.id,
+                    task_date: dateStr,
+                    is_okay: true,
+                  }))
+                );
+              }
+            }
+          }
+        } catch (seedErr) {
+          console.error("Failed to seed initial refrigerator_tasks on stock session start:", seedErr);
+        }
+      }
+
       const items: ChecklistItem[] = dbTasks.map((t: any) => {
         const work = workRows.find((w: any) => w.task === t.id);
         const timeRange = t.start && t.end ? `${t.start.slice(0, 5)} - ${t.end.slice(0, 5)}` : undefined;
@@ -211,6 +261,7 @@ export class ChecklistService implements IChecklistService {
           completedAt: work?.timestamp ? new Date(work.timestamp).toISOString() : null,
           taskWorkId: work?.id,
           isLate,
+          comment: work?.comment ?? null,
         };
       });
 
@@ -241,9 +292,10 @@ export class ChecklistService implements IChecklistService {
     shiftSessionId?: string;
     taskId?: string;
     completed: boolean;
+    comment?: string;
   }): Promise<{ success: boolean; completedAt?: string | null; error?: string }> {
     try {
-      const { taskWorkId, shiftSessionId, taskId, completed } = params;
+      const { taskWorkId, shiftSessionId, taskId, completed, comment } = params;
       const completedAt = completed ? new Date() : null;
 
       let targetShiftSessionId = shiftSessionId;
@@ -251,7 +303,10 @@ export class ChecklistService implements IChecklistService {
       if (taskWorkId && isValidUuid(taskWorkId)) {
         await this.db
           .update(taskWork)
-          .set({ timestamp: completedAt })
+          .set({
+            timestamp: completedAt,
+            comment: completed ? (comment ?? null) : null,
+          })
           .where(eq(taskWork.id, taskWorkId));
 
         if (!targetShiftSessionId) {
@@ -274,13 +329,17 @@ export class ChecklistService implements IChecklistService {
         if (existing) {
           await this.db
             .update(taskWork)
-            .set({ timestamp: completedAt })
+            .set({
+              timestamp: completedAt,
+              comment: completed ? (comment ?? null) : null,
+            })
             .where(eq(taskWork.id, existing.id));
         } else {
           await this.db.insert(taskWork).values({
             shift_session: shiftSessionId,
             task: taskId,
             timestamp: completedAt,
+            comment: completed ? (comment ?? null) : null,
           });
         }
       } else {

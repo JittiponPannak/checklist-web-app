@@ -301,6 +301,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         shiftSessionId: updated.id,
         taskId: changedItem.id,
         completed: Boolean(changedItem.completedAt),
+        comment: changedItem.comment || undefined,
       }).catch((err) => console.error("Failed to sync toggle to DB:", err));
     }
 

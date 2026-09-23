@@ -175,6 +175,7 @@ export class AuthService implements IAuthService {
             .update(branches)
             .set({
               members: [...currentMembers, created.id],
+              last_update: new Date(),
             })
             .where(eq(branches.id, data.branchId));
         }

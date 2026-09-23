@@ -2,11 +2,12 @@ import { useState, useEffect } from "react";
 import { User } from "../../types";
 import { BrandLogo } from "../common/BrandLogo";
 import { ThemeToggle } from "../common/ThemeToggle";
-import { LogOut } from "lucide-react";
+import { LogOut, RefreshCw } from "lucide-react";
 
-import { getBranchesAction, createBranchAction, assignStaffToBranchAction, assignTasksToBranchAction, DashboardBranch as Branch } from "../../actions/branch";
+import { createBranchAction, assignStaffToBranchAction, assignTasksToBranchAction, DashboardBranch as Branch } from "../../actions/branch";
+import { fetchBranchesWithCache, invalidateBranchCache } from "../../utils/cache";
 import { getAllUsersAction } from "../../actions/auth";
-import { getAllTasksAction, createTaskAction } from "../../actions/task";
+import { getAllTasksAction, createTaskAction, toggleTaskDisabledAction } from "../../actions/task";
 
 interface MasterTask {
   id: string;
@@ -145,10 +146,14 @@ export function AdminDashboardView({
     });
   }
 
-  const loadBranches = async () => {
-    const res = await getBranchesAction();
-    if (res.success && res.branches) setBranches(res.branches);
-    else showToast(res.error || "โหลดข้อมูลสาขาไม่สำเร็จ");
+  const loadBranches = async (force = false) => {
+    const res = await fetchBranchesWithCache({ force, intervalMs: 30000 });
+    if (res.success && res.branches) {
+      setBranches(res.branches);
+      if (force) showToast("อัปเดตข้อมูลสาขาล่าสุดเรียบร้อย");
+    } else {
+      showToast(res.error || "โหลดข้อมูลสาขาไม่สำเร็จ");
+    }
   };
 
   const loadUsers = async () => {
@@ -192,7 +197,8 @@ export function AdminDashboardView({
       showToast("เพิ่มสาขาใหม่สำเร็จ");
       setIsNewBranchModalOpen(false);
       setNewBranchName("");
-      loadBranches();
+      invalidateBranchCache();
+      loadBranches(true);
     } else {
       showToast(res.error || "เกิดข้อผิดพลาด");
     }
@@ -215,7 +221,8 @@ export function AdminDashboardView({
     if (res.success) {
       showToast("บันทึกการมอบหมายพนักงานสำเร็จ");
       setIsManageStaffModalOpen(false);
-      loadBranches();
+      invalidateBranchCache();
+      loadBranches(true);
     } else {
       showToast(res.error || "เกิดข้อผิดพลาด");
     }
@@ -235,7 +242,8 @@ export function AdminDashboardView({
     const res = await assignTasksToBranchAction(selectedBranchForTasks, selectedTaskIds);
     if (res.success) {
       showToast("บันทึกการตั้งค่างานของสาขาสำเร็จ");
-      await loadBranches();
+      invalidateBranchCache();
+      await loadBranches(true);
       setIsManageTasksModalOpen(false);
     } else {
       showToast(res.error || "เกิดข้อผิดพลาด");
@@ -270,11 +278,28 @@ export function AdminDashboardView({
     }
   }
 
-  function toggleTaskStatus(taskId: string) {
-    setTasks((prev) =>
-      prev.map((t) => (t.id === taskId ? { ...t, active: !t.active } : t))
+  async function toggleTaskStatus(taskId: string, currentDisabled: boolean) {
+    const nextDisabled = !currentDisabled;
+    setTasksList((prev) =>
+      prev.map((t) => (t.id === taskId ? { ...t, disabled: nextDisabled } : t))
     );
-    showToast("อัปเดตสถานะการใช้งานแม่แบบงานเรียบร้อยแล้ว");
+    try {
+      const res = await toggleTaskDisabledAction(taskId, nextDisabled);
+      if (res.success) {
+        showToast(nextDisabled ? "ปิดการใช้งานงานนี้แล้ว (ซ่อนจากเช็คลิสต์)" : "เปิดการใช้งานงานนี้เรียบร้อยแล้ว");
+        invalidateBranchCache();
+      } else {
+        showToast(res.error || "เกิดข้อผิดพลาดในการปรับสถานะ");
+        setTasksList((prev) =>
+          prev.map((t) => (t.id === taskId ? { ...t, disabled: currentDisabled } : t))
+        );
+      }
+    } catch {
+      showToast("เกิดข้อผิดพลาดในการปรับสถานะ");
+      setTasksList((prev) =>
+        prev.map((t) => (t.id === taskId ? { ...t, disabled: currentDisabled } : t))
+      );
+    }
   }
 
   function handlePromoteUser(userId: string, newRole: any) {
@@ -525,13 +550,24 @@ export function AdminDashboardView({
                 aria-label="ค้นหาชื่อสาขา หรือรหัสสาขา"
                 className="bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-xl px-3.5 py-2 text-xs text-[var(--color-text)] placeholder:text-[var(--color-text-subtle)] focus:outline-none focus:border-amber-400 w-full sm:w-80"
               />
-              <button
-                type="button"
-                onClick={() => setIsNewBranchModalOpen(true)}
-                className="bg-[var(--color-brown)] hover:bg-[var(--color-brown-light)] text-amber-100 text-xs font-bold px-4 py-2 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
-              >
-                <span>+ เพิ่มสาขาใหม่</span>
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => loadBranches(true)}
+                  title="รีเฟรชข้อมูลสาขา (อัปเดตทันที)"
+                  className="bg-[var(--color-surface-2)] hover:bg-[var(--color-border)] text-[var(--color-text)] text-xs font-semibold px-3 py-2 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 border border-[var(--color-border)] shadow-sm"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  <span>รีเฟรช</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsNewBranchModalOpen(true)}
+                  className="bg-[var(--color-brown)] hover:bg-[var(--color-brown-light)] text-amber-100 text-xs font-bold px-4 py-2 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
+                >
+                  <span>+ เพิ่มสาขาใหม่</span>
+                </button>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -652,14 +688,17 @@ export function AdminDashboardView({
                           <td className="py-3.5 px-3 text-[var(--color-text-muted)] capitalize">{t.shift === "morning" ? "กะเช้า" : t.shift === "afternoon" ? "กะบ่าย" : "ควบกะ"}</td>
                           <td className="py-3.5 px-3 font-mono text-[var(--color-text-muted)]">{t.start ? `${t.start} - ${t.end}` : "ตามเวลาปฏิบัติการ"}</td>
                           <td className="py-3.5 px-3 text-right">
-                            <span
-                              className={`px-3 py-1 rounded-full text-[11px] font-bold ${!t.disabled
-                                ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                                : "bg-[var(--color-surface-2)] text-[var(--color-text-subtle)] border border-[var(--color-border)]"
+                            <button
+                              type="button"
+                              onClick={() => toggleTaskStatus(t.id, Boolean(t.disabled))}
+                              title={t.disabled ? "คลิกเพื่อเปิดใช้งาน" : "คลิกเพื่อปิดชั่วคราว"}
+                              className={`px-3 py-1 rounded-full text-[11px] font-bold transition-all cursor-pointer border ${!t.disabled
+                                ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border-emerald-300 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800"
+                                : "bg-[var(--color-surface-2)] text-[var(--color-text-subtle)] hover:bg-rose-50 hover:text-rose-700 border-[var(--color-border)]"
                                 }`}
                             >
-                              {!t.disabled ? "ทำงานได้" : "ปิดชั่วคราว"}
-                            </span>
+                              {!t.disabled ? "✓ ทำงานได้" : "✕ ปิดชั่วคราว"}
+                            </button>
                           </td>
                         </tr>
                       ))

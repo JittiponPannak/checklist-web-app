@@ -5,13 +5,28 @@ import { DashboardBranch } from "../services/BranchService";
 
 export type { DashboardBranch };
 
-export async function getBranchesAction(): Promise<{
+export async function getBranchesAction(options?: { forceRefresh?: boolean }): Promise<{
   success: boolean;
+  branches?: DashboardBranch[];
+  lastUpdate?: string;
+  error?: string;
+}> {
+  const services = getServices();
+  return await services.branch.getBranches(options);
+}
+
+export async function checkBranchesUpdatedAction(
+  clientLastUpdate?: string,
+  branchId?: string
+): Promise<{
+  success: boolean;
+  updated: boolean;
+  lastUpdate?: string;
   branches?: DashboardBranch[];
   error?: string;
 }> {
   const services = getServices();
-  return await services.branch.getBranches();
+  return await services.branch.checkBranchesUpdated(clientLastUpdate, branchId);
 }
 
 export async function createBranchAction(name: string): Promise<{ success: boolean; error?: string }> {

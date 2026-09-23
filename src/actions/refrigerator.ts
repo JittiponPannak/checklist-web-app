@@ -4,6 +4,7 @@ import { getServices } from "../services/container";
 import { RefrigeratorConfig } from "../services/RefrigeratorService";
 
 export type { RefrigeratorConfig };
+export type { RefrigeratorTaskItem } from "../services/types";
 
 export async function getRefrigeratorsAction(
   userId: string
@@ -30,4 +31,32 @@ export async function updateRefrigeratorAction(params: {
 }): Promise<{ success: boolean; error?: string }> {
   const services = getServices();
   return await services.refrigerator.updateRefrigerator(params);
+}
+
+export async function getBranchRefrigeratorTasksAction(params: {
+  userId?: string;
+  branchId?: string;
+  dateStr?: string;
+}) {
+  const services = getServices();
+  return await services.refrigerator.getBranchRefrigeratorTasks(params);
+}
+
+export async function updateRefrigeratorTaskAction(params: {
+  taskId: string;
+  userId: string;
+  completed: boolean;
+  temperature?: number;
+  isOkay?: boolean;
+  comment?: string;
+  shiftSessionId?: string;
+  shift?: any;
+}) {
+  const services = getServices();
+  return await services.refrigerator.updateRefrigeratorTask(params);
+}
+
+export async function ensureDailyRefrigeratorTasksAction(branchId: string, dateStr?: string) {
+  const services = getServices();
+  return await services.refrigerator.ensureDailyRefrigeratorTasks(branchId, dateStr);
 }

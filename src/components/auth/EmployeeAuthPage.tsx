@@ -3,7 +3,8 @@ import { User } from "../../types";
 import { getUsers, saveUsers } from "../../data/storage";
 import { BrandLogo } from "../common/BrandLogo";
 import { loginAction, registerAction } from "../../actions/auth";
-import { getBranchesAction, DashboardBranch } from "../../actions/branch";
+import { DashboardBranch } from "../../actions/branch";
+import { fetchBranchesWithCache } from "../../utils/cache";
 import { ThemeToggle } from "../common/ThemeToggle";
 import Link from "next/link";
 
@@ -26,7 +27,7 @@ export function EmployeeAuthPage({
 
     useEffect(() => {
         if (tab === "register") {
-            getBranchesAction().then((res) => {
+            fetchBranchesWithCache({ intervalMs: 60000 }).then((res) => {
                 if (res.success && res.branches) {
                     setBranches(res.branches);
                 }

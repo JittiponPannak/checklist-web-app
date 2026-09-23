@@ -1,8 +1,8 @@
 "use server";
 
 import { db } from "../db";
-import { tasks } from "../db/schema";
-import { asc } from "drizzle-orm";
+import { tasks, branches } from "../db/schema";
+import { asc, eq, sql } from "drizzle-orm";
 
 export async function getAllTasksAction(): Promise<{ success: boolean; tasks?: any[]; error?: string }> {
     try {
@@ -37,6 +37,29 @@ export async function createTaskAction(params: CreateTaskParams): Promise<{ succ
     } catch (err: any) {
         console.error("createTaskAction error:", err);
         return { success: false, error: err?.message || "เกิดข้อผิดพลาดในการสร้างงานใหม่" };
+    }
+}
+
+export async function toggleTaskDisabledAction(
+    taskId: string,
+    disabled: boolean
+): Promise<{ success: boolean; error?: string }> {
+    try {
+        await db
+            .update(tasks)
+            .set({ disabled })
+            .where(eq(tasks.id, taskId));
+
+        // Touch last_update for all branches that have this task
+        await db
+            .update(branches)
+            .set({ last_update: new Date() })
+            .where(sql`${taskId} = ANY(${branches.tasks})`);
+
+        return { success: true };
+    } catch (err: any) {
+        console.error("toggleTaskDisabledAction error:", err);
+        return { success: false, error: err?.message || "เกิดข้อผิดพลาดในการปรับปรุงสถานะงาน" };
     }
 }
 

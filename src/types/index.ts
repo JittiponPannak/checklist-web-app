@@ -28,6 +28,7 @@ export interface ChecklistItem {
   completedAt: string | null;
   taskWorkId?: string;
   isLate?: boolean;
+  comment?: string | null;
 }
 
 export interface ShiftSession {

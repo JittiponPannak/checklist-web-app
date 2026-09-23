@@ -28,6 +28,7 @@ export interface ManagerShiftSummary {
     assistantApproved: boolean;
     managerApproved: boolean;
     isLate?: boolean;
+    comment?: string | null;
   }>;
   branchName?: string;
 }
@@ -156,6 +157,7 @@ export class ManagerService implements IManagerService {
             assistantApproved: work.manager_assistance_approve_timestamp !== null,
             managerApproved: work.manager_approve_timestamp !== null,
             isLate,
+            comment: work.comment ?? null,
           };
         });
 
@@ -295,6 +297,7 @@ export class ManagerService implements IManagerService {
             assistantApproved: work.manager_assistance_approve_timestamp !== null,
             managerApproved: work.manager_approve_timestamp !== null,
             isLate,
+            comment: work.comment ?? null,
           };
         });
 

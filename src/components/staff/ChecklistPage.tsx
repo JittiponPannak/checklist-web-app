@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ChecklistItem, ShiftSession, ShiftType } from "../../types";
 import { fmtTime, getSelectedShift } from "../../data/storage";
 import { secureGetItem, secureSetItem, secureRemoveItem } from "../../utils/crypto";
@@ -21,6 +21,9 @@ import {
   AlertCircle,
   LayoutDashboard
 } from "lucide-react";
+import { BranchRefrigeratorChecklist } from "./BranchRefrigeratorChecklist";
+import { LateReasonModal } from "../common/LateReasonModal";
+import { getOrCreateShiftSessionAction } from "../../actions/checklist";
 
 function getCategoryColor(category?: string) {
   if (!category) {
@@ -72,6 +75,11 @@ export function ChecklistPage({
   const [showConfirm, setShowConfirm] = useState(false);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
   const [filter, setFilter] = useState<"all" | "pending" | "done">("all");
+  const [mobileTab, setMobileTab] = useState<"tasks" | "refrigerators">("tasks");
+
+  const isStockShift =
+    session.taskRole === "stock" ||
+    Boolean(session.userPosition?.includes("สต็อก") || session.userPosition?.includes("stock"));
 
   const activeSelectedShift = propSelectedShift || (typeof window !== "undefined"
     ? getSelectedShift()
@@ -109,6 +117,71 @@ export function ChecklistPage({
     setShiftCompleted(Boolean(session.completedAt));
   }, [session.completedAt]);
 
+  const itemsRef = useRef(items);
+  itemsRef.current = items;
+  const sessionRef = useRef(session);
+  sessionRef.current = session;
+  const onUpdateRef = useRef(onUpdate);
+  onUpdateRef.current = onUpdate;
+
+  // Background sync every 8 seconds to reflect tasks added/disabled by manager live
+  useEffect(() => {
+    let isMounted = true;
+
+    async function syncTasksFromDb() {
+      if (typeof document !== "undefined" && document.hidden) return;
+      const currentSess = sessionRef.current;
+      if (!currentSess?.userId) return;
+
+      try {
+        const res = await getOrCreateShiftSessionAction({
+          userId: currentSess.userId,
+          userName: currentSess.userName,
+          position: currentSess.userPosition || "พนักงาน",
+          shift: currentSess.shift,
+        });
+
+        if (res.success && res.session && isMounted) {
+          const freshSession = res.session;
+          const freshItems = freshSession.items || [];
+          const curItems = itemsRef.current;
+
+          const curSig = curItems.map((i) => `${i.id}:${i.label}:${i.category}`).join("|");
+          const freshSig = freshItems.map((i) => `${i.id}:${i.label}:${i.category}`).join("|");
+
+          if (curSig !== freshSig) {
+            const merged = freshItems.map((fItem) => {
+              const localMatch = curItems.find((i) => i.id === fItem.id);
+              if (localMatch && localMatch.completedAt && !fItem.completedAt) {
+                return {
+                  ...fItem,
+                  completedAt: localMatch.completedAt,
+                  comment: localMatch.comment,
+                  isLate: localMatch.isLate,
+                };
+              }
+              return fItem;
+            });
+
+            setItems(merged);
+            onUpdateRef.current({
+              ...currentSess,
+              items: merged,
+            });
+          }
+        }
+      } catch (err) {
+        console.warn("Live task sync error in ChecklistPage:", err);
+      }
+    }
+
+    const interval = setInterval(syncTasksFromDb, 8000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, []);
+
   const total = items.length;
   const done = items.filter((i) => i.completedAt).length;
   const progress = total > 0 ? Math.round((done / total) * 100) : 0;
@@ -123,9 +196,22 @@ export function ChecklistPage({
     return true;
   });
 
-  function toggleItem(id: string) {
+  const [lateModalTarget, setLateModalTarget] = useState<{
+    id: string;
+    label: string;
+    deadlineText?: string;
+  } | null>(null);
+
+  function applyToggle(id: string, comment: string | null, isLate: boolean) {
     const updated = items.map((item) =>
-      item.id === id ? { ...item, completedAt: item.completedAt ? null : new Date().toISOString() } : item
+      item.id === id
+        ? {
+            ...item,
+            completedAt: new Date().toISOString(),
+            isLate,
+            comment: comment ?? item.comment ?? null,
+          }
+        : item
     );
     setItems(updated);
     if (shiftCompleted) {
@@ -137,6 +223,56 @@ export function ChecklistPage({
       updatedSession = { ...updatedSession, notified: true };
     }
     onUpdate(updatedSession);
+  }
+
+  function handleLateReasonSubmit(reason: string) {
+    if (!lateModalTarget) return;
+    applyToggle(lateModalTarget.id, reason, true);
+    setLateModalTarget(null);
+  }
+
+  function toggleItem(id: string) {
+    const targetItem = items.find((i) => i.id === id);
+    if (!targetItem) return;
+
+    if (targetItem.completedAt) {
+      const updated = items.map((item) =>
+        item.id === id ? { ...item, completedAt: null, isLate: false, comment: null } : item
+      );
+      setItems(updated);
+      if (shiftCompleted) {
+        setShiftCompleted(false);
+      }
+      onUpdate({ ...session, completedAt: null, items: updated });
+      return;
+    }
+
+    let isLate = false;
+    let deadlineText: string | undefined;
+    if (targetItem.category) {
+      const match = targetItem.category.match(/(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})/);
+      if (match) {
+        const endStr = match[2];
+        const [endHr, endMin] = endStr.split(":").map(Number);
+        const deadlineDate = new Date(session.startedAt);
+        deadlineDate.setHours(endHr, endMin, 0, 0);
+        deadlineText = `${targetItem.category} (สิ้นสุด ${endStr} น.)`;
+        if (new Date() > deadlineDate) {
+          isLate = true;
+        }
+      }
+    }
+
+    if (isLate) {
+      setLateModalTarget({
+        id: targetItem.id,
+        label: targetItem.label,
+        deadlineText,
+      });
+      return;
+    }
+
+    applyToggle(id, null, false);
   }
 
   function handleToggleContinue() {
@@ -165,7 +301,7 @@ export function ChecklistPage({
         ความคืบหน้าเช็คลิสต์ {done} จาก {total} รายการ ({progress}%)
       </div>
 
-      <div className="w-full max-w-2xl space-y-4">
+      <div className={`w-full space-y-4 transition-all ${isStockShift ? "max-w-6xl" : "max-w-2xl"}`}>
         {/* Top App Bar */}
         <nav aria-label="แถบข้อมูลผู้ใช้งานและเครื่องมือ" className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl px-2.5 sm:px-4 py-2 sm:py-3 shadow-xs flex items-center justify-between gap-1.5 sm:gap-4">
           <div className="flex items-center gap-2 sm:gap-2.5 min-w-0 flex-1">
@@ -267,8 +403,40 @@ export function ChecklistPage({
           </div>
         </header>
 
-        {/* Filter Segmented Control */}
-        <div className="flex items-center justify-between gap-2 px-1">
+        {/* Mobile Tab Switcher for Stock Shift */}
+        {isStockShift && (
+          <div className="lg:hidden flex bg-[var(--color-surface-2)] p-1 rounded-xl border border-[var(--color-border)] text-xs font-bold gap-1 shadow-2xs">
+            <button
+              type="button"
+              onClick={() => setMobileTab("tasks")}
+              className={`flex-1 py-2 rounded-lg text-center cursor-pointer transition-all ${
+                mobileTab === "tasks"
+                  ? "bg-[var(--color-brown)] text-amber-100 dark:bg-amber-400 dark:text-amber-950 shadow-xs"
+                  : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+              }`}
+            >
+              📋 งานประจำกะ ({done}/{total})
+            </button>
+            <button
+              type="button"
+              onClick={() => setMobileTab("refrigerators")}
+              className={`flex-1 py-2 rounded-lg text-center cursor-pointer transition-all ${
+                mobileTab === "refrigerators"
+                  ? "bg-sky-600 text-white shadow-xs"
+                  : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+              }`}
+            >
+              ❄️ เช็คลิสต์ตู้แช่สาขา
+            </button>
+          </div>
+        )}
+
+        {/* Main Content Layout (2 Columns for Stock, 1 Column for Others) */}
+        <div className={isStockShift ? "grid grid-cols-1 lg:grid-cols-2 gap-6 items-start" : ""}>
+          {/* Left Column: Usual Shift Tasks */}
+          <div className={`space-y-4 ${isStockShift && mobileTab === "refrigerators" ? "hidden lg:block" : "block"}`}>
+            {/* Filter Segmented Control */}
+            <div className="flex items-center justify-between gap-2 px-1">
           <div
             role="tablist"
             aria-label="กรองรายการเช็คลิสต์"
@@ -419,13 +587,21 @@ export function ChecklistPage({
                       }
 
                       return (
-                        <div className="flex flex-wrap items-center gap-1.5 mt-2 text-xs font-mono text-emerald-900 dark:text-emerald-300 font-bold pl-0 sm:pl-6">
-                          <CheckCircle2 size={13} className="text-emerald-700" />
-                          <span>บันทึกเมื่อ {fmtTime(item.completedAt)}</span>
-                          {isLate && (
-                            <span className="text-rose-950 dark:text-rose-200 font-bold bg-rose-100 dark:bg-rose-950/80 border border-rose-300 dark:border-rose-800 px-1.5 py-0.5 rounded-md ml-1">
-                              (ล่าช้า)
-                            </span>
+                        <div className="flex flex-col gap-1 mt-2 pl-0 sm:pl-6">
+                          <div className="flex flex-wrap items-center gap-1.5 text-xs font-mono text-emerald-900 dark:text-emerald-300 font-bold">
+                            <CheckCircle2 size={13} className="text-emerald-700" />
+                            <span>บันทึกเมื่อ {fmtTime(item.completedAt)}</span>
+                            {isLate && (
+                              <span className="text-rose-950 dark:text-rose-200 font-bold bg-rose-100 dark:bg-rose-950/80 border border-rose-300 dark:border-rose-800 px-1.5 py-0.5 rounded-md ml-1">
+                                (ล่าช้า)
+                              </span>
+                            )}
+                          </div>
+                          {item.comment && (
+                            <div className="text-xs text-rose-900 dark:text-rose-300 bg-rose-50/80 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 rounded-lg px-2.5 py-1 flex items-start gap-1.5 font-sans font-normal">
+                              <span className="font-semibold shrink-0">เหตุผล:</span>
+                              <span className="break-words">{item.comment}</span>
+                            </div>
                           )}
                         </div>
                       );
@@ -452,11 +628,25 @@ export function ChecklistPage({
             </div>
           )}
         </div>
+          </div>
+
+          {/* Right Column: Branch Refrigerator Checklist for Stock Shift */}
+          {isStockShift && (
+            <div className={`space-y-4 ${mobileTab === "tasks" ? "hidden lg:block" : "block"}`}>
+              <BranchRefrigeratorChecklist
+                userId={session.userId}
+                branchName={session.branchName}
+                shiftSessionId={session.id}
+                shift={session.shift}
+              />
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Sticky Bottom Ergonomic Action Dock (Floor Staff Thumb Zone) */}
       <footer className="fixed bottom-0 left-0 right-0 z-40 bg-[var(--color-surface)]/95 backdrop-blur-md border-t border-[var(--color-border)] p-2.5 sm:p-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-md">
-        <div className="max-w-2xl mx-auto flex items-center justify-between gap-2 sm:gap-3">
+        <div className={`mx-auto flex items-center justify-between gap-2 sm:gap-3 ${isStockShift ? "max-w-6xl" : "max-w-2xl"}`}>
           {/* Progress pill indicator */}
           <div className="flex flex-col shrink-0">
             <span className="text-[11px] sm:text-xs font-bold text-[var(--color-text)] leading-tight">
@@ -625,6 +815,15 @@ export function ChecklistPage({
           </div>
         </div>
       )}
+
+      {/* Late Reason Requirement Modal */}
+      <LateReasonModal
+        isOpen={Boolean(lateModalTarget)}
+        taskLabel={lateModalTarget?.label || ""}
+        deadlineText={lateModalTarget?.deadlineText}
+        onSubmit={handleLateReasonSubmit}
+        onCancel={() => setLateModalTarget(null)}
+      />
     </div>
   );
 }

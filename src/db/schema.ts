@@ -82,6 +82,21 @@ export const refrigeratorCheck = pgTable.withRLS("refrigerator_check", {
     timestamp: timestamp("timestamp"),
 });
 
+export const refrigeratorTasks = pgTable.withRLS("refrigerator_tasks", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    branch_id: uuid("branch_id").notNull().references(() => branches.id),
+    refrigerator_id: uuid("refrigerator_id").notNull().references(() => refrigerators.id),
+    task_date: text("task_date").notNull(),
+    completed_by: uuid("completed_by").references(() => users.id),
+    completed_at: timestamp("completed_at"),
+    shift_session_id: uuid("shift_session_id").references(() => shiftSession.id),
+    shift: shiftEnum("shift"),
+    temperature: integer("temperature"),
+    is_okay: boolean("is_okay").default(true),
+    comment: text("comment"),
+    created_at: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const notifications = pgTable.withRLS("notifications", {
     id: uuid("id").primaryKey().defaultRandom(),
     recipient_id: uuid("recipient_id").references(() => users.id),

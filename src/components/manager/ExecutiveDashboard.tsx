@@ -31,6 +31,7 @@ import { ThemeToggle } from "../common/ThemeToggle";
 import { LeaderboardWidget } from "./LeaderboardWidget";
 import { ErrorBoundary } from "../common/ErrorBoundary";
 import { ClipboardCheck, ShieldCheck, Building2, Award, Snowflake, History, CheckCircle2, AlertCircle, LogOut } from "lucide-react";
+import { LateReasonModal } from "../common/LateReasonModal";
 
 export type ExecutiveRole = "manager_assistant" | "manager" | "committee" | "general_manager";
 
@@ -214,6 +215,8 @@ export function ExecutiveDashboard({
             category: it.category,
             completedAt: it.completedAt,
             taskWorkId: it.taskWorkId,
+            isLate: it.isLate,
+            comment: it.comment,
           })),
           notified: true,
           branchName: s.branchName,
@@ -260,6 +263,8 @@ export function ExecutiveDashboard({
             category: it.category,
             completedAt: it.completedAt,
             taskWorkId: it.taskWorkId,
+            isLate: it.isLate,
+            comment: it.comment,
           })),
           notified: true,
           branchName: s.branchName,
@@ -280,10 +285,10 @@ export function ExecutiveDashboard({
   };
 
   // Load assistant manager checklist directly from Supabase DB
-  const loadAssistantChecklist = useCallback(async (shift: ShiftType) => {
+  const loadAssistantChecklist = useCallback(async (shift: ShiftType, isSilent = false) => {
     if (currentRole !== "manager_assistant") return;
     try {
-      setIsLoadingChecklist(true);
+      if (!isSilent) setIsLoadingChecklist(true);
       const res = await getOrCreateShiftSessionAction({
         userId: user.id,
         userName: user.name,
@@ -292,12 +297,26 @@ export function ExecutiveDashboard({
       });
       if (res.success && res.session) {
         setAssistantSession(res.session);
-        setMyChecklistItems(res.session.items);
+        setMyChecklistItems((prev) => {
+          const fresh = res.session!.items || [];
+          const curSig = prev.map((i) => `${i.id}:${i.label}:${i.category}`).join("|");
+          const freshSig = fresh.map((i) => `${i.id}:${i.label}:${i.category}`).join("|");
+          if (curSig !== freshSig || prev.length === 0) {
+            return fresh.map((f) => {
+              const local = prev.find((p) => p.id === f.id);
+              if (local && local.completedAt && !f.completedAt) {
+                return { ...f, completedAt: local.completedAt, comment: local.comment, isLate: local.isLate };
+              }
+              return f;
+            });
+          }
+          return prev;
+        });
       }
     } catch (err) {
       console.error("Failed to load assistant checklist from DB:", err);
     } finally {
-      setIsLoadingChecklist(false);
+      if (!isSilent) setIsLoadingChecklist(false);
     }
   }, [currentRole, user]);
 
@@ -305,6 +324,13 @@ export function ExecutiveDashboard({
     if (currentRole === "manager_assistant") {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       loadAssistantChecklist(myChecklistShift);
+
+      const interval = setInterval(() => {
+        if (typeof document !== "undefined" && document.hidden) return;
+        void loadAssistantChecklist(myChecklistShift, true);
+      }, 6000);
+
+      return () => clearInterval(interval);
     } else {
       setAssistantSession(null);
       setMyChecklistItems([]);
@@ -423,16 +449,28 @@ export function ExecutiveDashboard({
     }
   }
 
-  async function handleToggleMyItem(itemId: string) {
-    const item = myChecklistItems.find((i) => i.id === itemId);
-    if (!item) return;
+  const [lateModalTarget, setLateModalTarget] = useState<{
+    id: string;
+    label: string;
+    deadlineText?: string;
+  } | null>(null);
 
-    const willBeDone = !item.completedAt;
+  async function executeToggleMyItem(itemId: string, willBeDone: boolean, comment?: string) {
     const newCompletedAt = willBeDone ? new Date().toISOString() : null;
+    const item = myChecklistItems.find((i) => i.id === itemId);
 
     // Optimistic UI update
     setMyChecklistItems((prev) =>
-      prev.map((i) => (i.id === itemId ? { ...i, completedAt: newCompletedAt } : i))
+      prev.map((i) =>
+        i.id === itemId
+          ? {
+              ...i,
+              completedAt: newCompletedAt,
+              comment: willBeDone ? (comment ?? i.comment) : null,
+              isLate: willBeDone ? (comment ? true : i.isLate) : false,
+            }
+          : i
+      )
     );
 
     // Persist to Supabase database
@@ -440,14 +478,60 @@ export function ExecutiveDashboard({
       await toggleTaskWorkAction({
         shiftSessionId: assistantSession?.id,
         taskId: itemId,
-        taskWorkId: item.taskWorkId,
+        taskWorkId: item?.taskWorkId,
         completed: willBeDone,
+        comment: willBeDone ? (comment || undefined) : undefined,
       });
       // Refresh live shift sessions in background
       loadDbSessions();
     } catch (err) {
       console.error("Failed to toggle assistant task work in DB:", err);
     }
+  }
+
+  function handleAssistantLateSubmit(reason: string) {
+    if (!lateModalTarget) return;
+    executeToggleMyItem(lateModalTarget.id, true, reason);
+    setLateModalTarget(null);
+  }
+
+  async function handleToggleMyItem(itemId: string) {
+    const item = myChecklistItems.find((i) => i.id === itemId);
+    if (!item) return;
+
+    if (item.completedAt) {
+      // Unchecking task
+      await executeToggleMyItem(itemId, false);
+      return;
+    }
+
+    // Check if late
+    let isLate = false;
+    let deadlineText: string | undefined;
+    if (item.category) {
+      const match = item.category.match(/(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})/);
+      if (match) {
+        const endStr = match[2];
+        const [endHr, endMin] = endStr.split(":").map(Number);
+        const deadlineDate = new Date();
+        deadlineDate.setHours(endHr, endMin, 0, 0);
+        deadlineText = `${item.category} (สิ้นสุด ${endStr} น.)`;
+        if (new Date() > deadlineDate) {
+          isLate = true;
+        }
+      }
+    }
+
+    if (isLate) {
+      setLateModalTarget({
+        id: item.id,
+        label: item.label,
+        deadlineText,
+      });
+      return;
+    }
+
+    await executeToggleMyItem(itemId, true);
   }
 
   async function handleResetChecklistData() {
@@ -620,9 +704,9 @@ export function ExecutiveDashboard({
                 : []),
               {
                 id: "refrigerator" as DashboardTab,
-                label: "ตั้งค่าตู้แช่",
+                label: "ตู้แช่ & ตรวจสอบงาน",
                 Icon: Snowflake,
-                desc: "จัดการและตั้งค่าตู้แช่",
+                desc: "ตรวจเช็คสดและตั้งค่าตู้แช่",
               },
               {
                 id: "history" as DashboardTab,
@@ -1539,14 +1623,22 @@ export function ExecutiveDashboard({
                                           }
                                         }
                                         return (
-                                          <p className="text-xs font-mono text-emerald-800 dark:text-emerald-300 font-semibold mt-1 flex items-center gap-1">
-                                            <span>บันทึกเมื่อ: {fmtTime(item.completedAt)}</span>
-                                            {isLate && (
-                                              <span className="inline-flex items-center px-1.5 py-0.2 rounded text-xs font-bold bg-amber-100 text-amber-950 border border-amber-300">
-                                                ล่าช้า
-                                              </span>
+                                          <div className="mt-1 flex flex-col gap-1">
+                                            <p className="text-xs font-mono text-emerald-800 dark:text-emerald-300 font-semibold flex items-center gap-1">
+                                              <span>บันทึกเมื่อ: {fmtTime(item.completedAt)}</span>
+                                              {isLate && (
+                                                <span className="inline-flex items-center px-1.5 py-0.2 rounded text-xs font-bold bg-amber-100 text-amber-950 border border-amber-300">
+                                                  ล่าช้า
+                                                </span>
+                                              )}
+                                            </p>
+                                            {item.comment && (
+                                              <div className="text-xs text-rose-900 dark:text-rose-300 bg-rose-50/80 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 rounded-lg px-2.5 py-1 flex items-start gap-1 font-sans font-normal">
+                                                <span className="font-semibold shrink-0">เหตุผล:</span>
+                                                <span className="break-words">{item.comment}</span>
+                                              </div>
                                             )}
-                                          </p>
+                                          </div>
                                         );
                                       })()}
                                     </div>
@@ -2013,6 +2105,15 @@ export function ExecutiveDashboard({
           </button>
         </div>
       </footer>
+
+      {/* Late Reason Requirement Modal for Assistant Manager */}
+      <LateReasonModal
+        isOpen={Boolean(lateModalTarget)}
+        taskLabel={lateModalTarget?.label || ""}
+        deadlineText={lateModalTarget?.deadlineText}
+        onSubmit={handleAssistantLateSubmit}
+        onCancel={() => setLateModalTarget(null)}
+      />
     </div>
   );
 }

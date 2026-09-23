@@ -18,6 +18,7 @@ export async function toggleTaskWorkAction(params: {
   shiftSessionId?: string;
   taskId?: string;
   completed: boolean;
+  comment?: string;
 }): Promise<{ success: boolean; completedAt?: string | null; error?: string }> {
   const services = getServices();
   return await services.checklist.toggleTaskWork(params);

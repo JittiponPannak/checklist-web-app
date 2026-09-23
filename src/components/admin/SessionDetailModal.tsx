@@ -131,10 +131,18 @@ export function SessionDetailModal({
                           }
                         }
                         return (
-                          <p className="text-xs font-mono text-amber-800 dark:text-amber-300 font-semibold mt-0.5">
-                            เสร็จเมื่อ {fmtTime(item.completedAt)}
-                            {isLate && <span className="text-rose-600 dark:text-rose-400 font-bold ml-1 font-sans">(ล่าช้า)</span>}
-                          </p>
+                          <div className="mt-0.5 space-y-1">
+                            <p className="text-xs font-mono text-amber-800 dark:text-amber-300 font-semibold">
+                              เสร็จเมื่อ {fmtTime(item.completedAt)}
+                              {isLate && <span className="text-rose-600 dark:text-rose-400 font-bold ml-1 font-sans">(ล่าช้า)</span>}
+                            </p>
+                            {item.comment && (
+                              <div className="text-[11px] text-rose-900 dark:text-rose-300 bg-rose-50/80 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 rounded-lg px-2 py-0.5 flex items-start gap-1 font-sans font-normal">
+                                <span className="font-semibold shrink-0">เหตุผล:</span>
+                                <span className="break-words">{item.comment}</span>
+                              </div>
+                            )}
+                          </div>
                         );
                       })()}
                     </div>

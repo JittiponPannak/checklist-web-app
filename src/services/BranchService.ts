@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { branches, users } from "../db/schema";
 import { IBranchService } from "./types";
 
@@ -16,18 +16,135 @@ export interface DashboardBranch {
 }
 
 export class BranchService implements IBranchService {
+  private static cachedBranches: DashboardBranch[] | null = null;
+  private static cachedLastUpdate: Date | null = null;
+  private static cacheFetchedAt: number = 0;
+  private static readonly CACHE_TTL_MS = 10000; // 10s soft window to avoid spamming SELECT MAX
+
   constructor(private db: any) {}
 
-  async getBranches(): Promise<{
+  invalidateCache(): void {
+    BranchService.cachedBranches = null;
+    BranchService.cachedLastUpdate = null;
+    BranchService.cacheFetchedAt = 0;
+  }
+
+  async checkBranchesUpdated(
+    clientLastUpdate?: string,
+    branchId?: string
+  ): Promise<{
     success: boolean;
+    updated: boolean;
+    lastUpdate?: string;
     branches?: DashboardBranch[];
     error?: string;
   }> {
     try {
+      let latestTimestamp: Date | null = null;
+
+      if (branchId) {
+        const [branchRow] = await this.db
+          .select({ lastUpdate: branches.last_update })
+          .from(branches)
+          .where(eq(branches.id, branchId))
+          .limit(1);
+        latestTimestamp = branchRow?.lastUpdate ? new Date(branchRow.lastUpdate) : null;
+      } else {
+        const [maxRow] = await this.db
+          .select({ maxUpdate: sql<Date | string>`MAX(${branches.last_update})` })
+          .from(branches);
+        latestTimestamp = maxRow?.maxUpdate ? new Date(maxRow.maxUpdate) : null;
+      }
+
+      const isoLatest = latestTimestamp?.toISOString();
+
+      if (!clientLastUpdate) {
+        // No client cache, needs full load
+        const fresh = await this.getBranches({ forceRefresh: true });
+        return {
+          success: true,
+          updated: true,
+          lastUpdate: isoLatest,
+          branches: fresh.branches,
+        };
+      }
+
+      const clientTime = new Date(clientLastUpdate).getTime();
+      const serverTime = latestTimestamp ? latestTimestamp.getTime() : 0;
+
+      // If server timestamp is newer than what client has
+      if (serverTime > clientTime) {
+        const fresh = await this.getBranches({ forceRefresh: true });
+        return {
+          success: true,
+          updated: true,
+          lastUpdate: isoLatest,
+          branches: fresh.branches,
+        };
+      }
+
+      // No updates needed
+      return {
+        success: true,
+        updated: false,
+        lastUpdate: isoLatest,
+      };
+    } catch (err: unknown) {
+      console.error("BranchService.checkBranchesUpdated error:", err);
+      return { success: false, updated: true, error: "เกิดข้อผิดพลาดในการตรวจสอบการอัปเดตสาขา" };
+    }
+  }
+
+  async getBranches(options?: { forceRefresh?: boolean }): Promise<{
+    success: boolean;
+    branches?: DashboardBranch[];
+    lastUpdate?: string;
+    error?: string;
+  }> {
+    try {
+      const now = Date.now();
+      const hasCache = BranchService.cachedBranches !== null;
+
+      // Check soft cache window (no DB request needed)
+      if (!options?.forceRefresh && hasCache && now - BranchService.cacheFetchedAt < BranchService.CACHE_TTL_MS) {
+        return {
+          success: true,
+          branches: BranchService.cachedBranches!,
+          lastUpdate: BranchService.cachedLastUpdate?.toISOString(),
+        };
+      }
+
+      // If cached, do a lightweight MAX(last_update) check before performing full tables scan
+      if (!options?.forceRefresh && hasCache && BranchService.cachedLastUpdate) {
+        const [maxRow] = await this.db
+          .select({ maxUpdate: sql<Date | string>`MAX(${branches.last_update})` })
+          .from(branches);
+        const serverMaxDate = maxRow?.maxUpdate ? new Date(maxRow.maxUpdate) : null;
+
+        if (serverMaxDate && serverMaxDate.getTime() <= BranchService.cachedLastUpdate.getTime()) {
+          BranchService.cacheFetchedAt = now;
+          return {
+            success: true,
+            branches: BranchService.cachedBranches!,
+            lastUpdate: BranchService.cachedLastUpdate.toISOString(),
+          };
+        }
+      }
+
+      // Full database load & formatting
       const allBranches = await this.db.select().from(branches);
       const allUsers = await this.db.select().from(users);
 
+      let maxBranchUpdate: Date | null = null;
+
       const formattedBranches: DashboardBranch[] = allBranches.map((b: any, index: number) => {
+        if (b.last_update) {
+          const dt = new Date(b.last_update);
+          if (!maxBranchUpdate || dt.getTime() > maxBranchUpdate.getTime()) {
+            maxBranchUpdate = dt;
+          }
+        }
+
         const branchUsers = allUsers.filter((u: any) => b.members.includes(u.id));
         const manager = branchUsers.find((u: any) => u.role === "manager" || u.role === "general_manager");
         const managerName = manager ? manager.name : "กำลังสรรหา";
@@ -51,7 +168,16 @@ export class BranchService implements IBranchService {
         };
       });
 
-      return { success: true, branches: formattedBranches };
+      // Update in-memory server cache
+      BranchService.cachedBranches = formattedBranches;
+      BranchService.cachedLastUpdate = maxBranchUpdate || new Date();
+      BranchService.cacheFetchedAt = now;
+
+      return {
+        success: true,
+        branches: formattedBranches,
+        lastUpdate: BranchService.cachedLastUpdate.toISOString(),
+      };
     } catch (err: any) {
       console.error("BranchService.getBranches error:", err);
       return { success: false, error: "เกิดข้อผิดพลาดในการดึงข้อมูลสาขา" };
@@ -69,6 +195,7 @@ export class BranchService implements IBranchService {
         last_update: new Date(),
       });
 
+      this.invalidateCache();
       return { success: true };
     } catch (err: any) {
       console.error("BranchService.createBranch error:", err);
@@ -86,6 +213,7 @@ export class BranchService implements IBranchService {
         })
         .where(eq(branches.id, branchId));
 
+      this.invalidateCache();
       return { success: true };
     } catch (err: any) {
       console.error("BranchService.assignStaffToBranch error:", err);
@@ -107,6 +235,7 @@ export class BranchService implements IBranchService {
         })
         .where(eq(branches.id, branchId));
 
+      this.invalidateCache();
       return { success: true };
     } catch (err: any) {
       console.error("BranchService.assignTasksToBranch error:", err);
