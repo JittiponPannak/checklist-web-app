@@ -47,10 +47,31 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             __html: `
               try {
                 if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-                  document.documentElement.classList.add('dark')
+                  document.documentElement.classList.add('dark');
                 } else {
-                  document.documentElement.classList.remove('dark')
+                  document.documentElement.classList.remove('dark');
                 }
+
+                // Daily cache eviction: check if last visit was on a different day
+                var now = new Date();
+                var todayStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok' }).format(now);
+                var lastVisit = localStorage.getItem('app_last_visit_date');
+                if (lastVisit && lastVisit !== todayStr) {
+                  var keysToRemove = [
+                    'app_sessions',
+                    'app_active_session',
+                    'app_selected_shift',
+                    'cached_branches',
+                    'branch_last_update',
+                    'branches_last_checked_at',
+                    'app_manager_read_notifs',
+                    'app_notifications'
+                  ];
+                  for (var i = 0; i < keysToRemove.length; i++) {
+                    localStorage.removeItem(keysToRemove[i]);
+                  }
+                }
+                localStorage.setItem('app_last_visit_date', todayStr);
               } catch (e) {}
             `,
           }}

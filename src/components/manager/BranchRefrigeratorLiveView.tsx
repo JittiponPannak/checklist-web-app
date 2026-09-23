@@ -1,13 +1,16 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Snowflake, CheckCircle2, Clock, UserCheck, AlertTriangle, RefreshCw, Thermometer, ShieldCheck } from "lucide-react";
+import { Snowflake, CheckCircle2, Clock, UserCheck, AlertTriangle, RefreshCw, Thermometer, ShieldCheck, FileText, Ban } from "lucide-react";
 import { RefrigeratorTaskItem, getBranchRefrigeratorTasksAction } from "../../actions/refrigerator";
 import { fmtTime } from "../../data/storage";
 import { User } from "../../types";
 
 export function BranchRefrigeratorLiveView({ user }: { user: User }) {
   const [tasks, setTasks] = useState<RefrigeratorTaskItem[]>([]);
+  const [disabledRefrigerators, setDisabledRefrigerators] = useState<
+    Array<{ id: string; name: string; minTemperature: number; maxTemperature: number }>
+  >([]);
   const [branchName, setBranchName] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -19,6 +22,9 @@ export function BranchRefrigeratorLiveView({ user }: { user: User }) {
       const res = await getBranchRefrigeratorTasksAction({ userId: user.id });
       if (res.success && res.data) {
         setTasks(res.data);
+        if (res.disabledRefrigerators) {
+          setDisabledRefrigerators(res.disabledRefrigerators);
+        }
         if (res.branchName) setBranchName(res.branchName);
         setError(null);
       } else if (!isSilent) {
@@ -362,6 +368,59 @@ export function BranchRefrigeratorLiveView({ user }: { user: User }) {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* ─── Paper / Notice Sheet: Disabled Refrigerator Units ─── */}
+      {disabledRefrigerators.length > 0 && (
+        <div className="relative mt-8 rounded-2xl border-2 border-dashed border-rose-300 dark:border-rose-900/60 bg-[var(--color-surface)] shadow-md p-5 sm:p-6 overflow-hidden">
+          {/* Paper aesthetic tape/clip badge */}
+          <div className="absolute top-0 left-8 transform -translate-y-1/2 bg-rose-700 text-white text-[11px] font-extrabold uppercase px-3 py-0.5 rounded-full shadow-xs tracking-wider flex items-center gap-1">
+            <FileText size={12} />
+            <span>เอกสารบันทึกงดตรวจประจำวัน</span>
+          </div>
+
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[var(--color-border)] pb-3 pt-1">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-rose-100 dark:bg-rose-950/80 border border-rose-300 dark:border-rose-800 text-rose-800 dark:text-rose-300 flex items-center justify-center shrink-0">
+                <Ban size={16} />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-[var(--color-text)]">
+                  ตู้แช่ที่ปิดใช้งาน / อยู่ระหว่างการซ่อมบำรุง ({disabledRefrigerators.length} ตู้)
+                </h3>
+                <p className="text-xs text-[var(--color-text-muted)]">
+                  รายการตู้แช่ต่อไปนี้ถูกตั้งค่าปิดการตรวจสอบไว้ในระบบ พนักงานสต็อกจะไม่สามารถบันทึกผลได้
+                </p>
+              </div>
+            </div>
+            <span className="text-[11px] font-bold text-rose-800 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 px-2.5 py-1 rounded-full self-start sm:self-auto">
+              🚫 ปิดการตรวจสอบแล้ว
+            </span>
+          </div>
+
+          <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+            {disabledRefrigerators.map((ref) => (
+              <div
+                key={ref.id}
+                className="p-3.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-2)]/70 flex items-center justify-between gap-2"
+              >
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-bold text-xs text-[var(--color-text)] line-through truncate">
+                      {ref.name}
+                    </span>
+                    <span className="text-[10px] font-extrabold text-rose-700 bg-rose-100 dark:bg-rose-950 dark:text-rose-300 px-1.5 py-0.5 rounded-md border border-rose-200 dark:border-rose-800">
+                      ปิดใช้งาน
+                    </span>
+                  </div>
+                  <span className="text-[11px] font-mono text-[var(--color-text-subtle)] block mt-0.5">
+                    เกณฑ์ปกติ: {ref.minTemperature}°C ~ {ref.maxTemperature}°C
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>

@@ -132,14 +132,16 @@ export function ExecutiveDashboard({
         }));
         setSessions(mappedSessions);
 
-        const newApprovals: Record<string, { assistantApproved?: boolean; managerApproved?: boolean }> = {};
-        res.sessions.forEach((s) => {
-          newApprovals[s.id] = {
-            assistantApproved: s.assistantApproved,
-            managerApproved: s.managerApproved,
-          };
+        setApprovals((prev) => {
+          const merged: Record<string, { assistantApproved?: boolean; managerApproved?: boolean }> = { ...prev };
+          (res.sessions || []).forEach((s) => {
+            merged[s.id] = {
+              assistantApproved: Boolean(s.assistantApproved || prev[s.id]?.assistantApproved),
+              managerApproved: Boolean(s.managerApproved || prev[s.id]?.managerApproved),
+            };
+          });
+          return merged;
         });
-        setApprovals((prev) => ({ ...prev, ...newApprovals }));
 
         // Read notification IDs stored locally
         const readIds: string[] = (() => {
@@ -466,7 +468,8 @@ export function ExecutiveDashboard({
       ...prev,
       [sessionId]: {
         ...prev[sessionId],
-        [type === "assistant" ? "assistantApproved" : "managerApproved"]: true,
+        assistantApproved: type === "assistant" ? true : Boolean(prev[sessionId]?.assistantApproved ?? true),
+        managerApproved: type !== "assistant" ? true : Boolean(prev[sessionId]?.managerApproved ?? false),
       },
     }));
 
@@ -1163,6 +1166,21 @@ export function ExecutiveDashboard({
                         const isAssistantSession =
                           sess.taskRole === "manager_assistant" || sess.userPosition === "ผู้ช่วยผู้จัดการร้าน";
 
+                        const lateItems = sess.items.filter((i) => {
+                          if (i.isLate || i.comment) return true;
+                          if (i.completedAt && i.category) {
+                            const match = i.category.match(/(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})/);
+                            if (match) {
+                              const [endHr, endMin] = match[2].split(':').map(Number);
+                              const completedDate = new Date(i.completedAt);
+                              const deadlineDate = new Date(sess.startedAt);
+                              deadlineDate.setHours(endHr, endMin, 0, 0);
+                              if (completedDate > deadlineDate) return true;
+                            }
+                          }
+                          return false;
+                        });
+
                         return (
                           <div
                             key={sess.id}
@@ -1213,6 +1231,26 @@ export function ExecutiveDashboard({
                               </div>
                             </div>
 
+                            {/* Late items reason display on general mobile card */}
+                            {lateItems.length > 0 && (
+                              <div className="p-2.5 rounded-xl bg-rose-50/80 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 text-xs space-y-1.5">
+                                <div className="flex items-center gap-1.5 text-rose-800 dark:text-rose-300 font-bold">
+                                  <AlertCircle size={13} className="shrink-0" />
+                                  <span>พบรายการล่าช้า {lateItems.length} ข้อ:</span>
+                                </div>
+                                <div className="space-y-1 pl-3 text-[11px] text-rose-950 dark:text-rose-200">
+                                  {lateItems.map((li) => (
+                                    <div key={li.id} className="leading-snug">
+                                      <span className="font-semibold text-rose-800 dark:text-rose-300">{li.label}:</span>{" "}
+                                      <span className="italic">
+                                        {li.comment ? `"${li.comment}"` : "(ไม่ได้ระบุเหตุผล)"}
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
                             {/* Status & Action */}
                             <div className="flex flex-wrap items-center justify-between gap-2 pt-0.5">
                               <div className="min-w-0">{renderApprovalBadge(sess)}</div>
@@ -1250,6 +1288,21 @@ export function ExecutiveDashboard({
                             const isAssistantSession =
                               sess.taskRole === "manager_assistant" || sess.userPosition === "ผู้ช่วยผู้จัดการร้าน";
 
+                            const lateItems = sess.items.filter((i) => {
+                              if (i.isLate || i.comment) return true;
+                              if (i.completedAt && i.category) {
+                                const match = i.category.match(/(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})/);
+                                if (match) {
+                                  const [endHr, endMin] = match[2].split(':').map(Number);
+                                  const completedDate = new Date(i.completedAt);
+                                  const deadlineDate = new Date(sess.startedAt);
+                                  deadlineDate.setHours(endHr, endMin, 0, 0);
+                                  if (completedDate > deadlineDate) return true;
+                                }
+                              }
+                              return false;
+                            });
+
                             return (
                               <tr key={sess.id} className="hover:bg-[var(--color-background)] transition-colors">
                                 <td className="py-3 px-3 font-semibold text-[var(--color-text)]">
@@ -1280,6 +1333,17 @@ export function ExecutiveDashboard({
                                         style={{ width: `${pct}%` }}
                                       />
                                     </div>
+                                    {lateItems.length > 0 && (
+                                      <div className="mt-1">
+                                        <span
+                                          className="inline-flex items-center gap-1 text-[10px] font-bold text-rose-800 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 px-1.5 py-0.5 rounded cursor-help"
+                                          title={lateItems.map((li) => `${li.label}: ${li.comment || "ไม่ระบุเหตุผล"}`).join("\n")}
+                                        >
+                                          <AlertCircle size={10} className="text-rose-600" />
+                                          <span>ล่าช้า {lateItems.length} ข้อ</span>
+                                        </span>
+                                      </div>
+                                    )}
                                   </div>
                                 </td>
                                 <td className="py-3 px-3 font-mono text-[var(--color-text-muted)] text-xs">

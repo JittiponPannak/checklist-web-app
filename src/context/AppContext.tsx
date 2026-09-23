@@ -22,6 +22,7 @@ import {
 import { getUserByIdAction, syncOAuthUserAction } from "../actions/auth";
 import { createClient } from "../db/supabase/client";
 import { secureGetItem, secureRemoveItem } from "../utils/crypto";
+import { invalidateBranchCache } from "../utils/cache";
 
 interface AppContextType {
   currentUser: User | null;
@@ -67,6 +68,26 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
+    // Check if the last time the user visited the site is a different day
+    if (typeof window !== "undefined") {
+      try {
+        const todayDateStr = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Bangkok" }).format(new Date());
+        const lastVisit = localStorage.getItem("app_last_visit_date");
+        if (lastVisit && lastVisit !== todayDateStr) {
+          // Different day: evict operational cache data
+          secureRemoveItem("app_sessions");
+          secureRemoveItem("app_active_session");
+          secureRemoveItem("app_selected_shift");
+          secureRemoveItem("app_manager_read_notifs");
+          secureRemoveItem("app_notifications");
+          invalidateBranchCache();
+        }
+        localStorage.setItem("app_last_visit_date", todayDateStr);
+      } catch (err) {
+        console.warn("Failed to check daily visit date:", err);
+      }
+    }
+
     const storedUser = getCurrentUser();
     const storedShift = getSelectedShift();
     const storedSession = getActiveSession();

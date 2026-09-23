@@ -1,4 +1,4 @@
-import { eq, and, gte, lte, desc, inArray } from "drizzle-orm";
+import { eq, and, gte, lte, desc, inArray, sql } from "drizzle-orm";
 import { tasks, taskWork, shiftSession, users, branches } from "../db/schema";
 import { IManagerService, IPointService, INotificationService } from "./types";
 import { ShiftType, Role } from "../types";
@@ -380,10 +380,46 @@ export class ManagerService implements IManagerService {
         };
       }
 
-      const sessionWorks = await this.db
+      let sessionWorks = await this.db
         .select()
         .from(taskWork)
         .where(eq(taskWork.shift_session, shiftSessionId));
+
+      const now = new Date();
+
+      // If no taskWorks exist for this session, seed them so approval can be tracked
+      if (sessionWorks.length === 0 && targetSession.branch) {
+        const [branchRow] = await this.db
+          .select({ tasks: branches.tasks })
+          .from(branches)
+          .where(eq(branches.id, targetSession.branch))
+          .limit(1);
+
+        const branchTaskIds: string[] = branchRow?.tasks || [];
+        if (branchTaskIds.length > 0) {
+          const matchingTasks = await this.db
+            .select({ id: tasks.id })
+            .from(tasks)
+            .where(
+              and(
+                inArray(tasks.id, branchTaskIds),
+                eq(tasks.task_role, targetSession.task_role),
+                eq(tasks.disabled, false)
+              )
+            );
+
+          if (matchingTasks.length > 0) {
+            const inserts = matchingTasks.map((t: any) => ({
+              task: t.id,
+              shift_session: shiftSessionId,
+              timestamp: now,
+              manager_assistance_approve_timestamp: now,
+              manager_approve_timestamp: role !== "manager_assistant" ? now : null,
+            }));
+            sessionWorks = await this.db.insert(taskWork).values(inserts).returning();
+          }
+        }
+      }
 
       const wasFullyApproved =
         sessionWorks.length > 0 &&
@@ -392,30 +428,35 @@ export class ManagerService implements IManagerService {
             w.manager_assistance_approve_timestamp !== null && w.manager_approve_timestamp !== null
         );
 
-      const now = new Date();
-
       if (role === "manager_assistant") {
         await this.db
           .update(taskWork)
           .set({ manager_assistance_approve_timestamp: now })
           .where(eq(taskWork.shift_session, shiftSessionId));
       } else {
+        // Manager or higher approval: approve manager level, and also fulfill assistant approval if missing
         await this.db
           .update(taskWork)
-          .set({ manager_approve_timestamp: now })
+          .set({
+            manager_approve_timestamp: now,
+            manager_assistance_approve_timestamp: sql`COALESCE(${taskWork.manager_assistance_approve_timestamp}, ${now})`,
+          })
           .where(eq(taskWork.shift_session, shiftSessionId));
       }
 
-      let isNowFullyApproved = false;
-      if (sessionWorks.length > 0) {
-        if (role === "manager_assistant") {
-          isNowFullyApproved = sessionWorks.every((w: any) => w.manager_approve_timestamp !== null);
-        } else {
-          isNowFullyApproved = sessionWorks.every(
-            (w: any) => w.manager_assistance_approve_timestamp !== null
-          );
-        }
-      }
+      // Re-fetch updated works to accurately verify full approval
+      const updatedWorks = await this.db
+        .select()
+        .from(taskWork)
+        .where(eq(taskWork.shift_session, shiftSessionId));
+
+      const isNowFullyApproved =
+        updatedWorks.length > 0 &&
+        updatedWorks.every(
+          (w: any) =>
+            w.manager_approve_timestamp !== null &&
+            (role === "manager_assistant" ? true : w.manager_assistance_approve_timestamp !== null)
+        );
 
       // Transition to fully approved -> Trigger PointService to award points and streak!
       if (!wasFullyApproved && isNowFullyApproved && this.pointService) {
