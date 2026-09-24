@@ -3,8 +3,9 @@
 import { getServices } from "../services/container";
 import { Role } from "../types";
 import { ManagerShiftSummary } from "../services/ManagerService";
+import { BranchEmployeeStatus } from "../services/types";
 
-export type { ManagerShiftSummary };
+export type { ManagerShiftSummary, BranchEmployeeStatus };
 
 export async function getManagerShiftSessionsAction(filterDate?: string): Promise<{
   success: boolean;
@@ -35,3 +36,15 @@ export async function approveShiftSessionAction(params: {
   const services = getServices();
   return await services.manager.approveShiftSession(params);
 }
+
+export async function getBranchStaffStatusAction(branchId?: string): Promise<{
+  success: boolean;
+  employees?: BranchEmployeeStatus[];
+  branches?: Array<{ id: string; name: string }>;
+  selectedBranchId?: string;
+  error?: string;
+}> {
+  const services = getServices();
+  return await services.manager.getBranchStaffStatus(branchId);
+}
+

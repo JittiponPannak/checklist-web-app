@@ -1,6 +1,6 @@
-import { eq, and, gte, lte, desc, inArray } from "drizzle-orm";
+import { eq, and, gte, lte, desc, inArray, sql } from "drizzle-orm";
 import { tasks, taskWork, shiftSession, users, branches } from "../db/schema";
-import { IManagerService, IPointService, INotificationService } from "./types";
+import { IManagerService, IPointService, INotificationService, BranchEmployeeStatus } from "./types";
 import { ShiftType, Role } from "../types";
 
 export interface ManagerShiftSummary {
@@ -437,6 +437,166 @@ export class ManagerService implements IManagerService {
     } catch (err: any) {
       console.error("ManagerService.approveShiftSession error:", err);
       return { success: false, error: err?.message || "เกิดข้อผิดพลาดในการรับรองผลงาน" };
+    }
+  }
+
+  async getBranchStaffStatus(branchId?: string): Promise<{
+    success: boolean;
+    employees?: BranchEmployeeStatus[];
+    branches?: Array<{ id: string; name: string }>;
+    selectedBranchId?: string;
+    error?: string;
+  }> {
+    try {
+      // 1. Fetch all branches
+      const allBranches = await this.db
+        .select({ id: branches.id, name: branches.name, members: branches.members })
+        .from(branches);
+
+      if (allBranches.length === 0) {
+        return { success: true, employees: [], branches: [] };
+      }
+
+      const activeBranch = branchId 
+        ? allBranches.find((b: any) => b.id === branchId) || allBranches[0]
+        : allBranches[0];
+
+      const activeBranchId = activeBranch.id;
+      const branchMemberIds: string[] = activeBranch.members || [];
+
+      // 2. Fetch users who belong to this branch, or if members array is empty, all staff
+      let candidateUsers: any[] = [];
+      if (branchMemberIds.length > 0) {
+        candidateUsers = await this.db
+          .select()
+          .from(users)
+          .where(inArray(users.id, branchMemberIds));
+      } else {
+        candidateUsers = await this.db
+          .select()
+          .from(users)
+          .where(inArray(users.role, ["employee", "manager_assistant"]));
+      }
+
+      // 3. Today's time boundary (Asia/Bangkok)
+      const { startOfDay, endOfDay } = getThaiStartAndEndOfDay(new Date());
+
+      // 4. Fetch all shift sessions for today across candidate users
+      const todaySessions = candidateUsers.length > 0
+        ? await this.db
+            .select()
+            .from(shiftSession)
+            .where(
+              and(
+                inArray(shiftSession.user, candidateUsers.map(u => u.id)),
+                gte(shiftSession.start, startOfDay),
+                lte(shiftSession.start, endOfDay)
+              )
+            )
+            .orderBy(desc(shiftSession.start))
+        : [];
+
+      // 5. Total shifts worked count and last shift per user across all time
+      const totalShiftCounts = candidateUsers.length > 0
+        ? await this.db
+            .select({
+              userId: shiftSession.user,
+              totalCount: sql<number>`count(*)::int`,
+              lastShift: sql<Date | string>`max(${shiftSession.start})`,
+            })
+            .from(shiftSession)
+            .where(inArray(shiftSession.user, candidateUsers.map(u => u.id)))
+            .groupBy(shiftSession.user)
+        : [];
+
+      // 6. For currently active shifts (end IS NULL), fetch their task works to calculate checklist progress
+      const activeSessions = todaySessions.filter((s: any) => s.end === null);
+      const activeSessionIds = activeSessions.map((s: any) => s.id);
+
+      const activeWorks = activeSessionIds.length > 0
+        ? await this.db
+            .select()
+            .from(taskWork)
+            .where(inArray(taskWork.shift_session, activeSessionIds))
+        : [];
+
+      // 7. Assemble BranchEmployeeStatus array
+      const employees: BranchEmployeeStatus[] = candidateUsers.map((u: any) => {
+        const userTodaySessions = todaySessions.filter((s: any) => s.user === u.id);
+        const todayShiftsCount = userTodaySessions.length;
+
+        // Current active shift (end is null)
+        const currentActiveSession = userTodaySessions.find((s: any) => s.end === null);
+        const isOnDuty = Boolean(currentActiveSession);
+
+        let activeShift: BranchEmployeeStatus["activeShift"] | undefined = undefined;
+        if (currentActiveSession) {
+          const works = activeWorks.filter((w: any) => w.shift_session === currentActiveSession.id);
+          const totalTasks = works.length;
+          const completedTasks = works.filter((w: any) => w.timestamp !== null).length;
+          const completionPercentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+          const startedAtDate = new Date(currentActiveSession.start);
+          const durationMinutes = Math.max(0, Math.round((Date.now() - startedAtDate.getTime()) / 60000));
+
+          activeShift = {
+            sessionId: currentActiveSession.id,
+            shift: mapDbShiftToUi(currentActiveSession.shift),
+            taskRole: currentActiveSession.task_role,
+            taskRoleTitle: mapTaskRoleToTitle(currentActiveSession.task_role),
+            startedAt: startedAtDate.toISOString(),
+            durationMinutes,
+            totalTasks,
+            completedTasks,
+            completionPercentage,
+          };
+        }
+
+        const totalStats = totalShiftCounts.find((tc: any) => tc.userId === u.id);
+        const totalShiftsWorked = totalStats ? Number(totalStats.totalCount) : todayShiftsCount;
+        const lastShiftAt = totalStats?.lastShift 
+          ? new Date(totalStats.lastShift).toISOString() 
+          : (currentActiveSession ? new Date(currentActiveSession.start).toISOString() : null);
+
+        let position = u.role === "manager_assistant" ? "ผู้ช่วยผู้จัดการร้าน" : "พนักงานประจำสาขา";
+        if (currentActiveSession) {
+          position = mapTaskRoleToTitle(currentActiveSession.task_role);
+        }
+
+        return {
+          id: u.id,
+          name: u.name,
+          email: u.email,
+          role: u.role,
+          position,
+          branchId: activeBranchId,
+          branchName: activeBranch.name,
+          isOnDuty,
+          activeShift,
+          todayShiftsCount,
+          totalShiftsWorked,
+          lastShiftAt,
+          point: u.point ?? 0,
+          pointStreak: u.point_streak ?? 0,
+          pointStreakType: u.point_streak_type ?? "none",
+        };
+      });
+
+      // Sort: On-duty first, then by name
+      employees.sort((a, b) => {
+        if (a.isOnDuty && !b.isOnDuty) return -1;
+        if (!a.isOnDuty && b.isOnDuty) return 1;
+        return a.name.localeCompare(b.name, "th");
+      });
+
+      return {
+        success: true,
+        employees,
+        branches: allBranches.map((b: any) => ({ id: b.id, name: b.name })),
+        selectedBranchId: activeBranchId,
+      };
+    } catch (err: any) {
+      console.error("ManagerService.getBranchStaffStatus error:", err);
+      return { success: false, error: err?.message || "เกิดข้อผิดพลาดในการโหลดสถานะพนักงาน" };
     }
   }
 }

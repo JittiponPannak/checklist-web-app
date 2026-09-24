@@ -131,6 +131,34 @@ export interface IChecklistService {
   }>;
 }
 
+export interface BranchEmployeeStatus {
+  id: string;
+  name: string;
+  email: string;
+  role: Role;
+  position?: string;
+  branchId?: string;
+  branchName?: string;
+  isOnDuty: boolean;
+  activeShift?: {
+    sessionId: string;
+    shift: ShiftType;
+    taskRole?: "cashier" | "stock" | "manager_assistant";
+    taskRoleTitle?: string;
+    startedAt: string;
+    durationMinutes: number;
+    totalTasks: number;
+    completedTasks: number;
+    completionPercentage: number;
+  };
+  todayShiftsCount: number;
+  totalShiftsWorked: number;
+  lastShiftAt?: string | null;
+  point: number;
+  pointStreak: number;
+  pointStreakType: "none" | "flawed" | "perfect";
+}
+
 export interface IManagerService {
   getManagerShiftSessions(filterDate?: string): Promise<{
     success: boolean;
@@ -149,6 +177,14 @@ export interface IManagerService {
     shiftSessionId: string;
     role: "manager" | "manager_assistant" | "committee" | "general_manager" | Role;
   }): Promise<{ success: boolean; error?: string }>;
+
+  getBranchStaffStatus(branchId?: string): Promise<{
+    success: boolean;
+    employees?: BranchEmployeeStatus[];
+    branches?: Array<{ id: string; name: string }>;
+    selectedBranchId?: string;
+    error?: string;
+  }>;
 }
 
 export interface IBranchService {

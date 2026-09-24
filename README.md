@@ -49,6 +49,16 @@
 - **ปิดกะค้างอัตโนมัติ (Auto End Shifts)**: ทำงานทุกวันเวลา 23:55 น. (เวลาไทย) เพื่อปิดกะพนักงานที่ลืมกดปิดกะ
 - **ทำความสะอาดข้อมูลประวัติ (Data Cleanup)**: ทำงานทุกวันอาทิตย์เวลา 23:50 น. (เวลาไทย) เพื่อลบข้อมูลประวัติที่เก่ากว่า 14 วัน รักษาประสิทธิภาพฐานข้อมูล
 
+### 7. 👥 ระบบตรวจสอบสถานะพนักงานและการเข้ากะสาขา (Staff Shift Attendance & Presence)
+- **ตรวจสอบการเข้ากะสดแบบ Real-time (`/manager/staff-status`)**: ผู้จัดการและผู้ช่วยผู้จัดการสามารถตรวจสอบรายชื่อพนักงานทุกคนในสาขาว่ากำลังเข้ากะทำงานอยู่หรือไม่ (`On Duty` vs `Off Duty`)
+- **ข้อมูลกะงานที่กำลังทำ**: แสดงรอบกะ (กะเช้า/กะบ่าย/กะควบ), หน้าที่ประจำกะ (แคชเชียร์/สต็อก/ผู้ช่วย), เวลาเริ่มกะ, ระยะเวลาที่ทำมาแล้ว และหลอดความคืบหน้าการเช็คลิสต์งาน (Checklist Progress %)
+- **สถิติจำนวนกะที่ปฏิบัติงาน**: บันทึกจำนวนกะที่เข้าทำในวันนี้ (Today's Shifts) และยอดรวมจำนวนกะสะสมทั้งหมดที่เคยปฏิบัติงานมา (Total Cumulative Shifts Worked)
+
+### 8. 📖 ศูนย์รวมเอกสารและคู่มือปฏิบัติงานในระบบ (Integrated Documentation Portal)
+- **รวมคู่มือสู่หน้าแรก**: เข้าถึงคู่มือ `GUIDE.md` และ `README.md` ได้ทันทีผ่านการ์ดบนหน้า Portal Page
+- **Interactive Reader Modal**: หน้าต่างอ่านคู่มือแบบโต้ตอบ รองรับการกระโดดตามบทบาทพนักงาน (Role Jump), สารบัญนำทางแบบคลิกได้, ค้นหาแบบเรียลไทม์ และรองรับ Dark/Light Mode
+- **หน้าเว็บเฉพาะ**: รองรับการเปิดดูแบบเต็มจอผ่าน `/guide` และ `/readme`
+
 ---
 
 ## 🛠 เทคโนโลยีที่ใช้งาน (Tech Stack)
@@ -77,7 +87,7 @@ checklist-web-app/
 │   │   ├── auth.ts             # จัดการยืนยันตัวตน, ดึงรายชื่อผู้ใช้
 │   │   ├── branch.ts           # จัดการสาขา, มอบหมายพนักงานและงาน
 │   │   ├── checklist.ts        # จัดการ Shift Session, บันทึกการติ๊กงาน, รีเซ็ตข้อมูล
-│   │   ├── manager.ts          # ดึงข้อมูลรอบกะรออนุมัติ, ตรวจสอบประวัติย้อนหลัง
+│   │   ├── manager.ts          # ดึงข้อมูลรอบกะรออนุมัติ, ตรวจสอบประวัติย้อนหลัง, ตรวจสอบการเข้ากะพนักงาน
 │   │   ├── notifications.ts    # ส่ง/อ่านการแจ้งเตือน
 │   │   ├── points.ts           # บันทึกคะแนนและธุรกรรมแต้ม
 │   │   ├── refrigerator.ts     # บันทึกอุณหภูมิตู้แช่, ตั้งค่าตู้แช่
@@ -92,18 +102,22 @@ checklist-web-app/
 │   │   │   └── end-shifts/     # สรุปปิดกะที่เปิดค้างเมื่อสิ้นวัน
 │   │   ├── awaiting-assignment/# หน้ารอการจัดสรรสาขา
 │   │   ├── checklist/          # หน้าหลักพนักงานตรวจเช็คลิสต์
-│   │   ├── manager/dashboard/  # หน้าจอแดชบอร์ดผู้จัดการ/กรรมการ
+│   │   ├── guide/              # หน้าเว็บอ่านคู่มือ GUIDE.md แบบเต็มจอ
+│   │   ├── manager/            # เส้นทางสำหรับผู้บริหารและผู้จัดการ
+│   │   │   ├── dashboard/      # หน้าจอแดชบอร์ดผู้จัดการ/กรรมการ
+│   │   │   └── staff-status/   # หน้าจอตรวจสอบสถานะการเข้ากะสดของพนักงานในสาขา
 │   │   ├── position/           # หน้าเลือกตำแหน่งก่อนเริ่มงาน
+│   │   ├── readme/             # หน้าเว็บอ่านเอกสาร README.md แบบเต็มจอ
 │   │   ├── shift/              # หน้าเลือกรอบกะการทำงาน
 │   │   ├── globals.css         # กำหนดตัวแปร Theme, สี Brand และ Utility
 │   │   ├── layout.tsx          # Root Layout ครอบ AppContext และธีม
 │   │   ├── middleware.ts       # Supabase Session Cookie Refresh
-│   │   └── page.tsx            # Portal Page ประตูหลักเลือกเข้าสู่ระบบ
+│   │   └── page.tsx            # Portal Page ประตูหลักพร้อมปุ่มเปิดอ่านคู่มือและเช็คระบบ
 │   ├── components/             # React UI Components
 │   │   ├── admin/              # Dashboard แอดมิน, จัดการสาขา, งาน, สิทธิ์
 │   │   ├── auth/               # กล่องฟอร์มล็อกอิน
-│   │   ├── common/             # Reusable UI: โลโก้, ป้าย Badge, แจ้งเตือน, ธีม
-│   │   ├── manager/            # Dashboard ผู้บริหาร, คิวอนุมัติกะ, กราฟตู้แช่, ลีดเดอร์บอร์ด
+│   │   ├── common/             # Reusable UI: โลโก้, ป้าย Badge, แจ้งเตือน, ธีม, DocsModal, PortalDocsSection
+│   │   ├── manager/            # Dashboard ผู้บริหาร, ตรวจสอบสถานะเข้ากะพนักงาน (BranchStaffPresenceView), คิวอนุมัติกะ, กราฟตู้แช่, ลีดเดอร์บอร์ด
 │   │   └── staff/              # หน้าบันทึกเช็คลิสต์, บันทึกตู้เย็น, เลือกกะ
 │   ├── context/                # Client State Management (AppContext)
 │   ├── data/                   # Fallback data, Storage helpers
@@ -115,14 +129,17 @@ checklist-web-app/
 │   │   ├── AuthService.ts
 │   │   ├── BranchService.ts
 │   │   ├── ChecklistService.ts
-│   │   ├── ManagerService.ts
+│   │   ├── ManagerService.ts   # ดึงคิวอนุมัติ, บันทึกผล, และดึงสถานะเข้ากะพนักงานในสาขา
 │   │   ├── NotificationService.ts
 │   │   ├── PointService.ts
 │   │   ├── RefrigeratorService.ts
 │   │   ├── container.ts        # Service Container (Dependency Injection)
-│   │   └── types.ts            # Service Interfaces
+│   │   └── types.ts            # Service Interfaces & BranchEmployeeStatus
 │   ├── types/                  # Unified TypeScript Interfaces
-│   └── utils/                  # ยูทิลิตี้ (Cache, เข้ารหัส LocalStorage, ฟอร์แมตเวลา)
+│   └── utils/                  # ยูทิลิตี้ (Cache, เข้ารหัส LocalStorage, ฟอร์แมตเวลา, ตัวแปลง Markdown ปลอดภัย)
+├── CHANGELOGS.md               # สรุปประวัติการอัปเดตและบันทึกการเปลี่ยนแปลงทั้งหมด
+├── GUIDE.md                    # คู่มือ SOP การปฏิบัติงานตามบทบาท (Staff to Owner)
+├── README.md                   # เอกสารข้อมูลระบบและคู่มือสถาปัตยกรรมทางเทคนิค
 ├── drizzle.config.ts           # การตั้งค่า Drizzle Kit
 ├── next.config.ts              # การตั้งค่า Next.js
 ├── package.json                # รายการ Dependencies และ Scripts
@@ -264,7 +281,7 @@ curl -X GET "https://your-domain.vercel.app/api/cron/end-shifts" \
 
 ---
 
-## 📄 เอกสารคู่มือการใช้งานสำหรับบทบาทต่าง ๆ (User Guides)
+## 📄 เอกสารคู่มือและการเปลี่ยนแปลงของระบบ (Documentation & Changelogs)
 
-ดูรายละเอียดขั้นตอนการปฏิบัติงาน กฎเหล็ก และแนวทางสำหรับแต่ละตำแหน่งงานตั้งแต่พนักงานจนถึงเจ้าของกิจการได้ที่:
-👉 **[อ่านคู่มือการใช้งานฉบับสมบูรณ์ (GUIDE.md)](./GUIDE.md)**
+- 👉 **[อ่านคู่มือการใช้งานฉบับสมบูรณ์ (GUIDE.md)](./GUIDE.md)**: ขั้นตอนการปฏิบัติงาน กฎเหล็ก และแนวทางสำหรับแต่ละตำแหน่งงานตั้งแต่พนักงานจนถึงเจ้าของกิจการ
+- 👉 **[ดูบันทึกประวัติการเปลี่ยนแปลง (CHANGELOGS.md)](./CHANGELOGS.md)**: รายละเอียดการอัปเดต ฟีเจอร์ใหม่ การปรับปรุงโค้ด และประวัติคอมมิตทั้งหมดตั้งแต่จุดเริ่มต้นการพัฒนา

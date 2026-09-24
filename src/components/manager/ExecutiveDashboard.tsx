@@ -32,7 +32,8 @@ import { NavbarRefreshControl } from "../common/NavbarRefreshControl";
 import { invalidateBranchCache } from "../../utils/cache";
 import { LeaderboardWidget } from "./LeaderboardWidget";
 import { ErrorBoundary } from "../common/ErrorBoundary";
-import { ClipboardCheck, ShieldCheck, Building2, Award, Snowflake, History, CheckCircle2, AlertCircle, LogOut } from "lucide-react";
+import { ClipboardCheck, ShieldCheck, Building2, Award, Snowflake, History, CheckCircle2, AlertCircle, LogOut, Users } from "lucide-react";
+import Link from "next/link";
 import { LateReasonModal } from "../common/LateReasonModal";
 
 export type ExecutiveRole = "manager_assistant" | "manager" | "committee" | "general_manager";
@@ -736,6 +737,15 @@ export function ExecutiveDashboard({
           </div>
 
           <div className="flex items-center gap-2.5 z-10 flex-wrap sm:flex-nowrap">
+            <Link
+              href="/manager/staff-status"
+              className="px-3.5 py-2.5 bg-amber-500 hover:bg-amber-400 text-amber-950 text-xs font-bold rounded-xl shadow-xs transition-all flex items-center gap-1.5 shrink-0"
+              title="ตรวจสอบรายชื่อพนักงานในสาขา การเข้ากะ และจำนวนกะสะสม"
+            >
+              <Users size={15} />
+              <span>พนักงานในสาขา & สถานะกะ →</span>
+            </Link>
+
             {currentRole === "manager_assistant" && (
               <button
                 type="button"
