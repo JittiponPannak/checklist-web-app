@@ -1,17 +1,24 @@
 import { BrandLogo } from "../components/common/BrandLogo";
 import { ThemeToggle } from "../components/common/ThemeToggle";
+import { PortalDocsSection } from "../components/common/PortalDocsSection";
+import { parseMarkdownFile } from "../utils/markdown";
 import Link from "next/link";
-import { Users, Briefcase, ShieldCheck, ArrowRight } from "lucide-react";
+import { Users, Briefcase, ShieldCheck, ArrowRight, BookOpen, FileCode2 } from "lucide-react";
 
 export default function PortalPage() {
+  const guideData = parseMarkdownFile("GUIDE.md");
+  const readmeData = parseMarkdownFile("README.md");
+
   return (
-    <main className="min-h-screen bg-[var(--color-background)] text-[var(--color-text)] flex flex-col justify-between px-4 py-8 sm:py-14 font-sans relative">
+    <main className="min-h-screen bg-[var(--color-background)] text-[var(--color-text)] flex flex-col justify-between px-4 py-6 sm:py-10 font-sans relative">
+      {/* Theme Toggle at top right */}
       <div className="absolute top-4 right-4 sm:top-6 sm:right-6">
         <ThemeToggle />
       </div>
+
       <div className="w-full max-w-2xl mx-auto flex-1 flex flex-col justify-center">
         {/* Brand Header */}
-        <header className="mb-8 sm:mb-10 text-center flex flex-col items-center">
+        <header className="mb-6 sm:mb-8 text-center flex flex-col items-center">
           <BrandLogo size={56} showText={true} isDark={false} subtitle="ระบบตรวจเช็คลิสต์และมาตรฐานการปฏิบัติงานสาขา" />
           <h1 className="sr-only">ระบบตรวจเช็คลิสต์และกำกับดูแลสาขา Eater Egg Fresh Mart</h1>
           <p className="mt-3 text-[var(--color-text-muted)] text-sm sm:text-base font-normal max-w-md">
@@ -20,11 +27,11 @@ export default function PortalPage() {
         </header>
 
         {/* Structured Operational Gateways: Hierarchy-based (Not 3 identical cards) */}
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           {/* Primary Gateway: Floor Staff (High Velocity, 80%+ of Daily Traffic) */}
           <Link
             href="/login/staff"
-            className="group block p-6 sm:p-7 bg-[var(--color-surface)] rounded-2xl border-2 border-amber-300 hover:border-amber-400 shadow-xs hover:shadow-md transition-all cursor-pointer"
+            className="group block p-5 sm:p-7 bg-[var(--color-surface)] rounded-2xl border-2 border-amber-300 hover:border-amber-400 shadow-xs hover:shadow-md transition-all cursor-pointer"
           >
             <div className="flex items-start justify-between gap-4">
               <div className="flex items-start gap-4">
@@ -64,7 +71,7 @@ export default function PortalPage() {
           {/* Secondary Gateway: Store Management & Audit */}
           <Link
             href="/login/executive"
-            className="group block p-5 sm:p-6 bg-[var(--color-surface)] rounded-2xl border-2 border-[var(--color-border)] hover:border-[var(--color-primary)]/60 shadow-xs hover:shadow-md transition-all cursor-pointer"
+            className="group block p-4 sm:p-6 bg-[var(--color-surface)] rounded-2xl border-2 border-[var(--color-border)] hover:border-[var(--color-primary)]/60 shadow-xs hover:shadow-md transition-all cursor-pointer"
           >
             <div className="flex items-start justify-between gap-4">
               <div className="flex items-start gap-4">
@@ -93,23 +100,26 @@ export default function PortalPage() {
           </Link>
 
           {/* Tertiary Utility Row: Central Administration */}
-          <div className="pt-2 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-1 px-2">
+          <div className="pt-1 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-1 px-2">
             <span className="text-xs text-[var(--color-text-muted)] font-medium">
               ระดับศูนย์กลางองค์กร
             </span>
             <Link
               href="/admin"
-              className="inline-flex items-center gap-1.5 text-xs text-[var(--color-text-muted)] hover:text-amber-950 dark:hover:text-amber-200 font-semibold min-h-[44px] sm:min-h-[32px] px-3 py-2 sm:px-2.5 sm:py-1 rounded-xl hover:bg-[var(--color-surface-2)] transition-colors focus-visible:outline-2 focus-visible:outline-amber-500"
+              className="inline-flex items-center gap-1.5 text-xs text-[var(--color-text-muted)] hover:text-amber-950 dark:hover:text-amber-200 font-semibold min-h-[36px] sm:min-h-[32px] px-3 py-1.5 sm:px-2.5 sm:py-1 rounded-xl hover:bg-[var(--color-surface-2)] transition-colors focus-visible:outline-2 focus-visible:outline-amber-500"
             >
               <ShieldCheck size={14} className="text-amber-700" />
               <span>เข้าสู่ระบบผู้ดูแลระบบส่วนกลาง (Central Admin) →</span>
             </Link>
           </div>
         </div>
+
+        {/* Integrated Documentation & Operating Guides Section */}
+        <PortalDocsSection guideData={guideData} readmeData={readmeData} />
       </div>
 
       <footer className="mt-8 text-center text-xs text-[var(--color-text-muted)] font-medium">
-        Eater Egg Fresh Mart • Checklist System
+        Eater Egg Fresh Mart • Operations, SOP & Audit Portal
       </footer>
     </main>
   );
