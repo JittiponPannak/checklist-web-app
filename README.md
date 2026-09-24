@@ -1,116 +1,270 @@
-# Eater Egg Fresh Mart - Operations & Audit Portal
-
-A comprehensive digital checklist, SOP (Standard Operating Procedure), gamification, and branch audit platform built for **Eater Egg Fresh Mart**. Developed with Next.js App Router, Supabase, and Drizzle ORM, this platform replaces traditional paper logs with a real-time, role-based operational workflow.
-
----
-
-## 🚀 Key Features
-
-### 1. 📋 Digital Shift Checklists & SOP
-- **Shift Routines**: Tailored checklist templates for Morning (`กะเช้า`), Afternoon (`กะบ่าย`), and Full-day shifts.
-- **Role-specific Duties**: Custom tasks per staff role (Cashier, Stock/Merchandiser, QC, Assistant Manager).
-- **Automated Deadline & Lateness Tracking**: Evaluates checklist timestamps against task time windows, highlighting delayed tasks with a red `(ล่าช้า)` (Late) badge.
-- **User-Isolated State**: Clean, per-user state management ensuring separate shift sessions and checklists when switching accounts on shared devices.
-
-### 2. 🔔 Realtime Notification System
-- **Supabase Realtime Push**: Instant Postgres changes subscription (`notifications` table) updating bell counts and alerts without manual refreshes.
-- **Shift Lifecycle Alerts**:
-  - **Shift Started**: Alerts employee upon commencing work.
-  - **Checklist 100% Completed**: Reminds employee to submit and alerts branch management.
-  - **Shift Ended & Submitted**: Dispatches submission report to managers.
-  - **Assistant Manager Verification**: Notifies employee of preliminary review and routes task to the **Store Manager** for final sign-off.
-  - **Manager Final Approval**: Rewards points and alerts employee.
-
-### 3. 🎮 Gamification: Points, Streaks & Leaderboards
-- **Points Economy**: Earn points for timely shift completions, zero-late checklist items, and streak milestones.
-- **Daily Streaks**: Maintains streak status (Perfect vs. Flawed) and awards tier badges.
-- **Branch & Global Leaderboard**: Real-time rank tracking to motivate staff engagement.
-
-### 4. ❄️ Refrigerator & Cold Chain Temperature Control
-- Dedicated temperature logging for chillers and freezers (0°C – 4°C standard).
-- Visual warning indicators and alerts for temperature deviations.
-
-### 5. 🛡️ Executive, Manager & Central Audit Portal
-- **Role Hierarchy**:
-  - **Employee**: Completes daily assigned routines.
-  - **Assistant Manager (`manager_assistant`)**: Preliminary task verification.
-  - **Store Manager (`manager`)**: Final approval and branch oversight.
-  - **General Manager / Committee / Central Admin**: Multi-branch audit, user management, branch creation, task assignment, and compliance reporting.
-- **Deep Audit History & Calendar Selection**: Rolling 14-day cached operational history paired with an arbitrary date-picker for database audit queries.
-- **Strict Thailand Timezone Enforcement**: Bounded to `Asia/Bangkok` (UTC+7) across all shift evaluations.
+# Eater Egg Fresh Mart - Operations, Checklist & Audit Portal
+> **ระบบดิจิทัลบริหารจัดการเช็คลิสต์ SOP, ควบคุมอุณหภูมิตู้แช่, Gamification และตรวจสอบมาตรฐานสาขา**
 
 ---
 
-## 🛠 Tech Stack
+## 📌 ภาพรวมโครงการ (Project Overview)
 
-- **Framework**: [Next.js](https://nextjs.org/) (App Router, Turbopack)
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS & Modern Design Tokens (High-contrast, accessible UI)
-- **Database**: PostgreSQL (via Supabase)
-- **ORM**: [Drizzle ORM](https://orm.drizzle.team/)
-- **Realtime**: `@supabase/ssr` / `@supabase/supabase-js` Channel Subscriptions
-- **Architecture**: Dependency Injection (DI) service container pattern (`src/services/container.ts`)
+**Eater Egg Fresh Mart Portal** เป็นเว็บแอปพลิเคชันระดับองค์กรที่พัฒนาขึ้นเพื่อยกระดับการปฏิบัติงานของร้านสะดวกซื้อและซูเปอร์มาร์เก็ตอาหารสด (Fresh Mart) แทนที่การจดบันทึกลงบนกระดาษแบบดั้งเดิมด้วยระบบดิจิทัลแบบเรียลไทม์ 
+
+ระบบออกแบบมาเพื่อรองรับโครงสร้างการทำงานของธุรกิจค้าปลีกในประเทศไทยโดยเฉพาะ เช่น โครงสร้างกะการทำงาน (กะเช้า, กะบ่าย, กะควบ), การตรวจนับเงินทอน (Register Float), การส่งมอบกะงาน (Shift Handover), การตรวจเช็คอุณหภูมิห่วงโซ่ความเย็น (Cold Chain), ตลอดจนระบบลงนามอนุมัติแบบสองระดับ (ผู้ช่วยผู้จัดการร้านตรวจรับรองเบื้องต้น และผู้จัดการร้านอนุมัติขั้นสุดท้าย)
 
 ---
 
-## 📁 Project Architecture
+## 🚀 ฟังก์ชันการทำงานหลัก (Key Features)
+
+### 1. 📋 ดิจิทัลเช็คลิสต์และการควบคุม SOP ประจำกะ (Shift Checklists & SOP)
+- **แยกตามรอบกะการทำงาน**: รองรับกะเช้า (`morning`), กะบ่าย (`afternoon`) และกะควบตลอดวัน (`morning_afternoon` หรือ `both`)
+- **แยกหน้าที่ตามตำแหน่งงาน**: รายการเช็คลิสต์เฉพาะสำหรับ แคชเชียร์ (Cashier), พนักงานสต็อก/จัดเรียง (Stock/Merchandiser) และผู้ช่วยผู้จัดการร้าน (Assistant Manager)
+- **ตรวจจับความล่าช้าอัตโนมัติ (Automated Lateness Detection)**: ตรวจสอบเวลาที่ทำเครื่องหมายเสร็จสิ้นเทียบกับช่วงเวลาที่กำหนดของงาน (Time Window) หากเกินเวลาจะแสดงป้าย `(ล่าช้า)` สีแดง และเปิดหน้าต่างให้ระบุสาเหตุ
+- **กฎเหล็กการปิดกะ 100%**: พนักงานต้องดำเนินการเช็คลิสต์ให้ครบทุกข้อก่อนส่งมอบงานปิดกะ
+- **การแยกสถานะต่อผู้ใช้อย่างปลอดภัย (User-Isolated State)**: รองรับการสลับบัญชีผู้ใช้บนอุปกรณ์แท็บเล็ต/สมาร์ตโฟนส่วนกลางของสาขา ข้อมูลงานไม่ปะปนกัน
+
+### 2. ❄️ การควบคุมอุณหภูมิตู้แช่และห่วงโซ่ความเย็น (Refrigerator & Cold Chain Control)
+- บันทึกค่าอุณหภูมิตู้แช่เย็น (Chiller: มาตรฐาน 0°C – 4°C) และตู้แช่แข็ง (Freezer)
+- แจ้งเตือนทันทีเมื่ออุณหภูมิออกนอกเกณฑ์มาตรฐาน (Out of range warning)
+- ผู้บริหารสามารถติดตามสถานะอุณหภูมิตู้แช่ทุกตู้ของสาขาได้แบบเรียลไทม์
+
+### 3. 🔔 ระบบแจ้งเตือนเรียลไทม์ (Supabase Realtime Notifications)
+- เชื่อมต่อผ่าน Supabase Realtime Channels ไปยังตาราง `notifications`
+- อัปเดตตัวเลขแจ้งเตือนที่กระดิ่งทันทีโดยไม่ต้องกดรีเฟรชหน้าจอ
+- แจ้งเตือนตลอดวงจรการทำงาน: เมื่อเริ่มกะ, เมื่อทำเช็คลิสต์ครบ 100%, เมื่อส่งมอบกะ, เมื่อผู้ช่วยผู้จัดการตรวจรับรอง และเมื่อผู้จัดการอนุมัติสำเร็จ
+
+### 4. 🎮 ระบบสร้างแรงจูงใจ (Gamification, Points & Streaks)
+- **ระบบคะแนน (Points Economy)**: รับคะแนนเมื่อปิดกะตรงเวลา, ไม่ทำงานล่าช้า, หรือได้รับคะแนนพิเศษจากผู้จัดการ
+- **สถิติความสม่ำเสมอ (Daily Streaks)**: บันทึกวันทำงานสมบูรณ์แบบต่อเนื่อง (Perfect Streak vs Flawed Streak)
+- **ลีดเดอร์บอร์ด (Leaderboard)**: จัดอันดับคะแนนภายในสาขาและภาพรวม เพื่อสร้างแรงจูงใจในการรักษามาตรฐานงาน
+
+### 5. 🛡️ พอร์ทัลกำกับดูแลสำหรับผู้บริหารและผู้ตรวจการ (Executive & Audit Portal)
+- แบ่งระดับการเข้าถึงตามสิทธิ์:
+  - **Employee**: ปฏิบัติงานและบันทึกเช็คลิสต์
+  - **Assistant Manager**: ปฏิบัติงานเช็คลิสต์ตนเอง + ตรวจสอบรับรองเบื้องต้น
+  - **Store Manager**: ตรวจสอบรายละเอียดงานของพนักงาน, ให้คะแนนพิเศษ, อนุมัติขั้นสุดท้าย
+  - **General Manager / Committee / Owner**: ติดตามสรุปทุกสาขา, เปรียบเทียบ KPI, ดูอัตราการเสร็จสิ้นงาน (Completion Rate)
+  - **Central Admin**: จัดการข้อมูลสาขา, จัดการงานแม่แบบ (Master Tasks), กำหนดสิทธิ์และบัญชีพนักงาน
+- **ประวัติการทำงานย้อนหลัง (Audit History)**: ดูประวัติย้อนหลัง 14 วันผ่านระบบแคช และสามารถเลือกค้นหาย้อนหลังวันใดก็ได้ผ่านปฏิทิน (Date Picker)
+- **ล็อกเวลามาตรฐานประเทศไทย**: ผูกติดกับ Timezone `Asia/Bangkok` (UTC+7) เสมอ
+
+### 6. ⏰ ระบบงานอัตโนมัติตามกำหนดเวลา (Vercel Cron Jobs)
+- **ปิดกะค้างอัตโนมัติ (Auto End Shifts)**: ทำงานทุกวันเวลา 23:55 น. (เวลาไทย) เพื่อปิดกะพนักงานที่ลืมกดปิดกะ
+- **ทำความสะอาดข้อมูลประวัติ (Data Cleanup)**: ทำงานทุกวันอาทิตย์เวลา 23:50 น. (เวลาไทย) เพื่อลบข้อมูลประวัติที่เก่ากว่า 14 วัน รักษาประสิทธิภาพฐานข้อมูล
+
+---
+
+## 🛠 เทคโนโลยีที่ใช้งาน (Tech Stack)
+
+| ส่วนประกอบ | เทคโนโลยีที่เลือกใช้ | รายละเอียด |
+| :--- | :--- | :--- |
+| **Framework** | [Next.js](https://nextjs.org/) (v16.3.4 App Router) | สถาปัตยกรรม Server Components, Server Actions และ Client Components |
+| **Language** | TypeScript (v5) | ปลอดภัยด้าน Type ตลอดทั้งแอปพลิเคชัน |
+| **Styling** | [Tailwind CSS](https://tailwindcss.com/) (v4) | CSS ตัวแปรสี Brand Token ระบบสีอบอุ่น พร้อมรองรับ Dark/Light Mode |
+| **Database** | PostgreSQL (Supabase) | รองรับ Transaction Pooler, RLS, และ Supabase Realtime |
+| **ORM** | [Drizzle ORM](https://orm.drizzle.team/) (v1.0.0-rc.4) | Type-safe ORM พร้อม Drizzle Kit สำหรับจัดการ Schema Migrations |
+| **Auth & Client** | `@supabase/ssr` & `@supabase/supabase-js` | Session Cookie Management และ Realtime Subscription |
+| **Architecture** | Dependency Injection (DI) Service Container | รวม Business Logic ไว้ที่ `src/services/` เพื่อความสะดวกในการทดสอบและบำรุงรักษา |
+| **Background Cron**| Vercel Cron Jobs | ทำงานเบื้องหลังผ่าน Serverless Route Handlers |
+
+---
+
+## 📁 โครงสร้างโปรเจกต์ (Project Architecture)
 
 ```text
-src/
-├── actions/        # Next.js Server Actions (Auth, Checklist, Branch, Notifications, Points)
-├── app/            # Next.js App Router (pages & route handlers)
-├── components/     # UI Components
-│   ├── auth/       # Login & Registration flows
-│   ├── common/     # Reusable components (Notifications, Badges, Brand, Modals)
-│   ├── manager/    # Manager & Executive approval dashboards
-│   └── staff/      # Shift selection & Checklist pages
-├── context/        # AppContext (user session, active shifts, client state)
-├── db/             # Drizzle ORM schema, migrations, and Supabase client
-├── services/       # Core Business Logic Layer (DI Container)
-│   ├── AuthService.ts
-│   ├── BranchService.ts
-│   ├── ChecklistService.ts
-│   ├── ManagerService.ts
-│   ├── NotificationService.ts
-│   ├── PointService.ts
-│   └── RefrigeratorService.ts
-└── types/          # Unified TypeScript interfaces and models
+checklist-web-app/
+├── drizzle/                    # ไฟล์ SQL Migrations ที่สร้างโดย Drizzle Kit
+├── public/                     # Static assets (ไอคอน, รูปภาพโลโก้)
+├── src/
+│   ├── actions/                # Next.js Server Actions (เรียกใช้ Services)
+│   │   ├── auth.ts             # จัดการยืนยันตัวตน, ดึงรายชื่อผู้ใช้
+│   │   ├── branch.ts           # จัดการสาขา, มอบหมายพนักงานและงาน
+│   │   ├── checklist.ts        # จัดการ Shift Session, บันทึกการติ๊กงาน, รีเซ็ตข้อมูล
+│   │   ├── manager.ts          # ดึงข้อมูลรอบกะรออนุมัติ, ตรวจสอบประวัติย้อนหลัง
+│   │   ├── notifications.ts    # ส่ง/อ่านการแจ้งเตือน
+│   │   ├── points.ts           # บันทึกคะแนนและธุรกรรมแต้ม
+│   │   ├── refrigerator.ts     # บันทึกอุณหภูมิตู้แช่, ตั้งค่าตู้แช่
+│   │   └── task.ts             # จัดการแม่แบบงาน (Master Tasks)
+│   ├── app/                    # Next.js App Router (เส้นทางและหน้าจอ)
+│   │   ├── (auth)/login/       # หน้าเข้าสู่ระบบ
+│   │   │   ├── executive/      # เข้าสู่ระบบผู้บริหาร/ผู้จัดการ
+│   │   │   └── staff/          # เข้าสู่ระบบพนักงานสาขา
+│   │   ├── admin/              # หน้าจอ Central Admin
+│   │   ├── api/cron/           # Vercel Cron Job Endpoints
+│   │   │   ├── cleanup-data/   # ลบข้อมูลเก่าเกิน 14 วัน
+│   │   │   └── end-shifts/     # สรุปปิดกะที่เปิดค้างเมื่อสิ้นวัน
+│   │   ├── awaiting-assignment/# หน้ารอการจัดสรรสาขา
+│   │   ├── checklist/          # หน้าหลักพนักงานตรวจเช็คลิสต์
+│   │   ├── manager/dashboard/  # หน้าจอแดชบอร์ดผู้จัดการ/กรรมการ
+│   │   ├── position/           # หน้าเลือกตำแหน่งก่อนเริ่มงาน
+│   │   ├── shift/              # หน้าเลือกรอบกะการทำงาน
+│   │   ├── globals.css         # กำหนดตัวแปร Theme, สี Brand และ Utility
+│   │   ├── layout.tsx          # Root Layout ครอบ AppContext และธีม
+│   │   ├── middleware.ts       # Supabase Session Cookie Refresh
+│   │   └── page.tsx            # Portal Page ประตูหลักเลือกเข้าสู่ระบบ
+│   ├── components/             # React UI Components
+│   │   ├── admin/              # Dashboard แอดมิน, จัดการสาขา, งาน, สิทธิ์
+│   │   ├── auth/               # กล่องฟอร์มล็อกอิน
+│   │   ├── common/             # Reusable UI: โลโก้, ป้าย Badge, แจ้งเตือน, ธีม
+│   │   ├── manager/            # Dashboard ผู้บริหาร, คิวอนุมัติกะ, กราฟตู้แช่, ลีดเดอร์บอร์ด
+│   │   └── staff/              # หน้าบันทึกเช็คลิสต์, บันทึกตู้เย็น, เลือกกะ
+│   ├── context/                # Client State Management (AppContext)
+│   ├── data/                   # Fallback data, Storage helpers
+│   ├── db/                     # Database Schema & Client
+│   │   ├── index.ts            # การเชื่อมต่อ Drizzle กับ PostgreSQL Pooler
+│   │   ├── schema.ts           # นิยามตารางฐานข้อมูลและ Enums ทั้งหมด
+│   │   └── supabase.ts         # Supabase Client สำหรับฝั่งเซิร์ฟเวอร์และไคลเอนต์
+│   ├── services/               # Core Business Logic Layer (Clean Architecture)
+│   │   ├── AuthService.ts
+│   │   ├── BranchService.ts
+│   │   ├── ChecklistService.ts
+│   │   ├── ManagerService.ts
+│   │   ├── NotificationService.ts
+│   │   ├── PointService.ts
+│   │   ├── RefrigeratorService.ts
+│   │   ├── container.ts        # Service Container (Dependency Injection)
+│   │   └── types.ts            # Service Interfaces
+│   ├── types/                  # Unified TypeScript Interfaces
+│   └── utils/                  # ยูทิลิตี้ (Cache, เข้ารหัส LocalStorage, ฟอร์แมตเวลา)
+├── drizzle.config.ts           # การตั้งค่า Drizzle Kit
+├── next.config.ts              # การตั้งค่า Next.js
+├── package.json                # รายการ Dependencies และ Scripts
+├── tsconfig.json               # การตั้งค่า TypeScript
+└── vercel.json                 # กำหนดค่า Vercel Cron Jobs
 ```
 
 ---
 
-## 📦 Getting Started
+## ⚙️ ข้อกำหนดและการติดตั้ง (Getting Started)
 
-### 1. Environment Setup
+### 1. ข้อกำหนดขั้นต่ำของระบบ (Prerequisites)
+- **Node.js**: เวอร์ชัน 20.x ขึ้นไป (แนะนำ LTS)
+- **Package Manager**: `npm` เวอร์ชัน 10.x ขึ้นไป
+- **ฐานข้อมูล PostgreSQL**: บริการบน [Supabase](https://supabase.com) พร้อมเปิดใช้งาน Transaction Pooler (Port 6543)
 
-Create a `.env` file in the root directory:
+### 2. การตั้งค่าตัวแปรสภาพแวดล้อม (Environment Variables)
+สร้างไฟล์ `.env` ที่โฟลเดอร์ราก (Root Directory) ของโปรเจกต์:
 
 ```env
-# Database (PostgreSQL / Supabase Transaction Pooler)
-DATABASE_URL=postgresql://postgres:[PASSWORD]@[HOST]:6543/postgres?sslmode=require
+# 1. การเชื่อมต่อฐานข้อมูล PostgreSQL ผ่าน Supabase Transaction Pooler (สำหรับ Drizzle ORM)
+DATABASE_URL=postgresql://postgres.[PROJECT-REF]:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:6543/postgres?sslmode=require
 
-# Supabase Client & Realtime
+# 2. Supabase API Configuration (สำหรับ Client & Realtime)
 NEXT_PUBLIC_SUPABASE_URL=https://[PROJECT-REF].supabase.co
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=[ANON-KEY]
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=[YOUR-ANON-PUBLIC-KEY]
+
+# 3. ความปลอดภัยสำหรับ Cron Jobs (Vercel Cron Secret)
+CRON_SECRET=your_super_secret_cron_token_here
 ```
 
-### 2. Install Dependencies
-
+### 3. การติดตั้ง Dependencies
 ```bash
 npm install
 ```
 
-### 3. Run Development Server
-
+### 4. การรันในโหมดพัฒนา (Development Mode)
 ```bash
 npm run dev
 ```
+เปิดเบราว์เซอร์ไปที่ [http://localhost:3000](http://localhost:3000)
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+### 5. การตรวจสอบความถูกต้องของโค้ด (Linting & Type Check)
+```bash
+# ตรวจสอบ TypeScript Type Safety
+npx tsc --noEmit
 
-### 4. Build for Production
+# ตรวจสอบ Lint ตามมาตรฐาน ESLint
+npm run lint
+```
 
+### 6. การ Build สำหรับ Production
 ```bash
 npm run build
 npm run start
 ```
+
+---
+
+## 🛠️ คู่มือการบำรุงรักษาและดูแลระบบ (Maintenance Guide)
+
+### 1. การแก้ไขและการอัปเดตโครงสร้างฐานข้อมูล (Database Migrations)
+โครงการใช้ **Drizzle ORM** ในการควบคุมโครงสร้างฐานข้อมูล ทุกครั้งที่มีการเปลี่ยนแปลงฟิลด์หรือตาราง:
+
+1. **แก้ไขไฟล์ Schema**: เข้าไปแก้ไขที่ `src/db/schema.ts`
+2. **สร้าง Migration File (ทางเลือกที่ 1)**:
+   ```bash
+   npx drizzle-kit generate
+   ```
+   ระบบจะสร้างไฟล์ SQL ใหม่อยู่ในโฟลเดอร์ `drizzle/`
+3. **พุชการเปลี่ยนแปลงขึ้นฐานข้อมูล Supabase โดยตรง (ทางเลือกที่ 2 - แนะนำสำหรับ Dev/Staging)**:
+   ```bash
+   npx drizzle-kit push
+   ```
+4. **เปิดดูตารางฐานข้อมูลผ่านเว็บ (Drizzle Studio)**:
+   ```bash
+   npx drizzle-kit studio
+   ```
+
+> [!WARNING]
+> ห้ามแก้ไขไฟล์ SQL ใน `drizzle/` โดยตรงโดยไม่ผ่านการ Generate เพื่อป้องกันปัญหา Migration Drift
+
+---
+
+### 2. การดูแลรักษาระบบงานอัตโนมัติ (Vercel Cron Jobs)
+ไฟล์ตั้งค่าอยู่ที่ `vercel.json`:
+```json
+{
+  "crons": [
+    {
+      "path": "/api/cron/end-shifts",
+      "schedule": "55 16 * * *"
+    },
+    {
+      "path": "/api/cron/cleanup-data",
+      "schedule": "50 16 * * 0"
+    }
+  ]
+}
+```
+
+#### การแปลงเวลา Timezone สำหรับ Cron
+Vercel Cron ทำงานบนมาตรฐานเวลา **UTC (Coordinated Universal Time)** ในขณะที่ประเทศไทยคือ **UTC+7 (Asia/Bangkok)**:
+- **Auto End Shifts (`55 16 * * *`)**:
+  - เวลา UTC: 16:55 น.
+  - เวลาไทย: $16:55 + 7:00 = 23:55$ น. (ห้าทุ่มห้าสิบห้านาทีของทุกคืน)
+  - หน้าที่: ตรวจหากะงานประจำวันที่ยังเปิดค้างอยู่ และทำการบันทึกปิดกะให้อัตโนมัติ ป้องกันข้อมูลค้างข้ามวัน
+- **Cleanup Old Data (`50 16 * * 0`)**:
+  - เวลา UTC: 16:50 น. วันอาทิตย์ (0)
+  - เวลาไทย: $16:50 + 7:00 = 23:50$ น. วันอาทิตย์
+  - หน้าที่: ลบข้อมูลประวัติงานที่อายุเกิน 14 วัน เพื่อรักษาขนาดฐานข้อมูล
+
+#### การทดสอบเรียก Cron Endpoint ด้วยตนเอง
+หากต้องการทดสอบการทำงานของ Cron แบบ Manual:
+```bash
+curl -X GET "https://your-domain.vercel.app/api/cron/end-shifts" \
+  -H "Authorization: Bearer your_super_secret_cron_token_here"
+```
+
+---
+
+### 3. การจัดการระบบแคชและความปลอดภัยของข้อมูลในเครื่อง (Cache & Client Storage)
+- **การเข้ารหัสข้อมูลในเบราว์เซอร์**: ข้อมูล Session, รหัสสาขา และสถานะกะที่เก็บใน `localStorage` จะถูกเข้ารหัสผ่าน `src/utils/crypto.ts` เพื่อป้องกันการเปิดดูข้อมูลโดยตรง
+- **การล้างแคชสาขา**: เมื่อผู้ดูแลระบบเพิ่มสาขาใหม่หรือมอบหมายพนักงานใหม่ ระบบจะเรียก `invalidateBranchCache()` ใน `src/utils/cache.ts` เพื่อดึงข้อมูลใหม่จากฐานข้อมูลทันที
+- **ปุ่มรีเฟรชข้อมูลใน Navbar**: ในหน้าจอผู้จัดการและแอดมิน มีปุ่มรีเฟรชสองระดับ:
+  - **Quick Refresh**: โหลดข้อมูลจากหน่วยความจำแคช
+  - **Force DB Refresh**: บังคับดึงข้อมูลสดตรงจาก Supabase ทันที
+
+---
+
+### 4. การจัดการกรณีเกิดปัญหาและการแก้ไขเบื้องต้น (Troubleshooting)
+
+| อาการที่พบ | สาเหตุที่เป็นไปได้ | แนวทางแก้ไข |
+| :--- | :--- | :--- |
+| **ตัวเลขแจ้งเตือนกระดิ่งไม่อัปเดตแบบ Realtime** | การเชื่อมต่อ Supabase Realtime หลุด หรือยังไม่ได้เปิด Realtime บนตาราง `notifications` | 1. ตรวจสอบใน Supabase Dashboard -> Database -> Replication ว่าเปิดการส่งต่อข้อมูลตาราง `notifications` แล้วหรือไม่<br>2. ตรวจสอบ `NEXT_PUBLIC_SUPABASE_URL` และ Key ใน `.env` |
+| **บันทึกงานแล้วเวลาไม่ตรงกับเวลาจริง** | เซิร์ฟเวอร์อ่านค่าเวลาเป็น UTC โดยไม่ได้แปลงเป็นเวลาไทย | ฟังก์ชันใน `src/utils/` ได้รับการตั้งค่าให้อ้างอิงเวลา `Asia/Bangkok` ตรวจสอบว่าไม่มีการแปลง Date ไปเป็นสตริงแบบไม่ระบุ Timezone |
+| **พนักงานล็อกอินแล้วไม่เห็นรายการงาน** | ยังไม่มีการมอบหมายงาน (Assign Tasks) ให้กับสาขานั้น | ให้ Central Admin เข้าไปที่ `/admin` -> แท็บ "สาขา" -> เลือกสาขาที่ต้องการ -> กด "จัดการงานที่ต้องทำ" แล้วเลือกรายการงานที่ต้องการให้สาขาทำ |
+| **พนักงานสลับเครื่องแล้วข้อมูลงานเก่าค้าง** | แคชในเบราว์เซอร์ไม่ถูกลบเมื่อออกจากระบบ | กดปุ่ม "ออกจากระบบ" (Logout) ทุกครั้ง ระบบจะล้างกุญแจ `shift_session` และแคชส่วนบุคคลออกทันที |
+
+---
+
+## 📄 เอกสารคู่มือการใช้งานสำหรับบทบาทต่าง ๆ (User Guides)
+
+ดูรายละเอียดขั้นตอนการปฏิบัติงาน กฎเหล็ก และแนวทางสำหรับแต่ละตำแหน่งงานตั้งแต่พนักงานจนถึงเจ้าของกิจการได้ที่:
+👉 **[อ่านคู่มือการใช้งานฉบับสมบูรณ์ (GUIDE.md)](./GUIDE.md)**
