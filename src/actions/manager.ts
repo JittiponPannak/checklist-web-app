@@ -32,6 +32,7 @@ export async function getHistoryShiftSessionsAction(
 export async function approveShiftSessionAction(params: {
   shiftSessionId: string;
   role: "manager" | "manager_assistant" | "committee" | "general_manager" | Role;
+  isException?: boolean;
 }): Promise<{ success: boolean; error?: string }> {
   const services = getServices();
   return await services.manager.approveShiftSession(params);
@@ -46,5 +47,12 @@ export async function getBranchStaffStatusAction(branchId?: string): Promise<{
 }> {
   const services = getServices();
   return await services.manager.getBranchStaffStatus(branchId);
+}
+
+export async function processShiftAttendanceAlertsAction(params?: {
+  dateStr?: string;
+}) {
+  const services = getServices();
+  return await services.manager.processShiftAttendanceAlerts(params);
 }
 

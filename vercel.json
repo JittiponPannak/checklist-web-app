@@ -11,6 +11,10 @@
     {
       "path": "/api/cron/daily-refrigerators",
       "schedule": "5 17 * * *"
+    },
+    {
+      "path": "/api/cron/shift-alerts",
+      "schedule": "50 16 * * *"
     }
   ]
 }

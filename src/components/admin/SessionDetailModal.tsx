@@ -1,8 +1,9 @@
+import { useState } from "react";
 import { ShiftSession } from "../../types";
 import { fmtDate, fmtTime } from "../../data/storage";
 import { Badge, Divider, getShiftBadge } from "../common/Badge";
 import { useModalFocusTrap } from "../common/ModalFocusTrap";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, ShieldCheck } from "lucide-react";
 
 export function SessionDetailModal({
   session,
@@ -16,9 +17,10 @@ export function SessionDetailModal({
   onClose: () => void;
   canApprove?: boolean;
   isApproved?: boolean;
-  onApprove?: (sessionId: string) => void;
+  onApprove?: (sessionId: string, isException?: boolean) => void;
   approveRoleTitle?: string;
 }) {
+  const [showApprovalPrompt, setShowApprovalPrompt] = useState(false);
   const { dialogRef, handleKeyDown } = useModalFocusTrap(Boolean(session), onClose);
 
   if (!session) return null;
@@ -213,7 +215,7 @@ export function SessionDetailModal({
           <div className="mt-5 pt-4 border-t border-[var(--color-border)]">
             <button
               type="button"
-              onClick={() => onApprove(session.id)}
+              onClick={() => setShowApprovalPrompt(true)}
               className="w-full min-h-[44px] py-3 sm:py-2.5 px-4 bg-[var(--color-brown)] hover:bg-[var(--color-brown-light)] text-amber-100 rounded-xl text-xs sm:text-sm font-bold transition-all shadow-sm cursor-pointer flex items-center justify-center gap-2"
             >
               <span>รับรองผลการตรวจงาน ({approveRoleTitle})</span>
@@ -224,6 +226,90 @@ export function SessionDetailModal({
           </div>
         )}
       </div>
+
+      {/* ─── Approval Prompt Modal (Standard vs Exception) ─── */}
+      {showApprovalPrompt && (
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-[60] px-4 animate-in fade-in duration-150"
+          onClick={() => setShowApprovalPrompt(false)}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="approval-prompt-title"
+            className="bg-[var(--color-surface)] border-2 border-[var(--color-border)] rounded-2xl p-5 sm:p-6 w-full max-w-md shadow-2xl space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-950/80 border border-amber-300 dark:border-amber-800 text-amber-800 dark:text-amber-200 flex items-center justify-center shrink-0">
+                <ShieldCheck size={22} />
+              </div>
+              <div>
+                <h3 id="approval-prompt-title" className="text-base font-bold text-[var(--color-text)]">
+                  เลือกรูปแบบการอนุมัติกะงาน ({approveRoleTitle})
+                </h3>
+                <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
+                  พนักงาน: <span className="font-semibold text-[var(--color-text)]">{session.userName}</span>
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-2.5 pt-1">
+              {/* Option 1: Standard Approval */}
+              <button
+                type="button"
+                onClick={() => {
+                  setShowApprovalPrompt(false);
+                  onApprove?.(session.id, false);
+                }}
+                className="w-full text-left p-3.5 rounded-xl border border-[var(--color-border)] hover:border-amber-500 bg-[var(--color-surface-2)] hover:bg-amber-500/5 transition-all cursor-pointer group"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-[var(--color-text)] group-hover:text-amber-600 flex items-center gap-1.5">
+                    <span>✓ อนุมัติตามปกติ (Standard Approval)</span>
+                  </span>
+                  <span className="text-[10px] font-mono text-[var(--color-text-muted)]">เกณฑ์ปกติ</span>
+                </div>
+                <p className="text-[11px] text-[var(--color-text-muted)] mt-1">
+                  คำนวณคะแนนตามผลการตรวจจริง (หากมีรายการล่าช้า สตรีคจะถูกรีเซ็ตเป็น 0)
+                </p>
+              </button>
+
+              {/* Option 2: Exception Approval (อนุโลม) */}
+              <button
+                type="button"
+                onClick={() => {
+                  setShowApprovalPrompt(false);
+                  onApprove?.(session.id, true);
+                }}
+                className="w-full text-left p-3.5 rounded-xl border-2 border-amber-500/70 hover:border-amber-500 bg-amber-500/10 hover:bg-amber-500/15 transition-all cursor-pointer group shadow-xs"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-extrabold text-amber-950 dark:text-amber-200 flex items-center gap-1.5">
+                    <span>🛡️ อนุมัติแบบอนุโลม (Exception Approval)</span>
+                  </span>
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500 text-amber-950">
+                    รักษาสตรีค
+                  </span>
+                </div>
+                <p className="text-[11px] text-amber-900 dark:text-amber-300 mt-1 leading-relaxed">
+                  ให้สิทธิประโยชน์รักษาสตรีคต่อเนื่อง โดยปรับสถานะเป็น <strong className="font-bold underline">Flawed (มีข้อบกพร่อง/อนุโลม)</strong> แทนที่จะถูกตัดสตรีคเป็น 0
+                </p>
+              </button>
+            </div>
+
+            <div className="pt-2 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setShowApprovalPrompt(false)}
+                className="px-4 py-2 rounded-xl border border-[var(--color-border)] text-xs font-bold text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors cursor-pointer"
+              >
+                ยกเลิก
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

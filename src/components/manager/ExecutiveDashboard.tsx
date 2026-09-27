@@ -456,7 +456,11 @@ export function ExecutiveDashboard({
     setTimeout(() => setActionFeedback(null), 3500);
   }
 
-  async function handleApproveSession(sessionId: string, type: "assistant" | "manager") {
+  async function handleApproveSession(
+    sessionId: string,
+    type: "assistant" | "manager",
+    isException?: boolean
+  ) {
     // Check if target session is from assistant manager
     const target = sessions.find((s) => s.id === sessionId);
     const isAssistantSession =
@@ -491,15 +495,17 @@ export function ExecutiveDashboard({
       const res = await approveShiftSessionAction({
         shiftSessionId: sessionId,
         role: roleForDb,
+        isException: Boolean(isException),
       });
 
       if (res.success) {
+        const exceptionNotice = isException ? " (แบบอนุโลม / Exception: สตรีคจะคงอยู่เป็นสถานะ Flawed)" : "";
         showToast(
           type === "assistant"
-            ? "บันทึกการรับรองกะโดยผู้ช่วยผู้จัดการลงฐานข้อมูลเรียบร้อยแล้ว ✓"
+            ? `บันทึกการรับรองกะโดยผู้ช่วยผู้จัดการลงฐานข้อมูลเรียบร้อยแล้ว${exceptionNotice} ✓`
             : (currentRole === "committee" || currentRole === "general_manager")
-              ? `รับรองผลการตรวจงานโดย${roleConfig.title}ลงฐานข้อมูลเรียบร้อยแล้ว ✓`
-              : "อนุมัติกะโดยผู้จัดการร้านลงฐานข้อมูลเรียบร้อยแล้ว ✓"
+              ? `รับรองผลการตรวจงานโดย${roleConfig.title}ลงฐานข้อมูลเรียบร้อยแล้ว${exceptionNotice} ✓`
+              : `อนุมัติกะโดยผู้จัดการร้านลงฐานข้อมูลเรียบร้อยแล้ว${exceptionNotice} ✓`
         );
         await loadDbSessions();
       } else {
@@ -2213,10 +2219,11 @@ export function ExecutiveDashboard({
             canApprove={canApprove}
             isApproved={isApproved}
             approveRoleTitle={approveTitle}
-            onApprove={(sessId) => {
+            onApprove={(sessId, isException) => {
               handleApproveSession(
                 sessId,
-                isAssistantSess ? "manager" : currentRole === "manager_assistant" ? "assistant" : "manager"
+                isAssistantSess ? "manager" : currentRole === "manager_assistant" ? "assistant" : "manager",
+                isException
               );
             }}
           />

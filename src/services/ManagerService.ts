@@ -334,9 +334,10 @@ export class ManagerService implements IManagerService {
   async approveShiftSession(params: {
     shiftSessionId: string;
     role: "manager" | "manager_assistant" | "committee" | "general_manager" | Role;
+    isException?: boolean;
   }): Promise<{ success: boolean; error?: string }> {
     try {
-      const { shiftSessionId, role } = params;
+      const { shiftSessionId, role, isException } = params;
 
       const [targetSession] = await this.db
         .select({
@@ -386,7 +387,7 @@ export class ManagerService implements IManagerService {
 
       // Transition to fully approved -> Trigger PointService to award points and streak!
       if (!wasFullyApproved && isNowFullyApproved && this.pointService) {
-        await this.pointService.evaluateShiftSession(shiftSessionId);
+        await this.pointService.evaluateShiftSession(shiftSessionId, Boolean(isException));
       }
 
       // Notify employee and manager about approval
@@ -400,13 +401,25 @@ export class ManagerService implements IManagerService {
         const empName = empUser?.name || "พนักงาน";
         const roleLabel = role === "manager_assistant" ? "ผู้ช่วยผู้จัดการร้าน" : "ผู้จัดการร้าน";
 
+        const empTitle = isNowFullyApproved
+          ? isException
+            ? "🛡️ กะงานได้รับการอนุมัติแบบอนุโลม (Exception)"
+            : "🏆 กะงานได้รับการอนุมัติสมบูรณ์"
+          : isException
+            ? `📝 ${roleLabel}ตรวจรับรองงานแล้ว (เสนอแบบอนุโลม)`
+            : `📝 ${roleLabel}ตรวจรับรองงานแล้ว`;
+
+        const empMsg = isNowFullyApproved
+          ? isException
+            ? "ผู้จัดการร้านได้อนุมัติการปฏิบัติงานกะของคุณแบบอนุโลม (รักษาคะแนนสตรีคต่อเนื่องเป็นสถานะ Flawed) เรียบร้อยแล้ว!"
+            : "ผู้จัดการร้านได้อนุมัติการปฏิบัติงานกะของคุณเรียบร้อยแล้ว!"
+          : `${roleLabel}ได้ตรวจสอบรายการงานกะของคุณแล้ว และบันทึกผลการรับรอง`;
+
         // 1. Notify Employee
         await this.notificationService.createNotification({
           recipientId: targetSession.user,
-          title: isNowFullyApproved ? "🏆 กะงานได้รับการอนุมัติสมบูรณ์" : `📝 ${roleLabel}ตรวจรับรองงานแล้ว`,
-          message: isNowFullyApproved
-            ? `ผู้จัดการร้านได้อนุมัติการปฏิบัติงานกะของคุณเรียบร้อยแล้ว!`
-            : `${roleLabel}ได้ตรวจสอบรายการงานกะของคุณแล้ว และบันทึกผลการรับรอง`,
+          title: empTitle,
+          message: empMsg,
           type: "shift_approved",
           shiftSessionId: shiftSessionId,
           branchId: targetSession.branch,
@@ -417,8 +430,8 @@ export class ManagerService implements IManagerService {
           await this.notificationService.createNotification({
             branchId: targetSession.branch,
             recipientRole: "manager",
-            title: `📋 ผู้ช่วยผู้จัดการตรวจรับรองงานแล้ว`,
-            message: `ผู้ช่วยผู้จัดการได้ตรวจรับรองรายการงานของ ${empName} เรียบร้อยแล้ว กรุณาตรวจสอบเพื่ออนุมัติขั้นสุดท้าย`,
+            title: `📋 ผู้ช่วยผู้จัดการตรวจรับรองงานแล้ว${isException ? " (เสนอแบบอนุโลม)" : ""}`,
+            message: `ผู้ช่วยผู้จัดการได้ตรวจรับรองรายการงานของ ${empName} เรียบร้อยแล้ว${isException ? " โดยเสนอให้พิจารณาอนุมัติแบบอนุโลม (Exception)" : ""} กรุณาตรวจสอบเพื่ออนุมัติขั้นสุดท้าย`,
             type: "shift_submitted",
             shiftSessionId: shiftSessionId,
           });
@@ -597,6 +610,206 @@ export class ManagerService implements IManagerService {
     } catch (err: any) {
       console.error("ManagerService.getBranchStaffStatus error:", err);
       return { success: false, error: err?.message || "เกิดข้อผิดพลาดในการโหลดสถานะพนักงาน" };
+    }
+  }
+
+  async processShiftAttendanceAlerts(params?: {
+    dateStr?: string;
+  }): Promise<{
+    success: boolean;
+    processedBranches: number;
+    totalUnendedShifts: number;
+    totalAbsentStaff: number;
+    details?: Array<{
+      branchId: string;
+      branchName: string;
+      unendedCount: number;
+      unendedStaff: string[];
+      absentCount: number;
+      absentStaff: string[];
+    }>;
+    error?: string;
+  }> {
+    try {
+      const now = new Date();
+      let targetDateObj = now;
+      if (params?.dateStr) {
+        const [y, m, d] = params.dateStr.split("-").map(Number);
+        targetDateObj = new Date(y, m - 1, d, 12, 0, 0);
+      }
+      const { startOfDay, endOfDay } = getThaiStartAndEndOfDay(targetDateObj);
+      const thaiDateLabel = new Intl.DateTimeFormat("th-TH", {
+        timeZone: "Asia/Bangkok",
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      }).format(targetDateObj);
+
+      // 1. Fetch all branches
+      const allBranches = await this.db
+        .select({ id: branches.id, name: branches.name, members: branches.members })
+        .from(branches);
+
+      let totalUnendedShifts = 0;
+      let totalAbsentStaff = 0;
+      const details: Array<{
+        branchId: string;
+        branchName: string;
+        unendedCount: number;
+        unendedStaff: string[];
+        absentCount: number;
+        absentStaff: string[];
+      }> = [];
+
+      for (const branch of allBranches) {
+        const memberIds: string[] = Array.isArray(branch.members) ? branch.members : [];
+        if (memberIds.length === 0) continue;
+
+        // Fetch candidate staff users
+        const candidateUsers = await this.db
+          .select({ id: users.id, name: users.name, role: users.role })
+          .from(users)
+          .where(
+            and(
+              inArray(users.id, memberIds),
+              inArray(users.role, ["employee", "manager_assistant"])
+            )
+          );
+
+        if (candidateUsers.length === 0) continue;
+
+        const candidateIds = candidateUsers.map((u: { id: string }) => u.id);
+
+        // Fetch shift sessions for this branch & candidate users within today's window
+        const branchSessions = await this.db
+          .select({
+            id: shiftSession.id,
+            user: shiftSession.user,
+            task_role: shiftSession.task_role,
+            shift: shiftSession.shift,
+            start: shiftSession.start,
+            end: shiftSession.end,
+          })
+          .from(shiftSession)
+          .where(
+            and(
+              eq(shiftSession.branch, branch.id),
+              inArray(shiftSession.user, candidateIds),
+              gte(shiftSession.start, startOfDay),
+              lte(shiftSession.start, endOfDay)
+            )
+          );
+
+        type SessionRecord = (typeof branchSessions)[number];
+
+        // Group sessions by user ID
+        const sessionsByUser = new Map<string, SessionRecord[]>();
+        for (const s of branchSessions) {
+          const list = sessionsByUser.get(s.user) || [];
+          list.push(s);
+          sessionsByUser.set(s.user, list);
+        }
+
+        // 1) Find staff who started a shift but never ended it (end is null)
+        const unendedStaffNames: string[] = [];
+        for (const [userId, userSessions] of sessionsByUser.entries()) {
+          const hasUnended = userSessions.some((s: SessionRecord) => s.end === null);
+          if (hasUnended) {
+            const u = candidateUsers.find((cu: { id: string }) => cu.id === userId);
+            if (u) {
+              const roleTitle = u.role === "manager_assistant" ? "ผู้ช่วยฯ" : "พนักงาน";
+              unendedStaffNames.push(`${u.name} (${roleTitle})`);
+            }
+          }
+        }
+
+        // 2) Find staff who didn't come to work (0 sessions today)
+        const absentStaffNames: string[] = [];
+        for (const u of candidateUsers) {
+          const userSessions = sessionsByUser.get(u.id);
+          if (!userSessions || userSessions.length === 0) {
+            const roleTitle = u.role === "manager_assistant" ? "ผู้ช่วยฯ" : "พนักงาน";
+            absentStaffNames.push(`${u.name} (${roleTitle})`);
+          }
+        }
+
+        totalUnendedShifts += unendedStaffNames.length;
+        totalAbsentStaff += absentStaffNames.length;
+
+        details.push({
+          branchId: branch.id,
+          branchName: branch.name,
+          unendedCount: unendedStaffNames.length,
+          unendedStaff: unendedStaffNames,
+          absentCount: absentStaffNames.length,
+          absentStaff: absentStaffNames,
+        });
+
+        // Send notifications if issues found
+        if (this.notificationService && (unendedStaffNames.length > 0 || absentStaffNames.length > 0)) {
+          const msgParts: string[] = [];
+          if (unendedStaffNames.length > 0) {
+            msgParts.push(`⚠️ เข้ากะแล้วแต่ไม่กดจบกะ (${unendedStaffNames.length} คน): ${unendedStaffNames.join(", ")}`);
+          }
+          if (absentStaffNames.length > 0) {
+            msgParts.push(`⚪ ไม่มาปฏิบัติงาน/ไม่พบการเข้ากะ (${absentStaffNames.length} คน): ${absentStaffNames.join(", ")}`);
+          }
+          const fullMsg = `สาขา${branch.name} ประจำวันที่ ${thaiDateLabel}:\n${msgParts.join("\n")}\nกรุณาตรวจสอบและดำเนินการติดตาม`;
+
+          // 1. Notify Manager of this branch
+          await this.notificationService.createNotification({
+            branchId: branch.id,
+            recipientRole: "manager",
+            title: `⚠️ แจ้งเตือน: พนักงานไม่จบกะ / ขาดการเข้ากะ (${branch.name})`,
+            message: fullMsg,
+            type: "system",
+          });
+
+          // 2. Notify Assistant Manager of this branch
+          await this.notificationService.createNotification({
+            branchId: branch.id,
+            recipientRole: "manager_assistant",
+            title: `⚠️ แจ้งเตือน: พนักงานไม่จบกะ / ขาดการเข้ากะ (${branch.name})`,
+            message: fullMsg,
+            type: "system",
+          });
+        }
+      }
+
+      // Notify General Manager with summary
+      if (this.notificationService) {
+        const issueBranches = details.filter(d => d.unendedCount > 0 || d.absentCount > 0);
+        if (issueBranches.length > 0) {
+          const branchSummaries = issueBranches
+            .map(b => `• ${b.branchName}: ไม่จบกะ ${b.unendedCount} คน, ขาดกะ ${b.absentCount} คน`)
+            .join("\n");
+
+          await this.notificationService.createNotification({
+            recipientRole: "general_manager",
+            title: `⚠️ รายงานพนักงานไม่จบกะและไม่เข้ากะ (${thaiDateLabel})`,
+            message: `ตรวจพบ ${issueBranches.length} สาขา ที่มีพนักงานไม่จบกะรวม ${totalUnendedShifts} คน และไม่พบการเข้ากะรวม ${totalAbsentStaff} คน:\n${branchSummaries}`,
+            type: "system",
+          });
+        }
+      }
+
+      return {
+        success: true,
+        processedBranches: allBranches.length,
+        totalUnendedShifts,
+        totalAbsentStaff,
+        details,
+      };
+    } catch (err: unknown) {
+      console.error("ManagerService.processShiftAttendanceAlerts error:", err);
+      const message = err instanceof Error ? err.message : "เกิดข้อผิดพลาดในการตรวจสอบการเข้ากะ";
+      return {
+        success: false,
+        processedBranches: 0,
+        totalUnendedShifts: 0,
+        totalAbsentStaff: 0,
+        error: message,
+      };
     }
   }
 }

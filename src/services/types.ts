@@ -51,7 +51,7 @@ export interface IPointService {
     description: string;
   }): Promise<{ success: boolean; newTotal?: number; error?: string }>;
 
-  evaluateShiftSession(shiftSessionId: string): Promise<{
+  evaluateShiftSession(shiftSessionId: string, isException?: boolean): Promise<{
     success: boolean;
     awardedPoints?: number;
     streakType?: "perfect" | "flawed";
@@ -176,6 +176,7 @@ export interface IManagerService {
   approveShiftSession(params: {
     shiftSessionId: string;
     role: "manager" | "manager_assistant" | "committee" | "general_manager" | Role;
+    isException?: boolean;
   }): Promise<{ success: boolean; error?: string }>;
 
   getBranchStaffStatus(branchId?: string): Promise<{
@@ -183,6 +184,24 @@ export interface IManagerService {
     employees?: BranchEmployeeStatus[];
     branches?: Array<{ id: string; name: string }>;
     selectedBranchId?: string;
+    error?: string;
+  }>;
+
+  processShiftAttendanceAlerts(params?: {
+    dateStr?: string;
+  }): Promise<{
+    success: boolean;
+    processedBranches: number;
+    totalUnendedShifts: number;
+    totalAbsentStaff: number;
+    details?: Array<{
+      branchId: string;
+      branchName: string;
+      unendedCount: number;
+      unendedStaff: string[];
+      absentCount: number;
+      absentStaff: string[];
+    }>;
     error?: string;
   }>;
 }

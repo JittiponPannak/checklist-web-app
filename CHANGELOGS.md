@@ -22,11 +22,36 @@
 
 | เวอร์ชัน | วันที่อัปเดต | ไฮไลท์สำหรับสาขาและผู้บริหาร | ไฮไลท์ทางเทคนิคสำคัญ (Very Technical) |
 | :---: | :---: | :--- | :--- |
+| **v1.6.0** | 27 ก.ย. 2026 | แจ้งเตือนพนักงานค้างกะ/ไม่มาทำงานอัตโนมัติ, ระบบอนุมัติแบบอนุโลมรักษาสตรีค (Streak Flawed Exception) | Vercel Cron `/api/cron/shift-alerts`, PointService Exception Logic, SessionDetailModal Choice Prompt |
 | **v1.5.0** | 27 ก.ย. 2026 | ระบบ Cron ตรวจสอบตู้แช่ข้ามวัน, มาร์กสถานะขาดตรวจ, แจ้งเตือน GM/ผู้จัดการอัตโนมัติ | Vercel Cron `/api/cron/daily-refrigerators`, RefrigeratorService Daily Automation, Date Picker Live View |
 | **v1.4.0** | 24 ก.ย. 2026 | หน้ารวมสถานะพนักงานเข้ากะสด, ระบบอ่านคู่มือในแอป, หน้า Portal โฉมใหม่ | Client-safe Markdown Parser, `BranchStaffPresenceView`, SQL Group Count Aggregation |
 | **v1.3.0** | 23 ก.ย. 2026 | แดชบอร์ดตรวจสอบสาขา, ตรวจวัดอุณหภูมิตู้แช่, ปิดกะอัตโนมัติรอบดึก | Vercel Cron Serverless Handlers (UTC+7 aligned), Lateness Detection Algorithm |
 | **v1.2.0** | 21–22 ก.ย. 2026 | ระบบสะสมแต้ม, ลีดเดอร์บอร์ด, แจ้งเตือนกระดิ่งเด้งสดทันที | Refactor สู่ Service Layer & Dependency Injection Container, Supabase SSR Auth |
 | **v1.1.0** | 17–18 ก.ย. 2026 | โทนสีร้านอาหารสดใหม่ สบายตา รองรับโหมดมืด (Dark Mode) | Row-Level Security (RLS), ลบการส่ง `userId` จากฝั่งหน้าบ้าน, ตาราง `refrigerators` |
+
+---
+
+## [v1.6.0] — 27 กันยายน 2026
+
+### 🏪 สำหรับผู้ใช้งานและผู้บริหาร (Business & User Value)
+- **🚨 ระบบ Cron แจ้งเตือนคนค้างกะและคนขาดงาน (Shift Attendance & Absence Alerts)**:
+  - ทุกคืนเวลา 23:50 น. (ก่อนระบบตัดปิดกะ 5 นาที) ระบบจะสแกนตรวจสอบพนักงานประจำสาขา
+  - **ตรวจจับพนักงานที่เปิดกะทิ้งไว้แล้วไม่ปิดกะ (`end IS NULL`)**: แจ้งเตือนไปยังผู้จัดการและผู้ช่วยผู้จัดการสาขาทันที เพื่อให้ติดตามพนักงาน
+  - **ตรวจจับพนักงานที่ไม่มาทำงานประจำวัน (0 กะ)**: ส่งการแจ้งเตือนรายงานรายชื่อพนักงานที่ขาดงานให้ผู้บริหารสาขาทราบ
+  - **รายงานสรุปเขตสำหรับผู้จัดการทั่วไป (`general_manager`)**: ได้รับรายงานสรุปรวมทุกสาขาที่มีเหตุการณ์พนักงานค้างกะหรือขาดงาน
+- **🛡️ ระบบอนุมัติกะแบบมีทางเลือก "อนุมัติตามปกติ" หรือ "อนุมัติแบบอนุโลม" (Streak Exception Approval)**:
+  - เมื่อผู้จัดการ หรือผู้ช่วยผู้จัดการ กดปุ่มอนุมัติกะในแดชบอร์ด จะมีหน้าต่างแจ้งเตือนถามความประสงค์:
+    - **✓ อนุมัติตามปกติ (Standard Approval)**: คิดคะแนนตามเกณฑ์เดิม หากงานไม่สมบูรณ์/ล่าช้า Streak จะถูกรีเซ็ตเป็น 0
+    - **🛡️ อนุมัติแบบอนุโลม (Exception Approval)**: สำหรับกรณีมีเหตุจำเป็นหรือสุดวิสัย คะแนน Streak จะไม่ถูกตัดเป็น 0 แต่จะคงสถิติการทำงานต่อเนื่องต่อไปและเปลี่ยนสถานะเป็น **Flawed** (+1 แต้ม)
+  - **การจำกัดสิทธิ์ตามลำดับขั้น**:
+    - กะของพนักงานทั่วไป: ผู้ช่วยผู้จัดการร้านและผู้จัดการร้านสามารถเลือกอนุมัติปกติหรืออนุโลมได้
+    - กะของผู้ช่วยผู้จัดการร้าน: เฉพาะผู้จัดการร้าน หรือผู้บริหารระดับสูง (กรรมการ/GM) เท่านั้นที่จะได้รับสิทธิ์และตัวเลือกอนุมัตินี้
+
+### 🔧 เบื้องหลังทางเทคนิคที่สำคัญ (Key Technical Highlights)
+- **Route Handler `/api/cron/shift-alerts`**: ตั้งเวลา Vercel Cron `"50 16 * * *"` (23:50 น. เวลาไทย UTC+7) ตรวจสอบพนักงานกลุ่ม `employee` และ `manager_assistant` ในแต่ละสาขา
+- **`ManagerService.processShiftAttendanceAlerts()`**: สแกนแบบแยกสาขาและสร้างแจ้งเตือนผ่าน `NotificationService`
+- **`PointService.evaluateShiftSession()`**: รองรับพารามิเตอร์ `isException?: boolean` จัดการอัปเดต `point_streak_type = "flawed"` และรักษาสตรีคต่อเนื่อง
+- **`SessionDetailModal` & `ExecutiveDashboard`**: เพิ่มการโต้ตอบถามตัวเลือกการอนุมัติ (Two-choice confirmation modal) พร้อม Toast Feedback แจ้งผลแบบเรียลไทม์
 
 ---
 
@@ -46,6 +71,10 @@
 ### 🔧 เบื้องหลังทางเทคนิคที่สำคัญ (Key Technical Highlights)
 - **Route Handler `/api/cron/daily-refrigerators`**: ตั้งเวลา `5 17 * * *` (UTC) เทียบเท่า 00:05 น. (UTC+7) พร้อมรองรับ `CRON_SECRET` Bearer Authorization
 - **`RefrigeratorService.processDailyRefrigeratorTasks()`**: ทำงานแบบ Batch Idempotent ป้องกันการสร้างงานซ้ำ, ซิงก์ตู้แช่ที่ถูกปิดการใช้งาน (`disable_check`) และกระจายการแจ้งเตือน Realtime ผ่าน `NotificationService`
+
+---
+
+## [v1.4.0] — 24 กันยายน 2026
 
 ### 🏪 สำหรับผู้ใช้งานและผู้บริหาร (Business & User Value)
 - **👥 ตรวจสอบการเข้ากะสดของพนักงานในสาขา (`/manager/staff-status`)**:

@@ -42,7 +42,7 @@ export class PointService implements IPointService {
     }
   }
 
-  async evaluateShiftSession(shiftSessionId: string): Promise<{
+  async evaluateShiftSession(shiftSessionId: string, isException = false): Promise<{
     success: boolean;
     awardedPoints?: number;
     streakType?: "perfect" | "flawed";
@@ -126,7 +126,15 @@ export class PointService implements IPointService {
           totalPoints += 3;
           pointReasons.push(`โบนัสสตรีคสมบูรณ์ทุกๆ 5 ครั้งติดต่อกัน (สตรีคที่ ${newStreakCount}) (+3 แต้ม)`);
         }
+      } else if (isException) {
+        // Exception approval (อนุโลม): Do NOT break the streak!
+        // Sets streak type to 'flawed' while keeping and incrementing the streak count
+        newStreakType = "flawed";
+        newStreakCount = (targetUser?.point_streak || 0) + 1;
+        totalPoints = 1;
+        pointReasons.push("ผู้บริหารอนุมัติแบบอนุโลม (Exception): รักษาสตรีคต่อเนื่องเป็นสถานะ Flawed (+1 แต้ม)");
       } else {
+        // Standard imperfect shift: breaks the streak
         newStreakType = "flawed";
         newStreakCount = 0;
         totalPoints = 1;
@@ -141,7 +149,7 @@ export class PointService implements IPointService {
       await this.db.insert(pointTransactions).values({
         user_id: session.user,
         points: totalPoints,
-        type: isPerfect ? "perfect_shift" : "shift_completion",
+        type: isPerfect ? "perfect_shift" : isException ? "exception_shift" : "shift_completion",
         shift_session_id: session.id,
         description: pointReasons.join(", "),
         created_at: new Date(),
@@ -160,14 +168,24 @@ export class PointService implements IPointService {
 
       // Notify employee if notification service is available
       if (this.notificationService) {
+        const notifTitle = isPerfect
+          ? "🌟 ผลงานยอดเยี่ยมตรงเวลา!"
+          : isException
+          ? "🛡️ อนุมัติแบบอนุโลม (รักษาสตรีค Flawed)"
+          : "✅ อนุมัติการส่งงานสำเร็จ";
+        const notifMsg = isPerfect
+          ? `ยินดีด้วย! คุณปฏิบัติงานตรงเวลาครบถ้วน (+${totalPoints} แต้ม) สตรีคสมบูรณ์ ${newStreakCount} วันติด`
+          : isException
+          ? `ผู้จัดการได้อนุมัติแบบอนุโลมให้กะของคุณ (+${totalPoints} แต้ม) รักษาสตรีคต่อเนื่องที่ ${newStreakCount} วัน (สถานะ Flawed)`
+          : `คุณได้รับคะแนนจากการปฏิบัติงาน (+${totalPoints} แต้ม)`;
+
         await this.notificationService.createNotification({
           recipientId: session.user,
-          title: isPerfect ? "🌟 ผลงานยอดเยี่ยมตรงเวลา!" : "✅ อนุมัติการส่งงานสำเร็จ",
-          message: `ผู้จัดการได้ตรวจสอบงานกะของคุณเรียบร้อยแล้ว คุณได้รับ ${totalPoints} แต้ม (${pointReasons.join(
-            " • "
-          )})`,
+          title: notifTitle,
+          message: notifMsg,
           type: "point_awarded",
           shiftSessionId: session.id,
+          branchId: session.branch,
         });
       }
 
