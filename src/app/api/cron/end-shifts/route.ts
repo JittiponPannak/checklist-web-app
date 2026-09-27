@@ -13,11 +13,21 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
+    const searchParams = request.nextUrl.searchParams;
+    const dateStr = searchParams.get("dateStr") || undefined;
+
     const services = getServices();
-    const result = await services.checklist.autoEndUnfinishedShifts();
+
+    // 1. Alert managers & assistant managers about unended shifts and absent staff first (while end is still null)
+    const alertsResult = await services.manager.processShiftAttendanceAlerts({ dateStr });
+
+    // 2. Automatically close all unended shifts for the day
+    const endShiftsResult = await services.checklist.autoEndUnfinishedShifts();
 
     return NextResponse.json({
-      ...result,
+      success: true,
+      alerts: alertsResult,
+      endShifts: endShiftsResult,
       timestamp: new Date().toISOString(),
     });
   } catch (error: unknown) {
