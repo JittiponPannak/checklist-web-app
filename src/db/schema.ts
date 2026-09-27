@@ -1,11 +1,13 @@
-import { boolean, integer, pgEnum, pgTable, timestamp, time, uuid, text } from "drizzle-orm/pg-core";
+import { boolean, integer, pgSchema, timestamp, time, uuid, text } from "drizzle-orm/pg-core";
 
-export const roleEnum = pgEnum('role', ['admin', 'committee', 'general_manager', 'manager', 'manager_assistant', 'employee']);
-export const taskRoleEnum = pgEnum('task_role', ['manager_assistant', 'cashier', 'stock']);
-export const shiftEnum = pgEnum('shift', ['morning', 'afternoon', 'morning_afternoon']);
-export const pointStreakEnum = pgEnum('point_streak', ['none', 'flawed', 'perfect']);
+export const checklistSchema = pgSchema("checklist_web_app");
 
-export const users = pgTable.withRLS("users", {
+export const roleEnum = checklistSchema.enum('role', ['admin', 'committee', 'general_manager', 'manager', 'manager_assistant', 'employee']);
+export const taskRoleEnum = checklistSchema.enum('task_role', ['manager_assistant', 'cashier', 'stock']);
+export const shiftEnum = checklistSchema.enum('shift', ['morning', 'afternoon', 'morning_afternoon']);
+export const pointStreakEnum = checklistSchema.enum('point_streak', ['none', 'flawed', 'perfect']);
+
+export const users = checklistSchema.table.withRLS("users", {
     id: uuid("id").primaryKey().defaultRandom(),
     name: text("name").notNull(),
     email: text("email").notNull(),
@@ -21,7 +23,7 @@ export const users = pgTable.withRLS("users", {
     created_at: timestamp("created_at").defaultNow(),
 });
 
-export const branches = pgTable.withRLS("branches", {
+export const branches = checklistSchema.table.withRLS("branches", {
     id: uuid("id").primaryKey().defaultRandom(),
     name: text("name").notNull(),
     members: uuid("member_ids").array().notNull().default([]),
@@ -31,7 +33,7 @@ export const branches = pgTable.withRLS("branches", {
     last_update: timestamp("last_update").defaultNow(),
 });
 
-export const tasks = pgTable.withRLS("tasks", {
+export const tasks = checklistSchema.table.withRLS("tasks", {
     id: uuid("id").primaryKey().defaultRandom(),
     shift: shiftEnum("shift").notNull(),
     name: text("name").notNull(),
@@ -43,7 +45,7 @@ export const tasks = pgTable.withRLS("tasks", {
     disabled: boolean("disabled").notNull().default(false),
 });
 
-export const shiftSession = pgTable.withRLS("shift_session", {
+export const shiftSession = checklistSchema.table.withRLS("shift_session", {
     id: uuid("id").primaryKey().defaultRandom(),
     user: uuid("user_id").notNull().references(() => users.id),
     branch: uuid("branch_id").notNull().references(() => branches.id),
@@ -56,7 +58,7 @@ export const shiftSession = pgTable.withRLS("shift_session", {
     manager_approve_timestamp: timestamp("manager_approve_timestamp"),
 });
 
-export const taskWork = pgTable.withRLS("task_work", {
+export const taskWork = checklistSchema.table.withRLS("task_work", {
     id: uuid("id").primaryKey().defaultRandom(),
     task: uuid("task_id").notNull().references(() => tasks.id),
     shift_session: uuid("shift_session_id").notNull().references(() => shiftSession.id),
@@ -65,7 +67,7 @@ export const taskWork = pgTable.withRLS("task_work", {
     timestamp: timestamp("timestamp"),
 });
 
-export const refrigerators = pgTable.withRLS("refrigerators", {
+export const refrigerators = checklistSchema.table.withRLS("refrigerators", {
     id: uuid("id").primaryKey().defaultRandom(),
     name: text("name").notNull().default(""),
     min_temperature: integer("min_temperature").notNull().default(0),
@@ -73,7 +75,7 @@ export const refrigerators = pgTable.withRLS("refrigerators", {
     disable_check: boolean("disable_check").notNull().default(false),
 });
 
-export const refrigeratorTasks = pgTable.withRLS("refrigerator_tasks", {
+export const refrigeratorTasks = checklistSchema.table.withRLS("refrigerator_tasks", {
     id: uuid("id").primaryKey().defaultRandom(),
     branch_id: uuid("branch_id").notNull().references(() => branches.id),
     refrigerator_id: uuid("refrigerator_id").notNull().references(() => refrigerators.id),
@@ -88,7 +90,7 @@ export const refrigeratorTasks = pgTable.withRLS("refrigerator_tasks", {
     created_at: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const notifications = pgTable.withRLS("notifications", {
+export const notifications = checklistSchema.table.withRLS("notifications", {
     id: uuid("id").primaryKey().defaultRandom(),
     recipient_id: uuid("recipient_id").references(() => users.id),
     recipient_role: roleEnum("recipient_role"),
@@ -102,7 +104,7 @@ export const notifications = pgTable.withRLS("notifications", {
     created_at: timestamp("created_at").notNull().defaultNow(),
 });
 
-export const pointTransactions = pgTable.withRLS("point_transactions", {
+export const pointTransactions = checklistSchema.table.withRLS("point_transactions", {
     id: uuid("id").primaryKey().defaultRandom(),
     user_id: uuid("user_id").notNull().references(() => users.id),
     points: integer("points").notNull(),
