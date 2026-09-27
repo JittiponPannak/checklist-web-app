@@ -23,7 +23,7 @@ interface DocsModalProps {
   onClose: () => void;
   initialDoc?: "guide" | "readme";
   guideData: ParsedDoc;
-  readmeData: ParsedDoc;
+  readmeData?: ParsedDoc;
 }
 
 export const ROLE_FILTERS = [
@@ -70,7 +70,7 @@ export function DocsModal({
     return () => el.removeEventListener("scroll", handleScroll);
   }, [isOpen, activeTab]);
 
-  const currentDocData = activeTab === "guide" ? guideData : readmeData;
+  const currentDocData = activeTab === "guide" || !readmeData ? guideData : readmeData;
 
   // Filter TOC by search query
   const filteredToc = useMemo(() => {
@@ -187,43 +187,57 @@ export function DocsModal({
       >
         {/* Header Toolbar */}
         <header className="no-print shrink-0 px-4 sm:px-6 py-3 border-b border-[var(--color-border)] bg-[var(--color-surface)] flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-          {/* Tabs */}
-          <div className="flex items-center gap-1.5 p-1 bg-[var(--color-surface-2)] rounded-xl">
-            <button
-              type="button"
-              onClick={() => {
-                setActiveTab("guide");
-                setActiveRole("all");
-                setSearchQuery("");
-                contentRef.current?.scrollTo({ top: 0 });
-              }}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all ${
-                activeTab === "guide"
-                  ? "bg-[var(--color-surface)] text-amber-950 dark:text-amber-200 shadow-xs border border-amber-200 dark:border-amber-900"
-                  : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
-              }`}
-            >
-              <BookOpen size={16} className={activeTab === "guide" ? "text-amber-600" : ""} />
-              <span>คู่มือการปฏิบัติงาน (GUIDE)</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setActiveTab("readme");
-                setActiveRole("all");
-                setSearchQuery("");
-                contentRef.current?.scrollTo({ top: 0 });
-              }}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all ${
-                activeTab === "readme"
-                  ? "bg-[var(--color-surface)] text-amber-950 dark:text-amber-200 shadow-xs border border-amber-200 dark:border-amber-900"
-                  : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
-              }`}
-            >
-              <FileText size={16} className={activeTab === "readme" ? "text-amber-600" : ""} />
-              <span>ข้อมูลระบบ & ดูแลรักษา (README)</span>
-            </button>
-          </div>
+          {/* Tabs or Single Guide Title */}
+          {readmeData ? (
+            <div className="flex items-center gap-1.5 p-1 bg-[var(--color-surface-2)] rounded-xl">
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab("guide");
+                  setActiveRole("all");
+                  setSearchQuery("");
+                  contentRef.current?.scrollTo({ top: 0 });
+                }}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all ${
+                  activeTab === "guide"
+                    ? "bg-[var(--color-surface)] text-amber-950 dark:text-amber-200 shadow-xs border border-amber-200 dark:border-amber-900"
+                    : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+                }`}
+              >
+                <BookOpen size={16} className={activeTab === "guide" ? "text-amber-600" : ""} />
+                <span>คู่มือการปฏิบัติงาน (GUIDE)</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab("readme");
+                  setActiveRole("all");
+                  setSearchQuery("");
+                  contentRef.current?.scrollTo({ top: 0 });
+                }}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all ${
+                  activeTab === "readme"
+                    ? "bg-[var(--color-surface)] text-amber-950 dark:text-amber-200 shadow-xs border border-amber-200 dark:border-amber-900"
+                    : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+                }`}
+              >
+                <FileText size={16} className={activeTab === "readme" ? "text-amber-600" : ""} />
+                <span>ข้อมูลระบบ & ดูแลรักษา (README)</span>
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-700 dark:text-amber-300 flex items-center justify-center shrink-0">
+                <BookOpen size={18} />
+              </div>
+              <div>
+                <h2 id="docs-modal-title" className="text-sm sm:text-base font-bold text-[var(--color-text)] leading-tight">
+                  คู่มือการปฏิบัติงานสาขา (SOP & User Guide)
+                </h2>
+                <p className="text-[11px] text-[var(--color-text-muted)] font-mono">GUIDE.md</p>
+              </div>
+            </div>
+          )}
 
           {/* Action buttons */}
           <div className="flex items-center justify-between sm:justify-end gap-2">

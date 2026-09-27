@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { marked } from "marked";
+import { marked, Tokens } from "marked";
 
 export interface TocItem {
   id: string;
@@ -16,19 +16,21 @@ export interface ParsedDoc {
   title: string;
 }
 
-function slugify(text: string): string {
+export function slugify(text: string): string {
   const clean = text
     .toLowerCase()
     .replace(/<[^>]*>/g, "")
+    .replace(/\*\*/g, "")
+    .replace(/`/g, "")
     .replace(/[^\w\u0E00-\u0E7F]+/g, "-")
     .replace(/^-+|-+$/g, "");
-  return clean ? `doc-${clean}` : "doc-heading";
+  return clean || "heading";
 }
 
 function processCallouts(markdown: string): string {
   // Replace GitHub alerts: > [!NOTE], > [!WARNING], > [!TIP], > [!IMPORTANT], > [!CAUTION]
   return markdown.replace(
-    />\s*\[!(NOTE|WARNING|TIP|IMPORTANT|CAUTION)\]\s*\n((?:>.*(?:\n|$))*)/gi,
+    />\s*\[!(NOTE|WARNING|TIP|IMPORTANT|CAUTION)\]\s*?\n((?:>.*(?:\n|$))*)/gi,
     (match, type, content) => {
       const cleanContent = content
         .split("\n")
@@ -72,7 +74,9 @@ function processCallouts(markdown: string): string {
 export function parseMarkdownFile(filename: "README.md" | "GUIDE.md"): ParsedDoc {
   try {
     const filePath = path.join(/*turbopackIgnore: true*/ process.cwd(), filename);
-    const raw = fs.readFileSync(filePath, "utf-8");
+    const rawContent = fs.readFileSync(filePath, "utf-8");
+    // Normalize Windows CRLF to standard LF to ensure cross-platform regex compatibility
+    const raw = rawContent.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
 
     // Extract TOC
     const toc: TocItem[] = [];
@@ -83,7 +87,8 @@ export function parseMarkdownFile(filename: "README.md" | "GUIDE.md"): ParsedDoc
       const headingMatch = line.match(/^(#{1,3})\s+(.+)$/);
       if (headingMatch) {
         const level = headingMatch[1].length;
-        const titleText = headingMatch[2].trim().replace(/\*\*/g, "").replace(/`/g, "");
+        const rawTitle = headingMatch[2].trim();
+        const titleText = rawTitle.replace(/\*\*/g, "").replace(/`/g, "");
         const id = slugify(titleText);
 
         if (level === 1 && docTitle === filename) {
@@ -109,23 +114,63 @@ export function parseMarkdownFile(filename: "README.md" | "GUIDE.md"): ParsedDoc
     // Process custom alerts and convert to HTML
     const processedMd = processCallouts(raw);
 
-    // Custom renderer for marked to add heading anchors with IDs
+    // Custom renderer for marked to ensure full inline formatting & anchor IDs
     const renderer = new marked.Renderer();
-    renderer.heading = ({ text, depth }: { text: string; depth: number }) => {
-      const plainText = text.replace(/<[^>]*>/g, "");
+
+    renderer.heading = function (token: Tokens.Heading) {
+      const html = this.parser.parseInline(token.tokens);
+      const plainText = token.text.replace(/<[^>]*>/g, "").replace(/\*\*/g, "").replace(/`/g, "");
       const id = slugify(plainText);
-      return `<h${depth} id="${id}" data-doc-id="${id}" class="doc-heading doc-h${depth} group flex items-center justify-between scroll-mt-24">
-        <span>${text}</span>
+      return `<h${token.depth} id="${id}" data-doc-id="${id}" class="doc-heading doc-h${token.depth} group flex items-center justify-between scroll-mt-24">
+        <span>${html}</span>
         <a href="#${id}" class="opacity-0 group-hover:opacity-100 text-amber-500 ml-2 text-sm font-normal transition-opacity" aria-label="Link to section">#</a>
-      </h${depth}>`;
+      </h${token.depth}>`;
     };
 
-    renderer.table = (token) => {
-      const headerRow = token.header.map(cell => `<th class="p-3 text-left font-semibold text-[var(--color-text)] border-b border-[var(--color-border)]">${cell.text}</th>`).join("");
-      const bodyRows = token.rows.map(row => {
-        const cells = row.map(cell => `<td class="p-3 border-b border-[var(--color-border-subtle)] text-[var(--color-text-subtle)]">${cell.text}</td>`).join("");
-        return `<tr class="hover:bg-[var(--color-surface-2)]/50 transition-colors">${cells}</tr>`;
-      }).join("");
+    renderer.listitem = function (token: Tokens.ListItem) {
+      // Parse child inline tokens to properly render links, bold text, and code within list items
+      const html = token.tokens ? this.parser.parse(token.tokens) : token.text;
+      return `<li class="my-1.5 text-[var(--color-text)] leading-relaxed">${html}</li>`;
+    };
+
+    renderer.link = function (token: Tokens.Link) {
+      const text = this.parser.parseInline(token.tokens);
+      let href = token.href || "#";
+
+      // Sanitize any PC absolute path or local file URL to protect user privacy
+      if (
+        href.includes("file://") ||
+        href.includes("nemoz") ||
+        href.includes("Users") ||
+        /^[a-zA-Z]:[\\/]/.test(href)
+      ) {
+        href = "/";
+      }
+
+      const isInternal = href.startsWith("#") || href.startsWith("/");
+      const targetAttr = isInternal ? "" : ' target="_blank" rel="noopener noreferrer"';
+      return `<a href="${href}" class="text-amber-600 dark:text-amber-400 underline hover:text-amber-700 dark:hover:text-amber-300 font-medium transition-colors"${targetAttr}>${text}</a>`;
+    };
+
+    renderer.table = function (token: Tokens.Table) {
+      const headerRow = token.header
+        .map(
+          (cell) =>
+            `<th class="p-3 text-left font-semibold text-[var(--color-text)] border-b border-[var(--color-border)]">${this.parser.parseInline(cell.tokens)}</th>`
+        )
+        .join("");
+
+      const bodyRows = token.rows
+        .map((row) => {
+          const cells = row
+            .map(
+              (cell) =>
+                `<td class="p-3 border-b border-[var(--color-border-subtle)] text-[var(--color-text-subtle)]">${this.parser.parseInline(cell.tokens)}</td>`
+            )
+            .join("");
+          return `<tr class="hover:bg-[var(--color-surface-2)]/50 transition-colors">${cells}</tr>`;
+        })
+        .join("");
 
       return `<div class="overflow-x-auto my-6 rounded-xl border border-[var(--color-border)] shadow-xs">
         <table class="w-full text-sm text-left border-collapse bg-[var(--color-surface)]">
@@ -139,15 +184,12 @@ export function parseMarkdownFile(filename: "README.md" | "GUIDE.md"): ParsedDoc
       </div>`;
     };
 
-    renderer.code = ({ text, lang }: { text: string; lang?: string }) => {
+    renderer.code = function (token: Tokens.Code) {
+      const escaped = token.text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
       return `<div class="my-4 rounded-xl overflow-hidden border border-[var(--color-border)] bg-[#1e1412] text-[#fffaf2] shadow-xs">
-        ${lang ? `<div class="px-4 py-1.5 text-xs font-mono font-bold bg-[#140807] border-b border-[#3b1c18] text-amber-300 flex items-center justify-between"><span>${lang}</span></div>` : ""}
-        <pre class="p-4 overflow-x-auto text-xs sm:text-sm font-mono leading-relaxed"><code>${text.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</code></pre>
+        ${token.lang ? `<div class="px-4 py-1.5 text-xs font-mono font-bold bg-[#140807] border-b border-[#3b1c18] text-amber-300 flex items-center justify-between"><span>${token.lang}</span></div>` : ""}
+        <pre class="p-4 overflow-x-auto text-xs sm:text-sm font-mono leading-relaxed"><code>${escaped}</code></pre>
       </div>`;
-    };
-
-    renderer.listitem = ({ text }: { text: string }) => {
-      return `<li class="my-1 text-[var(--color-text)] leading-relaxed">${text}</li>`;
     };
 
     marked.setOptions({

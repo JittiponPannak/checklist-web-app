@@ -3,7 +3,7 @@ import { BrandLogo } from "../../components/common/BrandLogo";
 import { ThemeToggle } from "../../components/common/ThemeToggle";
 import { PrintButton } from "../../components/common/PrintButton";
 import Link from "next/link";
-import { ArrowLeft, FileText, BookOpen } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 
 export const metadata = {
   title: "คู่มือการปฏิบัติงานสาขา (SOP & User Guide) | Eater Egg Fresh Mart",
@@ -33,14 +33,7 @@ export default function GuidePage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <Link
-            href="/readme"
-            className="px-3 py-1.5 rounded-xl border border-[var(--color-border)] hover:bg-[var(--color-surface-2)] text-xs font-semibold flex items-center gap-1.5 transition-colors text-[var(--color-text)]"
-          >
-            <FileText size={14} className="text-amber-600" />
-            <span>ดูข้อมูลระบบ (README)</span>
-          </Link>
-
+          <PrintButton />
           <ThemeToggle />
         </div>
       </header>

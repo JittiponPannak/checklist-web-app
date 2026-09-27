@@ -6,7 +6,6 @@ import { parseMarkdownFile } from "../utils/markdown";
 
 export default function PortalPage() {
   const guideData = parseMarkdownFile("GUIDE.md");
-  const readmeData = parseMarkdownFile("README.md");
 
   return (
     <main className="min-h-screen bg-[var(--color-background)] text-[var(--color-text)] flex flex-col justify-between px-4 py-6 sm:py-10 font-sans relative">
@@ -28,8 +27,8 @@ export default function PortalPage() {
         {/* Structured Operational Gateways + Employee Registration */}
         <PortalMainSection />
 
-        {/* Integrated Documentation & Operating Guides Section */}
-        <PortalDocsSection guideData={guideData} readmeData={readmeData} />
+        {/* Integrated Operating Guide Section */}
+        <PortalDocsSection guideData={guideData} />
       </div>
 
       <footer className="mt-8 text-center text-xs text-[var(--color-text-muted)] font-medium">
