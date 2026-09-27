@@ -197,13 +197,24 @@ export function ExecutiveDashboard({
     // eslint-disable-next-line react-hooks/set-state-in-effect
     loadDbSessions();
 
+    const handleRefresh = () => {
+      loadDbSessions();
+    };
+
+    window.addEventListener("app:date-rollover", handleRefresh);
+    window.addEventListener("focus", handleRefresh);
+
     // Auto-refresh from Supabase DB every 6 seconds (paused if tab is backgrounded)
     const interval = setInterval(() => {
       if (typeof document !== "undefined" && document.hidden) return;
       loadDbSessions();
     }, 6000);
 
-    return () => clearInterval(interval);
+    return () => {
+      window.removeEventListener("app:date-rollover", handleRefresh);
+      window.removeEventListener("focus", handleRefresh);
+      clearInterval(interval);
+    };
   }, [loadDbSessions]);
 
   // Load history metadata

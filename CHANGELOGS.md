@@ -22,12 +22,33 @@
 
 | เวอร์ชัน | วันที่อัปเดต | ไฮไลท์สำหรับสาขาและผู้บริหาร | ไฮไลท์ทางเทคนิคสำคัญ (Very Technical) |
 | :---: | :---: | :--- | :--- |
+| **v1.6.1** | 27 ก.ย. 2026 | ล้างแคชข้ามวันอัตโนมัติเมื่อคงการล็อกอินไว้, ดึงงานและกะใหม่ของวันนี้จากฐานข้อมูลเสมอ | Real-time Date-Rollover Detection, `isTodayThai` Validator, Bangkok Timezone Boundary Correction, Auto-Close Dangling Shifts |
 | **v1.6.0** | 27 ก.ย. 2026 | แจ้งเตือนพนักงานค้างกะ/ไม่มาทำงานอัตโนมัติ, ระบบอนุมัติแบบอนุโลมรักษาสตรีค (Streak Flawed Exception) | Vercel Cron `/api/cron/shift-alerts`, PointService Exception Logic, SessionDetailModal Choice Prompt |
 | **v1.5.0** | 27 ก.ย. 2026 | ระบบ Cron ตรวจสอบตู้แช่ข้ามวัน, มาร์กสถานะขาดตรวจ, แจ้งเตือน GM/ผู้จัดการอัตโนมัติ | Vercel Cron `/api/cron/daily-refrigerators`, RefrigeratorService Daily Automation, Date Picker Live View |
 | **v1.4.0** | 24 ก.ย. 2026 | หน้ารวมสถานะพนักงานเข้ากะสด, ระบบอ่านคู่มือในแอป, หน้า Portal โฉมใหม่ | Client-safe Markdown Parser, `BranchStaffPresenceView`, SQL Group Count Aggregation |
 | **v1.3.0** | 23 ก.ย. 2026 | แดชบอร์ดตรวจสอบสาขา, ตรวจวัดอุณหภูมิตู้แช่, ปิดกะอัตโนมัติรอบดึก | Vercel Cron Serverless Handlers (UTC+7 aligned), Lateness Detection Algorithm |
 | **v1.2.0** | 21–22 ก.ย. 2026 | ระบบสะสมแต้ม, ลีดเดอร์บอร์ด, แจ้งเตือนกระดิ่งเด้งสดทันที | Refactor สู่ Service Layer & Dependency Injection Container, Supabase SSR Auth |
 | **v1.1.0** | 17–18 ก.ย. 2026 | โทนสีร้านอาหารสดใหม่ สบายตา รองรับโหมดมืด (Dark Mode) | Row-Level Security (RLS), ลบการส่ง `userId` จากฝั่งหน้าบ้าน, ตาราง `refrigerators` |
+
+---
+
+## [v1.6.1] — 27 กันยายน 2026
+
+### 🏪 สำหรับผู้ใช้งานและผู้บริหาร (Business & User Value)
+- **🌅 ล้างแคชข้ามวันอัตโนมัติเมื่อคงการล็อกอินไว้ (Cross-Day Session & Task Auto-Refresh)**:
+  - หากพนักงานหรือผู้จัดการคงการล็อกอินไว้ข้ามคืน (Keep Login / ไม่ได้กด Logout หรือเปิดแท็บทิ้งไว้บนเคาน์เตอร์):
+    - เมื่อเข้าสู่วันใหม่ ระบบจะล้างแคชงานและสถานะของเมื่อวานทิ้งทันที
+    - ข้อมูลเช็คลิสต์ รายการงาน และกะการทำงานจะถูกดึงใหม่จากฐานข้อมูลสดๆ ของวันปัจจุบัน
+    - การ์ดเลือกกะจะรีเซ็ตสถานะเป็นงานของวันนี้ ไม่นำผลงานของเมื่อวานมาแสดงปะปน
+- **🔄 ตรวจจับการเปลี่ยนวันแบบเรียลไทม์ (Real-time Date Rollover Detection)**:
+  - หากเปิดหน้าจอค้างไว้ข้ามเที่ยงคืน หรือหยิบอุปกรณ์ขึ้นมาปลดล็อกหน้าจอในตอนเช้า ระบบจะตรวจจับและรีเฟรชเข้าสู่วันใหม่ให้ทันที โดยไม่ต้องปิดเบราว์เซอร์หรือล็อกอินใหม่
+
+### ⚙️ ไฮไลท์ทางเทคนิคสำคัญ (Engineering & Architecture)
+- **`isTodayThai` & Strict Timezone Boundaries**: พัฒนาโมดูล `src/utils/date.ts` สำหรับตรวจสอบวันในเขตเวลา `Asia/Bangkok` (UTC+7) อย่างแม่นยำ ป้องกันปัญหาความต่างของเวลาระหว่างเซิร์ฟเวอร์ UTC กับเวลาไทย
+- **Storage Layer Cache Eviction**: ฟังก์ชัน `getActiveSession()` และ `getSessions()` ใน `storage.ts` จะตรวจสอบ `startedAt` เทียบกับวันปัจจุบัน หากเป็นข้อมูลจากวันก่อนหน้าจะลบออกจากหน่วยความจำและ Storage ทันที
+- **Checklist Page Dynamic Re-Sync**: ปรับปรุง `ChecklistPage.tsx` เมื่อพบว่ากะเปลี่ยนวันหรือ Session ID เปลี่ยนแปลง ระบบจะดึงรายการงานใหม่ของวันนี้และเคลียร์สถานะติ๊กถูกของเมื่อวานออกทั้งหมด ไม่ให้สถานะติ๊กค้างข้ามวัน
+- **Auto-Close Past Dangling Sessions**: เมื่อพนักงานเริ่มต้นกะการทำงานของวันนี้ ระบบใน `ChecklistService.ts` จะตัดปิดกะของวันก่อนหน้าที่ยังค้างอยู่ (`isNull(end) AND start < startOfDay`) ให้อัตโนมัติ เพื่อรักษาความถูกต้องของข้อมูลประวัติการทำงาน
+- **Typography & Font Upgrade**: อัปเกรดแบบอักษรเนื้อหาหลัก (Body & Content) สู่ `Noto Sans Thai Looped` อ่านง่าย สบายตา และมีหัวชัดเจนตามหลักการอ่านภาษาไทย พร้อมคงฟอนต์หัวข้อ (Title & Heading) เป็นฟอนต์เดิม (`Prompt`) เพื่อคงเอกลักษณ์ของแบรนด์
 
 ---
 

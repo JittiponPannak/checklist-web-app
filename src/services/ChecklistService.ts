@@ -139,6 +139,18 @@ export class ChecklistService implements IChecklistService {
       let workRows: any[] = [];
 
       if (!activeDbSession) {
+        // Auto-close any unended shift sessions from previous days for this user
+        await this.db
+          .update(shiftSession)
+          .set({ end: startOfDay })
+          .where(
+            and(
+              eq(shiftSession.user, validUserId),
+              isNull(shiftSession.end),
+              lt(shiftSession.start, startOfDay)
+            )
+          );
+
         const [newSession] = await this.db
           .insert(shiftSession)
           .values({
@@ -470,9 +482,7 @@ export class ChecklistService implements IChecklistService {
   }> {
     try {
       const taskRole = mapPositionToTaskRole(position);
-      const today = new Date();
-      const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0);
-      const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
+      const { startOfDay, endOfDay } = getThaiStartAndEndOfDay();
 
       const whereConditions = [
         eq(shiftSession.task_role, taskRole),
@@ -539,9 +549,7 @@ export class ChecklistService implements IChecklistService {
 
   async resetTodayChecklistData(position?: string): Promise<{ success: boolean; error?: string }> {
     try {
-      const today = new Date();
-      const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0);
-      const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
+      const { startOfDay, endOfDay } = getThaiStartAndEndOfDay();
 
       const conditions = [gte(shiftSession.start, startOfDay), lte(shiftSession.start, endOfDay)];
 

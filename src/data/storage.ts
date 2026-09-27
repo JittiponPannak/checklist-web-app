@@ -1,6 +1,10 @@
 import { Notification, Position, ShiftSession, ShiftType, User } from "../types";
 import { DEFAULT_POSITIONS } from "../types";
 import { secureGetItem, secureSetItem, secureRemoveItem } from "../utils/crypto";
+import { getThaiDateString, isTodayThai } from "../utils/date";
+
+export { getThaiDateString, isTodayThai };
+
 
 export function getPositions(): Position[] {
   if (typeof window === "undefined") return DEFAULT_POSITIONS;
@@ -49,7 +53,15 @@ export function saveUsers(users: User[]) {
 export function getSessions(): ShiftSession[] {
   if (typeof window === "undefined") return [];
   try {
-    return JSON.parse(secureGetItem("app_sessions") ?? "[]");
+    const raw = secureGetItem("app_sessions");
+    if (!raw) return [];
+    const list: ShiftSession[] = JSON.parse(raw);
+    if (!Array.isArray(list)) return [];
+    const todaySessions = list.filter((s) => s && s.startedAt && isTodayThai(s.startedAt));
+    if (todaySessions.length !== list.length) {
+      secureSetItem("app_sessions", JSON.stringify(todaySessions));
+    }
+    return todaySessions;
   } catch {
     return [];
   }
@@ -257,10 +269,33 @@ export function getActiveSession(): ShiftSession | null {
   if (typeof window === "undefined") return null;
   try {
     const raw = secureGetItem("app_active_session");
-    return raw ? JSON.parse(raw) : null;
+    if (!raw) return null;
+    const parsed: ShiftSession = JSON.parse(raw);
+    if (!parsed || !parsed.startedAt || !isTodayThai(parsed.startedAt)) {
+      secureRemoveItem("app_active_session");
+      secureRemoveItem("app_selected_shift");
+      return null;
+    }
+    return parsed;
   } catch {
     return null;
   }
+}
+
+export function evictDailyCache() {
+  if (typeof window === "undefined") return;
+  const keys = [
+    "app_sessions",
+    "app_active_session",
+    "app_selected_shift",
+    "app_queue_afternoon",
+    "app_manager_read_notifs",
+    "app_notifications",
+    "cached_branches",
+    "branch_last_update",
+    "branches_last_checked_at",
+  ];
+  keys.forEach((k) => secureRemoveItem(k));
 }
 
 export function saveActiveSession(session: ShiftSession | null) {
