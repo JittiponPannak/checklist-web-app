@@ -19,7 +19,7 @@ export function createServiceContainer(customDb?: any, customSupabaseClient?: an
   const manager = new ManagerService(database, points, notifications);
   const auth = new AuthService(database, customSupabaseClient);
   const branch = new BranchService(database);
-  const refrigerator = new RefrigeratorService(database);
+  const refrigerator = new RefrigeratorService(database, notifications);
 
   return {
     auth,

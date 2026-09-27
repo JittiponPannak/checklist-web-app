@@ -263,6 +263,24 @@ export interface IRefrigeratorService {
     shiftSessionId?: string;
     shift?: ShiftType;
   }): Promise<{ success: boolean; data?: RefrigeratorTaskItem; error?: string }>;
+  processDailyRefrigeratorTasks(params?: {
+    targetDate?: string;
+    yesterdayDate?: string;
+  }): Promise<{
+    success: boolean;
+    processedBranches: number;
+    totalNewTasksCreated: number;
+    totalMissedTasksMarked: number;
+    missedBranchesCount: number;
+    details?: Array<{
+      branchId: string;
+      branchName: string;
+      missedCount: number;
+      missedRefrigerators: string[];
+      newTasksCount: number;
+    }>;
+    error?: string;
+  }>;
 }
 
 export interface IServiceContainer {
