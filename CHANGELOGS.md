@@ -46,12 +46,21 @@
   - **การจำกัดสิทธิ์ตามลำดับขั้น**:
     - กะของพนักงานทั่วไป: ผู้ช่วยผู้จัดการร้านและผู้จัดการร้านสามารถเลือกอนุมัติปกติหรืออนุโลมได้
     - กะของผู้ช่วยผู้จัดการร้าน: เฉพาะผู้จัดการร้าน หรือผู้บริหารระดับสูง (กรรมการ/GM) เท่านั้นที่จะได้รับสิทธิ์และตัวเลือกอนุมัตินี้
+- **🚪 ปรับปรุงหน้าแรกและระบบเข้าสู่ระบบแยก 3 กลุ่มชัดเจน (Restructured Login & Registration)**:
+  - **ลงทะเบียนพนักงานสาขาได้จากหน้าหลักทันที**: เพิ่มฟอร์มสมัครบัญชีพนักงานใหม่ (`EmployeeRegisterForm`) บนหน้าหลัก (`/`) พร้อมเลือกสาขาประจำการได้ทันทีโดยไม่ต้องเปลี่ยนหน้า
+  - **แยกช่องทางเข้าสู่ระบบเป็น 3 ระดับอย่างชัดเจน**:
+    1. **พนักงานสาขา (`/login/employee`)**: สำหรับแคชเชียร์, สต็อก และพนักงานทั่วไป
+    2. **ผู้จัดการและผู้ช่วยผู้จัดการร้าน (`/login/manager`)**: รวมผู้ช่วยผู้จัดการร้าน (`manager_assistant`) และผู้จัดการร้าน (`manager`)
+    3. **ฝ่ายบริหารระดับสูงและกรรมการ (`/login/executive`)**: รวมกรรมการบริหาร (`committee`) และผู้จัดการทั่วไป (`general_manager`)
+  - **ปุ่มและหน้าต่างแจ้งเตือนลืมรหัสผ่าน (Forgot Password Modal)**: เพิ่มปุ่ม "ลืมรหัสผ่าน?" ในทุกฟอร์ม พร้อม Dialog แจ้งขั้นตอนการติดต่อ Central Admin เพื่อขอรีเซ็ตรหัสผ่านอย่างปลอดภัย
+  - **ปรับ Placeholder อีเมลมาตรฐาน**: เปลี่ยนข้อความตัวอย่างอีเมลจาก `cashier@factory.com` และ `manager@factory.com` เป็น `user@email.com` ทุกจุด
 
 ### 🔧 เบื้องหลังทางเทคนิคที่สำคัญ (Key Technical Highlights)
 - **Unified Route Handler `/api/cron/end-shifts`**: ควบรวม `services.manager.processShiftAttendanceAlerts()` (ทำงานก่อนขณะที่ `end` ยังเป็น null) และ `services.checklist.autoEndUnfinishedShifts()` (ทำงานต่อทันที) ไว้ใน Cron ตัวเดียว
 - **Vercel Cron Optimization**: ลดจำนวน Cron ใน `vercel.json` เหลือ 3 ตัว เพื่อความเสถียรและประหยัดโควตา
 - **`PointService.evaluateShiftSession()`**: รองรับพารามิเตอร์ `isException?: boolean` จัดการอัปเดต `point_streak_type = "flawed"` และรักษาสตรีคต่อเนื่อง
 - **`SessionDetailModal` & `ExecutiveDashboard`**: เพิ่มการโต้ตอบถามตัวเลือกการอนุมัติ (Two-choice confirmation modal) พร้อม Toast Feedback แจ้งผลแบบเรียลไทม์
+- **`PortalMainSection` & `ForgotPasswordModal`**: แยกการทำงานเป็น Client Component ที่รองรับการสลับแท็บระหว่างหน้าล็อกอินและฟอร์มลงทะเบียนพนักงานใหม่ พร้อมระบบดักสิทธิ์ Role Guard ในแต่ละหน้าล็อกอินอย่างรัดกุม
 
 ---
 

@@ -9,7 +9,7 @@ import { loginAction } from "../../actions/auth";
 import { ForgotPasswordModal } from "./ForgotPasswordModal";
 import Link from "next/link";
 
-export function ExecutiveAuthPage({
+export function ManagerAuthPage({
     onLogin,
 }: {
     onLogin: (user: User, shift?: ShiftType, redirectPath?: string) => void;
@@ -43,17 +43,17 @@ export function ExecutiveAuthPage({
             }
 
             const role = res.user.role;
-            if (role !== "general_manager" && role !== "committee" && role !== "admin") {
+            if (role !== "manager" && role !== "manager_assistant") {
                 if (role === "employee") {
-                    setError("บัญชีนี้มีสิทธิ์ระดับพนักงานสาขา กรุณาเข้าสู่ระบบผ่านหน้าพนักงานสาขา (Floor Staff)");
+                    setError("บัญชีนี้มีสิทธิ์ระดับพนักงาน กรุณาเข้าสู่ระบบผ่านหน้าพนักงานสาขา (Floor Staff)");
                 } else {
-                    setError("บัญชีนี้มีสิทธิ์ระดับผู้จัดการร้าน กรุณาเข้าสู่ระบบผ่านหน้าผู้จัดการสาขา (Manager Portal)");
+                    setError("บัญชีนี้มีสิทธิ์ระดับบริหาร กรุณาเข้าสู่ระบบผ่านหน้าฝ่ายบริหาร (Executive Portal)");
                 }
                 setLoading(false);
                 return;
             }
 
-            onLogin(res.user, undefined, role === "admin" ? "/admin/dashboard" : "/manager/dashboard");
+            onLogin(res.user, undefined, "/manager/dashboard");
         } catch (err: unknown) {
             console.error("Login error:", err);
             const msg = err instanceof Error ? err.message : "เกิดข้อผิดพลาดในการเชื่อมต่อฐานข้อมูล กรุณาลองใหม่อีกครั้ง";
@@ -74,21 +74,21 @@ export function ExecutiveAuthPage({
                 <header className="mb-2 text-center flex flex-col items-center">
                     <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 text-[var(--color-text)] text-xs font-extrabold border border-amber-500/30 mb-3">
                         <span className="w-1.5 h-1.5 rounded-full bg-amber-500" aria-hidden="true" />
-                        <span>ระบบฝ่ายบริหารและกรรมการ (Executive & General Manager)</span>
+                        <span>ระบบผู้จัดการและผู้ช่วยผู้จัดการร้าน (Store Management)</span>
                     </div>
                     <BrandLogo size={48} showText={true} isDark={false} />
                     <p className="text-xs text-[var(--color-text-muted)] mt-2">
-                        สำหรับกรรมการบริหาร และผู้จัดการทั่วไป ติดตามภาพรวม KPI ทุกสาขา
+                        สำหรับผู้จัดการร้าน และผู้ช่วยผู้จัดการร้าน เข้าตรวจรับรองและดูแลสาขา
                     </p>
                 </header>
 
                 <form onSubmit={handleLogin} className="space-y-4 pt-1 focus-visible:outline-none">
                     <div>
-                        <label htmlFor="exec-email" className="block text-xs font-semibold text-[var(--color-text)] mb-1.5">
-                            อีเมลฝ่ายบริหาร
+                        <label htmlFor="mgr-email" className="block text-xs font-semibold text-[var(--color-text)] mb-1.5">
+                            อีเมลผู้จัดการ / ผู้ช่วยผู้จัดการ
                         </label>
                         <input
-                            id="exec-email"
+                            id="mgr-email"
                             className={inp}
                             placeholder="user@email.com"
                             type="email"
@@ -100,7 +100,7 @@ export function ExecutiveAuthPage({
 
                     <div>
                         <div className="flex items-center justify-between mb-1.5">
-                            <label htmlFor="exec-password" className="block text-xs font-semibold text-[var(--color-text)]">
+                            <label htmlFor="mgr-password" className="block text-xs font-semibold text-[var(--color-text)]">
                                 รหัสผ่าน
                             </label>
                             <button
@@ -112,7 +112,7 @@ export function ExecutiveAuthPage({
                             </button>
                         </div>
                         <input
-                            id="exec-password"
+                            id="mgr-password"
                             className={inp}
                             placeholder="••••••••"
                             type="password"
@@ -135,7 +135,7 @@ export function ExecutiveAuthPage({
                             loading ? "opacity-70 cursor-not-allowed" : ""
                         }`}
                     >
-                        <span>{loading ? "กำลังตรวจสอบข้อมูล..." : "เข้าสู่ระบบฝ่ายบริหารและตรวจสอบ →"}</span>
+                        <span>{loading ? "กำลังตรวจสอบข้อมูล..." : "เข้าสู่ระบบผู้จัดการสาขา →"}</span>
                     </button>
                 </form>
 
@@ -143,8 +143,8 @@ export function ExecutiveAuthPage({
                     <Link href="/login/employee" className="inline-flex items-center justify-center min-h-[36px] text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)] font-semibold transition-colors">
                         สำหรับพนักงานหน้าร้านสาขา (Floor Staff) →
                     </Link>
-                    <Link href="/login/manager" className="inline-flex items-center justify-center min-h-[36px] text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)] font-semibold transition-colors">
-                        สำหรับผู้จัดการและผู้ช่วยผู้จัดการร้าน (Manager) →
+                    <Link href="/login/executive" className="inline-flex items-center justify-center min-h-[36px] text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)] font-semibold transition-colors">
+                        สำหรับฝ่ายบริหารและกรรมการ (Executive & GM) →
                     </Link>
                     <Link href="/" className="inline-flex items-center justify-center min-h-[36px] text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)] font-semibold transition-colors">
                         ← กลับสู่หน้าหลักเลือกช่องทางเข้างาน

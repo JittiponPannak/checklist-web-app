@@ -109,7 +109,7 @@ export function AddStaffModal({
             <input
               id="new-staff-email"
               type="email"
-              placeholder="name@factory.com"
+              placeholder="user@email.com"
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
               className="w-full bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-xl px-3.5 py-2 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-subtle)] focus:border-amber-400 focus:outline-none"
