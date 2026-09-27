@@ -157,7 +157,7 @@ export function ManagerAuthPage({ onLogin }: { onLogin: (user: User) => void }) 
             <input
               id="mgr-email"
               className={inputStyle}
-              placeholder="manager@factory.com"
+              placeholder="user@email.com"
               type="email"
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}

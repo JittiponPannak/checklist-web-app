@@ -13,6 +13,9 @@ import {
   saveCurrentUser,
   saveSelectedShift,
   saveSessions,
+  getThaiDateString,
+  isTodayThai,
+  evictDailyCache,
 } from "../data/storage";
 import {
   getOrCreateShiftSessionAction,
@@ -69,19 +72,44 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const checkDateRollover = React.useCallback(() => {
+    if (typeof window === "undefined") return;
+    const currentThaiDate = getThaiDateString();
+    const lastVisit = localStorage.getItem("app_last_visit_date");
+    const activeSess = getActiveSession();
+
+    // Condition 1: Recorded date is different from today's Thai date
+    // Condition 2: Active session exists in state but started on a past day
+    const isPastSession = activeSession?.startedAt && !isTodayThai(activeSession.startedAt);
+    const dateChanged = Boolean(lastVisit && lastVisit !== currentThaiDate);
+
+    if (dateChanged || isPastSession || (!activeSess && activeSession)) {
+      console.info("Daily cache rollover triggered. Purging previous day's operational cache...");
+      localStorage.setItem("app_last_visit_date", currentThaiDate);
+      evictDailyCache();
+      invalidateBranchCache();
+
+      setActiveSessionState(null);
+      setSelectedShiftState(null);
+      setSessionsState([]);
+
+      window.dispatchEvent(new CustomEvent("app:date-rollover", { detail: { date: currentThaiDate } }));
+
+      if (window.location.pathname.includes("/checklist")) {
+        router.replace("/shift");
+      }
+    }
+  }, [activeSession, router]);
+
   useEffect(() => {
     // Check if the last time the user visited the site is a different day
     if (typeof window !== "undefined") {
       try {
-        const todayDateStr = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Bangkok" }).format(new Date());
+        const todayDateStr = getThaiDateString();
         const lastVisit = localStorage.getItem("app_last_visit_date");
-        if (lastVisit && lastVisit !== todayDateStr) {
-          // Different day: evict operational cache data
-          secureRemoveItem("app_sessions");
-          secureRemoveItem("app_active_session");
-          secureRemoveItem("app_selected_shift");
-          secureRemoveItem("app_manager_read_notifs");
-          secureRemoveItem("app_notifications");
+        if (!lastVisit || lastVisit !== todayDateStr) {
+          // Different day or first init: evict operational cache data
+          evictDailyCache();
           invalidateBranchCache();
         }
         localStorage.setItem("app_last_visit_date", todayDateStr);
@@ -91,20 +119,25 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
 
     const storedUser = getCurrentUser();
-    const storedShift = getSelectedShift();
     const storedSession = getActiveSession();
+    // Only restore shift if there's a valid today session
+    const storedShift = storedSession ? getSelectedShift() : null;
     const storedSessions = getSessions();
 
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (storedUser) setCurrentUserState(storedUser);
-    if (storedShift) setSelectedShiftState(storedShift);
+    if (storedShift) {
+      setSelectedShiftState(storedShift);
+    } else {
+      secureRemoveItem("app_selected_shift");
+    }
 
-    // Only restore active session if it matches the current user
+    // Only restore active session if it matches the current user and is from today
     if (storedSession && storedUser && storedSession.userId === storedUser.id) {
       setActiveSessionState(storedSession);
-    } else if (storedSession && (!storedUser || storedSession.userId !== storedUser?.id)) {
+    } else {
       secureRemoveItem("app_active_session");
       secureRemoveItem("app_selected_shift");
+      setActiveSessionState(null);
     }
 
     if (storedSessions && storedUser) {
@@ -113,6 +146,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     } else {
       setSessionsState([]);
     }
+
+    // Set up real-time listener for tab focus, visibility change, and heartbeat
+    const onActivity = () => {
+      if (typeof document !== "undefined" && !document.hidden) {
+        checkDateRollover();
+      }
+    };
+
+    window.addEventListener("focus", onActivity);
+    document.addEventListener("visibilitychange", onActivity);
+    const interval = setInterval(checkDateRollover, 30000);
 
     // Check Supabase Auth state for OAuth logins
     const supabase = createClient();
@@ -139,7 +183,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     });
 
     setIsReady(true);
-  }, []);
+
+    return () => {
+      window.removeEventListener("focus", onActivity);
+      document.removeEventListener("visibilitychange", onActivity);
+      clearInterval(interval);
+    };
+  }, [checkDateRollover]);
 
   function setCurrentUser(user: User | null) {
     setCurrentUserState(user);
@@ -312,6 +362,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }
 
   function updateSession(updated: ShiftSession) {
+    if (!isTodayThai(updated.startedAt)) {
+      setActiveSession(null);
+      return;
+    }
     const allSessions = getSessions();
     const hasSess = allSessions.some((s) => s.id === updated.id);
     const next = hasSess

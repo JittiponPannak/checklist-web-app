@@ -2,6 +2,7 @@
 
 import { getServices } from "../services/container";
 import { RefrigeratorConfig } from "../services/RefrigeratorService";
+import { ShiftType } from "../types";
 
 export type { RefrigeratorConfig };
 export type { RefrigeratorTaskItem } from "../services/types";
@@ -52,7 +53,7 @@ export async function updateRefrigeratorTaskAction(params: {
   isOkay?: boolean;
   comment?: string;
   shiftSessionId?: string;
-  shift?: any;
+  shift?: ShiftType;
 }) {
   const services = getServices();
   return await services.refrigerator.updateRefrigeratorTask(params);
@@ -61,4 +62,12 @@ export async function updateRefrigeratorTaskAction(params: {
 export async function ensureDailyRefrigeratorTasksAction(branchId: string, dateStr?: string) {
   const services = getServices();
   return await services.refrigerator.ensureDailyRefrigeratorTasks(branchId, dateStr);
+}
+
+export async function processDailyRefrigeratorTasksAction(params?: {
+  targetDate?: string;
+  yesterdayDate?: string;
+}) {
+  const services = getServices();
+  return await services.refrigerator.processDailyRefrigeratorTasks(params);
 }

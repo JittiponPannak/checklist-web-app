@@ -32,7 +32,8 @@ import { NavbarRefreshControl } from "../common/NavbarRefreshControl";
 import { invalidateBranchCache } from "../../utils/cache";
 import { LeaderboardWidget } from "./LeaderboardWidget";
 import { ErrorBoundary } from "../common/ErrorBoundary";
-import { ClipboardCheck, ShieldCheck, Building2, Award, Snowflake, History, CheckCircle2, AlertCircle, LogOut } from "lucide-react";
+import { ClipboardCheck, ShieldCheck, Building2, Award, Snowflake, History, CheckCircle2, AlertCircle, LogOut, Users } from "lucide-react";
+import Link from "next/link";
 import { LateReasonModal } from "../common/LateReasonModal";
 
 export type ExecutiveRole = "manager_assistant" | "manager" | "committee" | "general_manager";
@@ -196,13 +197,24 @@ export function ExecutiveDashboard({
     // eslint-disable-next-line react-hooks/set-state-in-effect
     loadDbSessions();
 
+    const handleRefresh = () => {
+      loadDbSessions();
+    };
+
+    window.addEventListener("app:date-rollover", handleRefresh);
+    window.addEventListener("focus", handleRefresh);
+
     // Auto-refresh from Supabase DB every 6 seconds (paused if tab is backgrounded)
     const interval = setInterval(() => {
       if (typeof document !== "undefined" && document.hidden) return;
       loadDbSessions();
     }, 6000);
 
-    return () => clearInterval(interval);
+    return () => {
+      window.removeEventListener("app:date-rollover", handleRefresh);
+      window.removeEventListener("focus", handleRefresh);
+      clearInterval(interval);
+    };
   }, [loadDbSessions]);
 
   // Load history metadata
@@ -455,7 +467,11 @@ export function ExecutiveDashboard({
     setTimeout(() => setActionFeedback(null), 3500);
   }
 
-  async function handleApproveSession(sessionId: string, type: "assistant" | "manager") {
+  async function handleApproveSession(
+    sessionId: string,
+    type: "assistant" | "manager",
+    isException?: boolean
+  ) {
     // Check if target session is from assistant manager
     const target = sessions.find((s) => s.id === sessionId);
     const isAssistantSession =
@@ -490,15 +506,17 @@ export function ExecutiveDashboard({
       const res = await approveShiftSessionAction({
         shiftSessionId: sessionId,
         role: roleForDb,
+        isException: Boolean(isException),
       });
 
       if (res.success) {
+        const exceptionNotice = isException ? " (แบบอนุโลม / Exception: สตรีคจะคงอยู่เป็นสถานะ Flawed)" : "";
         showToast(
           type === "assistant"
-            ? "บันทึกการรับรองกะโดยผู้ช่วยผู้จัดการลงฐานข้อมูลเรียบร้อยแล้ว ✓"
+            ? `บันทึกการรับรองกะโดยผู้ช่วยผู้จัดการลงฐานข้อมูลเรียบร้อยแล้ว${exceptionNotice} ✓`
             : (currentRole === "committee" || currentRole === "general_manager")
-              ? `รับรองผลการตรวจงานโดย${roleConfig.title}ลงฐานข้อมูลเรียบร้อยแล้ว ✓`
-              : "อนุมัติกะโดยผู้จัดการร้านลงฐานข้อมูลเรียบร้อยแล้ว ✓"
+              ? `รับรองผลการตรวจงานโดย${roleConfig.title}ลงฐานข้อมูลเรียบร้อยแล้ว${exceptionNotice} ✓`
+              : `อนุมัติกะโดยผู้จัดการร้านลงฐานข้อมูลเรียบร้อยแล้ว${exceptionNotice} ✓`
         );
         await loadDbSessions();
       } else {
@@ -736,6 +754,15 @@ export function ExecutiveDashboard({
           </div>
 
           <div className="flex items-center gap-2.5 z-10 flex-wrap sm:flex-nowrap">
+            <Link
+              href="/manager/staff-status"
+              className="px-3.5 py-2.5 bg-amber-500 hover:bg-amber-400 text-amber-950 text-xs font-bold rounded-xl shadow-xs transition-all flex items-center gap-1.5 shrink-0"
+              title="ตรวจสอบรายชื่อพนักงานในสาขา การเข้ากะ และจำนวนกะสะสม"
+            >
+              <Users size={15} />
+              <span>พนักงานในสาขา & สถานะกะ →</span>
+            </Link>
+
             {currentRole === "manager_assistant" && (
               <button
                 type="button"
@@ -2203,10 +2230,11 @@ export function ExecutiveDashboard({
             canApprove={canApprove}
             isApproved={isApproved}
             approveRoleTitle={approveTitle}
-            onApprove={(sessId) => {
+            onApprove={(sessId, isException) => {
               handleApproveSession(
                 sessId,
-                isAssistantSess ? "manager" : currentRole === "manager_assistant" ? "assistant" : "manager"
+                isAssistantSess ? "manager" : currentRole === "manager_assistant" ? "assistant" : "manager",
+                isException
               );
             }}
           />

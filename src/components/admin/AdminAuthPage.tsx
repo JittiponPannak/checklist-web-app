@@ -3,6 +3,7 @@ import { User } from "../../types";
 import { loginAction } from "../../actions/auth";
 import { BrandLogo } from "../common/BrandLogo";
 import { ThemeToggle } from "../common/ThemeToggle";
+import { ForgotPasswordModal } from "../auth/ForgotPasswordModal";
 import Link from "next/link";
 
 export function AdminAuthPage({ onLogin }: { onLogin: (user: User) => void }) {
@@ -12,6 +13,7 @@ export function AdminAuthPage({ onLogin }: { onLogin: (user: User) => void }) {
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showForgotModal, setShowForgotModal] = useState(false);
 
   async function handleLogin() {
     if (!form.email.trim() || !form.password.trim()) {
@@ -63,12 +65,12 @@ export function AdminAuthPage({ onLogin }: { onLogin: (user: User) => void }) {
 
           <div>
             <label htmlFor="admin-email" className="block text-xs font-semibold text-[var(--color-text-muted)] mb-1">
-              อีเมลฝ่ายบริหาร
+              อีเมลผู้ดูแลระบบ
             </label>
             <input
               id="admin-email"
               className={inputStyle}
-              placeholder="manager@factory.com"
+              placeholder="user@email.com"
               type="email"
               autoComplete="email"
               aria-invalid={Boolean(error)}
@@ -79,9 +81,18 @@ export function AdminAuthPage({ onLogin }: { onLogin: (user: User) => void }) {
           </div>
 
           <div>
-            <label htmlFor="admin-password" className="block text-xs font-semibold text-[var(--color-text-muted)] mb-1">
-              รหัสผ่าน
-            </label>
+            <div className="flex items-center justify-between mb-1">
+              <label htmlFor="admin-password" className="block text-xs font-semibold text-[var(--color-text-muted)]">
+                รหัสผ่าน
+              </label>
+              <button
+                type="button"
+                onClick={() => setShowForgotModal(true)}
+                className="text-xs text-amber-700 dark:text-amber-400 hover:underline cursor-pointer font-medium"
+              >
+                ลืมรหัสผ่าน?
+              </button>
+            </div>
             <input
               id="admin-password"
               className={inputStyle}
@@ -133,6 +144,11 @@ export function AdminAuthPage({ onLogin }: { onLogin: (user: User) => void }) {
           </Link>
         </div>
       </div>
+
+      <ForgotPasswordModal
+        isOpen={showForgotModal}
+        onClose={() => setShowForgotModal(false)}
+      />
     </div>
   );
 }

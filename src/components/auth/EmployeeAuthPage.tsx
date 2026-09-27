@@ -1,17 +1,18 @@
 import { useState, useEffect } from "react";
-import { User } from "../../types";
+import { User, ShiftType } from "../../types";
 import { getUsers, saveUsers } from "../../data/storage";
 import { BrandLogo } from "../common/BrandLogo";
 import { loginAction, registerAction } from "../../actions/auth";
 import { DashboardBranch } from "../../actions/branch";
 import { fetchBranchesWithCache } from "../../utils/cache";
 import { ThemeToggle } from "../common/ThemeToggle";
+import { ForgotPasswordModal } from "./ForgotPasswordModal";
 import Link from "next/link";
 
 export function EmployeeAuthPage({
     onLogin,
 }: {
-    onLogin: (user: User, shift?: any, redirectPath?: string) => void;
+    onLogin: (user: User, shift?: ShiftType, redirectPath?: string) => void;
 }) {
     const [tab, setTab] = useState<"login" | "register">("login");
     const [branches, setBranches] = useState<DashboardBranch[]>([]);
@@ -24,6 +25,7 @@ export function EmployeeAuthPage({
     });
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
+    const [showForgotModal, setShowForgotModal] = useState(false);
 
     useEffect(() => {
         if (tab === "register") {
@@ -55,20 +57,21 @@ export function EmployeeAuthPage({
             }
 
             const role = res.user.role;
-            if (role !== "employee" && role !== "manager_assistant") {
-                setError("บัญชีนี้มีสิทธิ์ระดับบริหาร กรุณาเข้าสู่ระบบผ่านหน้าฝ่ายบริหาร (Management Portal)");
+            if (role !== "employee") {
+                if (role === "manager_assistant" || role === "manager") {
+                    setError("บัญชีนี้มีสิทธิ์ระดับผู้จัดการ กรุณาเข้าสู่ระบบผ่านหน้าผู้จัดการและผู้ช่วยฯ (Manager Portal)");
+                } else {
+                    setError("บัญชีนี้มีสิทธิ์ระดับบริหาร กรุณาเข้าสู่ระบบผ่านหน้าฝ่ายบริหาร (Executive Portal)");
+                }
                 setLoading(false);
                 return;
             }
 
-            if (role === "manager_assistant") {
-                onLogin(res.user, undefined, "/manager/dashboard");
-            } else {
-                onLogin(res.user);
-            }
-        } catch (err: any) {
+            onLogin(res.user);
+        } catch (err: unknown) {
             console.error("Login error:", err);
-            setError(err?.message || "เกิดข้อผิดพลาดในการเชื่อมต่อฐานข้อมูล กรุณาลองใหม่อีกครั้ง");
+            const msg = err instanceof Error ? err.message : "เกิดข้อผิดพลาดในการเชื่อมต่อฐานข้อมูล กรุณาลองใหม่อีกครั้ง";
+            setError(msg);
             setLoading(false);
         }
     }
@@ -101,9 +104,10 @@ export function EmployeeAuthPage({
             saveUsers([...localUsers, res.user]);
 
             onLogin(res.user);
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error("Register error:", err);
-            setError(err?.message || "เกิดข้อผิดพลาดในการสมัครสมาชิก กรุณาลองใหม่อีกครั้ง");
+            const msg = err instanceof Error ? err.message : "เกิดข้อผิดพลาดในการสมัครสมาชิก กรุณาลองใหม่อีกครั้ง";
+            setError(msg);
             setLoading(false);
         }
     }
@@ -120,7 +124,7 @@ export function EmployeeAuthPage({
                 <header className="mb-2 text-center flex flex-col items-center">
                     <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 text-[var(--color-text)] text-xs font-extrabold border border-amber-500/30 mb-3">
                         <span className="w-1.5 h-1.5 rounded-full bg-amber-500" aria-hidden="true" />
-                        <span>ระบบพนักงานและผู้ช่วยผู้จัดการร้าน</span>
+                        <span>ระบบพนักงานสาขา (Floor Staff)</span>
                     </div>
                     <BrandLogo size={48} showText={true} isDark={false} />
                 </header>
@@ -166,8 +170,6 @@ export function EmployeeAuthPage({
                                 />
                             </div>
 
-
-
                             <div>
                                 <label htmlFor="reg-branch" className="block text-xs font-semibold text-[var(--color-text-muted)] mb-1">
                                     สังกัดสาขา
@@ -194,7 +196,7 @@ export function EmployeeAuthPage({
                         <input
                             id="emp-email"
                             className={inp}
-                            placeholder="cashier@factory.com"
+                            placeholder="user@email.com"
                             type="email"
                             autoComplete="email"
                             aria-invalid={Boolean(error)}
@@ -205,9 +207,20 @@ export function EmployeeAuthPage({
                     </div>
 
                     <div>
-                        <label htmlFor="emp-password" className="block text-xs font-semibold text-[var(--color-text-muted)] mb-1">
-                            รหัสผ่าน
-                        </label>
+                        <div className="flex items-center justify-between mb-1">
+                            <label htmlFor="emp-password" className="block text-xs font-semibold text-[var(--color-text-muted)]">
+                                รหัสผ่าน
+                            </label>
+                            {tab === "login" && (
+                                <button
+                                    type="button"
+                                    onClick={() => setShowForgotModal(true)}
+                                    className="text-xs text-amber-700 dark:text-amber-400 hover:underline cursor-pointer font-medium"
+                                >
+                                    ลืมรหัสผ่าน?
+                                </button>
+                            )}
+                        </div>
                         <input
                             id="emp-password"
                             className={inp}
@@ -265,14 +278,22 @@ export function EmployeeAuthPage({
                 </div>
 
                 <div className="mt-4 pt-4 border-t border-[var(--color-border)] text-center flex flex-col gap-1.5">
+                    <Link href="/login/manager" className="inline-flex items-center justify-center min-h-[36px] text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)] font-semibold transition-colors">
+                        สำหรับผู้จัดการและผู้ช่วยผู้จัดการร้าน →
+                    </Link>
                     <Link href="/login/executive" className="inline-flex items-center justify-center min-h-[36px] text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)] font-semibold transition-colors">
-                        สำหรับระดับผู้จัดการและฝ่ายบริหาร →
+                        สำหรับฝ่ายบริหารและกรรมการ (Executive) →
                     </Link>
                     <Link href="/" className="inline-flex items-center justify-center min-h-[36px] text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)] font-semibold transition-colors">
                         ← กลับสู่หน้าหลักเลือกช่องทางเข้างาน
                     </Link>
                 </div>
             </div>
+
+            <ForgotPasswordModal
+                isOpen={showForgotModal}
+                onClose={() => setShowForgotModal(false)}
+            />
         </div>
     );
 }

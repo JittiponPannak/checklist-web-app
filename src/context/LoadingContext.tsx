@@ -8,6 +8,7 @@ interface LoadingContextType {
   isPageTransition: boolean;
   startLoading: (message?: string, isTransition?: boolean) => void;
   stopLoading: () => void;
+  resetLoading: () => void;
   withLoading: <T>(action: () => Promise<T>, message?: string) => Promise<T>;
 }
 
@@ -40,10 +41,23 @@ export function LoadingProvider({ children }: { children: React.ReactNode }) {
   const stopLoading = useCallback(() => {
     activeCountRef.current = Math.max(0, activeCountRef.current - 1);
     if (activeCountRef.current === 0) {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
       setIsLoading(false);
       setIsPageTransition(false);
     }
+  }, []);
+
+  const resetLoading = useCallback(() => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+    activeCountRef.current = 0;
+    setIsLoading(false);
+    setIsPageTransition(false);
   }, []);
 
   const withLoading = useCallback(
@@ -66,6 +80,7 @@ export function LoadingProvider({ children }: { children: React.ReactNode }) {
         isPageTransition,
         startLoading,
         stopLoading,
+        resetLoading,
         withLoading,
       }}
     >

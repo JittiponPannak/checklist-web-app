@@ -1,30 +1,41 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Snowflake, CheckCircle2, Clock, UserCheck, AlertTriangle, RefreshCw, Thermometer, ShieldCheck, FileText, Ban } from "lucide-react";
+import { Snowflake, CheckCircle2, Clock, UserCheck, AlertTriangle, RefreshCw, Thermometer, ShieldCheck, Ban } from "lucide-react";
 import { RefrigeratorTaskItem, getBranchRefrigeratorTasksAction } from "../../actions/refrigerator";
 import { fmtTime } from "../../data/storage";
 import { User } from "../../types";
 
+function getThaiToday(): string {
+  const y = new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Bangkok", year: "numeric" }).format(new Date());
+  const m = new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Bangkok", month: "2-digit" }).format(new Date());
+  const d = new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Bangkok", day: "2-digit" }).format(new Date());
+  return `${y}-${m}-${d}`;
+}
+
+function getThaiYesterday(): string {
+  const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const y = new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Bangkok", year: "numeric" }).format(yesterday);
+  const m = new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Bangkok", month: "2-digit" }).format(yesterday);
+  const d = new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Bangkok", day: "2-digit" }).format(yesterday);
+  return `${y}-${m}-${d}`;
+}
+
 export function BranchRefrigeratorLiveView({ user }: { user: User }) {
   const [tasks, setTasks] = useState<RefrigeratorTaskItem[]>([]);
-  const [disabledRefrigerators, setDisabledRefrigerators] = useState<
-    Array<{ id: string; name: string; minTemperature: number; maxTemperature: number }>
-  >([]);
   const [branchName, setBranchName] = useState<string>("");
+  const [selectedDate, setSelectedDate] = useState<string>(getThaiToday);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<"all" | "done" | "pending" | "disabled" | "issues">("all");
 
   const loadData = useCallback(async (isSilent = false) => {
+    if (!isSilent) setRefreshing(true);
     try {
-      const res = await getBranchRefrigeratorTasksAction({ userId: user.id });
+      const res = await getBranchRefrigeratorTasksAction({ userId: user.id, dateStr: selectedDate });
       if (res.success && res.data) {
         setTasks(res.data);
-        if (res.disabledRefrigerators) {
-          setDisabledRefrigerators(res.disabledRefrigerators);
-        }
         if (res.branchName) setBranchName(res.branchName);
         setError(null);
       } else if (!isSilent) {
@@ -36,15 +47,34 @@ export function BranchRefrigeratorLiveView({ user }: { user: User }) {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [user.id]);
+  }, [user.id, selectedDate]);
 
   useEffect(() => {
-    void loadData(true);
-    const interval = setInterval(() => {
-      void loadData(true);
-    }, 10000);
-    return () => clearInterval(interval);
-  }, [loadData]);
+    let isMounted = true;
+    const fetchInitial = async () => {
+      try {
+        const res = await getBranchRefrigeratorTasksAction({ userId: user.id, dateStr: selectedDate });
+        if (!isMounted) return;
+        if (res.success && res.data) {
+          setTasks(res.data);
+          if (res.branchName) setBranchName(res.branchName);
+          setError(null);
+        }
+      } catch (err: unknown) {
+        if (!isMounted) return;
+        setError((err as Error)?.message || "เกิดข้อผิดพลาดในการโหลดข้อมูล");
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+
+    void fetchInitial();
+    const interval = setInterval(fetchInitial, 10000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [user.id, selectedDate]);
 
   const total = tasks.length;
   const done = tasks.filter((t) => t.completed).length;
@@ -52,8 +82,9 @@ export function BranchRefrigeratorLiveView({ user }: { user: User }) {
   const pending = tasks.filter((t) => !t.completed && !t.disableCheck).length;
 
   const isTaskIssue = (t: RefrigeratorTaskItem) => {
-    if (!t.completed || t.disableCheck) return false;
+    if (t.disableCheck) return false;
     if (!t.isOkay) return true;
+    if (!t.completed) return false;
     if (t.temperature !== null && t.temperature !== undefined) {
       if (t.temperature > t.maxTemperature) return true;
       if (t.minTemperature !== undefined && t.temperature < t.minTemperature) return true;
@@ -96,15 +127,50 @@ export function BranchRefrigeratorLiveView({ user }: { user: User }) {
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={() => loadData()}
-          disabled={refreshing}
-          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-2)] text-[var(--color-text)] hover:text-sky-600 hover:border-sky-300 text-xs font-bold transition-colors cursor-pointer shrink-0 self-start sm:self-auto"
-        >
-          <RefreshCw size={13} className={refreshing ? "animate-spin text-sky-600" : ""} />
-          <span>รีเฟรชข้อมูล</span>
-        </button>
+        <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+          {/* Quick Date Selector */}
+          <div className="flex items-center gap-1 bg-[var(--color-surface-2)] p-1 rounded-xl border border-[var(--color-border)] text-xs">
+            <button
+              type="button"
+              onClick={() => setSelectedDate(getThaiToday())}
+              className={`px-2.5 py-1 rounded-lg font-bold transition-all cursor-pointer ${
+                selectedDate === getThaiToday()
+                  ? "bg-[var(--color-brown)] text-amber-100 dark:bg-amber-400 dark:text-amber-950 shadow-xs"
+                  : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+              }`}
+            >
+              วันนี้
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelectedDate(getThaiYesterday())}
+              className={`px-2.5 py-1 rounded-lg font-bold transition-all cursor-pointer ${
+                selectedDate === getThaiYesterday()
+                  ? "bg-[var(--color-brown)] text-amber-100 dark:bg-amber-400 dark:text-amber-950 shadow-xs"
+                  : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+              }`}
+            >
+              เมื่อวาน
+            </button>
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => e.target.value && setSelectedDate(e.target.value)}
+              className="bg-transparent border-none text-[var(--color-text)] text-xs font-mono px-1.5 py-0.5 rounded cursor-pointer focus:outline-none"
+              title="เลือกวันที่ต้องการดูประวัติ"
+            />
+          </div>
+
+          <button
+            type="button"
+            onClick={() => loadData()}
+            disabled={refreshing}
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-2)] text-[var(--color-text)] hover:text-sky-600 hover:border-sky-300 text-xs font-bold transition-colors cursor-pointer shrink-0"
+          >
+            <RefreshCw size={13} className={refreshing ? "animate-spin text-sky-600" : ""} />
+            <span>รีเฟรช</span>
+          </button>
+        </div>
       </div>
 
       {/* KPI Cards Cockpit */}
@@ -327,8 +393,12 @@ export function BranchRefrigeratorLiveView({ user }: { user: User }) {
                             {isTempHigh ? "อุณหภูมิเกินเกณฑ์" : isTempLow ? "อุณหภูมิต่ำกว่าเกณฑ์" : !task.isOkay ? "พบสิ่งผิดปกติ" : "ปกติเรียบร้อย"}
                           </span>
                         ) : (
-                          <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 dark:bg-amber-950/80 dark:text-amber-200">
-                            ยังไม่ได้รับการตรวจ
+                          <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${
+                            !task.isOkay
+                              ? "bg-rose-100 text-rose-800 border-rose-300 dark:bg-rose-950/80 dark:text-rose-200"
+                              : "bg-amber-100 text-amber-900 border-amber-300 dark:bg-amber-950/80 dark:text-amber-200"
+                          }`}>
+                            {!task.isOkay ? "⚠️ ขาดการตรวจเช็ค" : "ยังไม่ได้รับการตรวจ"}
                           </span>
                         )}
                       </div>
@@ -361,9 +431,18 @@ export function BranchRefrigeratorLiveView({ user }: { user: User }) {
                           )}
                         </div>
                       ) : (
-                        <p className="text-xs text-[var(--color-text-muted)] mt-1">
-                          รอพนักงานสต็อกประจำกะบันทึกผลการตรวจเช็คอุณหภูมิ
-                        </p>
+                        <div className="mt-1">
+                          {task.comment ? (
+                            <span className="inline-flex items-center gap-1 text-xs font-semibold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/50 px-2 py-0.5 rounded border border-rose-200 dark:border-rose-800">
+                              <AlertTriangle size={11} />
+                              <span>{task.comment}</span>
+                            </span>
+                          ) : (
+                            <p className="text-xs text-[var(--color-text-muted)]">
+                              รอพนักงานสต็อกประจำกะบันทึกผลการตรวจเช็คอุณหภูมิ
+                            </p>
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>

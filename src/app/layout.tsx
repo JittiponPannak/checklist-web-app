@@ -60,11 +60,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 var now = new Date();
                 var todayStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok' }).format(now);
                 var lastVisit = localStorage.getItem('app_last_visit_date');
-                if (lastVisit && lastVisit !== todayStr) {
+                if (!lastVisit || lastVisit !== todayStr) {
                   var keysToRemove = [
                     'app_sessions',
                     'app_active_session',
                     'app_selected_shift',
+                    'app_queue_afternoon',
                     'cached_branches',
                     'branch_last_update',
                     'branches_last_checked_at',

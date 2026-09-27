@@ -49,7 +49,7 @@ export function NotificationCenter() {
           "postgres_changes",
           {
             event: "*",
-            schema: "public",
+            schema: "checklist_web_app",
             table: "notifications",
           },
           () => {
@@ -68,7 +68,7 @@ export function NotificationCenter() {
         try {
           const supabase = createClient();
           supabase.removeChannel(channel);
-        } catch (_) {}
+        } catch (_) { }
       }
     };
   }, [currentUser?.id, currentUser?.branchId]);
@@ -179,52 +179,51 @@ export function NotificationCenter() {
             </div>
 
             <div className="overflow-y-auto divide-y divide-[var(--color-border)] flex-1">
-            {notifications.length === 0 ? (
-              <div className="p-8 text-center text-xs text-[var(--color-text-muted)] flex flex-col items-center gap-2">
-                <Bell className="w-8 h-8 opacity-30 stroke-1" />
-                <p className="font-bold text-[var(--color-text)]">ไม่มีการแจ้งเตือนใหม่ในขณะนี้</p>
-                <p className="text-xs text-[var(--color-text-subtle)] max-w-xs">เมื่อมีการส่งมอบกะ รายงานแจ้งเตือนอุณหภูมิตู้แช่ หรือการรับรองงาน ข้อมูลจะแสดงที่นี่แบบเรียลไทม์</p>
-              </div>
-            ) : (
-              notifications.map((n) => (
-                <div
-                  key={n.id}
-                  onClick={() => !n.read && handleMarkAsRead(n.id)}
-                  className={`p-3 sm:p-3.5 transition-colors flex items-start gap-3 cursor-pointer ${
-                    n.read
-                      ? "hover:bg-[var(--color-surface-2)]/50 text-[var(--color-text-muted)]"
-                      : "bg-amber-500/5 hover:bg-amber-500/10 font-medium"
-                  }`}
-                >
-                  <div className="mt-0.5 p-1.5 rounded-lg bg-[var(--color-surface)] border border-[var(--color-border)] shadow-xs shrink-0">
-                    {getTypeIcon(n.type)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between gap-1 mb-0.5">
-                      <p className="text-xs font-bold text-[var(--color-text)] truncate">{n.title}</p>
-                      {!n.read && (
-                        <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
-                      )}
-                    </div>
-                    <p className="text-xs text-[var(--color-text-muted)] leading-relaxed break-words">
-                      {n.message}
-                    </p>
-                    <div className="mt-1 flex items-center gap-2 text-xs text-[var(--color-text-subtle)]">
-                      <span>
-                        {new Date(n.createdAt).toLocaleTimeString("th-TH", {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </span>
-                      {n.branchName && <span>• สาขา {n.branchName}</span>}
-                    </div>
-                  </div>
+              {notifications.length === 0 ? (
+                <div className="p-8 text-center text-xs text-[var(--color-text-muted)] flex flex-col items-center gap-2">
+                  <Bell className="w-8 h-8 opacity-30 stroke-1" />
+                  <p className="font-bold text-[var(--color-text)]">ไม่มีการแจ้งเตือนใหม่ในขณะนี้</p>
+                  <p className="text-xs text-[var(--color-text-subtle)] max-w-xs">เมื่อมีการส่งมอบกะ รายงานแจ้งเตือนอุณหภูมิตู้แช่ หรือการรับรองงาน ข้อมูลจะแสดงที่นี่แบบเรียลไทม์</p>
                 </div>
-              ))
-            )}
+              ) : (
+                notifications.map((n) => (
+                  <div
+                    key={n.id}
+                    onClick={() => !n.read && handleMarkAsRead(n.id)}
+                    className={`p-3 sm:p-3.5 transition-colors flex items-start gap-3 cursor-pointer ${n.read
+                        ? "hover:bg-[var(--color-surface-2)]/50 text-[var(--color-text-muted)]"
+                        : "bg-amber-500/5 hover:bg-amber-500/10 font-medium"
+                      }`}
+                  >
+                    <div className="mt-0.5 p-1.5 rounded-lg bg-[var(--color-surface)] border border-[var(--color-border)] shadow-xs shrink-0">
+                      {getTypeIcon(n.type)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-1 mb-0.5">
+                        <p className="text-xs font-bold text-[var(--color-text)] truncate">{n.title}</p>
+                        {!n.read && (
+                          <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
+                        )}
+                      </div>
+                      <p className="text-xs text-[var(--color-text-muted)] leading-relaxed break-words">
+                        {n.message}
+                      </p>
+                      <div className="mt-1 flex items-center gap-2 text-xs text-[var(--color-text-subtle)]">
+                        <span>
+                          {new Date(n.createdAt).toLocaleTimeString("th-TH", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </span>
+                        {n.branchName && <span>• สาขา {n.branchName}</span>}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
-        </div>
-      </>
+        </>
       )}
     </div>
   );

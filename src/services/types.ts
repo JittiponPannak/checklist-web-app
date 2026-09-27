@@ -51,7 +51,7 @@ export interface IPointService {
     description: string;
   }): Promise<{ success: boolean; newTotal?: number; error?: string }>;
 
-  evaluateShiftSession(shiftSessionId: string): Promise<{
+  evaluateShiftSession(shiftSessionId: string, isException?: boolean): Promise<{
     success: boolean;
     awardedPoints?: number;
     streakType?: "perfect" | "flawed";
@@ -131,6 +131,34 @@ export interface IChecklistService {
   }>;
 }
 
+export interface BranchEmployeeStatus {
+  id: string;
+  name: string;
+  email: string;
+  role: Role;
+  position?: string;
+  branchId?: string;
+  branchName?: string;
+  isOnDuty: boolean;
+  activeShift?: {
+    sessionId: string;
+    shift: ShiftType;
+    taskRole?: "cashier" | "stock" | "manager_assistant";
+    taskRoleTitle?: string;
+    startedAt: string;
+    durationMinutes: number;
+    totalTasks: number;
+    completedTasks: number;
+    completionPercentage: number;
+  };
+  todayShiftsCount: number;
+  totalShiftsWorked: number;
+  lastShiftAt?: string | null;
+  point: number;
+  pointStreak: number;
+  pointStreakType: "none" | "flawed" | "perfect";
+}
+
 export interface IManagerService {
   getManagerShiftSessions(filterDate?: string): Promise<{
     success: boolean;
@@ -148,7 +176,34 @@ export interface IManagerService {
   approveShiftSession(params: {
     shiftSessionId: string;
     role: "manager" | "manager_assistant" | "committee" | "general_manager" | Role;
+    isException?: boolean;
   }): Promise<{ success: boolean; error?: string }>;
+
+  getBranchStaffStatus(branchId?: string): Promise<{
+    success: boolean;
+    employees?: BranchEmployeeStatus[];
+    branches?: Array<{ id: string; name: string }>;
+    selectedBranchId?: string;
+    error?: string;
+  }>;
+
+  processShiftAttendanceAlerts(params?: {
+    dateStr?: string;
+  }): Promise<{
+    success: boolean;
+    processedBranches: number;
+    totalUnendedShifts: number;
+    totalAbsentStaff: number;
+    details?: Array<{
+      branchId: string;
+      branchName: string;
+      unendedCount: number;
+      unendedStaff: string[];
+      absentCount: number;
+      absentStaff: string[];
+    }>;
+    error?: string;
+  }>;
 }
 
 export interface IBranchService {
@@ -227,6 +282,24 @@ export interface IRefrigeratorService {
     shiftSessionId?: string;
     shift?: ShiftType;
   }): Promise<{ success: boolean; data?: RefrigeratorTaskItem; error?: string }>;
+  processDailyRefrigeratorTasks(params?: {
+    targetDate?: string;
+    yesterdayDate?: string;
+  }): Promise<{
+    success: boolean;
+    processedBranches: number;
+    totalNewTasksCreated: number;
+    totalMissedTasksMarked: number;
+    missedBranchesCount: number;
+    details?: Array<{
+      branchId: string;
+      branchName: string;
+      missedCount: number;
+      missedRefrigerators: string[];
+      newTasksCount: number;
+    }>;
+    error?: string;
+  }>;
 }
 
 export interface IServiceContainer {

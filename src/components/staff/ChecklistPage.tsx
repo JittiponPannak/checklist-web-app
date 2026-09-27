@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { ChecklistItem, ShiftSession, ShiftType } from "../../types";
-import { fmtTime, getSelectedShift } from "../../data/storage";
+import { fmtTime, getSelectedShift, isTodayThai } from "../../data/storage";
 import { secureGetItem, secureSetItem, secureRemoveItem } from "../../utils/crypto";
 import { getShiftBadge } from "../common/Badge";
 import { useModalFocusTrap } from "../common/ModalFocusTrap";
@@ -146,8 +146,17 @@ export function ChecklistPage({
           const freshItems = freshSession.items || [];
           const curItems = itemsRef.current;
 
-          const curSig = curItems.map((i) => `${i.id}:${i.label}:${i.category}`).join("|");
-          const freshSig = freshItems.map((i) => `${i.id}:${i.label}:${i.category}`).join("|");
+          // If session ID changed or the previous session is from a different day,
+          // adopt today's fresh session completely without carrying over yesterday's completion status
+          if (freshSession.id !== currentSess.id || (currentSess.startedAt && !isTodayThai(currentSess.startedAt))) {
+            setItems(freshItems);
+            setShiftCompleted(Boolean(freshSession.completedAt));
+            onUpdateRef.current(freshSession);
+            return;
+          }
+
+          const curSig = curItems.map((i) => `${i.id}:${i.label}:${i.completedAt || ""}:${i.comment || ""}`).join("|");
+          const freshSig = freshItems.map((i) => `${i.id}:${i.label}:${i.completedAt || ""}:${i.comment || ""}`).join("|");
 
           if (curSig !== freshSig) {
             const merged = freshItems.map((fItem) => {
@@ -175,10 +184,18 @@ export function ChecklistPage({
       }
     }
 
+    const handleDateRollover = () => {
+      if (isMounted) syncTasksFromDb();
+    };
+    window.addEventListener("app:date-rollover", handleDateRollover);
+    window.addEventListener("focus", handleDateRollover);
+
     const interval = setInterval(syncTasksFromDb, 8000);
     return () => {
       isMounted = false;
       clearInterval(interval);
+      window.removeEventListener("app:date-rollover", handleDateRollover);
+      window.removeEventListener("focus", handleDateRollover);
     };
   }, []);
 

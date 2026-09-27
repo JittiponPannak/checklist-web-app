@@ -1,6 +1,6 @@
 import { eq, and, sql, inArray } from "drizzle-orm";
 import { refrigerators, branches, refrigeratorTasks, users } from "../db/schema";
-import { IRefrigeratorService, RefrigeratorTaskItem } from "./types";
+import { IRefrigeratorService, INotificationService, RefrigeratorTaskItem } from "./types";
 import { ShiftType } from "../types";
 
 export interface RefrigeratorConfig {
@@ -19,7 +19,7 @@ function getThaiDateString(baseDate = new Date()): string {
 }
 
 export class RefrigeratorService implements IRefrigeratorService {
-  constructor(private db: any) {}
+  constructor(private db: any, private notificationService?: INotificationService) {}
 
   private async getBranchForUser(userId: string) {
     let [branch] = await this.db
@@ -511,6 +511,245 @@ export class RefrigeratorService implements IRefrigeratorService {
     } catch (err: any) {
       console.error("RefrigeratorService.updateRefrigeratorTask error:", err);
       return { success: false, error: err?.message || "เกิดข้อผิดพลาดในการบันทึกผลการตรวจตู้แช่" };
+    }
+  }
+
+  async processDailyRefrigeratorTasks(params?: {
+    targetDate?: string;
+    yesterdayDate?: string;
+  }): Promise<{
+    success: boolean;
+    processedBranches: number;
+    totalNewTasksCreated: number;
+    totalMissedTasksMarked: number;
+    missedBranchesCount: number;
+    details?: Array<{
+      branchId: string;
+      branchName: string;
+      missedCount: number;
+      missedRefrigerators: string[];
+      newTasksCount: number;
+    }>;
+    error?: string;
+  }> {
+    try {
+      const now = new Date();
+      const targetDate = params?.targetDate || getThaiDateString(now);
+      const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      const yesterdayDate = params?.yesterdayDate || getThaiDateString(yesterday);
+
+      // 1. Fetch all branches
+      const allBranches = await this.db
+        .select({ id: branches.id, name: branches.name, refrigerators: branches.refrigerators })
+        .from(branches);
+
+      const activeBranches = allBranches.filter(
+        (b: { id: string; name: string; refrigerators: string[] | null }) =>
+          Array.isArray(b.refrigerators) && b.refrigerators.length > 0
+      );
+
+      // 2. Fetch all refrigerators metadata
+      const allDbRefs = await this.db.select().from(refrigerators);
+      type RefRecord = typeof refrigerators.$inferSelect;
+      const refMap = new Map<string, RefRecord>(allDbRefs.map((r: RefRecord) => [r.id, r]));
+
+      let totalNewTasksCreated = 0;
+      let totalMissedTasksMarked = 0;
+      const details: Array<{
+        branchId: string;
+        branchName: string;
+        missedCount: number;
+        missedRefrigerators: string[];
+        newTasksCount: number;
+      }> = [];
+
+      for (const branch of activeBranches) {
+        const branchRefIds: string[] = branch.refrigerators || [];
+        const activeBranchRefs = branchRefIds
+          .map((id) => refMap.get(id))
+          .filter((r): r is RefRecord => Boolean(r && !r.disable_check));
+
+        if (activeBranchRefs.length === 0) continue;
+
+        const activeRefIdSet = new Set(activeBranchRefs.map((r) => r.id));
+
+        // --- Step A: Process yesterday's tasks ---
+        const yesterdayTasks = await this.db
+          .select()
+          .from(refrigeratorTasks)
+          .where(
+            and(
+              eq(refrigeratorTasks.branch_id, branch.id),
+              eq(refrigeratorTasks.task_date, yesterdayDate)
+            )
+          );
+
+        type TaskRecord = typeof refrigeratorTasks.$inferSelect;
+        const existingRefIdsYesterday = new Set(yesterdayTasks.map((t: TaskRecord) => t.refrigerator_id));
+        const missingYesterdayRefs = activeBranchRefs.filter((r) => !existingRefIdsYesterday.has(r.id));
+
+        // Insert missing yesterday rows as marked unchecked
+        if (missingYesterdayRefs.length > 0) {
+          const insertMissing = missingYesterdayRefs.map((r) => ({
+            branch_id: branch.id,
+            refrigerator_id: r.id,
+            task_date: yesterdayDate,
+            is_okay: false,
+            comment: "ไม่ได้ตรวจเช็คเมื่อวาน (ขาดการตรวจสอบ)",
+          }));
+          await this.db.insert(refrigeratorTasks).values(insertMissing);
+          totalMissedTasksMarked += missingYesterdayRefs.length;
+        }
+
+        // Mark existing uncompleted tasks from yesterday as unchecked
+        const uncompletedYesterdayTasks = yesterdayTasks.filter(
+          (t: TaskRecord) => activeRefIdSet.has(t.refrigerator_id) && !t.completed_at
+        );
+
+        const uncompletedTaskIds = uncompletedYesterdayTasks.map((t: TaskRecord) => t.id);
+        if (uncompletedTaskIds.length > 0) {
+          await this.db
+            .update(refrigeratorTasks)
+            .set({
+              is_okay: false,
+              comment: sql`COALESCE(${refrigeratorTasks.comment}, 'ไม่ได้ตรวจเช็คเมื่อวาน (ขาดการตรวจสอบ)')`,
+            })
+            .where(inArray(refrigeratorTasks.id, uncompletedTaskIds));
+          totalMissedTasksMarked += uncompletedTaskIds.length;
+        }
+
+        const missedRefIds = new Set([
+          ...missingYesterdayRefs.map((r) => r.id),
+          ...uncompletedYesterdayTasks.map((t: TaskRecord) => t.refrigerator_id),
+        ]);
+
+        const missedRefNames = Array.from(missedRefIds)
+          .map((id) => refMap.get(id)?.name || "ตู้แช่")
+          .filter(Boolean);
+
+        // --- Step B: Ensure today's daily tasks exist ---
+        const existingTodayTasks = await this.db
+          .select({ id: refrigeratorTasks.id, refrigerator_id: refrigeratorTasks.refrigerator_id })
+          .from(refrigeratorTasks)
+          .where(
+            and(
+              eq(refrigeratorTasks.branch_id, branch.id),
+              eq(refrigeratorTasks.task_date, targetDate)
+            )
+          );
+
+        const existingRefIdsToday = new Set(existingTodayTasks.map((t: { id: string; refrigerator_id: string }) => t.refrigerator_id));
+        const missingTodayRefs = activeBranchRefs.filter((r) => !existingRefIdsToday.has(r.id));
+
+        if (missingTodayRefs.length > 0) {
+          const insertToday = missingTodayRefs.map((r) => ({
+            branch_id: branch.id,
+            refrigerator_id: r.id,
+            task_date: targetDate,
+            is_okay: true,
+          }));
+          await this.db.insert(refrigeratorTasks).values(insertToday);
+          totalNewTasksCreated += missingTodayRefs.length;
+        }
+
+        // Clean up any uncompleted tasks for disabled/removed refrigerators today
+        const staleTodayTasks = existingTodayTasks.filter((t: { id: string; refrigerator_id: string }) => !activeRefIdSet.has(t.refrigerator_id));
+        if (staleTodayTasks.length > 0) {
+          await this.db
+            .delete(refrigeratorTasks)
+            .where(
+              and(
+                inArray(refrigeratorTasks.id, staleTodayTasks.map((t: { id: string }) => t.id)),
+                sql`${refrigeratorTasks.completed_at} IS NULL`
+              )
+            );
+        }
+
+        details.push({
+          branchId: branch.id,
+          branchName: branch.name,
+          missedCount: missedRefNames.length,
+          missedRefrigerators: missedRefNames,
+          newTasksCount: missingTodayRefs.length,
+        });
+
+        // --- Step C: Send notification to Manager & Assistant Manager for this branch ---
+        if (this.notificationService) {
+          if (missedRefNames.length > 0) {
+            const warningMsg = `สาขา${branch.name} พบตู้แช่ที่ไม่ได้ตรวจเช็คเมื่อวาน (${yesterdayDate}) จำนวน ${missedRefNames.length} ตู้: ${missedRefNames.join(", ")} ระบบได้บันทึกสถานะไม่ผ่านเรียบร้อยแล้ว และได้เตรียมรายการตรวจเช็คประจำวันใหม่ (${targetDate}) ให้พนักงานสต็อกแล้ว`;
+
+            // 1. Manager of this branch
+            await this.notificationService.createNotification({
+              branchId: branch.id,
+              recipientRole: "manager",
+              title: `⚠️ แจ้งเตือน: ตู้แช่ไม่ได้ตรวจเช็ค (${branch.name})`,
+              message: warningMsg,
+              type: "refrigerator_alert",
+            });
+
+            // 2. Assistant Manager of this branch
+            await this.notificationService.createNotification({
+              branchId: branch.id,
+              recipientRole: "manager_assistant",
+              title: `⚠️ แจ้งเตือน: ตู้แช่ไม่ได้ตรวจเช็ค (${branch.name})`,
+              message: warningMsg,
+              type: "refrigerator_alert",
+            });
+          } else {
+            await this.notificationService.createNotification({
+              branchId: branch.id,
+              recipientRole: "manager",
+              title: `📋 เริ่มต้นรายการตรวจตู้แช่วันนี้ (${targetDate})`,
+              message: `สาขา${branch.name} บันทึกอุณหภูมิตู้แช่เมื่อวานครบถ้วน 100% ระบบได้เตรียมรายการตรวจเช็คสำหรับวันนี้เรียบร้อยแล้ว`,
+              type: "system",
+            });
+          }
+        }
+      }
+
+      // --- Step D: Send notification to General Manager (GM) ---
+      if (this.notificationService) {
+        const missedBranches = details.filter((d) => d.missedCount > 0);
+        if (missedBranches.length > 0) {
+          const summaryLines = missedBranches
+            .map((b) => `• ${b.branchName}: ${b.missedCount} ตู้ (${b.missedRefrigerators.join(", ")})`)
+            .join("\n");
+
+          await this.notificationService.createNotification({
+            recipientRole: "general_manager",
+            title: `⚠️ รายงานตู้แช่ที่ไม่ได้ตรวจเช็คเมื่อวาน (${yesterdayDate})`,
+            message: `ตรวจพบ ${missedBranches.length} สาขา ที่ขาดการบันทึกตู้แช่เมื่อวาน (รวม ${totalMissedTasksMarked} ตู้):\n${summaryLines}\nระบบได้ทำเครื่องหมายสถานะไม่ผ่านและเตรียมงานตรวจรอบใหม่ (${targetDate}) ให้ทุกสาขาแล้ว`,
+            type: "refrigerator_alert",
+          });
+        } else {
+          await this.notificationService.createNotification({
+            recipientRole: "general_manager",
+            title: `✅ สรุปการตรวจตู้แช่เมื่อวาน (${yesterdayDate}) เรียบร้อยครบถ้วน`,
+            message: `ทุกสาขาบันทึกผลการตรวจตู้แช่เมื่อวานครบ 100% และระบบได้เริ่มต้นรายการตรวจเช็คประจำวัน (${targetDate}) ทุกสาขาเรียบร้อยแล้ว`,
+            type: "system",
+          });
+        }
+      }
+
+      return {
+        success: true,
+        processedBranches: activeBranches.length,
+        totalNewTasksCreated,
+        totalMissedTasksMarked,
+        missedBranchesCount: details.filter((d) => d.missedCount > 0).length,
+        details,
+      };
+    } catch (err: unknown) {
+      console.error("RefrigeratorService.processDailyRefrigeratorTasks error:", err);
+      const message = err instanceof Error ? err.message : "เกิดข้อผิดพลาดในการประมวลผลงานตู้แช่ประจำวัน";
+      return {
+        success: false,
+        processedBranches: 0,
+        totalNewTasksCreated: 0,
+        totalMissedTasksMarked: 0,
+        missedBranchesCount: 0,
+        error: message,
+      };
     }
   }
 }

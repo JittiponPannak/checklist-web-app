@@ -182,7 +182,7 @@ export function StaffAuthPage({
             <input
               id="staff-email"
               className={inp}
-              placeholder={tab === "manager" ? "manager@factory.com" : "cashier@factory.com"}
+              placeholder="user@email.com"
               type="email"
               autoComplete="email"
               aria-invalid={Boolean(error)}

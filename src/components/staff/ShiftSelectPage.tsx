@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { ShiftSession, ShiftType, User } from "../../types";
 import { BrandLogo } from "../common/BrandLogo";
-import { getSessions } from "../../data/storage";
+import { getSessions, isTodayThai } from "../../data/storage";
 import { getPositionShiftsStatusAction, resetTodayChecklistDataAction } from "../../actions/checklist";
 import { secureSetItem, secureRemoveItem } from "../../utils/crypto";
 import { Confetti } from "../common/Confetti";
@@ -34,46 +34,55 @@ export function ShiftSelectPage({
   const [isLoadingStatuses, setIsLoadingStatuses] = useState(true);
   const [isStartingShift, setIsStartingShift] = useState(false);
 
-  useEffect(() => {
-    const rawSessions = getSessions();
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setInternalSessions(rawSessions.filter((s) => s.userId === user.id));
-  }, [user.id]);
-
-  useEffect(() => {
-    if (user.position) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setIsLoadingStatuses(true);
-      setDbStatuses(null);
-      setChosenShift(null);
-      getPositionShiftsStatusAction(user.position, user.id)
-        .then((res) => {
-          if (res.success && res.statuses) {
-            setDbStatuses(res.statuses);
-
-            // Auto-select next available shift once validated
-            const mornDone = res.statuses['morning'].status === "completed";
-            const aftDone = res.statuses['afternoon'].status === "completed";
-
-            if (mornDone || aftDone) {
-              setShowConfetti(true);
-            }
-
-            if (!mornDone) {
-              setChosenShift("morning");
-            } else if (!aftDone) {
-              setChosenShift("afternoon");
-            }
-          }
-        })
-        .catch(console.error)
-        .finally(() => {
-          setIsLoadingStatuses(false);
-        });
-    } else {
+  const loadStatuses = useCallback(() => {
+    if (!user.position) {
       setIsLoadingStatuses(false);
+      return;
     }
+    const rawSessions = getSessions();
+    setInternalSessions(rawSessions.filter((s) => s.userId === user.id && isTodayThai(s.startedAt)));
+
+    setIsLoadingStatuses(true);
+    getPositionShiftsStatusAction(user.position, user.id)
+      .then((res) => {
+        if (res.success && res.statuses) {
+          setDbStatuses(res.statuses);
+
+          // Auto-select next available shift once validated
+          const mornDone = res.statuses['morning'].status === "completed";
+          const aftDone = res.statuses['afternoon'].status === "completed";
+
+          if (mornDone || aftDone) {
+            setShowConfetti(true);
+          }
+
+          if (!mornDone) {
+            setChosenShift("morning");
+          } else if (!aftDone) {
+            setChosenShift("afternoon");
+          }
+        }
+      })
+      .catch(console.error)
+      .finally(() => {
+        setIsLoadingStatuses(false);
+      });
   }, [user.position, user.id]);
+
+  useEffect(() => {
+    loadStatuses();
+
+    const handleRefresh = () => {
+      loadStatuses();
+    };
+    window.addEventListener("app:date-rollover", handleRefresh);
+    window.addEventListener("focus", handleRefresh);
+
+    return () => {
+      window.removeEventListener("app:date-rollover", handleRefresh);
+      window.removeEventListener("focus", handleRefresh);
+    };
+  }, [loadStatuses]);
 
   const sessions =
     propSessions && propSessions.length > 0
@@ -208,25 +217,15 @@ export function ShiftSelectPage({
           {shifts.map((s) => {
             const isMorn = s.id === "morning";
             // Find session specifically for this user's currently selected position
-            const todayStr = new Date().toDateString();
             const positionSessions = sessions.filter(
               (sess) =>
                 sess.shift === s.id &&
                 sess.userPosition?.trim() === user.position?.trim() &&
-                sess.userId === user.id
+                sess.userId === user.id &&
+                isTodayThai(sess.startedAt)
             );
 
-            const todaySession = positionSessions.find(
-              (sess) =>
-                new Date(sess.startedAt).toDateString() === todayStr ||
-                (sess.completedAt ? new Date(sess.completedAt).toDateString() === todayStr : false)
-            );
-
-            const shiftSession =
-              todaySession ||
-              positionSessions.sort(
-                (a, b) => new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime()
-              )[0];
+            const shiftSession = positionSessions[0] || null;
 
             const dbStatus = dbStatuses ? dbStatuses[s.id] : null;
             const hasDbData = Boolean(dbStatus && dbStatus.total > 0);

@@ -14,24 +14,21 @@ export async function GET(request: NextRequest) {
     }
 
     const searchParams = request.nextUrl.searchParams;
-    const dateStr = searchParams.get("dateStr") || undefined;
+    const targetDate = searchParams.get("targetDate") || undefined;
+    const yesterdayDate = searchParams.get("yesterdayDate") || undefined;
 
     const services = getServices();
-
-    // 1. Alert managers & assistant managers about unended shifts and absent staff first (while end is still null)
-    const alertsResult = await services.manager.processShiftAttendanceAlerts({ dateStr });
-
-    // 2. Automatically close all unended shifts for the day
-    const endShiftsResult = await services.checklist.autoEndUnfinishedShifts();
+    const result = await services.refrigerator.processDailyRefrigeratorTasks({
+      targetDate,
+      yesterdayDate,
+    });
 
     return NextResponse.json({
-      success: true,
-      alerts: alertsResult,
-      endShifts: endShiftsResult,
+      ...result,
       timestamp: new Date().toISOString(),
     });
   } catch (error: unknown) {
-    console.error("Cron /api/cron/end-shifts error:", error);
+    console.error("Cron /api/cron/daily-refrigerators error:", error);
     const message = error instanceof Error ? error.message : "Internal server error";
     return NextResponse.json(
       { success: false, error: message },
