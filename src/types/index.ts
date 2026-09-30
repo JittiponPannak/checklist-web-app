@@ -1,5 +1,26 @@
 export type Role = "employee" | "manager" | "manager_assistant" | "committee" | "general_manager" | "admin";
 export type ShiftType = "morning" | "afternoon" | "both";
+export type LeaveType = "sick" | "personal" | "other";
+
+export interface EmployeeLeave {
+  id: string;
+  userId: string;
+  userName?: string;
+  userPosition?: string;
+  branchId: string;
+  branchName?: string;
+  leaveType: LeaveType;
+  startDate: string; // YYYY-MM-DD
+  endDate: string; // YYYY-MM-DD
+  reason: string;
+  preserveStreak: boolean;
+  previousStreak?: number;
+  recordedBy: string;
+  recordedByName?: string;
+  recordedByRole?: Role;
+  createdAt: string;
+  updatedAt?: string;
+}
 
 export interface Position {
   id: string;

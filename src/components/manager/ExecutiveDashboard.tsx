@@ -32,9 +32,10 @@ import { NavbarRefreshControl } from "../common/NavbarRefreshControl";
 import { invalidateBranchCache } from "../../utils/cache";
 import { LeaderboardWidget } from "./LeaderboardWidget";
 import { ErrorBoundary } from "../common/ErrorBoundary";
-import { ClipboardCheck, ShieldCheck, Building2, Award, Snowflake, History, CheckCircle2, AlertCircle, LogOut, Users } from "lucide-react";
+import { ClipboardCheck, ShieldCheck, Building2, Award, Snowflake, History, CheckCircle2, AlertCircle, LogOut, Users, HeartPulse } from "lucide-react";
 import Link from "next/link";
 import { LateReasonModal } from "../common/LateReasonModal";
+import { BranchLeaveManagementView } from "./BranchLeaveManagementView";
 
 export type ExecutiveRole = "manager_assistant" | "manager" | "committee" | "general_manager";
 
@@ -99,7 +100,7 @@ export function ExecutiveDashboard({
   const [isLoadingChecklist, setIsLoadingChecklist] = useState(false);
 
   // Navigation tab
-  type DashboardTab = "overview" | "checklist" | "history" | "refrigerator";
+  type DashboardTab = "overview" | "checklist" | "history" | "refrigerator" | "leaves";
   const [activeTab, setActiveTab] = useState<DashboardTab>("overview");
 
   // Load live shift sessions from Supabase DB
@@ -755,6 +756,15 @@ export function ExecutiveDashboard({
 
           <div className="flex items-center gap-2.5 z-10 flex-wrap sm:flex-nowrap">
             <Link
+              href="/manager/leaves"
+              className="px-3.5 py-2.5 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold rounded-xl shadow-xs transition-all flex items-center gap-1.5 shrink-0"
+              title="บันทึกการลาป่วยและลากิจสำหรับพนักงานในสาขา (คุ้มครองสตรีคและคะแนนสะสม)"
+            >
+              <HeartPulse size={15} />
+              <span>บันทึกการลาพนักงาน</span>
+            </Link>
+
+            <Link
               href="/manager/staff-status"
               className="px-3.5 py-2.5 bg-amber-500 hover:bg-amber-400 text-amber-950 text-xs font-bold rounded-xl shadow-xs transition-all flex items-center gap-1.5 shrink-0"
               title="ตรวจสอบรายชื่อพนักงานในสาขา การเข้ากะ และจำนวนกะสะสม"
@@ -781,7 +791,7 @@ export function ExecutiveDashboard({
 
         {/* ─── Navigation Tabs (Tailored to Executive & Operations) ──────────── */}
         <div className="bg-[var(--color-surface-2)] p-1.5 rounded-2xl border border-[var(--color-border)] shadow-2xs">
-          <div className={`grid ${currentRole === "manager_assistant" ? "grid-cols-2 sm:grid-cols-4" : "grid-cols-2 sm:grid-cols-3"} gap-1`}>
+          <div className={`grid ${currentRole === "manager_assistant" ? "grid-cols-2 sm:grid-cols-5" : "grid-cols-2 sm:grid-cols-4"} gap-1`}>
             {[
               {
                 id: "overview" as DashboardTab,
@@ -799,6 +809,12 @@ export function ExecutiveDashboard({
                   },
                 ]
                 : []),
+              {
+                id: "leaves" as DashboardTab,
+                label: "การลา & วันหยุด",
+                Icon: HeartPulse,
+                desc: "บันทึกและจัดการลาป่วย/ลากิจ",
+              },
               {
                 id: "refrigerator" as DashboardTab,
                 label: "ตู้แช่ & ตรวจสอบงาน",
@@ -833,7 +849,14 @@ export function ExecutiveDashboard({
           </div>
         </div>
 
-        {/* ─── TAB 1: OVERVIEW & LIVE SHIFT APPROVALS ──────────────────────────── */}
+        {/* ─── TAB CONTENT ─────────────────────────────────────────────────── */}
+        {activeTab === "leaves" && (
+          <BranchLeaveManagementView
+            currentUser={user}
+            onBackToDashboard={() => setActiveTab("overview")}
+          />
+        )}
+
         {activeTab === "refrigerator" && (
           <RefrigeratorConfigView user={user} />
         )}

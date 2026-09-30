@@ -23,6 +23,7 @@
 
 | เวอร์ชัน | วันที่อัปเดต | ไฮไลท์สำหรับสาขาและผู้บริหาร | ไฮไลท์ทางเทคนิคสำคัญ (Very Technical) |
 | :---: | :---: | :--- | :--- |
+| **v1.7.0** | 30 ก.ย. 2026 | ระบบบันทึกการลาพนักงาน (ลาป่วย/ลากิจ/อื่นๆ), ดุลยพินิจรักษาสตรีคหรือตัดสตรีค, ลีดเดอร์บอร์ดพนักงานแยกสาขา/ทุกสาขา | Employee Leave Management (`employee_leaves` & `leave_type` enum), Manager Streak Decision & Restoration, Attendance Alert Cron Exclusion, Employee Leaderboard Tab (`PointStreakBadge`), Next.js Proxy Architecture (`proxy.ts`) |
 | **v1.6.1** | 27 ก.ย. 2026 | ล้างแคชข้ามวันอัตโนมัติเมื่อคงการล็อกอินไว้, ดึงงานและกะใหม่ของวันนี้จากฐานข้อมูลเสมอ | Real-time Date-Rollover Detection, `isTodayThai` Validator, Bangkok Timezone Boundary Correction, Auto-Close Dangling Shifts |
 | **v1.6.0** | 27 ก.ย. 2026 | แจ้งเตือนพนักงานค้างกะ/ไม่มาทำงานอัตโนมัติ, ระบบอนุมัติแบบอนุโลมรักษาสตรีค (Streak Flawed Exception) | Vercel Cron `/api/cron/shift-alerts`, PointService Exception Logic, SessionDetailModal Choice Prompt |
 | **v1.5.0** | 27 ก.ย. 2026 | ระบบ Cron ตรวจสอบตู้แช่ข้ามวัน, มาร์กสถานะขาดตรวจ, แจ้งเตือน GM/ผู้จัดการอัตโนมัติ | Vercel Cron `/api/cron/daily-refrigerators`, RefrigeratorService Daily Automation, Date Picker Live View |
@@ -30,6 +31,58 @@
 | **v1.3.0** | 23 ก.ย. 2026 | แดชบอร์ดตรวจสอบสาขา, ตรวจวัดอุณหภูมิตู้แช่, ปิดกะอัตโนมัติรอบดึก | Vercel Cron Serverless Handlers (UTC+7 aligned), Lateness Detection Algorithm |
 | **v1.2.0** | 21–22 ก.ย. 2026 | ระบบสะสมแต้ม, ลีดเดอร์บอร์ด, แจ้งเตือนกระดิ่งเด้งสดทันที | Refactor สู่ Service Layer & Dependency Injection Container, Supabase SSR Auth |
 | **v1.1.0** | 17–18 ก.ย. 2026 | โทนสีร้านอาหารสดใหม่ สบายตา รองรับโหมดมืด (Dark Mode) | Row-Level Security (RLS), ลบการส่ง `userId` จากฝั่งหน้าบ้าน, ตาราง `refrigerators` |
+
+---
+
+## [v1.7.0] — 30 กันยายน 2026
+
+### 🏪 สำหรับผู้ใช้งานและผู้บริหาร (Business & User Value)
+
+- **📋 ระบบบันทึกและจัดการการลาพนักงานสำหรับผู้บริหารสาขา (Employee Leave Management - `/manager/leaves`)**:
+  - ผู้จัดการร้าน (`manager`) และผู้ช่วยผู้จัดการร้าน (`manager_assistant`) สามารถบันทึกการลาให้กับพนักงานในสาขาตนเองได้อย่างเป็นระบบ ผ่านแดชบอร์ดจัดการการลาโดยเฉพาะ
+  - **ตัวเลือกประเภทการลา 3 แบบ (Flexible Leave Types)**:
+    1. **ลาป่วย (Sick Leave)**: มีใบรับรองแพทย์ / มีไข้ไม่สบาย ไปพบแพทย์
+    2. **ลากิจ (Personal Leave)**: มีธุระสำคัญทางครอบครัวหรือติดต่อราชการ
+    3. **อื่นๆ (Other Leave)**: ลากิจกรรม, ลาฉุกเฉิน หรือกรณีพิเศษ โดยมีระบบบังคับให้ต้องระบุเหตุผล/รายละเอียดการลาอย่างชัดเจน (Comment Required)
+  - **🛡️ ระบบพิจารณาสตรีคคะแนนตามดุลยพินิจผู้บริหาร (Manager Streak Decision)**:
+    - ผู้บริหารสาขาสามารถเลือกว่าการลานี้ถูกต้องตามเกณฑ์ของร้านหรือไม่ ผ่านตัวเลือก 2 ทาง:
+      - **🛡️ อนุมัติรักษาสตรีค (Streak Protected)**: ถือว่าเป็นการลาที่สมเหตุสมผล สตรีคคะแนนสะสมของพนักงานจะไม่ถูกตัด และสามารถสะสมต่อได้ตามปกติ
+      - **⚠️ ไม่อนุมัติรักษาสตรีค / ตัดสตรีคเป็น 0 (Break Streak)**: สำหรับการลาที่ไม่ตรงตามเกณฑ์ หรือแจ้งกระชั้นชิดเกินกำหนด สตรีคสะสมของพนักงานจะถูกตัดเป็น 0 ทันที
+    - **ระบบกู้คืนสตรีคอัตโนมัติ (Streak Auto-Restoration)**: ฐานข้อมูลจะจดจำสถิติสตรีคเดิม (`previous_streak`) ไว้เสมอ หากผู้จัดการมีการยกเลิกรายการลาที่เคยตัดสตรีคไว้ ระบบจะคืนสตรีคสะสมเดิมให้กับพนักงานโดยอัตโนมัติ
+  - **🚫 ไม่ถูกนับเป็นการขาดงานในระบบแจ้งเตือนรอบดึก (Shift Attendance Alert Exclusion)**:
+    - ในการประมวลผลสิ้นวันเวลา 23:55 น. ระบบจะตรวจสอบตารางการลา หากพนักงานได้รับการอนุมัติการลาในวันนั้น ระบบจะไม่นับเป็นการขาดงาน (Not Absent) และไม่ส่งแจ้งเตือนว่าขาดงาน ช่วยลดการแจ้งเตือนผิดพลาด (False Alerts)
+  - **👀 แสดงสถานะการลาสดบนหน้ารวมกะ (`/manager/staff-status`)**:
+    - ในหน้ารวมสถานะพนักงานสาขา พนักงานที่อยู่ในช่วงเวลาลาจะแสดง Badge `ลางาน (On Leave)` ตามประเภทการลา พร้อมกล่องรายละเอียดแสดงช่วงเวลา, เหตุผล, ชื่อผู้บันทึก และป้ายยืนยันสถานะสตรีค
+- **🏆 ระบบตารางอันดับคะแนนสำหรับพนักงานทั่วไป (Employee Leaderboard Modal)**:
+  - พนักงานทุกคนสามารถกดดู "ตารางอันดับ (Leaderboard)" ได้โดยตรงจาก Badge สตรีคคะแนนของตนเองที่มุมบนขวาของหน้าจอ
+  - เพิ่มแท็บแยก 2 แท็บ: "สถิติและเกณฑ์คะแนน" (Statistics & Criteria) และ "ตารางอันดับ (Leaderboard)"
+  - **สลับขอบเขตการดูอันดับได้ 2 ระดับ**:
+    - **สาขาของฉัน (My Branch)**: ดูกระดานคะแนนและสตรีคเฉพาะเพื่อนร่วมงานในสาขาตนเอง เพื่อสร้างแรงจูงใจในการทำงานร่วมกัน
+    - **ทุกสาขา (All Branches)**: ดูอันดับท็อปพนักงานทั่วทั้งองค์กร
+- **🔄 ปรับปรุงสถาปัตยกรรม Next.js Proxy Architecture (`proxy.ts`)**:
+  - เปลี่ยนจากการใช้ `middleware.ts` แบบเดิมสู่โครงสร้าง `proxy.ts` (`src/proxy.ts` และ `src/db/supabase/proxy.ts`) ตามมาตรฐาน Next.js เพื่อประสิทธิภาพและความเสถียรในการทำงาน
+
+### ⚙️ ไฮไลท์ทางเทคนิคสำคัญ (Engineering & Architecture)
+
+- **Database Schema & Drizzle Kit**:
+  - สร้างตาราง `checklist_web_app.employee_leaves` พร้อมเชื่อมโยง Foreign Key ไปยัง `users` และ `branches`
+  - สร้าง Enum `checklist_web_app.leave_type` (`'sick'`, `'personal'`, `'other'`)
+  - คอลัมน์ `preserve_streak` (boolean default true) และ `previous_streak` (integer nullable)
+  - สร้างดัชนี (Indexes) `idx_employee_leaves_branch_dates` และ `idx_employee_leaves_user_dates` เพื่อประสิทธิภาพในการค้นหา
+  - ไฟล์ Migration Script: `tools/migration_add_employee_leaves.sql` ออกแบบแบบ Idempotent ปลอดภัยต่อการรันซ้ำ
+- **ManagerService Enhancements**:
+  - `markEmployeeLeave`: ตรวจสอบความถูกต้องของวันและเหตุผลสำหรับประเภท 'other', ดำเนินการตัด `point_streak = 0` ในตาราง `users` หากเลือกไม่รักษาสตรีค, และส่ง Realtime Notification แจ้งเตือนพนักงาน
+  - `getBranchLeaves`: ดึงข้อมูลการลาพร้อม Join รายชื่อพนักงานและผู้บันทึก
+  - `cancelEmployeeLeave`: ลบรายการลาพร้อมเงื่อนไขคืนค่าสตรีค `point_streak = previous_streak` ให้พนักงานหากสตรีคปัจจุบันยังเป็น 0
+  - `processShiftAttendanceAlerts`: คำนวณ `onLeaveUserIds` และยกเว้นพนักงานที่ลางานไม่ให้นับเป็นผู้ขาดงาน
+- **PointService Leaderboard Filtering**:
+  - ฟังก์ชัน `getLeaderboard()` รองรับพารามิเตอร์ `branchId?: string` เพื่อกรองข้อมูลอันดับตามสาขา
+- **Frontend Components & Routing**:
+  - สร้างหน้า App Router ใหม่: `src/app/manager/leaves/page.tsx`
+  - สร้างคอมโพเนนต์แดชบอร์ดการลา: `src/components/manager/BranchLeaveManagementView.tsx` รองรับการดูสถิติ, กรองประเภท, กรองสถานะสตรีค, และโมดอลบันทึกการลา
+  - ปรับปรุง `PointStreakBadge.tsx` ให้มีแท็บ Leaderboard พร้อมสวิตช์ My Branch / All Branches
+  - ปรับปรุง `ExecutiveDashboard.tsx` และ `BranchStaffPresenceView.tsx` เพื่อแสดงสถานะการลาและลิงก์เชื่อมโยง
+
 
 ---
 

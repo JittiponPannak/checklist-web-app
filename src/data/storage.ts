@@ -1,4 +1,4 @@
-import { Notification, Position, ShiftSession, ShiftType, User } from "../types";
+import { Notification, Position, ShiftSession, ShiftType, User, EmployeeLeave } from "../types";
 import { DEFAULT_POSITIONS } from "../types";
 import { secureGetItem, secureSetItem, secureRemoveItem } from "../utils/crypto";
 import { getThaiDateString, isTodayThai } from "../utils/date";
@@ -306,3 +306,20 @@ export function saveActiveSession(session: ShiftSession | null) {
     secureRemoveItem("app_active_session");
   }
 }
+
+export function getLocalLeaves(): EmployeeLeave[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = secureGetItem("app_leaves");
+    if (!raw) return [];
+    return JSON.parse(raw);
+  } catch {
+    return [];
+  }
+}
+
+export function saveLocalLeaves(leaves: EmployeeLeave[]) {
+  if (typeof window === "undefined") return;
+  secureSetItem("app_leaves", JSON.stringify(leaves));
+}
+

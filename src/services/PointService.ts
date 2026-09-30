@@ -274,13 +274,29 @@ export class PointService implements IPointService {
     error?: string;
   }> {
     try {
-      const allUsers = await this.db
-        .select()
-        .from(users)
-        .orderBy(desc(users.point))
-        .limit(30);
-
       const allBranches = await this.db.select().from(branches);
+      let allUsers: any[] = [];
+
+      if (branchId) {
+        const targetBranch = allBranches.find((b: any) => b.id === branchId);
+        const memberIds: string[] = Array.isArray(targetBranch?.members) ? targetBranch.members : [];
+        if (memberIds.length > 0) {
+          allUsers = await this.db
+            .select()
+            .from(users)
+            .where(inArray(users.id, memberIds))
+            .orderBy(desc(users.point))
+            .limit(30);
+        } else {
+          allUsers = [];
+        }
+      } else {
+        allUsers = await this.db
+          .select()
+          .from(users)
+          .orderBy(desc(users.point))
+          .limit(30);
+      }
 
       const mapped: LeaderboardEntry[] = allUsers.map((u: any) => {
         const userBranch = allBranches.find(

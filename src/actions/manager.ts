@@ -1,11 +1,11 @@
 "use server";
 
 import { getServices } from "../services/container";
-import { Role } from "../types";
+import { Role, LeaveType, EmployeeLeave } from "../types";
 import { ManagerShiftSummary } from "../services/ManagerService";
 import { BranchEmployeeStatus } from "../services/types";
 
-export type { ManagerShiftSummary, BranchEmployeeStatus };
+export type { ManagerShiftSummary, BranchEmployeeStatus, EmployeeLeave, LeaveType };
 
 export async function getManagerShiftSessionsAction(filterDate?: string): Promise<{
   success: boolean;
@@ -55,4 +55,36 @@ export async function processShiftAttendanceAlertsAction(params?: {
   const services = getServices();
   return await services.manager.processShiftAttendanceAlerts(params);
 }
+
+export async function markEmployeeLeaveAction(params: {
+  userId: string;
+  branchId: string;
+  leaveType: LeaveType;
+  startDate: string;
+  endDate: string;
+  reason: string;
+  preserveStreak?: boolean;
+  recordedBy: string;
+}): Promise<{ success: boolean; leave?: EmployeeLeave; error?: string }> {
+  const services = getServices();
+  return await services.manager.markEmployeeLeave(params);
+}
+
+export async function getBranchLeavesAction(params: {
+  branchId: string;
+  startDate?: string;
+  endDate?: string;
+}): Promise<{ success: boolean; leaves?: EmployeeLeave[]; error?: string }> {
+  const services = getServices();
+  return await services.manager.getBranchLeaves(params);
+}
+
+export async function cancelEmployeeLeaveAction(params: {
+  leaveId: string;
+  cancelledBy: string;
+}): Promise<{ success: boolean; error?: string }> {
+  const services = getServices();
+  return await services.manager.cancelEmployeeLeave(params);
+}
+
 

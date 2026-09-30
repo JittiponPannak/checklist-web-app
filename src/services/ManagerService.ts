@@ -1,7 +1,7 @@
 import { eq, and, gte, lte, desc, inArray, sql } from "drizzle-orm";
-import { tasks, taskWork, shiftSession, users, branches } from "../db/schema";
+import { tasks, taskWork, shiftSession, users, branches, employeeLeaves } from "../db/schema";
 import { IManagerService, IPointService, INotificationService, BranchEmployeeStatus } from "./types";
-import { ShiftType, Role } from "../types";
+import { ShiftType, Role, LeaveType, EmployeeLeave } from "../types";
 
 export interface ManagerShiftSummary {
   id: string;
@@ -522,6 +522,37 @@ export class ManagerService implements IManagerService {
             .groupBy(shiftSession.user)
         : [];
 
+      // 5.5 Fetch active leaves for today for candidate users at this branch
+      const thaiTodayStr = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Bangkok" }).format(new Date());
+      let todayLeaves: any[] = [];
+      const leaveRecorderMap = new Map<string, string>();
+      try {
+        if (candidateUsers.length > 0) {
+          todayLeaves = await this.db
+            .select()
+            .from(employeeLeaves)
+            .where(
+              and(
+                eq(employeeLeaves.branch_id, activeBranchId),
+                inArray(employeeLeaves.user_id, candidateUsers.map(u => u.id)),
+                lte(employeeLeaves.start_date, thaiTodayStr),
+                gte(employeeLeaves.end_date, thaiTodayStr)
+              )
+            );
+
+          const recorderIds = Array.from(new Set(todayLeaves.map((l: any) => l.recorded_by).filter(Boolean))) as string[];
+          if (recorderIds.length > 0) {
+            const recorderUsers = await this.db
+              .select({ id: users.id, name: users.name })
+              .from(users)
+              .where(inArray(users.id, recorderIds));
+            recorderUsers.forEach((ru: any) => leaveRecorderMap.set(ru.id, ru.name));
+          }
+        }
+      } catch (leaveErr) {
+        console.warn("Could not query employeeLeaves table, falling back:", leaveErr);
+      }
+
       // 6. For currently active shifts (end IS NULL), fetch their task works to calculate checklist progress
       const activeSessions = todaySessions.filter((s: any) => s.end === null);
       const activeSessionIds = activeSessions.map((s: any) => s.id);
@@ -575,6 +606,20 @@ export class ManagerService implements IManagerService {
           position = mapTaskRoleToTitle(currentActiveSession.task_role);
         }
 
+        const matchingLeave = todayLeaves.find((l: any) => l.user_id === u.id);
+        const isOnLeave = Boolean(matchingLeave);
+        const activeLeave = matchingLeave
+          ? {
+              id: matchingLeave.id,
+              leaveType: matchingLeave.leave_type as LeaveType,
+              startDate: matchingLeave.start_date,
+              endDate: matchingLeave.end_date,
+              reason: matchingLeave.reason,
+              preserveStreak: matchingLeave.preserve_streak ?? true,
+              recordedByName: leaveRecorderMap.get(matchingLeave.recorded_by) || "ผู้จัดการ",
+            }
+          : undefined;
+
         return {
           id: u.id,
           name: u.name,
@@ -584,6 +629,8 @@ export class ManagerService implements IManagerService {
           branchId: activeBranchId,
           branchName: activeBranch.name,
           isOnDuty,
+          isOnLeave,
+          activeLeave,
           activeShift,
           todayShiftsCount,
           totalShiftsWorked,
@@ -594,10 +641,12 @@ export class ManagerService implements IManagerService {
         };
       });
 
-      // Sort: On-duty first, then by name
+      // Sort: On-duty first, then On-leave, then by name
       employees.sort((a, b) => {
         if (a.isOnDuty && !b.isOnDuty) return -1;
         if (!a.isOnDuty && b.isOnDuty) return 1;
+        if (a.isOnLeave && !b.isOnLeave) return -1;
+        if (!a.isOnLeave && b.isOnLeave) return 1;
         return a.name.localeCompare(b.name, "th");
       });
 
@@ -723,11 +772,47 @@ export class ManagerService implements IManagerService {
           }
         }
 
-        // 2) Find staff who didn't come to work (0 sessions today)
+        // Fetch approved leaves for today at this branch to avoid false absence alerts
+        const dateStrForLeaves = params?.dateStr || new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Bangkok" }).format(targetDateObj);
+        let onLeaveUserIds = new Set<string>();
+        const onLeaveStaffNames: string[] = [];
+        try {
+          const branchLeaves = await this.db
+            .select({
+              id: employeeLeaves.id,
+              user_id: employeeLeaves.user_id,
+              leave_type: employeeLeaves.leave_type,
+            })
+            .from(employeeLeaves)
+            .where(
+              and(
+                eq(employeeLeaves.branch_id, branch.id),
+                inArray(employeeLeaves.user_id, candidateIds),
+                lte(employeeLeaves.start_date, dateStrForLeaves),
+                gte(employeeLeaves.end_date, dateStrForLeaves)
+              )
+            );
+
+          onLeaveUserIds = new Set(branchLeaves.map((l: any) => l.user_id));
+          for (const leave of branchLeaves) {
+            const u = candidateUsers.find((cu: { id: string }) => cu.id === leave.user_id);
+            if (u) {
+              const typeLabel = leave.leave_type === "sick" ? "ลาป่วย" : leave.leave_type === "personal" ? "ลากิจ" : "อื่นๆ";
+              onLeaveStaffNames.push(`${u.name} (${typeLabel})`);
+            }
+          }
+        } catch (leaveErr) {
+          console.warn("Could not query leaves for attendance alerts:", leaveErr);
+        }
+
+        // 2) Find staff who didn't come to work (0 sessions today and NOT on approved leave)
         const absentStaffNames: string[] = [];
         for (const u of candidateUsers) {
           const userSessions = sessionsByUser.get(u.id);
           if (!userSessions || userSessions.length === 0) {
+            if (onLeaveUserIds.has(u.id)) {
+              continue; // On approved leave, do not count as absent!
+            }
             const roleTitle = u.role === "manager_assistant" ? "ผู้ช่วยฯ" : "พนักงาน";
             absentStaffNames.push(`${u.name} (${roleTitle})`);
           }
@@ -810,6 +895,249 @@ export class ManagerService implements IManagerService {
         totalAbsentStaff: 0,
         error: message,
       };
+    }
+  }
+
+  async markEmployeeLeave(params: {
+    userId: string;
+    branchId: string;
+    leaveType: LeaveType;
+    startDate: string;
+    endDate: string;
+    reason: string;
+    preserveStreak?: boolean;
+    recordedBy: string;
+  }): Promise<{ success: boolean; leave?: EmployeeLeave; error?: string }> {
+    try {
+      const { userId, branchId, leaveType, startDate, endDate, reason, preserveStreak = true, recordedBy } = params;
+
+      if (!userId || !branchId || !leaveType || !startDate || !endDate || !reason?.trim() || !recordedBy) {
+        return { success: false, error: "กรุณากรอกข้อมูลการลาให้ครบถ้วน" };
+      }
+
+      if (leaveType === "other" && reason.trim().length < 2) {
+        return { success: false, error: "สำหรับการลาประเภท 'อื่นๆ' จำเป็นต้องระบุเหตุผลหรือรายละเอียดการลา" };
+      }
+
+      if (startDate > endDate) {
+        return { success: false, error: "วันที่เริ่มต้นต้องไม่มากกว่าวันที่สิ้นสุด" };
+      }
+
+      // Retrieve target user & recorder info first
+      const [targetUser] = await this.db.select().from(users).where(eq(users.id, userId)).limit(1);
+      if (!targetUser) {
+        return { success: false, error: "ไม่พบข้อมูลพนักงาน" };
+      }
+      const [recorder] = await this.db.select().from(users).where(eq(users.id, recordedBy)).limit(1);
+      const [branch] = await this.db.select().from(branches).where(eq(branches.id, branchId)).limit(1);
+
+      const previousStreak = targetUser.point_streak ?? 0;
+
+      // If the manager decided not to preserve streak (e.g. invalid leave or unexcused), break streak
+      if (!preserveStreak) {
+        await this.db
+          .update(users)
+          .set({
+            point_streak: 0,
+            point_streak_type: "none",
+          })
+          .where(eq(users.id, userId));
+      }
+
+      // Insert leave record into database
+      const [newLeave] = await this.db
+        .insert(employeeLeaves)
+        .values({
+          user_id: userId,
+          branch_id: branchId,
+          leave_type: leaveType,
+          start_date: startDate,
+          end_date: endDate,
+          reason: reason.trim(),
+          preserve_streak: preserveStreak,
+          previous_streak: previousStreak,
+          recorded_by: recordedBy,
+          created_at: new Date(),
+          updated_at: new Date(),
+        })
+        .returning();
+
+      // Create an audit notification if notificationService is available
+      if (this.notificationService) {
+        const leaveTypeName = leaveType === "sick" 
+          ? "ลาป่วย (Sick Leave)" 
+          : leaveType === "personal" 
+          ? "ลากิจ (Personal Leave)" 
+          : "การลาอื่นๆ (Other Leave)";
+        const dateDesc = startDate === endDate ? startDate : `${startDate} ถึง ${endDate}`;
+        const streakDecisionText = preserveStreak 
+          ? "(สตรีคคะแนนสะสมได้รับการคุ้มครอง ไม่ขาด)" 
+          : "(ดุลยพินิจผู้บริหาร: ไม่อนุมัติรักษาสตรีค ส่งผลให้สตรีคคะแนนถูกตัดเป็น 0)";
+        
+        await this.notificationService.createNotification({
+          recipientId: userId,
+          branchId,
+          title: `📋 บันทึก${leaveTypeName}`,
+          message: `ผู้บริหาร (${recorder?.name || "ผู้จัดการ"}) ได้บันทึก${leaveTypeName} วันที่ ${dateDesc} เรียบร้อยแล้ว ${streakDecisionText}`,
+          type: "system",
+        });
+      }
+
+      const createdLeave: EmployeeLeave = {
+        id: newLeave.id,
+        userId: newLeave.user_id,
+        userName: targetUser?.name || "พนักงาน",
+        userPosition: targetUser?.role === "manager_assistant" ? "ผู้ช่วยผู้จัดการร้าน" : "พนักงานประจำสาขา",
+        branchId: newLeave.branch_id,
+        branchName: branch?.name,
+        leaveType: newLeave.leave_type as LeaveType,
+        startDate: newLeave.start_date,
+        endDate: newLeave.end_date,
+        reason: newLeave.reason,
+        preserveStreak: newLeave.preserve_streak ?? true,
+        previousStreak: newLeave.previous_streak ?? undefined,
+        recordedBy: newLeave.recorded_by,
+        recordedByName: recorder?.name || "ผู้จัดการ",
+        recordedByRole: recorder?.role as Role,
+        createdAt: newLeave.created_at ? new Date(newLeave.created_at).toISOString() : new Date().toISOString(),
+        updatedAt: newLeave.updated_at ? new Date(newLeave.updated_at).toISOString() : undefined,
+      };
+
+      return {
+        success: true,
+        leave: createdLeave,
+      };
+    } catch (err: unknown) {
+      console.error("ManagerService.markEmployeeLeave error:", err);
+      const message = err instanceof Error ? err.message : "ไม่สามารถบันทึกการลาได้";
+      return { success: false, error: message };
+    }
+  }
+
+  async getBranchLeaves(params: {
+    branchId: string;
+    startDate?: string;
+    endDate?: string;
+  }): Promise<{ success: boolean; leaves?: EmployeeLeave[]; error?: string }> {
+    try {
+      const { branchId, startDate, endDate } = params;
+      if (!branchId) {
+        return { success: false, error: "ไม่พบรหัสสาขา" };
+      }
+
+      const conditions = [eq(employeeLeaves.branch_id, branchId)];
+      if (startDate && endDate) {
+        conditions.push(lte(employeeLeaves.start_date, endDate));
+        conditions.push(gte(employeeLeaves.end_date, startDate));
+      }
+
+      const rawLeaves = await this.db
+        .select()
+        .from(employeeLeaves)
+        .where(and(...conditions))
+        .orderBy(desc(employeeLeaves.created_at));
+
+      if (rawLeaves.length === 0) {
+        return { success: true, leaves: [] };
+      }
+
+      const userIds = Array.from(
+        new Set([
+          ...rawLeaves.map((l: { user_id: string }) => l.user_id),
+          ...rawLeaves.map((l: { recorded_by: string }) => l.recorded_by),
+        ])
+      );
+
+      const userRecords = userIds.length > 0
+        ? await this.db.select().from(users).where(inArray(users.id, userIds))
+        : [];
+      const userMap = new Map<string, { id: string; name: string; role: Role }>(
+        userRecords.map((u: { id: string; name: string; role: Role }) => [u.id, u])
+      );
+
+      const [branchRecord] = await this.db
+        .select({ id: branches.id, name: branches.name })
+        .from(branches)
+        .where(eq(branches.id, branchId))
+        .limit(1);
+
+      const leaves: EmployeeLeave[] = rawLeaves.map((l: typeof employeeLeaves.$inferSelect) => {
+        const emp = userMap.get(l.user_id);
+        const rec = userMap.get(l.recorded_by);
+        return {
+          id: l.id,
+          userId: l.user_id,
+          userName: emp?.name || "พนักงาน",
+          userPosition: emp?.role === "manager_assistant" ? "ผู้ช่วยผู้จัดการร้าน" : "พนักงานประจำสาขา",
+          branchId: l.branch_id,
+          branchName: branchRecord?.name,
+          leaveType: l.leave_type as LeaveType,
+          startDate: l.start_date,
+          endDate: l.end_date,
+          reason: l.reason,
+          preserveStreak: l.preserve_streak ?? true,
+          previousStreak: l.previous_streak ?? undefined,
+          recordedBy: l.recorded_by,
+          recordedByName: rec?.name || "ผู้จัดการ",
+          recordedByRole: rec?.role as Role,
+          createdAt: l.created_at ? new Date(l.created_at).toISOString() : new Date().toISOString(),
+          updatedAt: l.updated_at ? new Date(l.updated_at).toISOString() : undefined,
+        };
+      });
+
+      return { success: true, leaves };
+    } catch (err: unknown) {
+      console.error("ManagerService.getBranchLeaves error:", err);
+      const message = err instanceof Error ? err.message : "ไม่สามารถโหลดรายการลาได้";
+      return { success: false, error: message };
+    }
+  }
+
+  async cancelEmployeeLeave(params: {
+    leaveId: string;
+    cancelledBy: string;
+  }): Promise<{ success: boolean; error?: string }> {
+    try {
+      const { leaveId } = params;
+      if (!leaveId) {
+        return { success: false, error: "ไม่พบรหัสรายการลา" };
+      }
+
+      // Fetch the leave record first to check if streak was broken and needs restoration
+      const [leaveRecord] = await this.db
+        .select()
+        .from(employeeLeaves)
+        .where(eq(employeeLeaves.id, leaveId))
+        .limit(1);
+
+      if (leaveRecord) {
+        // If this leave broke the streak and there was a previous streak, restore it if current streak is still 0
+        if (!leaveRecord.preserve_streak && leaveRecord.previous_streak && leaveRecord.previous_streak > 0) {
+          const [userRecord] = await this.db
+            .select()
+            .from(users)
+            .where(eq(users.id, leaveRecord.user_id))
+            .limit(1);
+
+          if (userRecord && userRecord.point_streak === 0) {
+            await this.db
+              .update(users)
+              .set({
+                point_streak: leaveRecord.previous_streak,
+                point_streak_type: "flawed", // Restore to active streak state
+              })
+              .where(eq(users.id, leaveRecord.user_id));
+          }
+        }
+
+        await this.db.delete(employeeLeaves).where(eq(employeeLeaves.id, leaveId));
+      }
+
+      return { success: true };
+    } catch (err: unknown) {
+      console.error("ManagerService.cancelEmployeeLeave error:", err);
+      const message = err instanceof Error ? err.message : "ไม่สามารถยกเลิกรายการลาได้";
+      return { success: false, error: message };
     }
   }
 }

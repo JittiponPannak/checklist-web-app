@@ -1,4 +1,4 @@
-import { Role, ShiftType, User, ShiftSession, Notification, PointTransaction, LeaderboardEntry } from "../types";
+import { Role, ShiftType, User, ShiftSession, Notification, PointTransaction, LeaderboardEntry, LeaveType, EmployeeLeave } from "../types";
 
 export interface IAuthService {
   login(email: string, password: string): Promise<{ success: boolean; user?: User; error?: string }>;
@@ -157,6 +157,16 @@ export interface BranchEmployeeStatus {
   point: number;
   pointStreak: number;
   pointStreakType: "none" | "flawed" | "perfect";
+  isOnLeave?: boolean;
+  activeLeave?: {
+    id: string;
+    leaveType: LeaveType;
+    startDate: string;
+    endDate: string;
+    reason: string;
+    preserveStreak?: boolean;
+    recordedByName?: string;
+  };
 }
 
 export interface IManagerService {
@@ -204,6 +214,28 @@ export interface IManagerService {
     }>;
     error?: string;
   }>;
+
+  markEmployeeLeave(params: {
+    userId: string;
+    branchId: string;
+    leaveType: LeaveType;
+    startDate: string;
+    endDate: string;
+    reason: string;
+    preserveStreak?: boolean;
+    recordedBy: string;
+  }): Promise<{ success: boolean; leave?: EmployeeLeave; error?: string }>;
+
+  getBranchLeaves(params: {
+    branchId: string;
+    startDate?: string;
+    endDate?: string;
+  }): Promise<{ success: boolean; leaves?: EmployeeLeave[]; error?: string }>;
+
+  cancelEmployeeLeave(params: {
+    leaveId: string;
+    cancelledBy: string;
+  }): Promise<{ success: boolean; error?: string }>;
 }
 
 export interface IBranchService {

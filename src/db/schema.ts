@@ -6,6 +6,7 @@ export const roleEnum = checklistSchema.enum('role', ['admin', 'committee', 'gen
 export const taskRoleEnum = checklistSchema.enum('task_role', ['manager_assistant', 'cashier', 'stock']);
 export const shiftEnum = checklistSchema.enum('shift', ['morning', 'afternoon', 'morning_afternoon']);
 export const pointStreakEnum = checklistSchema.enum('point_streak', ['none', 'flawed', 'perfect']);
+export const leaveTypeEnum = checklistSchema.enum('leave_type', ['sick', 'personal', 'other']);
 
 export const users = checklistSchema.table.withRLS("users", {
     id: uuid("id").primaryKey().defaultRandom(),
@@ -112,4 +113,19 @@ export const pointTransactions = checklistSchema.table.withRLS("point_transactio
     shift_session_id: uuid("shift_session_id").references(() => shiftSession.id),
     description: text("description").notNull(),
     created_at: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const employeeLeaves = checklistSchema.table.withRLS("employee_leaves", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    user_id: uuid("user_id").notNull().references(() => users.id),
+    branch_id: uuid("branch_id").notNull().references(() => branches.id),
+    leave_type: leaveTypeEnum("leave_type").notNull(), // 'sick' | 'personal' | 'other'
+    start_date: text("start_date").notNull(), // 'YYYY-MM-DD'
+    end_date: text("end_date").notNull(), // 'YYYY-MM-DD'
+    reason: text("reason").notNull(),
+    preserve_streak: boolean("preserve_streak").notNull().default(true),
+    previous_streak: integer("previous_streak"),
+    recorded_by: uuid("recorded_by").notNull().references(() => users.id),
+    created_at: timestamp("created_at").notNull().defaultNow(),
+    updated_at: timestamp("updated_at").defaultNow(),
 });
