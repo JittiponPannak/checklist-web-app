@@ -9,6 +9,7 @@ import { createBranchAction, assignStaffToBranchAction, assignTasksToBranchActio
 import { fetchBranchesWithCache, invalidateBranchCache } from "../../utils/cache";
 import { getAllUsersAction } from "../../actions/auth";
 import { getAllTasksAction, createTaskAction, toggleTaskDisabledAction } from "../../actions/task";
+import { AdminCronSettingsTab } from "./AdminCronSettingsTab";
 
 interface MasterTask {
   id: string;
@@ -99,7 +100,7 @@ export function AdminDashboardView({
   user: User;
   onLogout: () => void;
 }) {
-  const [activeTab, setActiveTab] = useState<"overview" | "branches" | "tasks" | "users">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "branches" | "tasks" | "users" | "cron">("overview");
   const [branches, setBranches] = useState<Branch[]>([]);
   const [tasks, setTasks] = useState<MasterTask[]>(INITIAL_MASTER_TASKS);
   const [usersList, setUsersList] = useState<User[]>([]);
@@ -434,6 +435,7 @@ export function AdminDashboardView({
               { id: "branches", label: `จัดการสาขา (${branches.length})` },
               { id: "tasks", label: `แม่แบบงานกลาง (${tasks.length})` },
               { id: "users", label: `จัดการผู้ใช้และสิทธิ์ (${usersList.length})` },
+              { id: "cron", label: "ตั้งค่างานระบบ (Cron Jobs)" },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -862,6 +864,10 @@ export function AdminDashboardView({
           </div>
         )}
 
+        {/* TAB 5: CRON SETTINGS */}
+        {activeTab === "cron" && (
+          <AdminCronSettingsTab showToast={showToast} />
+        )}
 
         {/* MODALS */}
         {isNewBranchModalOpen && (

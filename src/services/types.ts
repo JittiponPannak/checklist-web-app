@@ -117,7 +117,16 @@ export interface IChecklistService {
     error?: string;
   }>;
 
-  cleanupOldData(retentionDays?: number): Promise<{
+  cleanupOldData(
+    retentionDays?: number,
+    options?: {
+      cleanShiftSessions?: boolean;
+      cleanRefrigeratorTasks?: boolean;
+      cleanNotifications?: boolean;
+      cleanPointTransactions?: boolean;
+      cleanEmployeeLeaves?: boolean;
+    }
+  ): Promise<{
     success: boolean;
     cutoffDate?: string;
     deleted?: {
@@ -325,6 +334,8 @@ export interface IRefrigeratorService {
   processDailyRefrigeratorTasks(params?: {
     targetDate?: string;
     yesterdayDate?: string;
+    createDailyTasks?: boolean;
+    markMissedYesterdayTasks?: boolean;
   }): Promise<{
     success: boolean;
     processedBranches: number;
@@ -342,6 +353,58 @@ export interface IRefrigeratorService {
   }>;
 }
 
+export type CronJobId = "cleanup-data" | "end-shifts" | "daily-refrigerators";
+
+export interface CleanupDataConfig {
+  retentionDays: number;
+  cleanShiftSessions: boolean;
+  cleanRefrigeratorTasks: boolean;
+  cleanNotifications: boolean;
+  cleanPointTransactions: boolean;
+  cleanEmployeeLeaves: boolean;
+}
+
+export interface EndShiftsConfig {
+  sendAttendanceAlerts: boolean;
+  autoEndUnclosedShifts: boolean;
+}
+
+export interface DailyRefrigeratorsConfig {
+  createDailyTasks: boolean;
+  markMissedYesterdayTasks: boolean;
+}
+
+export interface CronSetting {
+  id: string;
+  name: string;
+  description: string;
+  schedule_cron: string;
+  schedule_description: string;
+  enabled: boolean;
+  config: Record<string, unknown>;
+  last_run_at: Date | string | null;
+  last_run_status: "success" | "failed" | "skipped" | null;
+  last_run_message: string | null;
+  updated_at?: Date | string | null;
+}
+
+export interface ICronService {
+  getAllSettings(): Promise<CronSetting[]>;
+  getSetting(id: string): Promise<CronSetting | null>;
+  updateSetting(
+    id: string,
+    updates: { enabled?: boolean; config?: Record<string, unknown> }
+  ): Promise<{ success: boolean; error?: string; setting?: CronSetting }>;
+  recordExecution(
+    id: string,
+    result: { status: "success" | "failed" | "skipped"; message?: string }
+  ): Promise<void>;
+  runCronJob(
+    id: string,
+    overrides?: Record<string, unknown>
+  ): Promise<{ success: boolean; skipped?: boolean; message?: string; result?: unknown; error?: string }>;
+}
+
 export interface IServiceContainer {
   auth: IAuthService;
   notifications: INotificationService;
@@ -350,4 +413,5 @@ export interface IServiceContainer {
   manager: IManagerService;
   branch: IBranchService;
   refrigerator: IRefrigeratorService;
+  cron: ICronService;
 }

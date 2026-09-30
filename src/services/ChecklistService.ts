@@ -729,7 +729,16 @@ export class ChecklistService implements IChecklistService {
     }
   }
 
-  async cleanupOldData(retentionDays: number = 14): Promise<{
+  async cleanupOldData(
+    retentionDays: number = 14,
+    options?: {
+      cleanShiftSessions?: boolean;
+      cleanRefrigeratorTasks?: boolean;
+      cleanNotifications?: boolean;
+      cleanPointTransactions?: boolean;
+      cleanEmployeeLeaves?: boolean;
+    }
+  ): Promise<{
     success: boolean;
     cutoffDate?: string;
     deleted?: {
@@ -749,16 +758,22 @@ export class ChecklistService implements IChecklistService {
       const d = new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Bangkok", day: "2-digit" }).format(cutoffDate);
       const cutoffDateStr = `${y}-${m}-${d}`;
 
+      const doCleanSessions = options?.cleanShiftSessions !== false;
+      const doCleanRefs = options?.cleanRefrigeratorTasks !== false;
+      const doCleanPoints = options?.cleanPointTransactions !== false;
+      const doCleanNotifs = options?.cleanNotifications !== false;
+      const doCleanLeaves = options?.cleanEmployeeLeaves !== false;
+
       // 1. Identify old shift sessions
       const oldSessions = await this.db
         .select({ id: shiftSession.id })
         .from(shiftSession)
         .where(lt(shiftSession.start, cutoffDate));
 
-      const oldSessionIds: string[] = oldSessions.map((s: any) => s.id);
+      const oldSessionIds: string[] = oldSessions.map((s: { id: string }) => s.id);
       let deletedTaskWorks = 0;
 
-      if (oldSessionIds.length > 0) {
+      if (doCleanSessions && oldSessionIds.length > 0) {
         // Delete taskWork referencing these old sessions
         const deletedWorks = await this.db
           .delete(taskWork)
@@ -768,44 +783,56 @@ export class ChecklistService implements IChecklistService {
       }
 
       // 2. Delete old refrigerator tasks (by created_at, task_date, or session_id)
-      const refConditions = [
-        lt(refrigeratorTasks.created_at, cutoffDate),
-        lte(refrigeratorTasks.task_date, cutoffDateStr),
-      ];
-      if (oldSessionIds.length > 0) {
-        refConditions.push(inArray(refrigeratorTasks.shift_session_id, oldSessionIds));
-      }
+      let deletedRefsCount = 0;
+      if (doCleanRefs) {
+        const refConditions = [
+          lt(refrigeratorTasks.created_at, cutoffDate),
+          lte(refrigeratorTasks.task_date, cutoffDateStr),
+        ];
+        if (oldSessionIds.length > 0) {
+          refConditions.push(inArray(refrigeratorTasks.shift_session_id, oldSessionIds));
+        }
 
-      const deletedRefs = await this.db
-        .delete(refrigeratorTasks)
-        .where(or(...refConditions))
-        .returning({ id: refrigeratorTasks.id });
+        const deletedRefs = await this.db
+          .delete(refrigeratorTasks)
+          .where(or(...refConditions))
+          .returning({ id: refrigeratorTasks.id });
+        deletedRefsCount = deletedRefs.length;
+      }
 
       // 3. Delete old point transactions referencing old sessions or created before cutoff
-      const pointConditions = [lt(pointTransactions.created_at, cutoffDate)];
-      if (oldSessionIds.length > 0) {
-        pointConditions.push(inArray(pointTransactions.shift_session_id, oldSessionIds));
-      }
+      let deletedPointsCount = 0;
+      if (doCleanPoints) {
+        const pointConditions = [lt(pointTransactions.created_at, cutoffDate)];
+        if (oldSessionIds.length > 0) {
+          pointConditions.push(inArray(pointTransactions.shift_session_id, oldSessionIds));
+        }
 
-      const deletedPoints = await this.db
-        .delete(pointTransactions)
-        .where(or(...pointConditions))
-        .returning({ id: pointTransactions.id });
+        const deletedPoints = await this.db
+          .delete(pointTransactions)
+          .where(or(...pointConditions))
+          .returning({ id: pointTransactions.id });
+        deletedPointsCount = deletedPoints.length;
+      }
 
       // 4. Delete old notifications referencing old sessions or created before cutoff
-      const notifConditions = [lt(notifications.created_at, cutoffDate)];
-      if (oldSessionIds.length > 0) {
-        notifConditions.push(inArray(notifications.shift_session_id, oldSessionIds));
-      }
+      let deletedNotifsCount = 0;
+      if (doCleanNotifs) {
+        const notifConditions = [lt(notifications.created_at, cutoffDate)];
+        if (oldSessionIds.length > 0) {
+          notifConditions.push(inArray(notifications.shift_session_id, oldSessionIds));
+        }
 
-      const deletedNotifs = await this.db
-        .delete(notifications)
-        .where(or(...notifConditions))
-        .returning({ id: notifications.id });
+        const deletedNotifs = await this.db
+          .delete(notifications)
+          .where(or(...notifConditions))
+          .returning({ id: notifications.id });
+        deletedNotifsCount = deletedNotifs.length;
+      }
 
       // 5. Delete old shift sessions
       let deletedSessions = 0;
-      if (oldSessionIds.length > 0) {
+      if (doCleanSessions && oldSessionIds.length > 0) {
         const deletedSess = await this.db
           .delete(shiftSession)
           .where(inArray(shiftSession.id, oldSessionIds))
@@ -815,19 +842,21 @@ export class ChecklistService implements IChecklistService {
 
       // 6. Delete old employee leaves (where leave period ended <= cutoffDateStr AND record created < cutoffDate)
       let deletedLeaves = 0;
-      try {
-        const deletedLeavesRes = await this.db
-          .delete(employeeLeaves)
-          .where(
-            and(
-              lte(employeeLeaves.end_date, cutoffDateStr),
-              lt(employeeLeaves.created_at, cutoffDate)
+      if (doCleanLeaves) {
+        try {
+          const deletedLeavesRes = await this.db
+            .delete(employeeLeaves)
+            .where(
+              and(
+                lte(employeeLeaves.end_date, cutoffDateStr),
+                lt(employeeLeaves.created_at, cutoffDate)
+              )
             )
-          )
-          .returning({ id: employeeLeaves.id });
-        deletedLeaves = deletedLeavesRes.length;
-      } catch (leaveErr) {
-        console.warn("ChecklistService.cleanupOldData: could not clean employeeLeaves:", leaveErr);
+            .returning({ id: employeeLeaves.id });
+          deletedLeaves = deletedLeavesRes.length;
+        } catch (leaveErr) {
+          console.warn("ChecklistService.cleanupOldData: could not clean employeeLeaves:", leaveErr);
+        }
       }
 
       return {
@@ -836,9 +865,9 @@ export class ChecklistService implements IChecklistService {
         deleted: {
           shiftSessions: deletedSessions,
           taskWorks: deletedTaskWorks,
-          refrigeratorTasks: deletedRefs.length,
-          notifications: deletedNotifs.length,
-          pointTransactions: deletedPoints.length,
+          refrigeratorTasks: deletedRefsCount,
+          notifications: deletedNotifsCount,
+          pointTransactions: deletedPointsCount,
           employeeLeaves: deletedLeaves,
         },
       };

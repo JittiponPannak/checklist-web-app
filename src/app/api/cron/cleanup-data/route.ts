@@ -14,12 +14,21 @@ export async function GET(request: NextRequest) {
     }
 
     const services = getServices();
-    // Cleans up old operational records older than 14 days (2 weeks):
-    // shift sessions, task works, refrigerator logs, notifications, points, and employee leave records
-    const result = await services.checklist.cleanupOldData(14);
+    const result = await services.cron.runCronJob("cleanup-data");
+
+    if (result.skipped) {
+      return NextResponse.json({
+        success: true,
+        skipped: true,
+        message: result.message,
+        timestamp: new Date().toISOString(),
+      });
+    }
 
     return NextResponse.json({
-      ...result,
+      success: result.success,
+      message: result.message,
+      data: result.result,
       timestamp: new Date().toISOString(),
     });
   } catch (error: unknown) {

@@ -1,4 +1,4 @@
-import { boolean, integer, pgSchema, timestamp, time, uuid, text } from "drizzle-orm/pg-core";
+import { boolean, integer, jsonb, pgSchema, timestamp, time, uuid, text } from "drizzle-orm/pg-core";
 
 export const checklistSchema = pgSchema("checklist_web_app");
 
@@ -129,3 +129,17 @@ export const employeeLeaves = checklistSchema.table.withRLS("employee_leaves", {
     created_at: timestamp("created_at").notNull().defaultNow(),
     updated_at: timestamp("updated_at").defaultNow(),
 });
+
+export const cronSettings = checklistSchema.table.withRLS("cron_settings", {
+    id: text("id").primaryKey(), // 'cleanup-data' | 'end-shifts' | 'daily-refrigerators'
+    name: text("name").notNull(),
+    description: text("description").notNull().default(""),
+    schedule_cron: text("schedule_cron").notNull(),
+    schedule_description: text("schedule_description").notNull(),
+    enabled: boolean("enabled").notNull().default(true),
+    config: jsonb("config").$type<Record<string, unknown>>().notNull().default({}),
+    last_run_at: timestamp("last_run_at"),
+    last_run_status: text("last_run_status"), // 'success' | 'failed' | 'skipped'
+    last_run_message: text("last_run_message"),
+    updated_at: timestamp("updated_at").defaultNow(),
+});
