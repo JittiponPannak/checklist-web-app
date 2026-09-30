@@ -59,6 +59,10 @@
   - **สลับขอบเขตการดูอันดับได้ 2 ระดับ**:
     - **สาขาของฉัน (My Branch)**: ดูกระดานคะแนนและสตรีคเฉพาะเพื่อนร่วมงานในสาขาตนเอง เพื่อสร้างแรงจูงใจในการทำงานร่วมกัน
     - **ทุกสาขา (All Branches)**: ดูอันดับท็อปพนักงานทั่วทั้งองค์กร
+- **🔀 รวมหน้าสถานะพนักงานและการจัดการการลาเป็นศูนย์กลางเดียวกัน (Unified Staff & Leaves Hub - Tabs Switcher)**:
+  - ผนวกหน้า `/manager/staff-status` และ `/manager/leaves` เข้าเป็นศูนย์กลางเดียวกัน ผู้บริหารสาขาสามารถสลับมุมมองระหว่าง **"สถานะกะพนักงาน" (Shift Presence)** และ **"จัดการการลา" (Leave Management)** ได้ทันใจผ่านปุ่มสลับแท็บ (Segmented Tab Switcher) ที่ด้านบนของหน้าจอโดยไม่ต้องโหลดหน้าเว็บใหม่
+  - การกดปุ่ม "บันทึกการลา" บนการ์ดพนักงานหรือ Drawer รายละเอียด จะสลับเข้าแท็บจัดการการลาพร้อมเลือกชื่อพนักงานให้อัตโนมัติทันที
+  - รองรับ Deep Link และ Query Parameter (`?tab=presence` หรือ `?tab=leaves`) ทั้งสอง URL ยังคงทำงานร่วมกันได้อย่างสมบูรณ์แบบโดยไม่กระทบ Bookmark เดิม
 - **🔄 ปรับปรุงสถาปัตยกรรม Next.js Proxy Architecture (`proxy.ts`)**:
   - เปลี่ยนจากการใช้ `middleware.ts` แบบเดิมสู่โครงสร้าง `proxy.ts` (`src/proxy.ts` และ `src/db/supabase/proxy.ts`) ตามมาตรฐาน Next.js เพื่อประสิทธิภาพและความเสถียรในการทำงาน
 
@@ -70,11 +74,12 @@
   - คอลัมน์ `preserve_streak` (boolean default true) และ `previous_streak` (integer nullable)
   - สร้างดัชนี (Indexes) `idx_employee_leaves_branch_dates` และ `idx_employee_leaves_user_dates` เพื่อประสิทธิภาพในการค้นหา
   - ไฟล์ Migration Script: `tools/migration_add_employee_leaves.sql` ออกแบบแบบ Idempotent ปลอดภัยต่อการรันซ้ำ
-- **ManagerService Enhancements**:
+- **ManagerService & ChecklistService Enhancements**:
   - `markEmployeeLeave`: ตรวจสอบความถูกต้องของวันและเหตุผลสำหรับประเภท 'other', ดำเนินการตัด `point_streak = 0` ในตาราง `users` หากเลือกไม่รักษาสตรีค, และส่ง Realtime Notification แจ้งเตือนพนักงาน
   - `getBranchLeaves`: ดึงข้อมูลการลาพร้อม Join รายชื่อพนักงานและผู้บันทึก
   - `cancelEmployeeLeave`: ลบรายการลาพร้อมเงื่อนไขคืนค่าสตรีค `point_streak = previous_streak` ให้พนักงานหากสตรีคปัจจุบันยังเป็น 0
   - `processShiftAttendanceAlerts`: คำนวณ `onLeaveUserIds` และยกเว้นพนักงานที่ลางานไม่ให้นับเป็นผู้ขาดงาน
+  - `cleanupOldData` & `cleanupOldLeaves`: อัปเกรด Cron `/api/cron/cleanup-data` ให้ลบประวัติการลา (`employee_leaves`) ที่สิ้นสุดและบันทึกไว้นานเกิน 14 วัน (2 สัปดาห์) อัตโนมัติร่วมกับกะงานและงานตู้แช่
 - **PointService Leaderboard Filtering**:
   - ฟังก์ชัน `getLeaderboard()` รองรับพารามิเตอร์ `branchId?: string` เพื่อกรองข้อมูลอันดับตามสาขา
 - **Frontend Components & Routing**:

@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useApp } from "../../../context/AppContext";
 import { LoadingSpinner } from "../../loading";
-import { BranchStaffPresenceView } from "../../../components/manager/BranchStaffPresenceView";
+import { BranchStaffUnifiedHub } from "../../../components/manager/BranchStaffUnifiedHub";
 
 export default function ManagerStaffStatusPage() {
   const router = useRouter();
@@ -30,5 +30,5 @@ export default function ManagerStaffStatusPage() {
     position: "ผู้จัดการร้าน",
   };
 
-  return <BranchStaffPresenceView currentUser={activeUser} />;
+  return <BranchStaffUnifiedHub currentUser={activeUser} initialTab="presence" />;
 }

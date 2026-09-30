@@ -126,6 +126,7 @@ export interface IChecklistService {
       refrigeratorTasks: number;
       notifications: number;
       pointTransactions: number;
+      employeeLeaves: number;
     };
     error?: string;
   }>;
@@ -236,6 +237,13 @@ export interface IManagerService {
     leaveId: string;
     cancelledBy: string;
   }): Promise<{ success: boolean; error?: string }>;
+
+  cleanupOldLeaves(retentionDays?: number): Promise<{
+    success: boolean;
+    cutoffDate?: string;
+    deletedCount?: number;
+    error?: string;
+  }>;
 }
 
 export interface IBranchService {

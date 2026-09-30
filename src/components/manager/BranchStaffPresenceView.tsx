@@ -35,9 +35,17 @@ import { getShiftBadge, getShiftName } from "../common/Badge";
 
 interface BranchStaffPresenceViewProps {
   currentUser: User;
+  currentTab?: "presence" | "leaves";
+  onTabChange?: (tab: "presence" | "leaves") => void;
+  onSwitchToLeaves?: (userId?: string) => void;
 }
 
-export function BranchStaffPresenceView({ currentUser }: BranchStaffPresenceViewProps) {
+export function BranchStaffPresenceView({
+  currentUser,
+  currentTab = "presence",
+  onTabChange,
+  onSwitchToLeaves,
+}: BranchStaffPresenceViewProps) {
   const [employees, setEmployees] = useState<BranchEmployeeStatus[]>([]);
   const [branches, setBranches] = useState<Array<{ id: string; name: string }>>([]);
   const [selectedBranchId, setSelectedBranchId] = useState<string>("");
@@ -224,15 +232,46 @@ export function BranchStaffPresenceView({ currentUser }: BranchStaffPresenceView
               </select>
             )}
 
-            {/* Quick Link to Leave Management */}
-            <Link
-              href="/manager/leaves"
-              className="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs"
-              title="บันทึกและจัดการการลาพนักงาน (คุ้มครองสตรีค)"
-            >
-              <HeartPulse size={14} />
-              <span>บันทึกการลา</span>
-            </Link>
+            {/* Tab Switcher: Presence vs Leaves */}
+            <div className="flex items-center p-0.5 sm:p-1 bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-xl shrink-0">
+              <button
+                type="button"
+                onClick={() => onTabChange?.("presence")}
+                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  currentTab === "presence"
+                    ? "bg-amber-500 text-amber-950 shadow-xs cursor-default"
+                    : "text-[var(--color-text-muted)] hover:text-[var(--color-text)] cursor-pointer"
+                }`}
+              >
+                <Users size={14} />
+                <span className="hidden sm:inline">สถานะกะพนักงาน</span>
+                <span className="sm:hidden">กะงาน</span>
+              </button>
+              {onTabChange ? (
+                <button
+                  type="button"
+                  onClick={() => onTabChange("leaves")}
+                  className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    currentTab === "leaves"
+                      ? "bg-rose-600 text-white shadow-xs"
+                      : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+                  }`}
+                >
+                  <HeartPulse size={14} className={currentTab === "leaves" ? "text-white" : "text-rose-500"} />
+                  <span className="hidden sm:inline">จัดการการลา</span>
+                  <span className="sm:hidden">การลา</span>
+                </button>
+              ) : (
+                <Link
+                  href="/manager/leaves"
+                  className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs font-bold transition-all text-[var(--color-text-muted)] hover:text-[var(--color-text)] cursor-pointer"
+                >
+                  <HeartPulse size={14} className="text-rose-500" />
+                  <span className="hidden sm:inline">จัดการการลา</span>
+                  <span className="sm:hidden">การลา</span>
+                </Link>
+              )}
+            </div>
 
             {/* Refresh Button */}
             <button
@@ -672,14 +711,26 @@ export function BranchStaffPresenceView({ currentUser }: BranchStaffPresenceView
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <Link
-                        href={`/manager/leaves?userId=${emp.id}`}
-                        className="text-xs font-semibold text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 flex items-center gap-1 transition-colors"
-                        title="บันทึกการลาสำหรับพนักงานคนนี้"
-                      >
-                        <HeartPulse size={12} />
-                        <span>บันทึกการลา</span>
-                      </Link>
+                      {onSwitchToLeaves ? (
+                        <button
+                          type="button"
+                          onClick={() => onSwitchToLeaves(emp.id)}
+                          className="text-xs font-semibold text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 flex items-center gap-1 transition-colors cursor-pointer"
+                          title="บันทึกการลาสำหรับพนักงานคนนี้"
+                        >
+                          <HeartPulse size={12} />
+                          <span>บันทึกการลา</span>
+                        </button>
+                      ) : (
+                        <Link
+                          href={`/manager/leaves?userId=${emp.id}`}
+                          className="text-xs font-semibold text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 flex items-center gap-1 transition-colors"
+                          title="บันทึกการลาสำหรับพนักงานคนนี้"
+                        >
+                          <HeartPulse size={12} />
+                          <span>บันทึกการลา</span>
+                        </Link>
+                      )}
 
                       <button
                         type="button"
@@ -834,13 +885,28 @@ export function BranchStaffPresenceView({ currentUser }: BranchStaffPresenceView
             </div>
 
             <div className="pt-2 flex justify-between items-center gap-2">
-              <Link
-                href={`/manager/leaves?userId=${inspectedEmployee.id}`}
-                className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs flex items-center gap-1.5 transition-colors shadow-xs"
-              >
-                <HeartPulse size={14} />
-                <span>บันทึกการลาให้พนักงานคนนี้</span>
-              </Link>
+              {onSwitchToLeaves ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const targetId = inspectedEmployee.id;
+                    setInspectedEmployee(null);
+                    onSwitchToLeaves(targetId);
+                  }}
+                  className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
+                >
+                  <HeartPulse size={14} />
+                  <span>บันทึกการลาให้พนักงานคนนี้</span>
+                </button>
+              ) : (
+                <Link
+                  href={`/manager/leaves?userId=${inspectedEmployee.id}`}
+                  className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs flex items-center gap-1.5 transition-colors shadow-xs"
+                >
+                  <HeartPulse size={14} />
+                  <span>บันทึกการลาให้พนักงานคนนี้</span>
+                </Link>
+              )}
               <button
                 type="button"
                 onClick={() => setInspectedEmployee(null)}

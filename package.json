@@ -1,6 +1,6 @@
 {
-  "name": "checklist-web-app",
-  "version": "0.2.0",
+  "name": "eater-egg-checklist-system",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev",

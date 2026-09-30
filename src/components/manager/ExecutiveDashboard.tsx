@@ -755,23 +755,26 @@ export function ExecutiveDashboard({
           </div>
 
           <div className="flex items-center gap-2.5 z-10 flex-wrap sm:flex-nowrap">
-            <Link
-              href="/manager/leaves"
-              className="px-3.5 py-2.5 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold rounded-xl shadow-xs transition-all flex items-center gap-1.5 shrink-0"
-              title="บันทึกการลาป่วยและลากิจสำหรับพนักงานในสาขา (คุ้มครองสตรีคและคะแนนสะสม)"
-            >
-              <HeartPulse size={15} />
-              <span>บันทึกการลาพนักงาน</span>
-            </Link>
-
-            <Link
-              href="/manager/staff-status"
-              className="px-3.5 py-2.5 bg-amber-500 hover:bg-amber-400 text-amber-950 text-xs font-bold rounded-xl shadow-xs transition-all flex items-center gap-1.5 shrink-0"
-              title="ตรวจสอบรายชื่อพนักงานในสาขา การเข้ากะ และจำนวนกะสะสม"
-            >
-              <Users size={15} />
-              <span>พนักงานในสาขา & สถานะกะ →</span>
-            </Link>
+            {/* Unified Hub: Staff Presence & Leaves */}
+            <div className="flex items-center bg-[var(--color-surface)] dark:bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-xl p-1 shadow-xs shrink-0">
+              <Link
+                href="/manager/staff-status?tab=presence"
+                className="px-3 py-1.5 hover:bg-amber-500/15 text-amber-950 dark:text-amber-200 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5"
+                title="ตรวจสอบรายชื่อพนักงานในสาขา การเข้ากะ และจำนวนกะสะสม"
+              >
+                <Users size={14} className="text-amber-600 dark:text-amber-400" />
+                <span>สถานะกะพนักงาน</span>
+              </Link>
+              <div className="h-4 w-px bg-[var(--color-border)] mx-0.5" />
+              <Link
+                href="/manager/staff-status?tab=leaves"
+                className="px-3 py-1.5 hover:bg-rose-500/15 text-rose-700 dark:text-rose-300 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5"
+                title="บันทึกการลาป่วยและลากิจสำหรับพนักงานในสาขา (คุ้มครองสตรีคและคะแนนสะสม)"
+              >
+                <HeartPulse size={14} className="text-rose-600 dark:text-rose-400" />
+                <span>จัดการการลา</span>
+              </Link>
+            </div>
 
             {currentRole === "manager_assistant" && (
               <button

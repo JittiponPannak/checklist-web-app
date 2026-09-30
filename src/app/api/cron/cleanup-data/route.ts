@@ -14,6 +14,8 @@ export async function GET(request: NextRequest) {
     }
 
     const services = getServices();
+    // Cleans up old operational records older than 14 days (2 weeks):
+    // shift sessions, task works, refrigerator logs, notifications, points, and employee leave records
     const result = await services.checklist.cleanupOldData(14);
 
     return NextResponse.json({

@@ -43,12 +43,16 @@ interface BranchLeaveManagementViewProps {
   currentUser: User;
   onBackToDashboard?: () => void;
   defaultSelectedUserId?: string;
+  currentTab?: "presence" | "leaves";
+  onTabChange?: (tab: "presence" | "leaves") => void;
 }
 
 export function BranchLeaveManagementView({ 
   currentUser, 
   onBackToDashboard,
-  defaultSelectedUserId 
+  defaultSelectedUserId,
+  currentTab = "leaves",
+  onTabChange
 }: BranchLeaveManagementViewProps) {
   const [leaves, setLeaves] = useState<EmployeeLeave[]>([]);
   const [employees, setEmployees] = useState<BranchEmployeeStatus[]>([]);
@@ -372,14 +376,46 @@ export function BranchLeaveManagementView({
               </div>
             )}
 
-            {/* Quick Link to Staff Status */}
-            <Link
-              href="/manager/staff-status"
-              className="px-3 py-1.5 bg-[var(--color-surface-2)] hover:bg-[var(--color-surface)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] text-xs font-semibold rounded-xl border border-[var(--color-border)] transition-colors flex items-center gap-1.5"
-            >
-              <Users size={14} />
-              <span className="hidden md:inline">สถานะกะพนักงาน</span>
-            </Link>
+            {/* Tab Switcher: Presence vs Leaves */}
+            <div className="flex items-center p-0.5 sm:p-1 bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-xl shrink-0">
+              {onTabChange ? (
+                <button
+                  type="button"
+                  onClick={() => onTabChange("presence")}
+                  className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    currentTab === "presence"
+                      ? "bg-amber-500 text-amber-950 shadow-xs"
+                      : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+                  }`}
+                >
+                  <Users size={14} />
+                  <span className="hidden sm:inline">สถานะกะพนักงาน</span>
+                  <span className="sm:hidden">กะงาน</span>
+                </button>
+              ) : (
+                <Link
+                  href="/manager/staff-status"
+                  className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs font-bold transition-all text-[var(--color-text-muted)] hover:text-[var(--color-text)] cursor-pointer"
+                >
+                  <Users size={14} />
+                  <span className="hidden sm:inline">สถานะกะพนักงาน</span>
+                  <span className="sm:hidden">กะงาน</span>
+                </Link>
+              )}
+              <button
+                type="button"
+                onClick={() => onTabChange?.("leaves")}
+                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  currentTab === "leaves"
+                    ? "bg-rose-600 text-white shadow-xs cursor-default"
+                    : "text-[var(--color-text-muted)] hover:text-[var(--color-text)] cursor-pointer"
+                }`}
+              >
+                <HeartPulse size={14} className={currentTab === "leaves" ? "text-white" : "text-rose-500"} />
+                <span className="hidden sm:inline">จัดการการลา</span>
+                <span className="sm:hidden">การลา</span>
+              </button>
+            </div>
 
             {/* Refresh Button */}
             <button
@@ -584,7 +620,7 @@ export function BranchLeaveManagementView({
           <div className="flex flex-wrap items-center gap-2">
             <select
               value={streakFilter}
-              onChange={(e) => setStreakFilter(e.target.value as any)}
+              onChange={(e) => setStreakFilter(e.target.value as "all" | "preserved" | "broken")}
               className="px-3 py-1.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-xs font-semibold text-[var(--color-text)] focus:outline-none cursor-pointer"
             >
               <option value="all">สตรีค: ทั้งหมด</option>
@@ -594,7 +630,7 @@ export function BranchLeaveManagementView({
 
             <select
               value={dateFilter}
-              onChange={(e) => setDateFilter(e.target.value as any)}
+              onChange={(e) => setDateFilter(e.target.value as "all" | "today" | "upcoming" | "past")}
               className="px-3 py-1.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-xs font-semibold text-[var(--color-text)] focus:outline-none cursor-pointer"
             >
               <option value="all">ทุกช่วงเวลา</option>
@@ -657,13 +693,9 @@ export function BranchLeaveManagementView({
             {filteredLeaves.map((leave) => {
               const isSick = leave.leaveType === "sick";
               const isPersonal = leave.leaveType === "personal";
-              const isOther = leave.leaveType === "other";
               const isToday = leave.startDate <= thaiTodayStr && leave.endDate >= thaiTodayStr;
               const isUpcoming = leave.startDate > thaiTodayStr;
               const isPast = leave.endDate < thaiTodayStr;
-
-              // Find matching employee to display current streak info
-              const matchedEmp = employees.find(e => e.id === leave.userId);
 
               return (
                 <div

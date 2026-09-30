@@ -1,4 +1,4 @@
-import { eq, and, gte, lte, desc, inArray, sql } from "drizzle-orm";
+import { eq, and, gte, lte, lt, desc, inArray, sql } from "drizzle-orm";
 import { tasks, taskWork, shiftSession, users, branches, employeeLeaves } from "../db/schema";
 import { IManagerService, IPointService, INotificationService, BranchEmployeeStatus } from "./types";
 import { ShiftType, Role, LeaveType, EmployeeLeave } from "../types";
@@ -1137,6 +1137,41 @@ export class ManagerService implements IManagerService {
     } catch (err: unknown) {
       console.error("ManagerService.cancelEmployeeLeave error:", err);
       const message = err instanceof Error ? err.message : "ไม่สามารถยกเลิกรายการลาได้";
+      return { success: false, error: message };
+    }
+  }
+
+  async cleanupOldLeaves(retentionDays: number = 14): Promise<{
+    success: boolean;
+    cutoffDate?: string;
+    deletedCount?: number;
+    error?: string;
+  }> {
+    try {
+      const cutoffDate = new Date(Date.now() - retentionDays * 24 * 60 * 60 * 1000);
+      const y = new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Bangkok", year: "numeric" }).format(cutoffDate);
+      const m = new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Bangkok", month: "2-digit" }).format(cutoffDate);
+      const d = new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Bangkok", day: "2-digit" }).format(cutoffDate);
+      const cutoffDateStr = `${y}-${m}-${d}`;
+
+      const deleted = await this.db
+        .delete(employeeLeaves)
+        .where(
+          and(
+            lte(employeeLeaves.end_date, cutoffDateStr),
+            lt(employeeLeaves.created_at, cutoffDate)
+          )
+        )
+        .returning({ id: employeeLeaves.id });
+
+      return {
+        success: true,
+        cutoffDate: cutoffDate.toISOString(),
+        deletedCount: deleted.length,
+      };
+    } catch (err: unknown) {
+      console.error("ManagerService.cleanupOldLeaves error:", err);
+      const message = err instanceof Error ? err.message : "เกิดข้อผิดพลาดในการล้างข้อมูลการลาเก่า";
       return { success: false, error: message };
     }
   }

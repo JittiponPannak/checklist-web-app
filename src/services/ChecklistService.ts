@@ -1,5 +1,5 @@
 import { eq, and, or, gte, lte, lt, desc, asc, inArray, isNull, sql } from "drizzle-orm";
-import { tasks, taskWork, shiftSession, users, branches, refrigerators, refrigeratorTasks, notifications, pointTransactions } from "../db/schema";
+import { tasks, taskWork, shiftSession, users, branches, refrigerators, refrigeratorTasks, notifications, pointTransactions, employeeLeaves } from "../db/schema";
 import { IChecklistService, INotificationService } from "./types";
 import { ShiftSession, ShiftType, ChecklistItem } from "../types";
 
@@ -738,6 +738,7 @@ export class ChecklistService implements IChecklistService {
       refrigeratorTasks: number;
       notifications: number;
       pointTransactions: number;
+      employeeLeaves: number;
     };
     error?: string;
   }> {
@@ -812,6 +813,23 @@ export class ChecklistService implements IChecklistService {
         deletedSessions = deletedSess.length;
       }
 
+      // 6. Delete old employee leaves (where leave period ended <= cutoffDateStr AND record created < cutoffDate)
+      let deletedLeaves = 0;
+      try {
+        const deletedLeavesRes = await this.db
+          .delete(employeeLeaves)
+          .where(
+            and(
+              lte(employeeLeaves.end_date, cutoffDateStr),
+              lt(employeeLeaves.created_at, cutoffDate)
+            )
+          )
+          .returning({ id: employeeLeaves.id });
+        deletedLeaves = deletedLeavesRes.length;
+      } catch (leaveErr) {
+        console.warn("ChecklistService.cleanupOldData: could not clean employeeLeaves:", leaveErr);
+      }
+
       return {
         success: true,
         cutoffDate: cutoffDate.toISOString(),
@@ -821,6 +839,7 @@ export class ChecklistService implements IChecklistService {
           refrigeratorTasks: deletedRefs.length,
           notifications: deletedNotifs.length,
           pointTransactions: deletedPoints.length,
+          employeeLeaves: deletedLeaves,
         },
       };
     } catch (err: any) {

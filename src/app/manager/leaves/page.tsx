@@ -1,15 +1,13 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useApp } from "../../../context/AppContext";
 import { LoadingSpinner } from "../../loading";
-import { BranchLeaveManagementView } from "../../../components/manager/BranchLeaveManagementView";
+import { BranchStaffUnifiedHub } from "../../../components/manager/BranchStaffUnifiedHub";
 
 export default function ManagerLeavesPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const defaultUserId = searchParams.get("userId") || undefined;
   const { currentUser, isReady } = useApp();
 
   useEffect(() => {
@@ -32,11 +30,5 @@ export default function ManagerLeavesPage() {
     position: "ผู้จัดการร้าน",
   };
 
-  return (
-    <BranchLeaveManagementView 
-      currentUser={activeUser}
-      onBackToDashboard={() => router.push("/manager/dashboard")}
-      defaultSelectedUserId={defaultUserId}
-    />
-  );
+  return <BranchStaffUnifiedHub currentUser={activeUser} initialTab="leaves" />;
 }
