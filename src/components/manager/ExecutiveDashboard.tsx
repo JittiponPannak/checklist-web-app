@@ -1561,7 +1561,7 @@ export function ExecutiveDashboard({
                               )}
                             </p>
                             <p className="text-[11px] font-mono text-[var(--color-text-muted)]">
-                              {isCompleted ? "ส่งเมื่อ" : "บันทึกล่าสุด"} {fmtTime(notif.completedAt || notif.createdAt)}
+                              {isCompleted ? "ส่งเมื่อ" : "แจ้งเตือนเมื่อ"} {fmtDate(notif.completedAt || notif.createdAt)} เวลา {fmtTime(notif.completedAt || notif.createdAt)} น.
                             </p>
                           </div>
                         </div>

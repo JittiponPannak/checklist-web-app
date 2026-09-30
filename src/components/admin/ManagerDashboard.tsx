@@ -778,8 +778,8 @@ export function ManagerDashboard({
                               ส่งรายงานตรวจเช็คลิสต์ประจำกะ ครบ 100% เรียบร้อยแล้ว
                             </span>
                           </div>
-                          <span className="text-[10px] text-slate-500 mt-0.5 block font-mono">
-                            {fmtDate(notif.completedAt || notif.createdAt)} • {fmtTime(notif.completedAt || notif.createdAt)}
+                          <span className="text-[10px] text-slate-400 mt-0.5 block font-mono">
+                            แจ้งเตือนเมื่อ: {fmtDate(notif.completedAt || notif.createdAt)} เวลา {fmtTime(notif.completedAt || notif.createdAt)} น.
                           </span>
                         </div>
                       </div>
