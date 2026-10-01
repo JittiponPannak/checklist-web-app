@@ -28,9 +28,11 @@ import {
   ShieldCheck,
   FileText,
   HelpCircle,
+  Coins,
   ZapOff
 } from "lucide-react";
 import Link from "next/link";
+import { isPaidLeave, getLeaveTypeLabel } from "../../utils/leave";
 import { getShiftBadge, getShiftName } from "../common/Badge";
 
 interface BranchStaffPresenceViewProps {
@@ -566,28 +568,19 @@ export function BranchStaffPresenceView({
 
                       {/* Status Badge */}
                       {emp.isOnLeave && emp.activeLeave ? (
-                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold shrink-0 ${
-                          emp.activeLeave.leaveType === "sick"
-                            ? "bg-rose-100 dark:bg-rose-950/80 text-rose-900 dark:text-rose-200 border border-rose-300 dark:border-rose-800"
-                            : emp.activeLeave.leaveType === "personal"
-                            ? "bg-sky-100 dark:bg-sky-950/80 text-sky-900 dark:text-sky-200 border border-sky-300 dark:border-sky-800"
-                            : "bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-800"
-                        }`}>
-                          {emp.activeLeave.leaveType === "sick" ? (
-                            <HeartPulse size={12} />
-                          ) : emp.activeLeave.leaveType === "personal" ? (
-                            <FileText size={12} />
-                          ) : (
-                            <HelpCircle size={12} />
-                          )}
-                          <span>
-                            {emp.activeLeave.leaveType === "sick"
-                              ? "ลาป่วย"
-                              : emp.activeLeave.leaveType === "personal"
-                              ? "ลากิจ"
-                              : "อื่นๆ"}
-                          </span>
-                        </span>
+                        (() => {
+                          const isPaid = isPaidLeave(emp.activeLeave.leaveType);
+                          return (
+                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold shrink-0 ${
+                              isPaid
+                                ? "bg-emerald-100 dark:bg-emerald-950/80 text-emerald-900 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-800"
+                                : "bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-800"
+                            }`}>
+                              {isPaid ? <Coins size={12} /> : <FileText size={12} />}
+                              <span>{isPaid ? "ลาเเบบได้เงิน" : "ลาเเบบไม่ได้รับเงิน"}</span>
+                            </span>
+                          );
+                        })()
                       ) : isOnDuty ? (
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-900 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-800 shrink-0">
                           <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 dark:bg-emerald-400" />
@@ -633,10 +626,8 @@ export function BranchStaffPresenceView({
                       </div>
                     ) : emp.isOnLeave && emp.activeLeave ? (
                       <div className={`my-3 p-3.5 rounded-xl border space-y-1.5 ${
-                        emp.activeLeave.leaveType === "sick"
-                          ? "bg-rose-500/10 border-rose-200 dark:border-rose-900/60"
-                          : emp.activeLeave.leaveType === "personal"
-                          ? "bg-sky-500/10 border-sky-200 dark:border-sky-900/60"
+                        isPaidLeave(emp.activeLeave.leaveType)
+                          ? "bg-emerald-500/10 border-emerald-200 dark:border-emerald-900/60"
                           : "bg-amber-500/10 border-amber-200 dark:border-amber-900/60"
                       }`}>
                         <div className="flex items-center justify-between text-xs">
@@ -836,33 +827,26 @@ export function BranchStaffPresenceView({
                 </div>
               )}
               {inspectedEmployee.isOnLeave && inspectedEmployee.activeLeave && (
-                <div className={`p-3.5 rounded-xl border space-y-2 mt-2 ${
-                  inspectedEmployee.activeLeave.leaveType === "sick"
-                    ? "bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800 text-rose-950 dark:text-rose-200"
-                    : inspectedEmployee.activeLeave.leaveType === "personal"
-                    ? "bg-sky-50 dark:bg-sky-950/40 border-sky-200 dark:border-sky-800 text-sky-950 dark:text-sky-200"
-                    : "bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800 text-amber-950 dark:text-amber-200"
-                }`}>
-                  <div className="flex items-center justify-between font-bold text-xs">
-                    <span className="flex items-center gap-1.5">
-                      {inspectedEmployee.activeLeave.leaveType === "sick" ? (
-                        <HeartPulse size={14} className="text-rose-600" />
-                      ) : inspectedEmployee.activeLeave.leaveType === "personal" ? (
-                        <FileText size={14} className="text-sky-600" />
-                      ) : (
-                        <HelpCircle size={14} className="text-amber-600" />
-                      )}
-                      <span>
-                        สถานะการลา: {
-                          inspectedEmployee.activeLeave.leaveType === "sick"
-                            ? "ลาป่วย (Sick Leave)"
-                            : inspectedEmployee.activeLeave.leaveType === "personal"
-                            ? "ลากิจ (Personal Leave)"
-                            : "อื่นๆ (Other Leave)"
-                        }
-                      </span>
-                    </span>
-                    {inspectedEmployee.activeLeave.preserveStreak !== false ? (
+                (() => {
+                  const isPaid = isPaidLeave(inspectedEmployee.activeLeave.leaveType);
+                  return (
+                    <div className={`p-3.5 rounded-xl border space-y-2 mt-2 ${
+                      isPaid
+                        ? "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-950 dark:text-emerald-200"
+                        : "bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800 text-amber-950 dark:text-amber-200"
+                    }`}>
+                      <div className="flex items-center justify-between font-bold text-xs">
+                        <span className="flex items-center gap-1.5">
+                          {isPaid ? (
+                            <Coins size={14} className="text-emerald-600 dark:text-emerald-400" />
+                          ) : (
+                            <FileText size={14} className="text-amber-600 dark:text-amber-400" />
+                          )}
+                          <span>
+                            สถานะการลา: {isPaid ? "ลาเเบบได้เงิน" : "ลาเเบบไม่ได้รับเงิน"}
+                          </span>
+                        </span>
+                        {inspectedEmployee.activeLeave.preserveStreak !== false ? (
                       <span className="text-[11px] text-emerald-700 dark:text-emerald-400 font-semibold flex items-center gap-1">
                         <ShieldCheck size={12} />
                         <span>สตรีคคุ้มครอง 100%</span>
@@ -881,6 +865,8 @@ export function BranchStaffPresenceView({
                     เหตุผล: &ldquo;{inspectedEmployee.activeLeave.reason}&rdquo;
                   </div>
                 </div>
+                  );
+                })()
               )}
             </div>
 

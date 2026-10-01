@@ -2,6 +2,7 @@ import { eq, and, gte, lte, lt, desc, inArray, sql } from "drizzle-orm";
 import { tasks, taskWork, shiftSession, users, branches, employeeLeaves } from "../db/schema";
 import { IManagerService, IPointService, INotificationService, BranchEmployeeStatus } from "./types";
 import { ShiftType, Role, LeaveType, EmployeeLeave } from "../types";
+import { isPaidLeave, getLeaveTypeLabel } from "../utils/leave";
 
 export interface ManagerShiftSummary {
   id: string;
@@ -797,7 +798,7 @@ export class ManagerService implements IManagerService {
           for (const leave of branchLeaves) {
             const u = candidateUsers.find((cu: { id: string }) => cu.id === leave.user_id);
             if (u) {
-              const typeLabel = leave.leave_type === "sick" ? "ลาป่วย" : leave.leave_type === "personal" ? "ลากิจ" : "อื่นๆ";
+              const typeLabel = isPaidLeave(leave.leave_type) ? "ลาเเบบได้เงิน" : "ลาเเบบไม่ได้รับเงิน";
               onLeaveStaffNames.push(`${u.name} (${typeLabel})`);
             }
           }
@@ -912,11 +913,7 @@ export class ManagerService implements IManagerService {
       const { userId, branchId, leaveType, startDate, endDate, reason, preserveStreak = true, recordedBy } = params;
 
       if (!userId || !branchId || !leaveType || !startDate || !endDate || !reason?.trim() || !recordedBy) {
-        return { success: false, error: "กรุณากรอกข้อมูลการลาให้ครบถ้วน" };
-      }
-
-      if (leaveType === "other" && reason.trim().length < 2) {
-        return { success: false, error: "สำหรับการลาประเภท 'อื่นๆ' จำเป็นต้องระบุเหตุผลหรือรายละเอียดการลา" };
+        return { success: false, error: "กรุณากรอกข้อมูลการลาและเหตุผลการลาให้ครบถ้วน" };
       }
 
       if (startDate > endDate) {
@@ -964,11 +961,9 @@ export class ManagerService implements IManagerService {
 
       // Create an audit notification if notificationService is available
       if (this.notificationService) {
-        const leaveTypeName = leaveType === "sick" 
-          ? "ลาป่วย (Sick Leave)" 
-          : leaveType === "personal" 
-          ? "ลากิจ (Personal Leave)" 
-          : "การลาอื่นๆ (Other Leave)";
+        const leaveTypeName = isPaidLeave(leaveType) 
+          ? "ลาเเบบได้เงิน (Paid Leave)" 
+          : "ลาเเบบไม่ได้รับเงิน (Unpaid Leave)";
         const dateDesc = startDate === endDate ? startDate : `${startDate} ถึง ${endDate}`;
         const streakDecisionText = preserveStreak 
           ? "(สตรีคคะแนนสะสมได้รับการคุ้มครอง ไม่ขาด)" 

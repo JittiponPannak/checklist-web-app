@@ -35,9 +35,11 @@ import {
   Store, 
   Sparkles,
   ChevronRight,
-  Info
+  Info,
+  Coins
 } from "lucide-react";
 import Link from "next/link";
+import { isPaidLeave, isUnpaidLeave, getLeaveTypeLabel } from "../../utils/leave";
 
 interface BranchLeaveManagementViewProps {
   currentUser: User;
@@ -64,7 +66,7 @@ export function BranchLeaveManagementView({
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   // Filters
-  const [typeFilter, setTypeFilter] = useState<"all" | LeaveType>("all");
+  const [typeFilter, setTypeFilter] = useState<"all" | "paid" | "unpaid">("all");
   const [streakFilter, setStreakFilter] = useState<"all" | "preserved" | "broken">("all");
   const [dateFilter, setDateFilter] = useState<"all" | "today" | "upcoming" | "past">("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -73,7 +75,7 @@ export function BranchLeaveManagementView({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formUserId, setFormUserId] = useState<string>("");
-  const [formLeaveType, setFormLeaveType] = useState<LeaveType>("sick");
+  const [formLeaveType, setFormLeaveType] = useState<LeaveType>("paid");
   const [formPreserveStreak, setFormPreserveStreak] = useState<boolean>(true);
   const [formStartDate, setFormStartDate] = useState<string>("");
   const [formEndDate, setFormEndDate] = useState<string>("");
@@ -153,17 +155,15 @@ export function BranchLeaveManagementView({
   const stats = useMemo(() => {
     const today = thaiTodayStr;
     const todayLeaves = leaves.filter(l => l.startDate <= today && l.endDate >= today);
-    const sickCount = todayLeaves.filter(l => l.leaveType === "sick").length;
-    const personalCount = todayLeaves.filter(l => l.leaveType === "personal").length;
-    const otherCount = todayLeaves.filter(l => l.leaveType === "other").length;
+    const paidCount = todayLeaves.filter(l => isPaidLeave(l.leaveType)).length;
+    const unpaidCount = todayLeaves.filter(l => isUnpaidLeave(l.leaveType)).length;
     const streakBrokenCount = leaves.filter(l => l.preserveStreak === false).length;
     const totalRecorded = leaves.length;
 
     return {
       todayCount: todayLeaves.length,
-      sickCount,
-      personalCount,
-      otherCount,
+      paidCount,
+      unpaidCount,
       streakBrokenCount,
       totalRecorded,
     };
@@ -174,7 +174,8 @@ export function BranchLeaveManagementView({
     const today = thaiTodayStr;
     return leaves.filter(leave => {
       // Type filter
-      if (typeFilter !== "all" && leave.leaveType !== typeFilter) return false;
+      if (typeFilter === "paid" && !isPaidLeave(leave.leaveType)) return false;
+      if (typeFilter === "unpaid" && !isUnpaidLeave(leave.leaveType)) return false;
 
       // Streak status filter
       if (streakFilter === "preserved" && leave.preserveStreak === false) return false;
@@ -205,7 +206,7 @@ export function BranchLeaveManagementView({
   // Open modal handler
   const handleOpenAddModal = (userId?: string) => {
     setFormUserId(userId || (employees[0]?.id ?? ""));
-    setFormLeaveType("sick");
+    setFormLeaveType("paid");
     setFormPreserveStreak(true);
     setFormStartDate(thaiTodayStr);
     setFormEndDate(thaiTodayStr);
@@ -225,10 +226,6 @@ export function BranchLeaveManagementView({
     }
     if (!formReason.trim()) {
       setFormError("กรุณาระบุเหตุผลในการลา");
-      return;
-    }
-    if (formLeaveType === "other" && formReason.trim().length < 3) {
-      setFormError("สำหรับการลาประเภท 'อื่นๆ' จำเป็นต้องระบุเหตุผลหรือรายละเอียดการลาให้ชัดเจน");
       return;
     }
     if (formStartDate > formEndDate) {
@@ -499,42 +496,42 @@ export function BranchLeaveManagementView({
             </div>
           </div>
 
-          {/* Card 2: Sick Leave Count */}
-          <div className="p-5 rounded-2xl bg-[var(--color-surface)] border-2 border-rose-500/30 dark:border-rose-500/40 shadow-xs flex items-center justify-between">
+          {/* Card 2: Paid Leave Count */}
+          <div className="p-5 rounded-2xl bg-[var(--color-surface)] border-2 border-emerald-500/30 dark:border-emerald-500/40 shadow-xs flex items-center justify-between">
             <div className="space-y-1">
               <div className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-rose-500" />
-                <p className="text-xs font-bold text-rose-700 dark:text-rose-400">ลาป่วย (Sick Leave)</p>
+                <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                <p className="text-xs font-bold text-emerald-700 dark:text-emerald-400">ลาเเบบได้เงิน (Paid Leave)</p>
               </div>
               <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-extrabold text-rose-950 dark:text-rose-200">
-                  {stats.sickCount}
+                <span className="text-3xl font-extrabold text-emerald-950 dark:text-emerald-200">
+                  {stats.paidCount}
                 </span>
-                <span className="text-xs text-rose-700 dark:text-rose-400">คนในวันนี้</span>
+                <span className="text-xs text-emerald-700 dark:text-emerald-400">คนในวันนี้</span>
               </div>
-              <p className="text-[11px] text-[var(--color-text-muted)]">มีใบรับรองแพทย์หรือแจ้งมีไข้</p>
+              <p className="text-[11px] text-[var(--color-text-muted)]">ได้รับค่าจ้างตามสิทธิ/มีใบรับรอง</p>
             </div>
-            <div className="w-12 h-12 rounded-2xl bg-rose-500/15 text-rose-600 dark:text-rose-300 flex items-center justify-center shrink-0">
-              <HeartPulse size={24} />
+            <div className="w-12 h-12 rounded-2xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 flex items-center justify-center shrink-0">
+              <Coins size={24} />
             </div>
           </div>
 
-          {/* Card 3: Personal Leave Count */}
-          <div className="p-5 rounded-2xl bg-[var(--color-surface)] border-2 border-sky-500/30 dark:border-sky-500/40 shadow-xs flex items-center justify-between">
+          {/* Card 3: Unpaid Leave Count */}
+          <div className="p-5 rounded-2xl bg-[var(--color-surface)] border-2 border-amber-500/30 dark:border-amber-500/40 shadow-xs flex items-center justify-between">
             <div className="space-y-1">
               <div className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-sky-500" />
-                <p className="text-xs font-bold text-sky-700 dark:text-sky-400">ลากิจ (Personal Leave)</p>
+                <span className="w-2 h-2 rounded-full bg-amber-500" />
+                <p className="text-xs font-bold text-amber-700 dark:text-amber-400">ลาเเบบไม่ได้รับเงิน (Unpaid Leave)</p>
               </div>
               <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-extrabold text-sky-950 dark:text-sky-200">
-                  {stats.personalCount}
+                <span className="text-3xl font-extrabold text-amber-950 dark:text-amber-200">
+                  {stats.unpaidCount}
                 </span>
-                <span className="text-xs text-sky-700 dark:text-sky-400">คนในวันนี้</span>
+                <span className="text-xs text-amber-700 dark:text-amber-400">คนในวันนี้</span>
               </div>
-              <p className="text-[11px] text-[var(--color-text-muted)]">แจ้งลาล่วงหน้าสำหรับธุระจำเป็น</p>
+              <p className="text-[11px] text-[var(--color-text-muted)]">ไม่ได้รับค่าจ้าง (Leave without pay)</p>
             </div>
-            <div className="w-12 h-12 rounded-2xl bg-sky-500/15 text-sky-600 dark:text-sky-300 flex items-center justify-center shrink-0">
+            <div className="w-12 h-12 rounded-2xl bg-amber-500/15 text-amber-600 dark:text-amber-300 flex items-center justify-center shrink-0">
               <FileText size={24} />
             </div>
           </div>
@@ -580,39 +577,27 @@ export function BranchLeaveManagementView({
             </button>
             <button
               type="button"
-              onClick={() => setTypeFilter("sick")}
+              onClick={() => setTypeFilter("paid")}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
-                typeFilter === "sick"
-                  ? "bg-rose-600 text-white shadow-xs"
-                  : "text-rose-700 dark:text-rose-400 hover:text-rose-950"
+                typeFilter === "paid"
+                  ? "bg-emerald-600 text-white shadow-xs"
+                  : "text-emerald-700 dark:text-emerald-400 hover:text-emerald-950"
               }`}
             >
-              <HeartPulse size={14} />
-              <span>ลาป่วย ({leaves.filter(l => l.leaveType === "sick").length})</span>
+              <Coins size={14} />
+              <span>ลาเเบบได้เงิน ({leaves.filter(l => isPaidLeave(l.leaveType)).length})</span>
             </button>
             <button
               type="button"
-              onClick={() => setTypeFilter("personal")}
+              onClick={() => setTypeFilter("unpaid")}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
-                typeFilter === "personal"
-                  ? "bg-sky-600 text-white shadow-xs"
-                  : "text-sky-700 dark:text-sky-400 hover:text-sky-950"
-              }`}
-            >
-              <FileText size={14} />
-              <span>ลากิจ ({leaves.filter(l => l.leaveType === "personal").length})</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setTypeFilter("other")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
-                typeFilter === "other"
+                typeFilter === "unpaid"
                   ? "bg-amber-600 text-white shadow-xs"
                   : "text-amber-700 dark:text-amber-400 hover:text-amber-950"
               }`}
             >
-              <HelpCircle size={14} />
-              <span>อื่นๆ ({leaves.filter(l => l.leaveType === "other").length})</span>
+              <FileText size={14} />
+              <span>ลาเเบบไม่ได้รับเงิน ({leaves.filter(l => isUnpaidLeave(l.leaveType)).length})</span>
             </button>
           </div>
 
@@ -691,8 +676,7 @@ export function BranchLeaveManagementView({
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {filteredLeaves.map((leave) => {
-              const isSick = leave.leaveType === "sick";
-              const isPersonal = leave.leaveType === "personal";
+              const isPaid = isPaidLeave(leave.leaveType);
               const isToday = leave.startDate <= thaiTodayStr && leave.endDate >= thaiTodayStr;
               const isUpcoming = leave.startDate > thaiTodayStr;
               const isPast = leave.endDate < thaiTodayStr;
@@ -702,10 +686,8 @@ export function BranchLeaveManagementView({
                   key={leave.id}
                   className={`p-5 rounded-2xl bg-[var(--color-surface)] border transition-all shadow-xs flex flex-col justify-between space-y-4 ${
                     isToday
-                      ? isSick
-                        ? "border-rose-400 dark:border-rose-600 ring-2 ring-rose-500/20"
-                        : isPersonal
-                        ? "border-sky-400 dark:border-sky-600 ring-2 ring-sky-500/20"
+                      ? isPaid
+                        ? "border-emerald-400 dark:border-emerald-600 ring-2 ring-emerald-500/20"
                         : "border-amber-400 dark:border-amber-600 ring-2 ring-amber-500/20"
                       : "border-[var(--color-border)] hover:border-amber-400/50"
                   }`}
@@ -714,13 +696,11 @@ export function BranchLeaveManagementView({
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-3">
                       <div className={`w-11 h-11 rounded-2xl flex items-center justify-center font-bold text-sm shrink-0 ${
-                        isSick
-                          ? "bg-rose-500/15 text-rose-700 dark:text-rose-300"
-                          : isPersonal
-                          ? "bg-sky-500/15 text-sky-700 dark:text-sky-300"
+                        isPaid
+                          ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"
                           : "bg-amber-500/15 text-amber-700 dark:text-amber-300"
                       }`}>
-                        {isSick ? <HeartPulse size={20} /> : isPersonal ? <FileText size={20} /> : <HelpCircle size={20} />}
+                        {isPaid ? <Coins size={20} /> : <FileText size={20} />}
                       </div>
 
                       <div>
@@ -752,26 +732,19 @@ export function BranchLeaveManagementView({
 
                     {/* Leave Type Badge */}
                     <div className={`px-2.5 py-1 rounded-xl text-xs font-extrabold flex items-center gap-1.5 shrink-0 ${
-                      isSick
-                        ? "bg-rose-100 dark:bg-rose-950/70 text-rose-900 dark:text-rose-200 border border-rose-300 dark:border-rose-800"
-                        : isPersonal
-                        ? "bg-sky-100 dark:bg-sky-950/70 text-sky-900 dark:text-sky-200 border border-sky-300 dark:border-sky-800"
+                      isPaid
+                        ? "bg-emerald-100 dark:bg-emerald-950/70 text-emerald-900 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-800"
                         : "bg-amber-100 dark:bg-amber-950/70 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-800"
                     }`}>
-                      {isSick ? (
+                      {isPaid ? (
                         <>
-                          <HeartPulse size={13} />
-                          <span>ลาป่วย</span>
-                        </>
-                      ) : isPersonal ? (
-                        <>
-                          <FileText size={13} />
-                          <span>ลากิจ</span>
+                          <Coins size={13} />
+                          <span>ลาเเบบได้เงิน</span>
                         </>
                       ) : (
                         <>
-                          <HelpCircle size={13} />
-                          <span>อื่นๆ</span>
+                          <FileText size={13} />
+                          <span>ลาเเบบไม่ได้รับเงิน</span>
                         </>
                       )}
                     </div>
@@ -932,87 +905,61 @@ export function BranchLeaveManagementView({
                 </select>
               </div>
 
-              {/* Leave Type Selector (3 Radio cards: Sick, Personal, Other) */}
+              {/* Leave Type Selector (2 Options: ลาเเบบได้เงิน vs ลาเเบบไม่ได้รับเงิน) */}
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-[var(--color-text)]">
                   ประเภทการลา <span className="text-rose-500">*</span>
                 </label>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                  {/* Sick Leave Option */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  {/* Paid Leave Option */}
                   <button
                     type="button"
-                    onClick={() => setFormLeaveType("sick")}
-                    className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex flex-col gap-1.5 ${
-                      formLeaveType === "sick"
-                        ? "bg-rose-500/15 border-rose-500 text-rose-950 dark:text-rose-200 ring-2 ring-rose-500/20"
-                        : "bg-[var(--color-surface-2)] border-[var(--color-border)] text-[var(--color-text-muted)] hover:border-rose-400"
+                    onClick={() => setFormLeaveType("paid")}
+                    className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer flex flex-col gap-1.5 ${
+                      isPaidLeave(formLeaveType)
+                        ? "bg-emerald-500/15 border-emerald-500 text-emerald-950 dark:text-emerald-200 ring-2 ring-emerald-500/20"
+                        : "bg-[var(--color-surface-2)] border-[var(--color-border)] text-[var(--color-text-muted)] hover:border-emerald-400"
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <span className="p-1.5 rounded-xl bg-rose-500 text-white">
-                        <HeartPulse size={15} />
+                      <span className="p-1.5 rounded-xl bg-emerald-600 text-white">
+                        <Coins size={15} />
                       </span>
-                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-rose-500/20 text-rose-700 dark:text-rose-300">
-                        มีใบรับรอง/ป่วย
-                      </span>
-                    </div>
-                    <span className="text-xs font-bold text-[var(--color-text)] mt-0.5">
-                      ลาป่วย (Sick)
-                    </span>
-                    <span className="text-[11px] text-[var(--color-text-muted)] line-clamp-1">
-                      มีไข้ ไม่สบาย ไปพบแพทย์
-                    </span>
-                  </button>
-
-                  {/* Personal Leave Option */}
-                  <button
-                    type="button"
-                    onClick={() => setFormLeaveType("personal")}
-                    className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex flex-col gap-1.5 ${
-                      formLeaveType === "personal"
-                        ? "bg-sky-500/15 border-sky-500 text-sky-950 dark:text-sky-200 ring-2 ring-sky-500/20"
-                        : "bg-[var(--color-surface-2)] border-[var(--color-border)] text-[var(--color-text-muted)] hover:border-sky-400"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="p-1.5 rounded-xl bg-sky-500 text-white">
-                        <FileText size={15} />
-                      </span>
-                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-sky-500/20 text-sky-700 dark:text-sky-300">
-                        ธุระส่วนตัว
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-emerald-500/20 text-emerald-700 dark:text-emerald-300">
+                        ได้รับค่าจ้าง
                       </span>
                     </div>
                     <span className="text-xs font-bold text-[var(--color-text)] mt-0.5">
-                      ลากิจ (Personal)
+                      ลาเเบบได้เงิน
                     </span>
                     <span className="text-[11px] text-[var(--color-text-muted)] line-clamp-1">
-                      มีธุระสำคัญทางครอบครัว
+                      ลาป่วยตามสิทธิ, ลาพักร้อน หรือลาได้รับค่าจ้าง
                     </span>
                   </button>
 
-                  {/* Other Leave Option */}
+                  {/* Unpaid Leave Option */}
                   <button
                     type="button"
-                    onClick={() => setFormLeaveType("other")}
-                    className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex flex-col gap-1.5 ${
-                      formLeaveType === "other"
+                    onClick={() => setFormLeaveType("unpaid")}
+                    className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer flex flex-col gap-1.5 ${
+                      isUnpaidLeave(formLeaveType)
                         ? "bg-amber-500/15 border-amber-500 text-amber-950 dark:text-amber-200 ring-2 ring-amber-500/20"
                         : "bg-[var(--color-surface-2)] border-[var(--color-border)] text-[var(--color-text-muted)] hover:border-amber-400"
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <span className="p-1.5 rounded-xl bg-amber-500 text-white">
-                        <HelpCircle size={15} />
+                      <span className="p-1.5 rounded-xl bg-amber-600 text-white">
+                        <FileText size={15} />
                       </span>
                       <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-amber-500/20 text-amber-700 dark:text-amber-300">
-                        ต้องมีเหตุผล
+                        ไม่ได้รับค่าจ้าง
                       </span>
                     </div>
                     <span className="text-xs font-bold text-[var(--color-text)] mt-0.5">
-                      อื่นๆ (Other)
+                      ลาเเบบไม่ได้รับเงิน
                     </span>
                     <span className="text-[11px] text-[var(--color-text-muted)] line-clamp-1">
-                      ลากิจกรรม, ฉุกเฉิน หรือพิเศษ
+                      ลากิจส่วนตัว, ขาดงาน หรือลาไม่มีค่าจ้าง (Leave without pay)
                     </span>
                   </button>
                 </div>
@@ -1199,7 +1146,7 @@ export function BranchLeaveManagementView({
             </div>
 
             <p className="text-xs text-[var(--color-text-muted)] leading-relaxed">
-              คุณต้องการยกเลิกรายการ{cancelTargetLeave.leaveType === "sick" ? "ลาป่วย" : "ลากิจ"} ของ{" "}
+              คุณต้องการยกเลิกรายการ{isPaidLeave(cancelTargetLeave.leaveType) ? "ลาเเบบได้เงิน" : "ลาเเบบไม่ได้รับเงิน"} ของ{" "}
               <strong className="text-[var(--color-text)]">{cancelTargetLeave.userName}</strong> ประจำวันที่{" "}
               {formatThaiDate(cancelTargetLeave.startDate)} ใช่หรือไม่?
             </p>

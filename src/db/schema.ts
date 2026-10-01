@@ -6,7 +6,17 @@ export const roleEnum = checklistSchema.enum('role', ['admin', 'committee', 'gen
 export const taskRoleEnum = checklistSchema.enum('task_role', ['manager_assistant', 'cashier', 'stock']);
 export const shiftEnum = checklistSchema.enum('shift', ['morning', 'afternoon', 'morning_afternoon']);
 export const pointStreakEnum = checklistSchema.enum('point_streak', ['none', 'flawed', 'perfect']);
-export const leaveTypeEnum = checklistSchema.enum('leave_type', ['sick', 'personal', 'other']);
+export const leaveTypeEnum = checklistSchema.enum('leave_type', [
+    'paid',
+    'unpaid',
+    'ลาเเบบได้เงิน',
+    'ลาเเบบไม่ได้รับเงิน',
+    'ลาแบบได้เงิน',
+    'ลาแบบไม่ได้รับเงิน',
+    'sick',
+    'personal',
+    'other',
+]);
 
 export const users = checklistSchema.table.withRLS("users", {
     id: uuid("id").primaryKey().defaultRandom(),

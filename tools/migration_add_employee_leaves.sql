@@ -11,9 +11,13 @@ BEGIN
         JOIN pg_namespace n ON n.oid = t.typnamespace 
         WHERE t.typname = 'leave_type' AND n.nspname = 'checklist_web_app'
     ) THEN
-        CREATE TYPE checklist_web_app.leave_type AS ENUM ('sick', 'personal', 'other');
+        CREATE TYPE checklist_web_app.leave_type AS ENUM ('paid', 'unpaid', 'ลาเเบบได้เงิน', 'ลาเเบบไม่ได้รับเงิน', 'sick', 'personal', 'other');
     ELSE
-        -- Ensure 'other' exists in leave_type enum
+        -- Ensure paid, unpaid, and Thai values exist in leave_type enum
+        ALTER TYPE checklist_web_app.leave_type ADD VALUE IF NOT EXISTS 'paid';
+        ALTER TYPE checklist_web_app.leave_type ADD VALUE IF NOT EXISTS 'unpaid';
+        ALTER TYPE checklist_web_app.leave_type ADD VALUE IF NOT EXISTS 'ลาเเบบได้เงิน';
+        ALTER TYPE checklist_web_app.leave_type ADD VALUE IF NOT EXISTS 'ลาเเบบไม่ได้รับเงิน';
         ALTER TYPE checklist_web_app.leave_type ADD VALUE IF NOT EXISTS 'other';
     END IF;
 END $$;
