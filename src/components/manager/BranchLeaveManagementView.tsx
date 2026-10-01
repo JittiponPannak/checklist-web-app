@@ -92,6 +92,7 @@ export function BranchLeaveManagementView({
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [editingQuotaValue, setEditingQuotaValue] = useState<string>("");
   const [isSavingQuota, setIsSavingQuota] = useState(false);
+  const [approvalLeaveTypes, setApprovalLeaveTypes] = useState<Record<string, LeaveType>>({});
 
   // Modal State for adding new leave
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -99,8 +100,13 @@ export function BranchLeaveManagementView({
   const [formUserId, setFormUserId] = useState<string>("");
   const [formLeaveType, setFormLeaveType] = useState<LeaveType>("paid");
   const [formPreserveStreak, setFormPreserveStreak] = useState<boolean>(true);
-  const [formStartDate, setFormStartDate] = useState<string>("");
-  const [formEndDate, setFormEndDate] = useState<string>("");
+  // Today string YYYY-MM-DD in Asia/Bangkok
+  const thaiTodayStr = useMemo(() => {
+    return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Bangkok" }).format(new Date());
+  }, []);
+
+  const [formStartDate, setFormStartDate] = useState<string>(thaiTodayStr);
+  const [formEndDate, setFormEndDate] = useState<string>(thaiTodayStr);
   const [formReason, setFormReason] = useState<string>("");
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -108,26 +114,13 @@ export function BranchLeaveManagementView({
   const [cancelTargetLeave, setCancelTargetLeave] = useState<EmployeeLeave | null>(null);
   const [isCancelling, setIsCancelling] = useState(false);
 
-  // Today string YYYY-MM-DD in Asia/Bangkok
-  const thaiTodayStr = useMemo(() => {
-    return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Bangkok" }).format(new Date());
-  }, []);
-
-  // Initialize dates
-  useEffect(() => {
-    setFormStartDate(thaiTodayStr);
-    setFormEndDate(thaiTodayStr);
-  }, [thaiTodayStr]);
-
   // Load data for selected branch
   const loadData = useCallback(async (branchId?: string, isManual = false) => {
     try {
-      if (isManual) setIsRefreshing(true);
-      else setIsLoading(true);
-      setErrorMsg(null);
-
       // 1. Fetch staff status to get candidate employees & branches list
       const staffRes = await getBranchStaffStatusAction(branchId);
+      if (isManual) setIsRefreshing(true);
+      setErrorMsg(null);
       let activeBranch = branchId;
       if (staffRes.success) {
         setEmployees(staffRes.employees || []);
@@ -157,14 +150,18 @@ export function BranchLeaveManagementView({
   }, []);
 
   useEffect(() => {
-    loadData(currentUser.branchId);
+    queueMicrotask(() => {
+      loadData(currentUser.branchId);
+    });
   }, [loadData, currentUser.branchId]);
 
   // If defaultSelectedUserId is provided, pre-select and open modal
   useEffect(() => {
     if (defaultSelectedUserId && employees.length > 0) {
-      setFormUserId(defaultSelectedUserId);
-      setIsModalOpen(true);
+      queueMicrotask(() => {
+        setFormUserId(defaultSelectedUserId);
+        setIsModalOpen(true);
+      });
     }
   }, [defaultSelectedUserId, employees]);
 
@@ -256,17 +253,20 @@ export function BranchLeaveManagementView({
 
   useEffect(() => {
     if (isQuotaModalOpen) {
-      loadBranchEmployeeQuotas();
+      queueMicrotask(() => {
+        loadBranchEmployeeQuotas();
+      });
     }
   }, [isQuotaModalOpen, loadBranchEmployeeQuotas]);
 
   // Approval handlers
-  const handleApprove = async (leaveId: string, preserveStreak: boolean = true) => {
+  const handleApprove = async (leaveId: string, leaveType?: LeaveType, preserveStreak: boolean = true) => {
     setIsApproving(leaveId);
     try {
       const res = await approveEmployeeLeaveAction({
         leaveId,
         approvedBy: currentUser.id,
+        leaveType,
         preserveStreak,
       });
       if (res.success) {
@@ -275,8 +275,8 @@ export function BranchLeaveManagementView({
       } else {
         setErrorMsg(res.error || "ไม่สามารถอนุมัติได้");
       }
-    } catch (e: any) {
-      setErrorMsg(e.message || "เกิดข้อผิดพลาดในการอนุมัติ");
+    } catch (e: unknown) {
+      setErrorMsg(e instanceof Error ? e.message : "เกิดข้อผิดพลาดในการอนุมัติ");
     } finally {
       setIsApproving(null);
     }
@@ -300,8 +300,8 @@ export function BranchLeaveManagementView({
       } else {
         setErrorMsg(res.error || "ไม่สามารถปฏิเสธได้");
       }
-    } catch (e: any) {
-      setErrorMsg(e.message || "เกิดข้อผิดพลาด");
+    } catch (e: unknown) {
+      setErrorMsg(e instanceof Error ? e.message : "เกิดข้อผิดพลาด");
     } finally {
       setIsRejecting(false);
     }
@@ -323,8 +323,8 @@ export function BranchLeaveManagementView({
       } else {
         setErrorMsg(res.error || "ไม่สามารถอัปเดตโควตาได้");
       }
-    } catch (e: any) {
-      setErrorMsg(e.message || "เกิดข้อผิดพลาด");
+    } catch (e: unknown) {
+      setErrorMsg(e instanceof Error ? e.message : "เกิดข้อผิดพลาด");
     } finally {
       setIsSavingQuota(false);
     }
@@ -749,12 +749,8 @@ export function BranchLeaveManagementView({
                   <div>
                     <div className="flex items-center justify-between gap-2 mb-1.5">
                       <span className="text-sm font-extrabold text-[var(--color-text)]">{pl.userName}</span>
-                      <span className={`text-[11px] font-extrabold px-2.5 py-0.5 rounded-full border ${
-                        isPaidLeave(pl.leaveType)
-                          ? "bg-emerald-100 text-emerald-900 border-emerald-300 dark:bg-emerald-950 dark:text-emerald-200"
-                          : "bg-amber-100 text-amber-900 border-amber-300 dark:bg-amber-950 dark:text-amber-200"
-                      }`}>
-                        {isPaidLeave(pl.leaveType) ? "ลาเเบบได้เงิน" : "ลาเเบบไม่ได้รับเงิน"}
+                      <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full border bg-amber-100 text-amber-900 border-amber-300 dark:bg-amber-950 dark:text-amber-200">
+                        รอผู้จัดการกำหนดประเภท
                       </span>
                     </div>
                     <p className="text-xs text-[var(--color-text-muted)]">
@@ -763,6 +759,40 @@ export function BranchLeaveManagementView({
                     <div className="mt-2 p-2.5 rounded-lg bg-[var(--color-surface-2)] border border-[var(--color-border)] text-xs text-[var(--color-text)]">
                       <span className="text-[var(--color-text-muted)] font-semibold">เหตุผล: </span>
                       <span className="italic">&ldquo;{pl.reason}&rdquo;</span>
+                    </div>
+                  </div>
+
+                  {/* Manager chooses leave type */}
+                  <div className="pt-2 border-t border-[var(--color-border)] space-y-1.5">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-bold text-[var(--color-text)]">กำหนดประเภทการลา:</span>
+                      <span className="text-[11px] font-semibold text-[var(--color-text-muted)]">
+                        {(approvalLeaveTypes[pl.id] || "ลาเเบบได้เงิน") === "ลาเเบบได้เงิน" ? "หักสิทธิการลา (Paid)" : "ไม่หักสิทธิการลา (Unpaid)"}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setApprovalLeaveTypes(prev => ({ ...prev, [pl.id]: "ลาเเบบได้เงิน" }))}
+                        className={`p-2 rounded-xl text-xs font-bold border transition-all flex items-center justify-center gap-1.5 cursor-pointer ${(approvalLeaveTypes[pl.id] || "ลาเเบบได้เงิน") === "ลาเเบบได้เงิน"
+                          ? "bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border-emerald-500 font-extrabold shadow-2xs"
+                          : "bg-[var(--color-surface-2)] text-[var(--color-text-muted)] border-[var(--color-border)] hover:bg-[var(--color-surface)]"
+                        }`}
+                      >
+                        <Coins size={14} className={(approvalLeaveTypes[pl.id] || "ลาเเบบได้เงิน") === "ลาเเบบได้เงิน" ? "text-emerald-600 dark:text-emerald-400" : "text-[var(--color-text-muted)]"} />
+                        <span>ลาเเบบได้เงิน</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setApprovalLeaveTypes(prev => ({ ...prev, [pl.id]: "ลาเเบบไม่ได้รับเงิน" }))}
+                        className={`p-2 rounded-xl text-xs font-bold border transition-all flex items-center justify-center gap-1.5 cursor-pointer ${approvalLeaveTypes[pl.id] === "ลาเเบบไม่ได้รับเงิน"
+                          ? "bg-amber-500/15 text-amber-800 dark:text-amber-300 border-amber-500 font-extrabold shadow-2xs"
+                          : "bg-[var(--color-surface-2)] text-[var(--color-text-muted)] border-[var(--color-border)] hover:bg-[var(--color-surface)]"
+                        }`}
+                      >
+                        <Clock size={14} className={approvalLeaveTypes[pl.id] === "ลาเเบบไม่ได้รับเงิน" ? "text-amber-600 dark:text-amber-400" : "text-[var(--color-text-muted)]"} />
+                        <span>ลาเเบบไม่ได้รับเงิน</span>
+                      </button>
                     </div>
                   </div>
 
@@ -780,16 +810,16 @@ export function BranchLeaveManagementView({
                     </button>
                     <button
                       type="button"
-                      onClick={() => handleApprove(pl.id, true)}
+                      onClick={() => handleApprove(pl.id, approvalLeaveTypes[pl.id] || "ลาเเบบได้เงิน", true)}
                       disabled={isApproving === pl.id}
-                      className="px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-extrabold shadow-xs transition-all cursor-pointer flex items-center gap-1.5"
+                      className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-extrabold shadow-xs transition-all cursor-pointer flex items-center gap-1.5"
                     >
                       {isApproving === pl.id ? (
                         <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                       ) : (
                         <Check size={14} />
                       )}
-                      <span>อนุมัติคำขอ</span>
+                      <span>อนุมัติ ({(approvalLeaveTypes[pl.id] || "ลาเเบบได้เงิน") === "ลาเเบบไม่ได้รับเงิน" ? "ไม่ได้รับเงิน" : "ได้เงิน"})</span>
                     </button>
                   </div>
                 </div>
@@ -1005,23 +1035,29 @@ export function BranchLeaveManagementView({
                       )}
 
                       {/* Leave Type Badge */}
-                      <div className={`px-2.5 py-1 rounded-xl text-xs font-extrabold flex items-center gap-1.5 shrink-0 ${
-                        isPaid
-                          ? "bg-emerald-100 dark:bg-emerald-950/70 text-emerald-900 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-800"
-                          : "bg-amber-100 dark:bg-amber-950/70 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-800"
-                      }`}>
-                        {isPaid ? (
-                          <>
-                            <Coins size={13} />
-                            <span>ลาเเบบได้เงิน</span>
-                          </>
-                        ) : (
-                          <>
-                            <FileText size={13} />
-                            <span>ลาเเบบไม่ได้รับเงิน</span>
-                          </>
-                        )}
-                      </div>
+                      {leave.status === "pending" ? (
+                        <span className="px-2.5 py-1 rounded-xl text-xs font-semibold bg-[var(--color-surface-2)] text-[var(--color-text-muted)] border border-[var(--color-border)]">
+                          รอผู้จัดการระบุประเภท
+                        </span>
+                      ) : (
+                        <div className={`px-2.5 py-1 rounded-xl text-xs font-extrabold flex items-center gap-1.5 shrink-0 ${
+                          isPaid
+                            ? "bg-emerald-100 dark:bg-emerald-950/70 text-emerald-900 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-800"
+                            : "bg-amber-100 dark:bg-amber-950/70 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-800"
+                        }`}>
+                          {isPaid ? (
+                            <>
+                              <Coins size={13} />
+                              <span>ลาเเบบได้เงิน</span>
+                            </>
+                          ) : (
+                            <>
+                              <FileText size={13} />
+                              <span>ลาเเบบไม่ได้รับเงิน</span>
+                            </>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
 

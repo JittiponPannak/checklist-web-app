@@ -110,7 +110,7 @@ export function AdminDashboardView({
   const [isNewBranchModalOpen, setIsNewBranchModalOpen] = useState(false);
   const [newBranchName, setNewBranchName] = useState("");
   const [selectedBranchForQuota, setSelectedBranchForQuota] = useState<Branch | null>(null);
-  const [branchQuotaInput, setBranchQuotaInput] = useState<number>(30);
+  const [branchQuotaInput, setBranchQuotaInput] = useState<number>(3);
   const [isUpdatingQuota, setIsUpdatingQuota] = useState<boolean>(false);
 
   const [isManageStaffModalOpen, setIsManageStaffModalOpen] = useState(false);
@@ -702,7 +702,7 @@ export function AdminDashboardView({
                       type="button"
                       onClick={() => {
                         setSelectedBranchForQuota(b);
-                        setBranchQuotaInput(b.leaveQuota ?? 30);
+                        setBranchQuotaInput(b.leaveQuota ?? 3);
                       }}
                       className="text-xs font-bold text-[var(--color-text)] hover:text-amber-950 bg-[var(--color-surface-2)] hover:bg-amber-100 min-h-[44px] sm:min-h-[34px] inline-flex items-center justify-center px-2 py-1.5 rounded-xl border border-[var(--color-border)] transition-all cursor-pointer flex-1"
                       title="ตั้งค่าโควตาการลาเริ่มต้นของสาขานี้"

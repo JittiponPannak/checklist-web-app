@@ -166,7 +166,7 @@ export class BranchService implements IBranchService {
           todayCompletionRate: 0,
           members: b.members || [],
           tasks: b.tasks || [],
-          leaveQuota: typeof b.leave_quota === "number" ? b.leave_quota : 30,
+          leaveQuota: typeof b.leave_quota === "number" ? b.leave_quota : 3,
         };
       });
 

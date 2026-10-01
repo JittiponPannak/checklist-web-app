@@ -42,7 +42,7 @@ export const branches = checklistSchema.table.withRLS("branches", {
     members: uuid("member_ids").array().notNull().default([]),
     tasks: uuid("task_ids").array().notNull().default([]),
     refrigerators: uuid("refrigerators").array().notNull().default([]),
-    leave_quota: integer("leave_quota").notNull().default(30),
+    leave_quota: integer("leave_quota").notNull().default(3),
 
     last_update: timestamp("last_update").defaultNow(),
 });

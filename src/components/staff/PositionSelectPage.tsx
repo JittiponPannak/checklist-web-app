@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
-import { ShiftType, User, LeaveType, LeaveQuotaInfo } from "../../types";
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { ShiftType, User, LeaveQuotaInfo } from "../../types";
 import { MANAGEMENT_POSITIONS, STAFF_POSITIONS } from "../../types";
 import { ThemeToggle } from "../common/ThemeToggle";
 import { BrandLogo } from "../common/BrandLogo";
@@ -16,10 +16,7 @@ import {
   CalendarOff, 
   CheckCircle2, 
   AlertCircle, 
-  Clock, 
-  Coins, 
-  X,
-  FileText
+  X
 } from "lucide-react";
 import { getEmployeeLeaveQuotaAction, requestEmployeeLeaveAction } from "../../actions/manager";
 
@@ -46,8 +43,6 @@ export function PositionSelectPage({
   // Leave Modal State
   const [isLeaveModalOpen, setIsLeaveModalOpen] = useState(false);
   const [quota, setQuota] = useState<LeaveQuotaInfo | null>(null);
-  const [isLoadingQuota, setIsLoadingQuota] = useState(false);
-  const [leaveType, setLeaveType] = useState<LeaveType>("ลาเเบบได้เงิน");
   const [leaveReason, setLeaveReason] = useState("");
   const [isSubmittingLeave, setIsSubmittingLeave] = useState(false);
   const [leaveError, setLeaveError] = useState<string | null>(null);
@@ -67,9 +62,8 @@ export function PositionSelectPage({
   }, []);
 
   // Fetch employee quota
-  const loadQuota = async () => {
+  const loadQuota = useCallback(async () => {
     if (!user.id) return;
-    setIsLoadingQuota(true);
     try {
       const res = await getEmployeeLeaveQuotaAction({ userId: user.id, branchId: user.branchId });
       if (res.success && res.quota) {
@@ -77,20 +71,25 @@ export function PositionSelectPage({
       }
     } catch (e) {
       console.error("Error loading leave quota:", e);
-    } finally {
-      setIsLoadingQuota(false);
     }
-  };
+  }, [user.id, user.branchId]);
 
   useEffect(() => {
-    loadQuota();
+    let ignore = false;
+    getEmployeeLeaveQuotaAction({ userId: user.id, branchId: user.branchId }).then((res) => {
+      if (!ignore && res.success && res.quota) {
+        setQuota(res.quota);
+      }
+    }).catch(console.error);
+    return () => {
+      ignore = true;
+    };
   }, [user.id, user.branchId]);
 
   const handleOpenLeaveModal = () => {
     setLeaveError(null);
     setLeaveSuccess(null);
     setLeaveReason("");
-    setLeaveType("ลาเเบบได้เงิน");
     setIsLeaveModalOpen(true);
     loadQuota();
   };
@@ -120,7 +119,7 @@ export function PositionSelectPage({
       const res = await requestEmployeeLeaveAction({
         userId: user.id,
         branchId: user.branchId,
-        leaveType,
+        leaveType: "ลาเเบบได้เงิน",
         startDate: todayStr,
         endDate: todayStr,
         reason: leaveReason.trim(),
@@ -350,7 +349,7 @@ export function PositionSelectPage({
                   </span>
                 ) : (
                   <span className="text-[11px] font-semibold text-[var(--color-text-muted)]">
-                    โควตา 30 วัน/ปี
+                    โควตา 3 วัน/ปี
                   </span>
                 )}
               </div>
@@ -476,66 +475,6 @@ export function PositionSelectPage({
                     )}
                   </div>
 
-                  {/* Leave Type Selector: Radio Cards for Paid / Unpaid */}
-                  <div>
-                    <label className="block text-xs font-bold text-[var(--color-text)] mb-2">
-                      ประเภทการลางาน <span className="text-rose-500">*</span>
-                    </label>
-                    <div className="grid grid-cols-2 gap-3">
-                      <label
-                        className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all flex flex-col justify-between ${
-                          leaveType === "ลาเเบบได้เงิน"
-                            ? "border-emerald-500 bg-emerald-500/10"
-                            : "border-[var(--color-border)] bg-[var(--color-surface)] hover:bg-[var(--color-surface-2)]"
-                        }`}
-                      >
-                        <div className="flex items-center justify-between mb-1.5">
-                          <div className="flex items-center gap-1.5">
-                            <Coins size={16} className={leaveType === "ลาเเบบได้เงิน" ? "text-emerald-600 dark:text-emerald-400" : "text-[var(--color-text-muted)]"} />
-                            <span className="font-extrabold text-xs text-[var(--color-text)]">ลาเเบบได้เงิน</span>
-                          </div>
-                          <input
-                            type="radio"
-                            name="leaveType"
-                            value="ลาเเบบได้เงิน"
-                            checked={leaveType === "ลาเเบบได้เงิน"}
-                            onChange={() => setLeaveType("ลาเเบบได้เงิน")}
-                            className="accent-emerald-600"
-                          />
-                        </div>
-                        <p className="text-[11px] text-[var(--color-text-muted)]">
-                          ได้รับค่าจ้างตามสิทธิการลา (Paid Leave)
-                        </p>
-                      </label>
-
-                      <label
-                        className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all flex flex-col justify-between ${
-                          leaveType === "ลาเเบบไม่ได้รับเงิน"
-                            ? "border-amber-500 bg-amber-500/10"
-                            : "border-[var(--color-border)] bg-[var(--color-surface)] hover:bg-[var(--color-surface-2)]"
-                        }`}
-                      >
-                        <div className="flex items-center justify-between mb-1.5">
-                          <div className="flex items-center gap-1.5">
-                            <Clock size={16} className={leaveType === "ลาเเบบไม่ได้รับเงิน" ? "text-amber-600 dark:text-amber-400" : "text-[var(--color-text-muted)]"} />
-                            <span className="font-extrabold text-xs text-[var(--color-text)]">ลาเเบบไม่ได้รับเงิน</span>
-                          </div>
-                          <input
-                            type="radio"
-                            name="leaveType"
-                            value="ลาเเบบไม่ได้รับเงิน"
-                            checked={leaveType === "ลาเเบบไม่ได้รับเงิน"}
-                            onChange={() => setLeaveType("ลาเเบบไม่ได้รับเงิน")}
-                            className="accent-amber-600"
-                          />
-                        </div>
-                        <p className="text-[11px] text-[var(--color-text-muted)]">
-                          ลาโดยไม่รับค่าจ้าง (Unpaid Leave)
-                        </p>
-                      </label>
-                    </div>
-                  </div>
-
                   {/* Reason Textarea */}
                   <div>
                     <label htmlFor="leave-reason" className="block text-xs font-bold text-[var(--color-text)] mb-2">
@@ -562,7 +501,7 @@ export function PositionSelectPage({
                         </span>
                       ) : (
                         <span>
-                          <strong>ขั้นตอนการอนุมัติ:</strong> เมื่อส่งคำขอแล้ว ระบบจะส่งการแจ้งเตือนไปยังผู้จัดการร้านหรือผู้ช่วยผู้จัดการร้านเพื่อตรวจสอบและอนุมัติการลาสำหรับวันนี้
+                          <strong>ขั้นตอนการอนุมัติ:</strong> เมื่อส่งคำขอแล้ว ผู้จัดการร้านจะเป็นผู้พิจารณากำหนดประเภทการลา (ได้เงิน / ไม่ได้รับเงิน) และอนุมัติการลาให้โดยตรง
                         </span>
                       )}
                     </div>

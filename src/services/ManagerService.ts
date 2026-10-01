@@ -1207,7 +1207,7 @@ export class ManagerService implements IManagerService {
         branchId = branchRecord?.id;
       }
 
-      const branchDefaultQuota = typeof branchRecord?.leave_quota === "number" ? branchRecord.leave_quota : 30;
+      const branchDefaultQuota = typeof branchRecord?.leave_quota === "number" ? branchRecord.leave_quota : 3;
       const customQuota = typeof targetUser.leave_quota === "number" ? targetUser.leave_quota : null;
       const allocatedQuota = customQuota !== null ? customQuota : branchDefaultQuota;
 

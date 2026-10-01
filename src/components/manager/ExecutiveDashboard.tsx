@@ -32,8 +32,7 @@ import { NavbarRefreshControl } from "../common/NavbarRefreshControl";
 import { invalidateBranchCache } from "../../utils/cache";
 import { LeaderboardWidget } from "./LeaderboardWidget";
 import { ErrorBoundary } from "../common/ErrorBoundary";
-import { ClipboardCheck, ShieldCheck, Building2, Award, Snowflake, History, CheckCircle2, AlertCircle, LogOut, Users, HeartPulse } from "lucide-react";
-import Link from "next/link";
+import { ClipboardCheck, ShieldCheck, Building2, Award, Snowflake, History, CheckCircle2, AlertCircle, LogOut, HeartPulse } from "lucide-react";
 import { LateReasonModal } from "../common/LateReasonModal";
 import { BranchLeaveManagementView } from "./BranchLeaveManagementView";
 
@@ -774,43 +773,6 @@ export function ExecutiveDashboard({
             <p className="text-xs text-[var(--color-text-muted)] font-mono pt-0.5">
               ภารกิจหลักวันนี้: <span className="font-semibold text-[var(--color-text)]">{roleConfig.primaryDuty}</span>
             </p>
-          </div>
-
-          <div className="flex items-center gap-2.5 z-10 flex-wrap sm:flex-nowrap">
-            {/* Unified Hub: Staff Presence & Leaves */}
-            <div className="flex items-center bg-[var(--color-surface)] dark:bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-xl p-1 shadow-xs shrink-0">
-              <Link
-                href="/manager/staff-status?tab=presence"
-                className="px-3 py-1.5 hover:bg-amber-500/15 text-amber-950 dark:text-amber-200 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5"
-                title="ตรวจสอบรายชื่อพนักงานในสาขา การเข้ากะ และจำนวนกะสะสม"
-              >
-                <Users size={14} className="text-amber-600 dark:text-amber-400" />
-                <span>สถานะกะพนักงาน</span>
-              </Link>
-              <div className="h-4 w-px bg-[var(--color-border)] mx-0.5" />
-              <Link
-                href="/manager/staff-status?tab=leaves"
-                className="px-3 py-1.5 hover:bg-rose-500/15 text-rose-700 dark:text-rose-300 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5"
-                title="บันทึกการลาป่วยและลากิจสำหรับพนักงานในสาขา (คุ้มครองสตรีคและคะแนนสะสม)"
-              >
-                <HeartPulse size={14} className="text-rose-600 dark:text-rose-400" />
-                <span>จัดการการลา</span>
-              </Link>
-            </div>
-
-            {(currentRole === "manager_assistant" || currentRole === "manager") && (
-              <button
-                type="button"
-                onClick={() => setActiveTab("checklist")}
-                className="px-4 py-2.5 bg-[var(--color-brown)] hover:bg-[var(--color-brown-light)] active:bg-black text-amber-100 text-xs font-bold rounded-xl shadow-sm transition-all flex items-center gap-2 cursor-pointer"
-              >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M9 11l3 3L22 4" />
-                  <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
-                </svg>
-                <span>{currentRole === "manager" ? "ตรวจเช็คลิสต์ผู้จัดการ & ปิดร้าน →" : "ตรวจเช็คลิสต์ประจำกะ →"}</span>
-              </button>
-            )}
           </div>
         </header>
 
