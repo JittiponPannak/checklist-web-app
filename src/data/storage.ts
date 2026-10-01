@@ -117,14 +117,14 @@ export function seedSampleData(force = false) {
 
   if (needsUsers) {
     users = [
-      { id: "u-admin", name: "คุณสมเกียรติ บริหารกิจ", email: "admin@factory.com", password: "admin123", role: "admin", position: "ผู้ดูแลระบบส่วนกลาง" },
-      { id: "u-manager", name: "คุณวิภาดา สุขเจริญ", email: "manager@factory.com", password: "manager123", role: "manager", position: "ผู้จัดการร้าน" },
-      { id: "u-asst", name: "คุณธนากร เกียรติไพบูลย์", email: "assistant@factory.com", password: "123", role: "manager_assistant", position: "ผู้ช่วยผู้จัดการร้าน" },
-      { id: "u-director", name: "คุณกิตติศักดิ์ พัฒนกิจ", email: "director@factory.com", password: "director123", role: "committee", position: "กรรมการ" },
-      { id: "u-cashier", name: "สมศรี ใจดี", email: "cashier@factory.com", password: "123", role: "employee", position: "แคชเชียร์" },
-      { id: "u-stock", name: "สมชาย มั่นคง", email: "stock@factory.com", password: "123", role: "employee", position: "พนักงานสต็อก/จัดเรียง" },
-      { id: "u-qc", name: "กัญญาภัทร พิมพา", email: "kanya@factory.com", password: "123", role: "employee", position: "แคชเชียร์" },
-      { id: "u-tech", name: "ศุภชัย มีสุข", email: "suphachai@factory.com", password: "123", role: "employee" },
+      { id: "u-admin", name: "คุณสมเกียรติ บริหารกิจ", username: "admin", email: "admin@factory.com", password: "admin123", role: "admin", position: "ผู้ดูแลระบบส่วนกลาง" },
+      { id: "u-manager", name: "คุณวิภาดา สุขเจริญ", username: "manager", email: "manager@factory.com", password: "manager123", role: "manager", position: "ผู้จัดการร้าน" },
+      { id: "u-asst", name: "คุณธนากร เกียรติไพบูลย์", username: "assistant", email: "assistant@factory.com", password: "123", role: "manager_assistant", position: "ผู้ช่วยผู้จัดการร้าน" },
+      { id: "u-director", name: "คุณกิตติศักดิ์ พัฒนกิจ", username: "director", email: "director@factory.com", password: "director123", role: "committee", position: "กรรมการ" },
+      { id: "u-cashier", name: "สมศรี ใจดี", username: "cashier", email: "cashier@factory.com", password: "123", role: "employee", position: "แคชเชียร์" },
+      { id: "u-stock", name: "สมชาย มั่นคง", username: "stock", email: "stock@factory.com", password: "123", role: "employee", position: "พนักงานสต็อก/จัดเรียง" },
+      { id: "u-qc", name: "กัญญาภัทร พิมพา", username: "kanya", email: "kanya@factory.com", password: "123", role: "employee", position: "แคชเชียร์" },
+      { id: "u-tech", name: "ศุภชัย มีสุข", username: "suphachai", email: "suphachai@factory.com", password: "123", role: "employee" },
     ];
     saveUsers(users);
   }

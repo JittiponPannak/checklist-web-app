@@ -15,7 +15,7 @@ export function ExecutiveAuthPage({
     onLogin: (user: User, shift?: ShiftType, redirectPath?: string) => void;
 }) {
     const [form, setForm] = useState({
-        email: "",
+        username: "",
         password: "",
     });
     const [error, setError] = useState("");
@@ -24,16 +24,16 @@ export function ExecutiveAuthPage({
 
     async function handleLogin(e?: React.FormEvent) {
         if (e) e.preventDefault();
-        if (!form.email.trim() || !form.password.trim()) {
-            setError("กรุณากรอกอีเมลและรหัสผ่าน");
+        if (!form.username.trim() || !form.password.trim()) {
+            setError("กรุณากรอกชื่อผู้ใช้และรหัสผ่าน");
             return;
         }
         setLoading(true);
         setError("");
         try {
-            const res = await loginAction(form.email, form.password);
+            const res = await loginAction(form.username, form.password);
             if (!res.success || !res.user) {
-                setError(res.error || "อีเมลหรือรหัสผ่านไม่ถูกต้อง");
+                setError(res.error || "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง");
                 setLoading(false);
                 return;
             }
@@ -84,17 +84,17 @@ export function ExecutiveAuthPage({
 
                 <form onSubmit={handleLogin} className="space-y-4 pt-1 focus-visible:outline-none">
                     <div>
-                        <label htmlFor="exec-email" className="block text-xs font-semibold text-[var(--color-text)] mb-1.5">
-                            อีเมลฝ่ายบริหาร
+                        <label htmlFor="exec-username" className="block text-xs font-semibold text-[var(--color-text)] mb-1.5">
+                            ชื่อผู้ใช้ (Username)
                         </label>
                         <input
-                            id="exec-email"
+                            id="exec-username"
                             className={inp}
-                            placeholder="user@email.com"
-                            type="email"
-                            autoComplete="email"
-                            value={form.email}
-                            onChange={(e) => setForm({ ...form, email: e.target.value })}
+                            placeholder="เช่น administrator หรือ director"
+                            type="text"
+                            autoComplete="username"
+                            value={form.username}
+                            onChange={(e) => setForm({ ...form, username: e.target.value })}
                         />
                     </div>
 

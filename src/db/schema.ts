@@ -21,7 +21,8 @@ export const leaveTypeEnum = checklistSchema.enum('leave_type', [
 export const users = checklistSchema.table.withRLS("users", {
     id: uuid("id").primaryKey().defaultRandom(),
     name: text("name").notNull(),
-    email: text("email").notNull(),
+    username: text("username").notNull().default(""),
+    email: text("email"),
     password: text("password"),
     role: roleEnum("role").notNull(),
 

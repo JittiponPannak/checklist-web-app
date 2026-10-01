@@ -1,10 +1,11 @@
 import { Role, ShiftType, User, ShiftSession, Notification, PointTransaction, LeaderboardEntry, LeaveType, EmployeeLeave, LeaveQuotaInfo } from "../types";
 
 export interface IAuthService {
-  login(email: string, password: string): Promise<{ success: boolean; user?: User; error?: string }>;
+  login(username: string, password: string): Promise<{ success: boolean; user?: User; error?: string }>;
   register(data: {
     name: string;
-    email: string;
+    username: string;
+    email?: string;
     password?: string;
     role?: Role;
     position?: string;
@@ -14,7 +15,8 @@ export interface IAuthService {
   getAllUsers(): Promise<{ success: boolean; users?: User[]; error?: string }>;
   syncOAuthUser(userData: {
     id: string;
-    email: string;
+    email?: string;
+    username?: string;
     name?: string;
     role?: Role;
   }): Promise<{ success: boolean; user?: User; error?: string }>;
@@ -156,7 +158,8 @@ export interface IChecklistService {
 export interface BranchEmployeeStatus {
   id: string;
   name: string;
-  email: string;
+  username?: string;
+  email?: string;
   role: Role;
   position?: string;
   branchId?: string;

@@ -388,7 +388,7 @@ export function AdminDashboardView({
 
   const filteredUsers = usersList.filter((u) =>
     u.name.toLowerCase().includes(userSearch.toLowerCase()) ||
-    u.email.toLowerCase().includes(userSearch.toLowerCase()) ||
+    (u.username && u.username.toLowerCase().includes(userSearch.toLowerCase())) ||
     (u.position && u.position.toLowerCase().includes(userSearch.toLowerCase()))
   );
 
@@ -831,7 +831,7 @@ export function AdminDashboardView({
                   <thead className="border-b border-[var(--color-border)] text-[var(--color-text-muted)] font-semibold bg-[var(--color-surface-2)]">
                     <tr>
                       <th className="py-3.5 px-4">ชื่อ-นามสกุล</th>
-                      <th className="py-3.5 px-3">อีเมล</th>
+                      <th className="py-3.5 px-3">ชื่อผู้ใช้ (Username)</th>
                       <th className="py-3.5 px-3">รหัสผ่าน</th>
                       <th className="py-3.5 px-3">บทบาทระบบ (Role)</th>
                       <th className="py-3.5 px-3">ตำแหน่งที่กำหนด</th>
@@ -848,7 +848,7 @@ export function AdminDashboardView({
                           </div>
                           <span>{u.name}</span>
                         </td>
-                        <td className="py-3.5 px-3 font-mono text-[var(--color-text-muted)]">{u.email}</td>
+                        <td className="py-3.5 px-3 font-mono text-[var(--color-text-muted)]">{u.username || u.name}</td>
                         <td className="py-3.5 px-3 font-mono text-[var(--color-text-muted)]">
                           <div className="flex items-center gap-2">
                             <span>
@@ -1004,7 +1004,7 @@ export function AdminDashboardView({
                           <div key={user.id} className="flex justify-between items-center p-2 rounded-lg bg-[var(--color-surface-2)] border border-[var(--color-border)]">
                             <div>
                               <p className="text-sm font-bold text-[var(--color-text)] leading-tight">{user.name}</p>
-                              <p className="text-[10px] text-[var(--color-text-subtle)] mt-0.5">{user.email}</p>
+                              <p className="text-[10px] text-[var(--color-text-subtle)] mt-0.5">@{user.username || user.name}</p>
                             </div>
                             <button onClick={() => setSelectedStaffIds(prev => prev.filter(id => id !== user.id))} className="text-rose-700 text-xs min-h-[44px] min-w-[44px] sm:min-h-[28px] sm:min-w-0 inline-flex items-center justify-center px-3 py-2 sm:px-2 sm:py-1 rounded-lg bg-rose-50 hover:bg-rose-100 font-semibold cursor-pointer whitespace-nowrap transition-colors">นำออก</button>
                           </div>
@@ -1062,8 +1062,8 @@ export function AdminDashboardView({
                     <input
                       id="staff-search-input"
                       type="text"
-                      placeholder="ค้นหาชื่อ หรืออีเมล..."
-                      aria-label="ค้นหาชื่อหรืออีเมลพนักงานในระบบ"
+                      placeholder="ค้นหาชื่อ หรือชื่อผู้ใช้..."
+                      aria-label="ค้นหาชื่อหรือชื่อผู้ใช้พนักงานในระบบ"
                       value={staffSearchQuery}
                       onChange={(e) => setStaffSearchQuery(e.target.value)}
                       className="mt-2 w-full bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-amber-400 transition-colors"
@@ -1073,7 +1073,7 @@ export function AdminDashboardView({
                     {usersList
                       .filter(u => !selectedStaffIds.includes(u.id))
                       .filter(u => u.role === "manager" || u.role === "manager_assistant" || u.role === "employee")
-                      .filter(u => u.name.toLowerCase().includes(staffSearchQuery.toLowerCase()) || u.email.toLowerCase().includes(staffSearchQuery.toLowerCase()))
+                      .filter(u => u.name.toLowerCase().includes(staffSearchQuery.toLowerCase()) || (u.username && u.username.toLowerCase().includes(staffSearchQuery.toLowerCase())))
                       .sort((a, b) => {
                         const rank = { manager: 1, manager_assistant: 2, employee: 3 };
                         const rankA = rank[a.role as keyof typeof rank] || 99;
@@ -1098,7 +1098,7 @@ export function AdminDashboardView({
                     {usersList
                       .filter(u => !selectedStaffIds.includes(u.id))
                       .filter(u => u.role === "manager" || u.role === "manager_assistant" || u.role === "employee")
-                      .filter(u => u.name.toLowerCase().includes(staffSearchQuery.toLowerCase()) || u.email.toLowerCase().includes(staffSearchQuery.toLowerCase())).length === 0 && (
+                      .filter(u => u.name.toLowerCase().includes(staffSearchQuery.toLowerCase()) || (u.username && u.username.toLowerCase().includes(staffSearchQuery.toLowerCase()))).length === 0 && (
                         <div className="text-center text-[var(--color-text-subtle)] text-sm py-8">
                           ไม่พบรายชื่อพนักงาน หรือถูกเพิ่มเข้าสาขาหมดแล้ว
                         </div>

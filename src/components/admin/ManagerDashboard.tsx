@@ -200,7 +200,8 @@ export function ManagerDashboard({
   const filteredEmployees = employees.filter((emp) => {
     const matchesSearch =
       emp.name.toLowerCase().includes(staffSearch.toLowerCase()) ||
-      emp.email.toLowerCase().includes(staffSearch.toLowerCase()) ||
+      (emp.username && emp.username.toLowerCase().includes(staffSearch.toLowerCase())) ||
+      (emp.email && emp.email.toLowerCase().includes(staffSearch.toLowerCase())) ||
       (emp.position && emp.position.toLowerCase().includes(staffSearch.toLowerCase()));
     if (!matchesSearch) return false;
     if (staffFilter === "unassigned") return !emp.position;
@@ -1126,7 +1127,7 @@ export function ManagerDashboard({
                                   <Badge color="muted">{emp.position}</Badge>
                                 )}
                               </div>
-                              <p className="text-xs text-slate-500 font-mono mt-0.5">{emp.email}</p>
+                              <p className="text-xs text-slate-500 font-mono mt-0.5">@{emp.username || emp.name}</p>
                               {lastSession && (
                                 <p className="text-[11px] text-slate-500 mt-1">
                                   เข้ากะล่าสุด: {getShiftName(lastSession.shift)} ({fmtDate(lastSession.startedAt)})

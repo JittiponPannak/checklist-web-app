@@ -14,14 +14,15 @@ export async function seedUsersIfEmpty(): Promise<void> {
   await services.auth.seedUsersIfEmpty();
 }
 
-export async function loginAction(email: string, password: string): Promise<AuthResponse> {
+export async function loginAction(username: string, password: string): Promise<AuthResponse> {
   const services = getServices();
-  return await services.auth.login(email, password);
+  return await services.auth.login(username, password);
 }
 
 export async function registerAction(data: {
   name: string;
-  email: string;
+  username: string;
+  email?: string;
   password?: string;
   role?: Role;
   position?: string;

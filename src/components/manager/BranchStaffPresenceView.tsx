@@ -136,9 +136,9 @@ export function BranchStaffPresenceView({
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
         const matchesName = emp.name.toLowerCase().includes(q);
-        const matchesEmail = emp.email.toLowerCase().includes(q);
+        const matchesUsername = (emp.username || emp.email || "").toLowerCase().includes(q);
         const matchesPosition = emp.position?.toLowerCase().includes(q);
-        if (!matchesName && !matchesEmail && !matchesPosition) return false;
+        if (!matchesName && !matchesUsername && !matchesPosition) return false;
       }
 
       return true;
@@ -757,7 +757,7 @@ export function BranchStaffPresenceView({
                 </div>
                 <div>
                   <h2 className="text-base font-bold text-[var(--color-text)]">{inspectedEmployee.name}</h2>
-                  <p className="text-xs text-[var(--color-text-muted)]">{inspectedEmployee.email}</p>
+                  <p className="text-xs text-[var(--color-text-muted)]">@{inspectedEmployee.username || inspectedEmployee.email || inspectedEmployee.name}</p>
                 </div>
               </div>
               <button

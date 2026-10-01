@@ -45,7 +45,8 @@ export interface Position {
 export interface User {
   id: string;
   name: string;
-  email: string;
+  username?: string;
+  email?: string;
   password?: string;
   role: Role;
   position?: string;
