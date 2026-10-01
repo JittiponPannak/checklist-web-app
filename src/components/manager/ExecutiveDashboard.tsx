@@ -342,16 +342,14 @@ export function ExecutiveDashboard({
         setAssistantSession(res.session);
         setMyChecklistItems((prev) => {
           const fresh = res.session!.items || [];
-          const curSig = prev.map((i) => `${i.id}:${i.label}:${i.category}`).join("|");
-          const freshSig = fresh.map((i) => `${i.id}:${i.label}:${i.category}`).join("|");
-          if (curSig !== freshSig || prev.length === 0) {
-            return fresh.map((f) => {
-              const local = prev.find((p) => p.id === f.id);
-              if (local && local.completedAt && !f.completedAt) {
-                return { ...f, completedAt: local.completedAt, comment: local.comment, isLate: local.isLate };
-              }
-              return f;
-            });
+          const curSig = prev
+            .map((i) => `${i.id}:${i.completedAt || ""}:${i.completedByName || ""}:${i.comment || ""}`)
+            .join("|");
+          const freshSig = fresh
+            .map((i) => `${i.id}:${i.completedAt || ""}:${i.completedByName || ""}:${i.comment || ""}`)
+            .join("|");
+          if (curSig !== freshSig || prev.length !== fresh.length) {
+            return fresh;
           }
           return prev;
         });
@@ -558,12 +556,15 @@ export function ExecutiveDashboard({
     const item = myChecklistItems.find((i) => i.id === itemId);
 
     // Optimistic UI update
+    const myTitle = user.position || (currentRole === "manager" ? "ผู้จัดการร้าน" : "ผู้ช่วยผู้จัดการร้าน");
     setMyChecklistItems((prev) =>
       prev.map((i) =>
         i.id === itemId
           ? {
             ...i,
             completedAt: newCompletedAt,
+            completedBy: willBeDone ? user.id : null,
+            completedByName: willBeDone ? `${user.name} (${myTitle})` : null,
             comment: willBeDone ? (comment ?? i.comment) : null,
             isLate: willBeDone ? (comment ? true : i.isLate) : false,
           }
@@ -582,6 +583,8 @@ export function ExecutiveDashboard({
       });
       // Refresh live shift sessions in background
       loadDbSessions();
+      // Silently reload my checklist to sync shared branch state
+      void loadAssistantChecklist(myChecklistShift, true);
     } catch (err) {
       console.error("Failed to toggle assistant task work in DB:", err);
     }
@@ -1665,9 +1668,12 @@ export function ExecutiveDashboard({
                       <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-400 text-amber-950 shadow-2xs">
                         ไม่มีคะแนน • 0 Points
                       </span>
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border border-emerald-500/40">
+                        🔗 เช็คลิสต์ร่วมระดับสาขา (Shared Checklist)
+                      </span>
                     </div>
                     <p className="text-[11px] text-amber-900/80 dark:text-amber-300/80 mt-0.5">
-                      4 รายการตรวจความปลอดภัย: 1) ปิดไฟ 2) ปิดไฟตู้แช่ 3) ปิดแอร์ 4) ล็อคประตูร้าน • ปฏิบัติงานในกะบ่าย/ปิดร้าน (ไม่นำมาคิดแต้มสะสม)
+                      4 รายการตรวจความปลอดภัย: 1) ปิดไฟ 2) ปิดไฟตู้แช่ 3) ปิดแอร์ 4) ล็อคประตูร้าน • ปฏิบัติงานในกะบ่าย/ปิดร้าน (ไม่คิดแต้ม) • แชร์ข้อมูลร่วมกันในสาขาเหมือนระบบตู้แช่ (คนหนึ่งตรวจแล้ว ทุกคนในสาขาจะเห็นทันที)
                     </p>
                   </div>
                 </div>
@@ -1894,9 +1900,12 @@ export function ExecutiveDashboard({
                                           </span>
                                         )}
                                         {isSpecialClosingTask(item) && (
-                                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-amber-500/15 text-amber-900 dark:text-amber-300 border border-amber-400/40">
+                                          <span className="inline-flex flex-wrap items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-amber-500/15 text-amber-900 dark:text-amber-300 border border-amber-400/40">
                                             <span>🛡️ ชุดงานพิเศษปิดร้าน</span>
-                                            <span className="text-[10px] font-mono text-amber-700 dark:text-amber-400 font-semibold">(0 แต้ม / Zero Points)</span>
+                                            <span className="text-[10px] font-mono text-amber-700 dark:text-amber-400 font-semibold">(0 แต้ม)</span>
+                                            <span className="text-[10px] font-semibold text-emerald-800 dark:text-emerald-300 bg-emerald-100/70 dark:bg-emerald-950/60 px-1.5 py-0.2 rounded border border-emerald-300/60">
+                                              แชร์ร่วมระดับสาขา
+                                            </span>
                                           </span>
                                         )}
                                       </div>
@@ -1925,14 +1934,19 @@ export function ExecutiveDashboard({
                                         }
                                         return (
                                           <div className="mt-1 flex flex-col gap-1">
-                                            <p className="text-xs font-mono text-emerald-800 dark:text-emerald-300 font-semibold flex items-center gap-1">
+                                            <div className="text-xs font-mono text-emerald-800 dark:text-emerald-300 font-semibold flex flex-wrap items-center gap-1.5">
                                               <span>บันทึกเมื่อ: {fmtTime(item.completedAt)}</span>
+                                              {item.completedByName && (
+                                                <span className="text-xs font-sans text-emerald-950 dark:text-emerald-200 bg-emerald-100/80 dark:bg-emerald-900/40 px-2 py-0.5 rounded-md border border-emerald-300/60 font-medium">
+                                                  ตรวจโดย {item.completedByName}
+                                                </span>
+                                              )}
                                               {isLate && (
                                                 <span className="inline-flex items-center px-1.5 py-0.2 rounded text-xs font-bold bg-amber-100 text-amber-950 border border-amber-300">
                                                   ล่าช้า
                                                 </span>
                                               )}
-                                            </p>
+                                            </div>
                                             {item.comment && (
                                               <div className="text-xs text-rose-900 dark:text-rose-300 bg-rose-50/80 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 rounded-lg px-2.5 py-1 flex items-start gap-1 font-sans font-normal">
                                                 <span className="font-semibold shrink-0">เหตุผล:</span>

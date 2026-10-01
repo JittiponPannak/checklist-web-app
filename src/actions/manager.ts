@@ -1,11 +1,11 @@
 "use server";
 
 import { getServices } from "../services/container";
-import { Role, LeaveType, EmployeeLeave } from "../types";
+import { Role, LeaveType, EmployeeLeave, LeaveQuotaInfo } from "../types";
 import { ManagerShiftSummary } from "../services/ManagerService";
 import { BranchEmployeeStatus } from "../services/types";
 
-export type { ManagerShiftSummary, BranchEmployeeStatus, EmployeeLeave, LeaveType };
+export type { ManagerShiftSummary, BranchEmployeeStatus, EmployeeLeave, LeaveType, LeaveQuotaInfo };
 
 export async function getManagerShiftSessionsAction(filterDate?: string): Promise<{
   success: boolean;
@@ -85,6 +85,64 @@ export async function cancelEmployeeLeaveAction(params: {
 }): Promise<{ success: boolean; error?: string }> {
   const services = getServices();
   return await services.manager.cancelEmployeeLeave(params);
+}
+
+export async function getEmployeeLeaveQuotaAction(params: {
+  userId: string;
+  branchId?: string;
+}): Promise<{ success: boolean; quota?: LeaveQuotaInfo; error?: string }> {
+  const services = getServices();
+  return await services.manager.getEmployeeLeaveQuota(params);
+}
+
+export async function requestEmployeeLeaveAction(params: {
+  userId: string;
+  branchId: string;
+  leaveType: LeaveType;
+  startDate: string;
+  endDate: string;
+  reason: string;
+  requestedBy: string;
+  preserveStreak?: boolean;
+  isManagerRole?: boolean;
+}): Promise<{ success: boolean; leave?: EmployeeLeave; autoApproved?: boolean; error?: string }> {
+  const services = getServices();
+  return await services.manager.requestEmployeeLeave(params);
+}
+
+export async function approveEmployeeLeaveAction(params: {
+  leaveId: string;
+  approvedBy: string;
+  leaveType?: LeaveType;
+  preserveStreak?: boolean;
+}): Promise<{ success: boolean; leave?: EmployeeLeave; error?: string }> {
+  const services = getServices();
+  return await services.manager.approveEmployeeLeave(params);
+}
+
+export async function rejectEmployeeLeaveAction(params: {
+  leaveId: string;
+  rejectedBy: string;
+  reason?: string;
+}): Promise<{ success: boolean; error?: string }> {
+  const services = getServices();
+  return await services.manager.rejectEmployeeLeave(params);
+}
+
+export async function updateEmployeeLeaveQuotaAction(params: {
+  userId: string;
+  quota: number | null;
+}): Promise<{ success: boolean; error?: string }> {
+  const services = getServices();
+  return await services.manager.updateEmployeeLeaveQuota(params);
+}
+
+export async function updateBranchLeaveQuotaAction(params: {
+  branchId: string;
+  quota: number;
+}): Promise<{ success: boolean; error?: string }> {
+  const services = getServices();
+  return await services.manager.updateBranchLeaveQuota(params);
 }
 
 

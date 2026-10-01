@@ -5,7 +5,7 @@ import { ThemeToggle } from "../common/ThemeToggle";
 import { NavbarRefreshControl } from "../common/NavbarRefreshControl";
 import { LogOut, RefreshCw } from "lucide-react";
 
-import { createBranchAction, assignStaffToBranchAction, assignTasksToBranchAction, DashboardBranch as Branch } from "../../actions/branch";
+import { createBranchAction, assignStaffToBranchAction, assignTasksToBranchAction, updateBranchLeaveQuotaAction, DashboardBranch as Branch } from "../../actions/branch";
 import { fetchBranchesWithCache, invalidateBranchCache } from "../../utils/cache";
 import { getAllUsersAction } from "../../actions/auth";
 import { getAllTasksAction, createTaskAction, toggleTaskDisabledAction } from "../../actions/task";
@@ -109,6 +109,9 @@ export function AdminDashboardView({
   // Modal states
   const [isNewBranchModalOpen, setIsNewBranchModalOpen] = useState(false);
   const [newBranchName, setNewBranchName] = useState("");
+  const [selectedBranchForQuota, setSelectedBranchForQuota] = useState<Branch | null>(null);
+  const [branchQuotaInput, setBranchQuotaInput] = useState<number>(30);
+  const [isUpdatingQuota, setIsUpdatingQuota] = useState<boolean>(false);
 
   const [isManageStaffModalOpen, setIsManageStaffModalOpen] = useState(false);
   const [selectedBranchForStaff, setSelectedBranchForStaff] = useState<string | null>(null);
@@ -245,6 +248,27 @@ export function AdminDashboardView({
       loadBranches(true);
     } else {
       showToast(res.error || "เกิดข้อผิดพลาด");
+    }
+  }
+
+  async function handleUpdateBranchQuota(e: React.FormEvent) {
+    e.preventDefault();
+    if (!selectedBranchForQuota) return;
+    setIsUpdatingQuota(true);
+    try {
+      const res = await updateBranchLeaveQuotaAction(selectedBranchForQuota.id, branchQuotaInput);
+      if (res.success) {
+        showToast(`อัปเดตโควตาการลาของสาขา ${selectedBranchForQuota.name} เป็น ${branchQuotaInput} วัน สำเร็จ`);
+        setSelectedBranchForQuota(null);
+        invalidateBranchCache();
+        loadBranches(true);
+      } else {
+        showToast(res.error || "ไม่สามารถอัปเดตโควตาสาขาได้");
+      }
+    } catch (err: any) {
+      showToast(err.message || "เกิดข้อผิดพลาด");
+    } finally {
+      setIsUpdatingQuota(false);
     }
   }
 
@@ -644,31 +668,46 @@ export function AdminDashboardView({
                     </span>
                   </div>
 
-                  <div className="pt-3 border-t border-[var(--color-border)] grid grid-cols-2 gap-2 text-xs">
+                  <div className="pt-3 border-t border-[var(--color-border)] grid grid-cols-3 gap-2 text-xs">
                     <div>
                       <p className="text-[var(--color-text-subtle)]">ผู้จัดการสาขา</p>
-                      <p className="font-semibold text-[var(--color-text)] mt-0.5">{b.managerName}</p>
+                      <p className="font-semibold text-[var(--color-text)] mt-0.5 truncate">{b.managerName}</p>
                     </div>
                     <div>
                       <p className="text-[var(--color-text-subtle)]">จำนวนพนักงาน</p>
                       <p className="font-semibold text-[var(--color-text)] mt-0.5">{b.staffCount} คน</p>
                     </div>
+                    <div>
+                      <p className="text-[var(--color-text-subtle)]">โควตาการลา</p>
+                      <p className="font-semibold text-amber-600 dark:text-amber-400 mt-0.5">{b.leaveQuota ?? 30} วัน/คน</p>
+                    </div>
                   </div>
 
-                  <div className="pt-2 flex items-center justify-between gap-2">
+                  <div className="pt-2 flex items-center justify-between gap-1.5 flex-wrap">
                     <button
                       type="button"
                       onClick={() => openManageStaffModal(b.id)}
-                      className="text-xs font-bold text-[var(--color-text)] hover:text-amber-950 bg-[var(--color-surface-2)] hover:bg-amber-100 min-h-[44px] sm:min-h-[34px] inline-flex items-center justify-center px-3 py-2 sm:px-2 sm:py-1.5 rounded-xl border border-[var(--color-border)] transition-all cursor-pointer flex-1"
+                      className="text-xs font-bold text-[var(--color-text)] hover:text-amber-950 bg-[var(--color-surface-2)] hover:bg-amber-100 min-h-[44px] sm:min-h-[34px] inline-flex items-center justify-center px-2 py-1.5 rounded-xl border border-[var(--color-border)] transition-all cursor-pointer flex-1"
                     >
                       จัดการสาขา
                     </button>
                     <button
                       type="button"
                       onClick={() => openManageTasksModal(b.id)}
-                      className="text-xs font-bold text-amber-950 bg-amber-100 hover:bg-amber-200 min-h-[44px] sm:min-h-[34px] inline-flex items-center justify-center px-3 py-2 sm:px-2 sm:py-1.5 rounded-xl border border-amber-300 transition-all cursor-pointer flex-1"
+                      className="text-xs font-bold text-amber-950 bg-amber-100 hover:bg-amber-200 min-h-[44px] sm:min-h-[34px] inline-flex items-center justify-center px-2 py-1.5 rounded-xl border border-amber-300 transition-all cursor-pointer flex-1"
                     >
                       จัดการงาน
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedBranchForQuota(b);
+                        setBranchQuotaInput(b.leaveQuota ?? 30);
+                      }}
+                      className="text-xs font-bold text-[var(--color-text)] hover:text-amber-950 bg-[var(--color-surface-2)] hover:bg-amber-100 min-h-[44px] sm:min-h-[34px] inline-flex items-center justify-center px-2 py-1.5 rounded-xl border border-[var(--color-border)] transition-all cursor-pointer flex-1"
+                      title="ตั้งค่าโควตาการลาเริ่มต้นของสาขานี้"
+                    >
+                      ตั้งโควตาลา
                     </button>
                   </div>
                 </div>
@@ -1364,6 +1403,70 @@ export function AdminDashboardView({
                     className="px-6 py-2.5 bg-[var(--color-brown)] hover:bg-[var(--color-brown-light)] disabled:opacity-50 text-amber-300 rounded-xl text-sm font-bold transition-all cursor-pointer flex items-center gap-2 shadow-sm"
                   >
                     {isCreatingTask ? "กำลังบันทึก..." : "เพิ่มงาน"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Set Branch Quota Modal */}
+        {selectedBranchForQuota && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fade-in">
+            <div className="w-full max-w-sm bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl shadow-xl p-5 space-y-4 animate-scale-up">
+              <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-3">
+                <h3 className="text-sm font-extrabold text-[var(--color-text)]">
+                  กำหนดโควตาการลาสาขา
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setSelectedBranchForQuota(null)}
+                  className="w-7 h-7 rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-text)] flex items-center justify-center cursor-pointer"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div>
+                <p className="text-xs text-[var(--color-text-muted)]">
+                  สาขา: <strong className="text-[var(--color-text)]">{selectedBranchForQuota.name}</strong> ({selectedBranchForQuota.code})
+                </p>
+                <p className="text-[11px] text-[var(--color-text-muted)] mt-1 leading-relaxed">
+                  กำหนดจำนวนวันลาเริ่มต้นต่อคนต่อปีสำหรับพนักงานทุกคนในสาขานี้ (ผู้จัดการสามารถปรับเพิ่ม/ลดเฉพาะบุคคลได้)
+                </p>
+              </div>
+
+              <form onSubmit={handleUpdateBranchQuota} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-[var(--color-text)] mb-1">
+                    โควตาการลา (วัน/คน/ปี)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="365"
+                    value={branchQuotaInput}
+                    onChange={(e) => setBranchQuotaInput(Math.max(0, parseInt(e.target.value, 10) || 0))}
+                    className="w-full bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-sm font-bold text-[var(--color-text)] focus:outline-none focus:border-amber-400"
+                    required
+                  />
+                </div>
+
+                <div className="flex items-center justify-end gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedBranchForQuota(null)}
+                    disabled={isUpdatingQuota}
+                    className="px-3.5 py-2 rounded-xl border border-[var(--color-border)] hover:bg-[var(--color-surface-2)] text-xs font-bold text-[var(--color-text)] transition-colors cursor-pointer"
+                  >
+                    ยกเลิก
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isUpdatingQuota}
+                    className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-amber-950 text-xs font-extrabold shadow-sm transition-colors cursor-pointer flex items-center gap-1.5"
+                  >
+                    {isUpdatingQuota ? "กำลังบันทึก..." : "บันทึกโควตาสาขา"}
                   </button>
                 </div>
               </form>

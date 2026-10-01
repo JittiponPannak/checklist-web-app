@@ -567,24 +567,33 @@ export function ChecklistPage({
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-start gap-2">
-                      <span
-                        className={`text-xs font-mono select-none pt-0.5 shrink-0 ${
-                          isDone ? "text-[var(--color-text-muted)] font-bold" : "text-[var(--color-text)] font-extrabold"
-                        }`}
-                        aria-hidden="true"
-                      >
-                        {String(originalIndex + 1).padStart(2, "0")}
-                      </span>
-                      <p
-                        className={`text-sm sm:text-base leading-snug transition-all ${
-                          isDone
-                            ? "text-[var(--color-text-muted)] line-through font-medium"
-                            : "text-[var(--color-text)] font-medium"
-                        }`}
-                      >
-                        {item.label}
-                      </p>
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-start gap-2">
+                        <span
+                          className={`text-xs font-mono select-none pt-0.5 shrink-0 ${
+                            isDone ? "text-[var(--color-text-muted)] font-bold" : "text-[var(--color-text)] font-extrabold"
+                          }`}
+                          aria-hidden="true"
+                        >
+                          {String(originalIndex + 1).padStart(2, "0")}
+                        </span>
+                        <p
+                          className={`text-sm sm:text-base leading-snug transition-all ${
+                            isDone
+                              ? "text-[var(--color-text-muted)] line-through font-medium"
+                              : "text-[var(--color-text)] font-medium"
+                          }`}
+                        >
+                          {item.label}
+                        </p>
+                      </div>
+                      {(item.isSpecial || item.zeroPoints) && (
+                        <div className="pl-0 sm:pl-6">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/15 text-amber-900 dark:text-amber-300 border border-amber-400/40">
+                            🛡️ ชุดงานพิเศษปิดร้าน (0 แต้ม • แชร์ร่วมระดับสาขา)
+                          </span>
+                        </div>
+                      )}
                     </div>
 
                     {isDone && item.completedAt && (() => {
@@ -608,6 +617,11 @@ export function ChecklistPage({
                           <div className="flex flex-wrap items-center gap-1.5 text-xs font-mono text-emerald-900 dark:text-emerald-300 font-bold">
                             <CheckCircle2 size={13} className="text-emerald-700" />
                             <span>บันทึกเมื่อ {fmtTime(item.completedAt)}</span>
+                            {item.completedByName && (
+                              <span className="text-xs font-sans text-emerald-950 dark:text-emerald-200 bg-emerald-100 dark:bg-emerald-900/40 px-2 py-0.5 rounded-md border border-emerald-300/60 font-medium">
+                                ตรวจโดย {item.completedByName}
+                              </span>
+                            )}
                             {isLate && (
                               <span className="text-rose-950 dark:text-rose-200 font-bold bg-rose-100 dark:bg-rose-950/80 border border-rose-300 dark:border-rose-800 px-1.5 py-0.5 rounded-md ml-1">
                                 (ล่าช้า)

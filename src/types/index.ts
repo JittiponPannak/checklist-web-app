@@ -18,8 +18,23 @@ export interface EmployeeLeave {
   recordedBy: string;
   recordedByName?: string;
   recordedByRole?: Role;
+  status?: "pending" | "approved" | "rejected";
+  approvedBy?: string;
+  approvedByName?: string;
+  approvedAt?: string;
   createdAt: string;
   updatedAt?: string;
+}
+
+export interface LeaveQuotaInfo {
+  userId: string;
+  branchId?: string;
+  allocatedQuota: number;
+  branchDefaultQuota: number;
+  customQuota: number | null;
+  usedDays: number;
+  pendingDays: number;
+  remainingDays: number;
 }
 
 export interface Position {
@@ -36,6 +51,7 @@ export interface User {
   position?: string;
   branchName?: string;
   branchId?: string;
+  leaveQuota?: number | null;
   point?: number;
   pointStreak?: number;
   pointStreakType?: "none" | "flawed" | "perfect";
@@ -47,6 +63,8 @@ export interface ChecklistItem {
   label: string;
   category?: string;
   completedAt: string | null;
+  completedBy?: string | null;
+  completedByName?: string | null;
   taskWorkId?: string;
   isLate?: boolean;
   comment?: string | null;

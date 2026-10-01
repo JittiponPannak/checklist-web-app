@@ -31,6 +31,7 @@ export const users = checklistSchema.table.withRLS("users", {
     point: integer("point").notNull().default(0),
 
     last_login: timestamp("last_login"),
+    leave_quota: integer("leave_quota"),
     created_at: timestamp("created_at").defaultNow(),
 });
 
@@ -40,6 +41,7 @@ export const branches = checklistSchema.table.withRLS("branches", {
     members: uuid("member_ids").array().notNull().default([]),
     tasks: uuid("task_ids").array().notNull().default([]),
     refrigerators: uuid("refrigerators").array().notNull().default([]),
+    leave_quota: integer("leave_quota").notNull().default(30),
 
     last_update: timestamp("last_update").defaultNow(),
 });
@@ -101,6 +103,18 @@ export const refrigeratorTasks = checklistSchema.table.withRLS("refrigerator_tas
     created_at: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const storeClosingTasks = checklistSchema.table.withRLS("store_closing_tasks", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    branch_id: uuid("branch_id").notNull().references(() => branches.id),
+    task_id: uuid("task_id").notNull().references(() => tasks.id),
+    task_date: text("task_date").notNull(),
+    completed_by: uuid("completed_by").references(() => users.id),
+    completed_at: timestamp("completed_at"),
+    shift_session_id: uuid("shift_session_id").references(() => shiftSession.id),
+    comment: text("comment"),
+    created_at: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const notifications = checklistSchema.table.withRLS("notifications", {
     id: uuid("id").primaryKey().defaultRandom(),
     recipient_id: uuid("recipient_id").references(() => users.id),
@@ -136,6 +150,9 @@ export const employeeLeaves = checklistSchema.table.withRLS("employee_leaves", {
     preserve_streak: boolean("preserve_streak").notNull().default(true),
     previous_streak: integer("previous_streak"),
     recorded_by: uuid("recorded_by").notNull().references(() => users.id),
+    status: text("status").notNull().default("approved"), // 'pending' | 'approved' | 'rejected'
+    approved_by: uuid("approved_by").references(() => users.id),
+    approved_at: timestamp("approved_at"),
     created_at: timestamp("created_at").notNull().defaultNow(),
     updated_at: timestamp("updated_at").defaultNow(),
 });

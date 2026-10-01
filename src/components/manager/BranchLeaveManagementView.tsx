@@ -8,7 +8,12 @@ import {
   getBranchLeavesAction, 
   markEmployeeLeaveAction, 
   cancelEmployeeLeaveAction,
-  getBranchStaffStatusAction 
+  getBranchStaffStatusAction,
+  approveEmployeeLeaveAction,
+  rejectEmployeeLeaveAction,
+  updateEmployeeLeaveQuotaAction,
+  getEmployeeLeaveQuotaAction,
+  LeaveQuotaInfo,
 } from "../../actions/manager";
 import { BrandLogo } from "../common/BrandLogo";
 import { ThemeToggle } from "../common/ThemeToggle";
@@ -36,7 +41,10 @@ import {
   Sparkles,
   ChevronRight,
   Info,
-  Coins
+  Coins,
+  Sliders,
+  Check,
+  X
 } from "lucide-react";
 import Link from "next/link";
 import { isPaidLeave, isUnpaidLeave, getLeaveTypeLabel } from "../../utils/leave";
@@ -66,10 +74,24 @@ export function BranchLeaveManagementView({
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   // Filters
-  const [typeFilter, setTypeFilter] = useState<"all" | "paid" | "unpaid">("all");
+  const [typeFilter, setTypeFilter] = useState<"all" | "pending" | "paid" | "unpaid">("all");
   const [streakFilter, setStreakFilter] = useState<"all" | "preserved" | "broken">("all");
   const [dateFilter, setDateFilter] = useState<"all" | "today" | "upcoming" | "past">("all");
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Approval action states
+  const [isApproving, setIsApproving] = useState<string | null>(null);
+  const [rejectModalLeave, setRejectModalLeave] = useState<EmployeeLeave | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
+  const [isRejecting, setIsRejecting] = useState(false);
+
+  // Quota Management modal state
+  const [isQuotaModalOpen, setIsQuotaModalOpen] = useState(false);
+  const [employeeQuotas, setEmployeeQuotas] = useState<Record<string, LeaveQuotaInfo>>({});
+  const [loadingQuotas, setLoadingQuotas] = useState(false);
+  const [editingUserId, setEditingUserId] = useState<string | null>(null);
+  const [editingQuotaValue, setEditingQuotaValue] = useState<string>("");
+  const [isSavingQuota, setIsSavingQuota] = useState(false);
 
   // Modal State for adding new leave
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -154,7 +176,8 @@ export function BranchLeaveManagementView({
   // KPI Calculations
   const stats = useMemo(() => {
     const today = thaiTodayStr;
-    const todayLeaves = leaves.filter(l => l.startDate <= today && l.endDate >= today);
+    const todayLeaves = leaves.filter(l => l.status !== "rejected" && l.startDate <= today && l.endDate >= today);
+    const pendingLeaves = leaves.filter(l => l.status === "pending");
     const paidCount = todayLeaves.filter(l => isPaidLeave(l.leaveType)).length;
     const unpaidCount = todayLeaves.filter(l => isUnpaidLeave(l.leaveType)).length;
     const streakBrokenCount = leaves.filter(l => l.preserveStreak === false).length;
@@ -162,6 +185,7 @@ export function BranchLeaveManagementView({
 
     return {
       todayCount: todayLeaves.length,
+      pendingCount: pendingLeaves.length,
       paidCount,
       unpaidCount,
       streakBrokenCount,
@@ -169,13 +193,18 @@ export function BranchLeaveManagementView({
     };
   }, [leaves, thaiTodayStr]);
 
+  const pendingLeaves = useMemo(() => {
+    return leaves.filter(l => l.status === "pending");
+  }, [leaves]);
+
   // Filtered leaves
   const filteredLeaves = useMemo(() => {
     const today = thaiTodayStr;
     return leaves.filter(leave => {
       // Type filter
-      if (typeFilter === "paid" && !isPaidLeave(leave.leaveType)) return false;
-      if (typeFilter === "unpaid" && !isUnpaidLeave(leave.leaveType)) return false;
+      if (typeFilter === "pending" && leave.status !== "pending") return false;
+      if (typeFilter === "paid" && (!isPaidLeave(leave.leaveType) || leave.status === "pending")) return false;
+      if (typeFilter === "unpaid" && (!isUnpaidLeave(leave.leaveType) || leave.status === "pending")) return false;
 
       // Streak status filter
       if (streakFilter === "preserved" && leave.preserveStreak === false) return false;
@@ -202,6 +231,104 @@ export function BranchLeaveManagementView({
       return true;
     });
   }, [leaves, typeFilter, streakFilter, dateFilter, searchQuery, thaiTodayStr]);
+
+  // Load employee quotas
+  const loadBranchEmployeeQuotas = useCallback(async () => {
+    if (!employees.length) return;
+    setLoadingQuotas(true);
+    try {
+      const quotaMap: Record<string, LeaveQuotaInfo> = {};
+      await Promise.all(
+        employees.map(async (emp) => {
+          const res = await getEmployeeLeaveQuotaAction({ userId: emp.id, branchId: selectedBranchId });
+          if (res.success && res.quota) {
+            quotaMap[emp.id] = res.quota;
+          }
+        })
+      );
+      setEmployeeQuotas(quotaMap);
+    } catch (e) {
+      console.error("Error loading employee quotas:", e);
+    } finally {
+      setLoadingQuotas(false);
+    }
+  }, [employees, selectedBranchId]);
+
+  useEffect(() => {
+    if (isQuotaModalOpen) {
+      loadBranchEmployeeQuotas();
+    }
+  }, [isQuotaModalOpen, loadBranchEmployeeQuotas]);
+
+  // Approval handlers
+  const handleApprove = async (leaveId: string, preserveStreak: boolean = true) => {
+    setIsApproving(leaveId);
+    try {
+      const res = await approveEmployeeLeaveAction({
+        leaveId,
+        approvedBy: currentUser.id,
+        preserveStreak,
+      });
+      if (res.success) {
+        setSuccessMsg("อนุมัติคำขอลางานเรียบร้อยแล้ว");
+        loadData(selectedBranchId, true);
+      } else {
+        setErrorMsg(res.error || "ไม่สามารถอนุมัติได้");
+      }
+    } catch (e: any) {
+      setErrorMsg(e.message || "เกิดข้อผิดพลาดในการอนุมัติ");
+    } finally {
+      setIsApproving(null);
+    }
+  };
+
+  const handleConfirmReject = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!rejectModalLeave) return;
+    setIsRejecting(true);
+    try {
+      const res = await rejectEmployeeLeaveAction({
+        leaveId: rejectModalLeave.id,
+        rejectedBy: currentUser.id,
+        reason: rejectReason.trim() || undefined,
+      });
+      if (res.success) {
+        setSuccessMsg("ปฏิเสธคำขอลางานเรียบร้อยแล้ว");
+        setRejectModalLeave(null);
+        setRejectReason("");
+        loadData(selectedBranchId, true);
+      } else {
+        setErrorMsg(res.error || "ไม่สามารถปฏิเสธได้");
+      }
+    } catch (e: any) {
+      setErrorMsg(e.message || "เกิดข้อผิดพลาด");
+    } finally {
+      setIsRejecting(false);
+    }
+  };
+
+  const handleSaveEmployeeQuota = async (userId: string) => {
+    setIsSavingQuota(true);
+    try {
+      const val = editingQuotaValue.trim();
+      const quotaNum = val === "" ? null : Math.max(0, parseInt(val, 10));
+      const res = await updateEmployeeLeaveQuotaAction({
+        userId,
+        quota: quotaNum,
+      });
+      if (res.success) {
+        setSuccessMsg("อัปเดตโควตาพนักงานเรียบร้อยแล้ว");
+        setEditingUserId(null);
+        loadBranchEmployeeQuotas();
+      } else {
+        setErrorMsg(res.error || "ไม่สามารถอัปเดตโควตาได้");
+      }
+    } catch (e: any) {
+      setErrorMsg(e.message || "เกิดข้อผิดพลาด");
+    } finally {
+      setIsSavingQuota(false);
+    }
+  };
 
   // Open modal handler
   const handleOpenAddModal = (userId?: string) => {
@@ -427,6 +554,17 @@ export function BranchLeaveManagementView({
 
             <ThemeToggle />
 
+            {/* Manage Employee Quotas Button */}
+            <button
+              type="button"
+              onClick={() => setIsQuotaModalOpen(true)}
+              className="px-3 py-1.5 sm:px-3.5 sm:py-2 bg-[var(--color-surface-2)] hover:bg-[var(--color-surface)] text-[var(--color-text)] border border-[var(--color-border)] text-xs sm:text-sm font-bold rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer shrink-0"
+              title="จัดการโควตาการลาของพนักงานในสาขา"
+            >
+              <Sliders size={15} className="text-amber-600 dark:text-amber-400" />
+              <span className="hidden sm:inline">โควตาพนักงาน</span>
+            </button>
+
             {/* Primary Action Button */}
             <button
               type="button"
@@ -496,12 +634,38 @@ export function BranchLeaveManagementView({
             </div>
           </div>
 
-          {/* Card 2: Paid Leave Count */}
+          {/* Card 2: Pending Approval Count */}
+          <div className={`p-5 rounded-2xl bg-[var(--color-surface)] border-2 shadow-xs flex items-center justify-between ${
+            stats.pendingCount > 0
+              ? "border-amber-500 bg-amber-500/5 ring-2 ring-amber-500/20"
+              : "border-[var(--color-border)]"
+          }`}>
+            <div className="space-y-1">
+              <div className="flex items-center gap-1.5">
+                <span className={`w-2 h-2 rounded-full ${stats.pendingCount > 0 ? "bg-amber-500 animate-ping" : "bg-[var(--color-border)]"}`} />
+                <p className="text-xs font-bold text-amber-700 dark:text-amber-400">คำขอรออนุมัติ</p>
+              </div>
+              <div className="flex items-baseline gap-2">
+                <span className="text-3xl font-extrabold text-[var(--color-text)]">
+                  {stats.pendingCount}
+                </span>
+                <span className="text-xs text-[var(--color-text-muted)]">รายการ</span>
+              </div>
+              <p className="text-[11px] text-[var(--color-text-muted)]">
+                {stats.pendingCount > 0 ? "มีคำขอจากพนักงานรอพิจารณา" : "ไม่มีคำขอรออนุมัติ"}
+              </p>
+            </div>
+            <div className="w-12 h-12 rounded-2xl bg-amber-500/15 text-amber-600 dark:text-amber-300 flex items-center justify-center shrink-0">
+              <Clock size={24} />
+            </div>
+          </div>
+
+          {/* Card 3: Paid Leave Count */}
           <div className="p-5 rounded-2xl bg-[var(--color-surface)] border-2 border-emerald-500/30 dark:border-emerald-500/40 shadow-xs flex items-center justify-between">
             <div className="space-y-1">
               <div className="flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                <p className="text-xs font-bold text-emerald-700 dark:text-emerald-400">ลาเเบบได้เงิน (Paid Leave)</p>
+                <p className="text-xs font-bold text-emerald-700 dark:text-emerald-400">ลาเเบบได้เงิน (Paid)</p>
               </div>
               <div className="flex items-baseline gap-2">
                 <span className="text-3xl font-extrabold text-emerald-950 dark:text-emerald-200">
@@ -509,7 +673,7 @@ export function BranchLeaveManagementView({
                 </span>
                 <span className="text-xs text-emerald-700 dark:text-emerald-400">คนในวันนี้</span>
               </div>
-              <p className="text-[11px] text-[var(--color-text-muted)]">ได้รับค่าจ้างตามสิทธิ/มีใบรับรอง</p>
+              <p className="text-[11px] text-[var(--color-text-muted)]">ได้รับค่าจ้างตามสิทธิ</p>
             </div>
             <div className="w-12 h-12 rounded-2xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 flex items-center justify-center shrink-0">
               <Coins size={24} />
@@ -560,6 +724,80 @@ export function BranchLeaveManagementView({
           </div>
         </section>
 
+        {/* ─── PENDING APPROVAL PRIORITY SECTION ────────────────────────── */}
+        {pendingLeaves.length > 0 && (typeFilter === "all" || typeFilter === "pending") && (
+          <section className="p-5 rounded-2xl bg-amber-500/10 border-2 border-amber-400 dark:border-amber-600 shadow-sm space-y-4 animate-fade-in">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <span className="w-9 h-9 rounded-xl bg-amber-500 text-amber-950 flex items-center justify-center font-bold shrink-0">
+                  <Clock size={20} />
+                </span>
+                <div>
+                  <h3 className="text-sm font-extrabold text-[var(--color-text)]">
+                    คำขอลางานรอการพิจารณาอนุมัติ ({pendingLeaves.length} รายการ)
+                  </h3>
+                  <p className="text-xs text-[var(--color-text-muted)]">
+                    พนักงานส่งคำขอลางานเข้ามา กรุณาตรวจสอบเหตุผลและพิจารณาอนุมัติ
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+              {pendingLeaves.map((pl) => (
+                <div key={pl.id} className="p-4 rounded-xl bg-[var(--color-surface)] border border-amber-300 dark:border-amber-700/60 shadow-xs flex flex-col justify-between gap-3">
+                  <div>
+                    <div className="flex items-center justify-between gap-2 mb-1.5">
+                      <span className="text-sm font-extrabold text-[var(--color-text)]">{pl.userName}</span>
+                      <span className={`text-[11px] font-extrabold px-2.5 py-0.5 rounded-full border ${
+                        isPaidLeave(pl.leaveType)
+                          ? "bg-emerald-100 text-emerald-900 border-emerald-300 dark:bg-emerald-950 dark:text-emerald-200"
+                          : "bg-amber-100 text-amber-900 border-amber-300 dark:bg-amber-950 dark:text-amber-200"
+                      }`}>
+                        {isPaidLeave(pl.leaveType) ? "ลาเเบบได้เงิน" : "ลาเเบบไม่ได้รับเงิน"}
+                      </span>
+                    </div>
+                    <p className="text-xs text-[var(--color-text-muted)]">
+                      {pl.userPosition || "พนักงานประจำสาขา"} • วันที่: <strong className="text-[var(--color-text)]">{pl.startDate === pl.endDate ? formatThaiDate(pl.startDate) : `${formatThaiDate(pl.startDate)} ถึง ${formatThaiDate(pl.endDate)}`}</strong>
+                    </p>
+                    <div className="mt-2 p-2.5 rounded-lg bg-[var(--color-surface-2)] border border-[var(--color-border)] text-xs text-[var(--color-text)]">
+                      <span className="text-[var(--color-text-muted)] font-semibold">เหตุผล: </span>
+                      <span className="italic">&ldquo;{pl.reason}&rdquo;</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-end gap-2 pt-2 border-t border-[var(--color-border)]">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setRejectModalLeave(pl);
+                        setRejectReason("");
+                      }}
+                      disabled={isApproving === pl.id}
+                      className="px-3 py-1.5 rounded-xl border border-rose-300 dark:border-rose-800 text-rose-700 dark:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-xs font-bold transition-all cursor-pointer"
+                    >
+                      ปฏิเสธคำขอ
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleApprove(pl.id, true)}
+                      disabled={isApproving === pl.id}
+                      className="px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-extrabold shadow-xs transition-all cursor-pointer flex items-center gap-1.5"
+                    >
+                      {isApproving === pl.id ? (
+                        <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      ) : (
+                        <Check size={14} />
+                      )}
+                      <span>อนุมัติคำขอ</span>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
         {/* ─── FILTERS & SEARCH TOOLBAR ───────────────────────────────────── */}
         <section className="p-4 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)] shadow-xs flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
           {/* Leave Type Tabs */}
@@ -574,6 +812,21 @@ export function BranchLeaveManagementView({
               }`}
             >
               ทั้งหมด ({leaves.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setTypeFilter("pending")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                typeFilter === "pending"
+                  ? "bg-amber-600 text-white shadow-xs"
+                  : "text-amber-700 dark:text-amber-400 hover:text-amber-950"
+              }`}
+            >
+              <Clock size={14} />
+              <span>รออนุมัติ ({stats.pendingCount})</span>
+              {stats.pendingCount > 0 && (
+                <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
+              )}
             </button>
             <button
               type="button"
@@ -730,23 +983,45 @@ export function BranchLeaveManagementView({
                       </div>
                     </div>
 
-                    {/* Leave Type Badge */}
-                    <div className={`px-2.5 py-1 rounded-xl text-xs font-extrabold flex items-center gap-1.5 shrink-0 ${
-                      isPaid
-                        ? "bg-emerald-100 dark:bg-emerald-950/70 text-emerald-900 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-800"
-                        : "bg-amber-100 dark:bg-amber-950/70 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-800"
-                    }`}>
-                      {isPaid ? (
-                        <>
-                          <Coins size={13} />
-                          <span>ลาเเบบได้เงิน</span>
-                        </>
-                      ) : (
-                        <>
-                          <FileText size={13} />
-                          <span>ลาเเบบไม่ได้รับเงิน</span>
-                        </>
+                    {/* Status & Type Badges */}
+                    <div className="flex items-center gap-1.5 flex-wrap justify-end">
+                      {leave.status === "pending" && (
+                        <span className="px-2.5 py-1 rounded-xl text-xs font-extrabold bg-amber-500/15 text-amber-800 dark:text-amber-200 border border-amber-400 animate-pulse flex items-center gap-1">
+                          <Clock size={12} />
+                          <span>รออนุมัติ</span>
+                        </span>
                       )}
+                      {leave.status === "approved" && (
+                        <span className="px-2.5 py-1 rounded-xl text-xs font-extrabold bg-emerald-500/15 text-emerald-800 dark:text-emerald-200 border border-emerald-400 flex items-center gap-1">
+                          <Check size={12} />
+                          <span>อนุมัติแล้ว</span>
+                        </span>
+                      )}
+                      {leave.status === "rejected" && (
+                        <span className="px-2.5 py-1 rounded-xl text-xs font-extrabold bg-rose-500/15 text-rose-800 dark:text-rose-200 border border-rose-400 flex items-center gap-1">
+                          <X size={12} />
+                          <span>ไม่อนุมัติ</span>
+                        </span>
+                      )}
+
+                      {/* Leave Type Badge */}
+                      <div className={`px-2.5 py-1 rounded-xl text-xs font-extrabold flex items-center gap-1.5 shrink-0 ${
+                        isPaid
+                          ? "bg-emerald-100 dark:bg-emerald-950/70 text-emerald-900 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-800"
+                          : "bg-amber-100 dark:bg-amber-950/70 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-800"
+                      }`}>
+                        {isPaid ? (
+                          <>
+                            <Coins size={13} />
+                            <span>ลาเเบบได้เงิน</span>
+                          </>
+                        ) : (
+                          <>
+                            <FileText size={13} />
+                            <span>ลาเเบบไม่ได้รับเงิน</span>
+                          </>
+                        )}
+                      </div>
                     </div>
                   </div>
 
@@ -1171,6 +1446,194 @@ export function BranchLeaveManagementView({
                 className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
               >
                 {isCancelling ? "กำลังยกเลิก..." : "ยืนยันยกเลิกรายการ"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── MODAL: REJECT CONFIRMATION ──────────────────────────────────── */}
+      {rejectModalLeave && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fade-in">
+          <div className="w-full max-w-md bg-[var(--color-surface)] border border-[var(--color-border)] rounded-3xl shadow-2xl p-6 space-y-4 animate-scale-up">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-rose-500/20 text-rose-600 dark:text-rose-400 flex items-center justify-center">
+                <AlertCircle size={20} />
+              </div>
+              <div>
+                <h3 className="text-base font-extrabold text-[var(--color-text)]">
+                  ปฏิเสธคำขอลางาน
+                </h3>
+                <p className="text-xs text-[var(--color-text-muted)]">
+                  {rejectModalLeave.userName} ({rejectModalLeave.startDate})
+                </p>
+              </div>
+            </div>
+
+            <form onSubmit={handleConfirmReject} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-[var(--color-text)] mb-1.5">
+                  ระบุเหตุผลในการไม่อนุมัติ (ไม่บังคับ)
+                </label>
+                <textarea
+                  rows={3}
+                  value={rejectReason}
+                  onChange={(e) => setRejectReason(e.target.value)}
+                  placeholder="เช่น กำลังคนไม่เพียงพอในกะ, แจ้งกระชั้นชิด ฯลฯ"
+                  className="w-full bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-xl p-3 text-xs text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-rose-400 resize-none"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2.5 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setRejectModalLeave(null)}
+                  disabled={isRejecting}
+                  className="px-4 py-2 rounded-xl border border-[var(--color-border)] hover:bg-[var(--color-surface-2)] text-xs font-bold text-[var(--color-text)] transition-colors cursor-pointer"
+                >
+                  ยกเลิก
+                </button>
+                <button
+                  type="submit"
+                  disabled={isRejecting}
+                  className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-xs transition-colors cursor-pointer flex items-center gap-1.5"
+                >
+                  {isRejecting ? (
+                    <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : null}
+                  <span>ยืนยันปฏิเสธคำขอ</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ─── MODAL: MANAGE EMPLOYEE QUOTAS ─────────────────────────────── */}
+      {isQuotaModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fade-in">
+          <div className="w-full max-w-2xl bg-[var(--color-surface)] border border-[var(--color-border)] rounded-3xl shadow-2xl p-6 space-y-5 animate-scale-up max-h-[90vh] overflow-y-auto">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                  <Sliders size={20} />
+                </div>
+                <div>
+                  <h3 className="text-base font-extrabold text-[var(--color-text)]">
+                    จัดการโควตาการลาพนักงาน
+                  </h3>
+                  <p className="text-xs text-[var(--color-text-muted)]">
+                    กำหนดจำกัดวันลาเฉพาะบุคคลของพนักงานในสาขา (หากไม่กำหนด จะใช้ค่าเริ่มต้นของสาขา)
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsQuotaModalOpen(false)}
+                className="w-8 h-8 rounded-full bg-[var(--color-surface-2)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] flex items-center justify-center cursor-pointer transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+
+            {loadingQuotas ? (
+              <div className="py-12 text-center text-xs text-[var(--color-text-muted)]">
+                กำลังโหลดข้อมูลโควตาพนักงาน...
+              </div>
+            ) : employees.length === 0 ? (
+              <div className="py-8 text-center text-xs text-[var(--color-text-muted)]">
+                ยังไม่มีข้อมูลพนักงานในสาขานี้
+              </div>
+            ) : (
+              <div className="divide-y divide-[var(--color-border)]">
+                {employees.map((emp) => {
+                  const q = employeeQuotas[emp.id];
+                  const isEditing = editingUserId === emp.id;
+                  const currentLimit = q?.customQuota !== null && q?.customQuota !== undefined ? q.customQuota : null;
+                  const branchDef = q?.branchDefaultQuota ?? 30;
+
+                  return (
+                    <div key={emp.id} className="py-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-extrabold text-sm text-[var(--color-text)]">{emp.name}</span>
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[var(--color-surface-2)] border border-[var(--color-border)] text-[var(--color-text-muted)]">
+                            {emp.position || "พนักงาน"}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3 text-xs text-[var(--color-text-muted)] mt-1">
+                          <span>
+                            โควตา:{" "}
+                            {currentLimit !== null ? (
+                              <strong className="text-amber-600 dark:text-amber-400">{currentLimit} วัน/ปี (กำหนดเฉพาะบุคคล)</strong>
+                            ) : (
+                              <span>ค่าเริ่มต้นสาขา ({branchDef} วัน/ปี)</span>
+                            )}
+                          </span>
+                          {q && (
+                            <span>
+                              ใช้แล้ว: <strong className="text-[var(--color-text)]">{q.usedDays}</strong> วัน (คงเหลือ {q.remainingDays} วัน)
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto justify-end">
+                        {isEditing ? (
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="number"
+                              min="0"
+                              max="365"
+                              placeholder={`${branchDef}`}
+                              value={editingQuotaValue}
+                              onChange={(e) => setEditingQuotaValue(e.target.value)}
+                              className="w-20 px-2.5 py-1.5 bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-xl text-xs font-bold text-[var(--color-text)] focus:outline-none focus:border-amber-400"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => handleSaveEmployeeQuota(emp.id)}
+                              disabled={isSavingQuota}
+                              className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all cursor-pointer"
+                            >
+                              บันทึก
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setEditingUserId(null)}
+                              className="px-2.5 py-1.5 rounded-xl border border-[var(--color-border)] text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)] cursor-pointer"
+                            >
+                              ยกเลิก
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingUserId(emp.id);
+                              setEditingQuotaValue(currentLimit !== null ? String(currentLimit) : "");
+                            }}
+                            className="px-3 py-1.5 rounded-xl border border-[var(--color-border)] hover:bg-[var(--color-surface-2)] text-xs font-bold text-[var(--color-text)] transition-all cursor-pointer"
+                          >
+                            {currentLimit !== null ? "แก้ไขโควตา" : "ตั้งโควตาเฉพาะคน"}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            <div className="pt-3 border-t border-[var(--color-border)] flex items-center justify-between text-xs text-[var(--color-text-muted)]">
+              <span>* เว้นว่างเพื่อคืนค่าเป็นค่าเริ่มต้นของสาขา</span>
+              <button
+                type="button"
+                onClick={() => setIsQuotaModalOpen(false)}
+                className="px-4 py-2 rounded-xl bg-[var(--color-surface-2)] hover:bg-[var(--color-border)] text-[var(--color-text)] font-bold text-xs cursor-pointer transition-colors"
+              >
+                ปิด
               </button>
             </div>
           </div>

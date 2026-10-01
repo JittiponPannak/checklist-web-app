@@ -1,4 +1,4 @@
-import { Role, ShiftType, User, ShiftSession, Notification, PointTransaction, LeaderboardEntry, LeaveType, EmployeeLeave } from "../types";
+import { Role, ShiftType, User, ShiftSession, Notification, PointTransaction, LeaderboardEntry, LeaveType, EmployeeLeave, LeaveQuotaInfo } from "../types";
 
 export interface IAuthService {
   login(email: string, password: string): Promise<{ success: boolean; user?: User; error?: string }>;
@@ -265,6 +265,46 @@ export interface IManagerService {
     deletedCount?: number;
     error?: string;
   }>;
+
+  getEmployeeLeaveQuota(params: {
+    userId: string;
+    branchId?: string;
+  }): Promise<{ success: boolean; quota?: LeaveQuotaInfo; error?: string }>;
+
+  requestEmployeeLeave(params: {
+    userId: string;
+    branchId: string;
+    leaveType: LeaveType;
+    startDate: string;
+    endDate: string;
+    reason: string;
+    requestedBy: string;
+    preserveStreak?: boolean;
+    isManagerRole?: boolean;
+  }): Promise<{ success: boolean; leave?: EmployeeLeave; autoApproved?: boolean; error?: string }>;
+
+  approveEmployeeLeave(params: {
+    leaveId: string;
+    approvedBy: string;
+    leaveType?: LeaveType;
+    preserveStreak?: boolean;
+  }): Promise<{ success: boolean; leave?: EmployeeLeave; error?: string }>;
+
+  rejectEmployeeLeave(params: {
+    leaveId: string;
+    rejectedBy: string;
+    reason?: string;
+  }): Promise<{ success: boolean; error?: string }>;
+
+  updateEmployeeLeaveQuota(params: {
+    userId: string;
+    quota: number | null;
+  }): Promise<{ success: boolean; error?: string }>;
+
+  updateBranchLeaveQuota(params: {
+    branchId: string;
+    quota: number;
+  }): Promise<{ success: boolean; error?: string }>;
 }
 
 export interface IBranchService {
@@ -284,6 +324,7 @@ export interface IBranchService {
   createBranch(name: string): Promise<{ success: boolean; error?: string }>;
   assignStaffToBranch(branchId: string, userIds: string[]): Promise<{ success: boolean; error?: string }>;
   assignTasksToBranch(branchId: string, taskIds: string[]): Promise<{ success: boolean; error?: string }>;
+  updateBranchLeaveQuota(branchId: string, quota: number): Promise<{ success: boolean; error?: string }>;
   invalidateCache(): void;
 }
 

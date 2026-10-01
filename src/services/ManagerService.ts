@@ -1,7 +1,7 @@
 import { eq, and, gte, lte, lt, desc, inArray, sql } from "drizzle-orm";
 import { tasks, taskWork, shiftSession, users, branches, employeeLeaves } from "../db/schema";
 import { IManagerService, IPointService, INotificationService, BranchEmployeeStatus } from "./types";
-import { ShiftType, Role, LeaveType, EmployeeLeave } from "../types";
+import { ShiftType, Role, LeaveType, EmployeeLeave, LeaveQuotaInfo } from "../types";
 import { isPaidLeave, getLeaveTypeLabel } from "../utils/leave";
 
 export interface ManagerShiftSummary {
@@ -954,6 +954,9 @@ export class ManagerService implements IManagerService {
           preserve_streak: preserveStreak,
           previous_streak: previousStreak,
           recorded_by: recordedBy,
+          status: "approved",
+          approved_by: recordedBy,
+          approved_at: new Date(),
           created_at: new Date(),
           updated_at: new Date(),
         })
@@ -994,6 +997,10 @@ export class ManagerService implements IManagerService {
         recordedBy: newLeave.recorded_by,
         recordedByName: recorder?.name || "ผู้จัดการ",
         recordedByRole: recorder?.role as Role,
+        status: (newLeave.status as "pending" | "approved" | "rejected") || "approved",
+        approvedBy: newLeave.approved_by || recordedBy,
+        approvedByName: recorder?.name || "ผู้จัดการ",
+        approvedAt: newLeave.approved_at ? new Date(newLeave.approved_at).toISOString() : new Date().toISOString(),
         createdAt: newLeave.created_at ? new Date(newLeave.created_at).toISOString() : new Date().toISOString(),
         updatedAt: newLeave.updated_at ? new Date(newLeave.updated_at).toISOString() : undefined,
       };
@@ -1040,6 +1047,7 @@ export class ManagerService implements IManagerService {
         new Set([
           ...rawLeaves.map((l: { user_id: string }) => l.user_id),
           ...rawLeaves.map((l: { recorded_by: string }) => l.recorded_by),
+          ...rawLeaves.map((l: { approved_by?: string | null }) => l.approved_by).filter((id: string | null | undefined): id is string => Boolean(id)),
         ])
       );
 
@@ -1059,6 +1067,7 @@ export class ManagerService implements IManagerService {
       const leaves: EmployeeLeave[] = rawLeaves.map((l: typeof employeeLeaves.$inferSelect) => {
         const emp = userMap.get(l.user_id);
         const rec = userMap.get(l.recorded_by);
+        const app = l.approved_by ? userMap.get(l.approved_by) : undefined;
         return {
           id: l.id,
           userId: l.user_id,
@@ -1075,6 +1084,10 @@ export class ManagerService implements IManagerService {
           recordedBy: l.recorded_by,
           recordedByName: rec?.name || "ผู้จัดการ",
           recordedByRole: rec?.role as Role,
+          status: (l.status as "pending" | "approved" | "rejected") || "approved",
+          approvedBy: l.approved_by || undefined,
+          approvedByName: app?.name || undefined,
+          approvedAt: l.approved_at ? new Date(l.approved_at).toISOString() : undefined,
           createdAt: l.created_at ? new Date(l.created_at).toISOString() : new Date().toISOString(),
           updatedAt: l.updated_at ? new Date(l.updated_at).toISOString() : undefined,
         };
@@ -1168,6 +1181,403 @@ export class ManagerService implements IManagerService {
       console.error("ManagerService.cleanupOldLeaves error:", err);
       const message = err instanceof Error ? err.message : "เกิดข้อผิดพลาดในการล้างข้อมูลการลาเก่า";
       return { success: false, error: message };
+    }
+  }
+
+  async getEmployeeLeaveQuota(params: {
+    userId: string;
+    branchId?: string;
+  }): Promise<{ success: boolean; quota?: LeaveQuotaInfo; error?: string }> {
+    try {
+      const { userId } = params;
+      if (!userId) return { success: false, error: "ไม่พบรหัสผู้ใช้" };
+
+      const [targetUser] = await this.db.select().from(users).where(eq(users.id, userId)).limit(1);
+      if (!targetUser) return { success: false, error: "ไม่พบข้อมูลผู้ใช้" };
+
+      let branchRecord: any = null;
+      let branchId = params.branchId;
+
+      if (branchId) {
+        const [b] = await this.db.select().from(branches).where(eq(branches.id, branchId)).limit(1);
+        branchRecord = b;
+      } else {
+        const allBranches = await this.db.select().from(branches);
+        branchRecord = allBranches.find((b: any) => b.members?.includes(userId));
+        branchId = branchRecord?.id;
+      }
+
+      const branchDefaultQuota = typeof branchRecord?.leave_quota === "number" ? branchRecord.leave_quota : 30;
+      const customQuota = typeof targetUser.leave_quota === "number" ? targetUser.leave_quota : null;
+      const allocatedQuota = customQuota !== null ? customQuota : branchDefaultQuota;
+
+      const currentYearStr = new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Bangkok", year: "numeric" }).format(new Date());
+      const userLeaves = await this.db
+        .select()
+        .from(employeeLeaves)
+        .where(eq(employeeLeaves.user_id, userId));
+
+      const calcDays = (start: string, end: string) => {
+        try {
+          const s = new Date(start).getTime();
+          const e = new Date(end).getTime();
+          if (isNaN(s) || isNaN(e)) return 1;
+          const diffDays = Math.round((e - s) / 86400000);
+          return Math.max(1, diffDays + 1);
+        } catch {
+          return 1;
+        }
+      };
+
+      let usedDays = 0;
+      let pendingDays = 0;
+
+      for (const l of userLeaves) {
+        if (l.start_date?.startsWith(currentYearStr) || l.end_date?.startsWith(currentYearStr)) {
+          const days = calcDays(l.start_date, l.end_date);
+          const st = l.status || "approved";
+          if (st === "approved") {
+            usedDays += days;
+          } else if (st === "pending") {
+            pendingDays += days;
+          }
+        }
+      }
+
+      const remainingDays = Math.max(0, allocatedQuota - usedDays - pendingDays);
+
+      return {
+        success: true,
+        quota: {
+          userId,
+          branchId,
+          allocatedQuota,
+          branchDefaultQuota,
+          customQuota,
+          usedDays,
+          pendingDays,
+          remainingDays,
+        },
+      };
+    } catch (err: unknown) {
+      console.error("ManagerService.getEmployeeLeaveQuota error:", err);
+      return { success: false, error: "ไม่สามารถคำนวณโควตาการลาได้" };
+    }
+  }
+
+  async requestEmployeeLeave(params: {
+    userId: string;
+    branchId: string;
+    leaveType: LeaveType;
+    startDate: string;
+    endDate: string;
+    reason: string;
+    requestedBy: string;
+    preserveStreak?: boolean;
+    isManagerRole?: boolean;
+  }): Promise<{ success: boolean; leave?: EmployeeLeave; autoApproved?: boolean; error?: string }> {
+    try {
+      const { userId, branchId, leaveType, startDate, endDate, reason, requestedBy, preserveStreak = true } = params;
+      if (!userId || !branchId || !leaveType || !startDate || !endDate || !reason?.trim() || !requestedBy) {
+        return { success: false, error: "กรุณากรอกข้อมูลการลาและเหตุผลให้ครบถ้วน" };
+      }
+      if (startDate > endDate) {
+        return { success: false, error: "วันที่เริ่มต้นต้องไม่มากกว่าวันที่สิ้นสุด" };
+      }
+
+      // Check quota
+      const quotaRes = await this.getEmployeeLeaveQuota({ userId, branchId });
+      if (quotaRes.success && quotaRes.quota) {
+        if (quotaRes.quota.remainingDays <= 0) {
+          return {
+            success: false,
+            error: `โควตาการลาของคุณหมดแล้ว (ใช้ไปแล้ว ${quotaRes.quota.usedDays}/${quotaRes.quota.allocatedQuota} วัน)`,
+          };
+        }
+      }
+
+      const [targetUser] = await this.db.select().from(users).where(eq(users.id, userId)).limit(1);
+      if (!targetUser) return { success: false, error: "ไม่พบข้อมูลพนักงาน" };
+      const [requester] = await this.db.select().from(users).where(eq(users.id, requestedBy)).limit(1);
+      const [branch] = await this.db.select().from(branches).where(eq(branches.id, branchId)).limit(1);
+
+      // Determine if manager requested -> auto confirm
+      const isManagerOrAdmin =
+        params.isManagerRole ||
+        requester?.role === "manager" ||
+        requester?.role === "manager_assistant" ||
+        requester?.role === "general_manager" ||
+        requester?.role === "committee" ||
+        requester?.role === "admin";
+
+      const isEmployeeSelf = userId === requestedBy && requester?.role === "employee";
+      const autoApproved = !isEmployeeSelf || isManagerOrAdmin;
+      const initialStatus = autoApproved ? "approved" : "pending";
+
+      const previousStreak = targetUser.point_streak ?? 0;
+
+      if (autoApproved && !preserveStreak) {
+        await this.db
+          .update(users)
+          .set({ point_streak: 0, point_streak_type: "none" })
+          .where(eq(users.id, userId));
+      }
+
+      const [newLeave] = await this.db
+        .insert(employeeLeaves)
+        .values({
+          user_id: userId,
+          branch_id: branchId,
+          leave_type: leaveType,
+          start_date: startDate,
+          end_date: endDate,
+          reason: reason.trim(),
+          preserve_streak: preserveStreak,
+          previous_streak: previousStreak,
+          recorded_by: requestedBy,
+          status: initialStatus,
+          approved_by: autoApproved ? requestedBy : null,
+          approved_at: autoApproved ? new Date() : null,
+          created_at: new Date(),
+          updated_at: new Date(),
+        })
+        .returning();
+
+      // Notifications
+      if (this.notificationService) {
+        const leaveTypeName = isPaidLeave(leaveType) ? "ลาเเบบได้เงิน" : "ลาเเบบไม่ได้รับเงิน";
+        const dateDesc = startDate === endDate ? startDate : `${startDate} ถึง ${endDate}`;
+
+        if (autoApproved) {
+          await this.notificationService.createNotification({
+            recipientId: userId,
+            branchId,
+            title: `📋 บันทึก${leaveTypeName} สำเร็จ`,
+            message: `การลาของคุณวันที่ ${dateDesc} ได้รับการอนุมัติแล้ว`,
+            type: "system",
+          });
+        } else {
+          // Notify branch managers & assistant managers
+          await this.notificationService.createNotification({
+            recipientRole: "manager",
+            branchId,
+            title: `📩 มีคำขอลางานใหม่`,
+            message: `พนักงาน ${targetUser.name} ได้ส่งคำขอ${leaveTypeName} วันที่ ${dateDesc}: "${reason.trim()}" รอการอนุมัติ`,
+            type: "system",
+          });
+          await this.notificationService.createNotification({
+            recipientRole: "manager_assistant",
+            branchId,
+            title: `📩 มีคำขอลางานใหม่`,
+            message: `พนักงาน ${targetUser.name} ได้ส่งคำขอ${leaveTypeName} วันที่ ${dateDesc}: "${reason.trim()}" รอการอนุมัติ`,
+            type: "system",
+          });
+        }
+      }
+
+      const createdLeave: EmployeeLeave = {
+        id: newLeave.id,
+        userId: newLeave.user_id,
+        userName: targetUser?.name || "พนักงาน",
+        userPosition: targetUser?.role === "manager_assistant" ? "ผู้ช่วยผู้จัดการร้าน" : "พนักงานประจำสาขา",
+        branchId: newLeave.branch_id,
+        branchName: branch?.name,
+        leaveType: newLeave.leave_type as LeaveType,
+        startDate: newLeave.start_date,
+        endDate: newLeave.end_date,
+        reason: newLeave.reason,
+        preserveStreak: newLeave.preserve_streak ?? true,
+        previousStreak: newLeave.previous_streak ?? undefined,
+        recordedBy: newLeave.recorded_by,
+        recordedByName: requester?.name || "ผู้จัดการ",
+        recordedByRole: requester?.role as Role,
+        status: newLeave.status as "pending" | "approved" | "rejected",
+        approvedBy: newLeave.approved_by || undefined,
+        approvedByName: autoApproved ? (requester?.name || "ผู้จัดการ") : undefined,
+        approvedAt: newLeave.approved_at ? new Date(newLeave.approved_at).toISOString() : undefined,
+        createdAt: newLeave.created_at ? new Date(newLeave.created_at).toISOString() : new Date().toISOString(),
+        updatedAt: newLeave.updated_at ? new Date(newLeave.updated_at).toISOString() : undefined,
+      };
+
+      return {
+        success: true,
+        leave: createdLeave,
+        autoApproved,
+      };
+    } catch (err: unknown) {
+      console.error("ManagerService.requestEmployeeLeave error:", err);
+      const message = err instanceof Error ? err.message : "ไม่สามารถส่งคำขอลางานได้";
+      return { success: false, error: message };
+    }
+  }
+
+  async approveEmployeeLeave(params: {
+    leaveId: string;
+    approvedBy: string;
+    leaveType?: LeaveType;
+    preserveStreak?: boolean;
+  }): Promise<{ success: boolean; leave?: EmployeeLeave; error?: string }> {
+    try {
+      const { leaveId, approvedBy, leaveType, preserveStreak } = params;
+      if (!leaveId || !approvedBy) return { success: false, error: "ข้อมูลไม่ครบถ้วน" };
+
+      const [existingLeave] = await this.db.select().from(employeeLeaves).where(eq(employeeLeaves.id, leaveId)).limit(1);
+      if (!existingLeave) return { success: false, error: "ไม่พบรายการขอลางาน" };
+
+      const [approver] = await this.db.select().from(users).where(eq(users.id, approvedBy)).limit(1);
+      const [targetUser] = await this.db.select().from(users).where(eq(users.id, existingLeave.user_id)).limit(1);
+
+      const finalPreserveStreak = preserveStreak !== undefined ? preserveStreak : existingLeave.preserve_streak;
+      const finalLeaveType = leaveType || existingLeave.leave_type;
+
+      if (!finalPreserveStreak) {
+        await this.db
+          .update(users)
+          .set({ point_streak: 0, point_streak_type: "none" })
+          .where(eq(users.id, existingLeave.user_id));
+      }
+
+      const [updatedLeave] = await this.db
+        .update(employeeLeaves)
+        .set({
+          status: "approved",
+          approved_by: approvedBy,
+          approved_at: new Date(),
+          leave_type: finalLeaveType,
+          preserve_streak: finalPreserveStreak,
+          updated_at: new Date(),
+        })
+        .where(eq(employeeLeaves.id, leaveId))
+        .returning();
+
+      if (this.notificationService) {
+        const leaveTypeName = isPaidLeave(finalLeaveType as LeaveType) ? "ลาเเบบได้เงิน" : "ลาเเบบไม่ได้รับเงิน";
+        const dateDesc = existingLeave.start_date === existingLeave.end_date
+          ? existingLeave.start_date
+          : `${existingLeave.start_date} ถึง ${existingLeave.end_date}`;
+        await this.notificationService.createNotification({
+          recipientId: existingLeave.user_id,
+          branchId: existingLeave.branch_id,
+          title: `✅ คำขอลางานได้รับการอนุมัติ`,
+          message: `ผู้บริหาร (${approver?.name || "ผู้จัดการ"}) ได้อนุมัติ${leaveTypeName} วันที่ ${dateDesc} เรียบร้อยแล้ว`,
+          type: "system",
+        });
+      }
+
+      return {
+        success: true,
+        leave: {
+          id: updatedLeave.id,
+          userId: updatedLeave.user_id,
+          userName: targetUser?.name || "พนักงาน",
+          branchId: updatedLeave.branch_id,
+          leaveType: updatedLeave.leave_type as LeaveType,
+          startDate: updatedLeave.start_date,
+          endDate: updatedLeave.end_date,
+          reason: updatedLeave.reason,
+          preserveStreak: updatedLeave.preserve_streak ?? true,
+          previousStreak: updatedLeave.previous_streak ?? undefined,
+          recordedBy: updatedLeave.recorded_by,
+          status: "approved",
+          approvedBy: updatedLeave.approved_by || undefined,
+          approvedByName: approver?.name || "ผู้จัดการ",
+          approvedAt: updatedLeave.approved_at ? new Date(updatedLeave.approved_at).toISOString() : undefined,
+          createdAt: updatedLeave.created_at ? new Date(updatedLeave.created_at).toISOString() : new Date().toISOString(),
+          updatedAt: updatedLeave.updated_at ? new Date(updatedLeave.updated_at).toISOString() : undefined,
+        },
+      };
+    } catch (err: unknown) {
+      console.error("ManagerService.approveEmployeeLeave error:", err);
+      const message = err instanceof Error ? err.message : "ไม่สามารถอนุมัติการลาได้";
+      return { success: false, error: message };
+    }
+  }
+
+  async rejectEmployeeLeave(params: {
+    leaveId: string;
+    rejectedBy: string;
+    reason?: string;
+  }): Promise<{ success: boolean; error?: string }> {
+    try {
+      const { leaveId, rejectedBy, reason } = params;
+      if (!leaveId || !rejectedBy) return { success: false, error: "ข้อมูลไม่ครบถ้วน" };
+
+      const [existingLeave] = await this.db.select().from(employeeLeaves).where(eq(employeeLeaves.id, leaveId)).limit(1);
+      if (!existingLeave) return { success: false, error: "ไม่พบรายการขอลางาน" };
+
+      const [rejecter] = await this.db.select().from(users).where(eq(users.id, rejectedBy)).limit(1);
+
+      await this.db
+        .update(employeeLeaves)
+        .set({
+          status: "rejected",
+          updated_at: new Date(),
+        })
+        .where(eq(employeeLeaves.id, leaveId));
+
+      if (this.notificationService) {
+        const dateDesc = existingLeave.start_date === existingLeave.end_date
+          ? existingLeave.start_date
+          : `${existingLeave.start_date} ถึง ${existingLeave.end_date}`;
+        await this.notificationService.createNotification({
+          recipientId: existingLeave.user_id,
+          branchId: existingLeave.branch_id,
+          title: `❌ คำขอลางานไม่ได้รับการอนุมัติ`,
+          message: `ผู้บริหาร (${rejecter?.name || "ผู้จัดการ"}) ไม่อนุมัติคำขอลางาน วันที่ ${dateDesc}${reason ? `: ${reason}` : ""}`,
+          type: "system",
+        });
+      }
+
+      return { success: true };
+    } catch (err: unknown) {
+      console.error("ManagerService.rejectEmployeeLeave error:", err);
+      const message = err instanceof Error ? err.message : "ไม่สามารถปฏิเสธการลาได้";
+      return { success: false, error: message };
+    }
+  }
+
+  async updateEmployeeLeaveQuota(params: {
+    userId: string;
+    quota: number | null;
+  }): Promise<{ success: boolean; error?: string }> {
+    try {
+      const { userId, quota } = params;
+      if (!userId) return { success: false, error: "ไม่พบรหัสผู้ใช้" };
+
+      const cleanQuota = quota === null ? null : Math.max(0, Math.floor(quota));
+      await this.db
+        .update(users)
+        .set({ leave_quota: cleanQuota })
+        .where(eq(users.id, userId));
+
+      return { success: true };
+    } catch (err: unknown) {
+      console.error("ManagerService.updateEmployeeLeaveQuota error:", err);
+      return { success: false, error: "ไม่สามารถอัปเดตโควตาการลาของพนักงานได้" };
+    }
+  }
+
+  async updateBranchLeaveQuota(params: {
+    branchId: string;
+    quota: number;
+  }): Promise<{ success: boolean; error?: string }> {
+    try {
+      const { branchId, quota } = params;
+      if (!branchId) return { success: false, error: "ไม่พบรหัสสาขา" };
+
+      const cleanQuota = Math.max(0, Math.floor(quota));
+      await this.db
+        .update(branches)
+        .set({
+          leave_quota: cleanQuota,
+          last_update: new Date(),
+        })
+        .where(eq(branches.id, branchId));
+
+      return { success: true };
+    } catch (err: unknown) {
+      console.error("ManagerService.updateBranchLeaveQuota error:", err);
+      return { success: false, error: "ไม่สามารถอัปเดตโควตาการลาของสาขาได้" };
     }
   }
 }
