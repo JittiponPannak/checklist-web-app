@@ -411,13 +411,24 @@ export function PointStreakBadge() {
             )}
 
             {/* Footer */}
-            <div className="p-3.5 bg-[var(--color-surface-2)] border-t border-[var(--color-border)] text-center">
+            <div className="p-3.5 bg-[var(--color-surface-2)] border-t border-[var(--color-border)] flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsModalOpen(false);
+                  window.dispatchEvent(new CustomEvent("open-weekly-leaderboard"));
+                }}
+                className="flex-1 py-2.5 px-3 bg-amber-500/15 hover:bg-amber-500/25 text-amber-900 dark:text-amber-200 border border-amber-500/30 font-bold text-xs rounded-xl transition-all cursor-pointer shadow-xs flex items-center justify-center gap-1.5"
+                title="เปิดดูสรุปอันดับต้นสัปดาห์และเอฟเฟกต์พลุฉลอง"
+              >
+                <span>🏆 สรุปอันดับต้นสัปดาห์ (ดูพลุ)</span>
+              </button>
               <button
                 type="button"
                 onClick={() => setIsModalOpen(false)}
-                className="w-full py-2.5 bg-[var(--color-brown)] hover:bg-[var(--color-brown-light)] text-amber-100 font-bold text-xs rounded-xl transition-colors cursor-pointer shadow-sm"
+                className="px-4 py-2.5 bg-[var(--color-brown)] hover:bg-[var(--color-brown-light)] text-amber-100 font-bold text-xs rounded-xl transition-colors cursor-pointer shadow-sm"
               >
-                ปิดหน้าต่าง
+                ปิด
               </button>
             </div>
           </div>

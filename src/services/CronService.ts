@@ -6,6 +6,7 @@ import {
   IChecklistService,
   IManagerService,
   IRefrigeratorService,
+  IPointService,
 } from "./types";
 
 const DEFAULT_CRON_JOBS: CronSetting[] = [
@@ -40,6 +41,23 @@ const DEFAULT_CRON_JOBS: CronSetting[] = [
     last_run_message: null,
   },
   {
+    id: "reset-scores",
+    name: "รีเซ็ตคะแนนพนักงานประจำเดือน (Monthly Employee Score Reset)",
+    description: "รีเซ็ตคะแนนสะสมของพนักงานให้เริ่มต้นใหม่ทุกวันแรกของเดือน เพื่อเริ่มรอบคะแนนและแข่งขันในตารางคะแนน (Leaderboard) ประจำเดือนใหม่",
+    schedule_cron: "0 0 1 * *",
+    schedule_description: "วันที่ 1 ของทุกเดือน เวลา 07:00 น.",
+    enabled: true,
+    config: {
+      resetRoles: ["employee"],
+      recordTransaction: true,
+      notifyEmployees: true,
+      resetStreaks: false,
+    },
+    last_run_at: null,
+    last_run_status: null,
+    last_run_message: null,
+  },
+  {
     id: "cleanup-data",
     name: "ล้างข้อมูลประวัติและบันทึกเก่า (Data Retention Cleanup)",
     description: "ลบประวัติงาน กะ และข้อมูลการดำเนินงานที่เก่ากว่ากำหนดโดยอัตโนมัติ เพื่อรักษาประสิทธิภาพของระบบ",
@@ -66,7 +84,8 @@ export class CronService implements ICronService {
     private db: any,
     private checklistService?: IChecklistService,
     private managerService?: IManagerService,
-    private refrigeratorService?: IRefrigeratorService
+    private refrigeratorService?: IRefrigeratorService,
+    private pointService?: IPointService
   ) {}
 
   async getAllSettings(): Promise<CronSetting[]> {
@@ -93,11 +112,45 @@ export class CronService implements ICronService {
         return DEFAULT_CRON_JOBS;
       }
 
-      // Maintain consistent ordering: end-shifts -> daily-refrigerators -> cleanup-data
+      // Ensure any newly added DEFAULT_CRON_JOBS exist in DB
+      for (const defaultJob of DEFAULT_CRON_JOBS) {
+        const found = records.find((r: typeof cronSettings.$inferSelect) => r.id === defaultJob.id);
+        if (!found) {
+          try {
+            await this.db.insert(cronSettings).values({
+              id: defaultJob.id,
+              name: defaultJob.name,
+              description: defaultJob.description,
+              schedule_cron: defaultJob.schedule_cron,
+              schedule_description: defaultJob.schedule_description,
+              enabled: defaultJob.enabled,
+              config: defaultJob.config,
+            });
+            records.push({
+              id: defaultJob.id,
+              name: defaultJob.name,
+              description: defaultJob.description,
+              schedule_cron: defaultJob.schedule_cron,
+              schedule_description: defaultJob.schedule_description,
+              enabled: defaultJob.enabled,
+              config: defaultJob.config,
+              last_run_at: null,
+              last_run_status: null,
+              last_run_message: null,
+              updated_at: new Date(),
+            });
+          } catch {
+            // Ignore insert conflicts
+          }
+        }
+      }
+
+      // Maintain consistent ordering: end-shifts -> daily-refrigerators -> reset-scores -> cleanup-data
       const orderMap: Record<string, number> = {
         "end-shifts": 1,
         "daily-refrigerators": 2,
-        "cleanup-data": 3,
+        "reset-scores": 3,
+        "cleanup-data": 4,
       };
 
       const mapped: CronSetting[] = records.map((r: typeof cronSettings.$inferSelect) => ({
@@ -331,6 +384,41 @@ export class CronService implements ICronService {
         }
 
         const summaryMsg = `ประมวลผลงานตู้แช่สำเร็จ: สร้างงานตรวจใหม่ ${res.totalNewTasksCreated} งาน, ทำเครื่องหมายตู้ขาดตรวจ ${res.totalMissedTasksMarked} ตู้ (ครอบคลุม ${res.processedBranches} สาขา)`;
+
+        await this.recordExecution(id, {
+          status: "success",
+          message: summaryMsg,
+        });
+
+        return {
+          success: true,
+          result: res,
+          message: summaryMsg,
+        };
+      }
+
+      if (id === "reset-scores") {
+        if (!this.pointService) {
+          throw new Error("PointService is not configured in CronService");
+        }
+
+        const resetRoles = (mergedConfig.resetRoles as string[]) || ["employee"];
+        const recordTransaction = mergedConfig.recordTransaction !== false;
+        const notifyEmployees = mergedConfig.notifyEmployees !== false;
+        const resetStreaks = Boolean(mergedConfig.resetStreaks);
+
+        const res = await this.pointService.resetEmployeeScores({
+          resetRoles,
+          recordTransaction,
+          notifyEmployees,
+          resetStreaks,
+        });
+
+        if (!res.success) {
+          throw new Error(res.error || "เกิดข้อผิดพลาดในการรีเซ็ตคะแนนพนักงานประจำเดือน");
+        }
+
+        const summaryMsg = `รีเซ็ตคะแนนประจำเดือนสำเร็จ: พนักงานที่ได้รับผลกระทบ ${res.affectedUsersCount} คน (ล้างคะแนนสะสมรวม ${res.totalPointsReset} แต้ม, สตรีค: ${resetStreaks ? "รีเซ็ต" : "คงเดิม"})`;
 
         await this.recordExecution(id, {
           status: "success",

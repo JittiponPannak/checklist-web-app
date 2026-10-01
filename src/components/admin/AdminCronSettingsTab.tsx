@@ -21,8 +21,9 @@ import {
   CalendarClock,
   ShieldCheck,
   ChevronRight,
+  Award,
 } from "lucide-react";
-import { CronSetting, CleanupDataConfig, EndShiftsConfig, DailyRefrigeratorsConfig } from "../../services/types";
+import { CronSetting, CleanupDataConfig, EndShiftsConfig, DailyRefrigeratorsConfig, ResetScoresConfig } from "../../services/types";
 import {
   getCronSettingsAction,
   updateCronSettingAction,
@@ -274,11 +275,14 @@ export function AdminCronSettingsTab({ showToast }: AdminCronSettingsTabProps) {
                           ? "bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200"
                           : job.id === "daily-refrigerators"
                           ? "bg-cyan-100 text-cyan-900 dark:bg-cyan-950 dark:text-cyan-200"
+                          : job.id === "reset-scores"
+                          ? "bg-purple-100 text-purple-900 dark:bg-purple-950 dark:text-purple-200"
                           : "bg-rose-100 text-rose-900 dark:bg-rose-950 dark:text-rose-200"
                       }`}
                     >
                       {job.id === "end-shifts" && <Moon size={22} />}
                       {job.id === "daily-refrigerators" && <Snowflake size={22} />}
+                      {job.id === "reset-scores" && <Award size={22} />}
                       {job.id === "cleanup-data" && <Trash2 size={22} />}
                     </div>
 
@@ -513,6 +517,136 @@ export function AdminCronSettingsTab({ showToast }: AdminCronSettingsTabProps) {
                             </label>
                           ))}
                         </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Case 4: reset-scores */}
+                  {job.id === "reset-scores" && (
+                    <div className="space-y-4">
+                      {/* Target Roles & Scope */}
+                      <div className="p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-2)]/60 space-y-3">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                          <span className="text-xs font-bold text-[var(--color-text)] flex items-center gap-1.5">
+                            <Award size={14} className="text-purple-600 dark:text-purple-400" />
+                            ขอบเขตบทบาทที่จะรีเซ็ตคะแนน (Target Roles)
+                          </span>
+                          <span className="text-xs font-mono font-bold text-purple-700 dark:text-purple-400">
+                            {((draft.config as unknown as Partial<ResetScoresConfig>)?.resetRoles || ["employee"]).includes("manager_assistant")
+                              ? "พนักงาน และ ผู้ช่วย ผจก."
+                              : "เฉพาะพนักงานทั่วไป (Employee)"}
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                          <label className="flex items-start gap-3 p-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] hover:bg-[var(--color-surface-2)] transition-all cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={((draft.config as unknown as Partial<ResetScoresConfig>)?.resetRoles || ["employee"]).includes("employee")}
+                              onChange={(e) => {
+                                const currentRoles = (draft.config as unknown as Partial<ResetScoresConfig>)?.resetRoles || ["employee"];
+                                const newRoles = e.target.checked
+                                  ? Array.from(new Set([...currentRoles, "employee"]))
+                                  : currentRoles.filter((r) => r !== "employee");
+                                handleConfigChange(job.id, "resetRoles", newRoles);
+                              }}
+                              className="mt-1 h-4 w-4 rounded-sm border-gray-300 text-purple-600 focus:ring-purple-500"
+                            />
+                            <div className="space-y-0.5">
+                              <span className="text-xs font-bold text-[var(--color-text)]">พนักงานทั่วไป (Employee)</span>
+                              <p className="text-[11px] text-[var(--color-text-subtle)] leading-relaxed">
+                                พนักงานประจำสาขา (Cashier, Stock) ที่สะสมคะแนนจากเช็คลิสต์ประจำวัน
+                              </p>
+                            </div>
+                          </label>
+
+                          <label className="flex items-start gap-3 p-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] hover:bg-[var(--color-surface-2)] transition-all cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={((draft.config as unknown as Partial<ResetScoresConfig>)?.resetRoles || ["employee"]).includes("manager_assistant")}
+                              onChange={(e) => {
+                                const currentRoles = (draft.config as unknown as Partial<ResetScoresConfig>)?.resetRoles || ["employee"];
+                                const newRoles = e.target.checked
+                                  ? Array.from(new Set([...currentRoles, "manager_assistant"]))
+                                  : currentRoles.filter((r) => r !== "manager_assistant");
+                                handleConfigChange(job.id, "resetRoles", newRoles);
+                              }}
+                              className="mt-1 h-4 w-4 rounded-sm border-gray-300 text-purple-600 focus:ring-purple-500"
+                            />
+                            <div className="space-y-0.5">
+                              <span className="text-xs font-bold text-[var(--color-text)]">ผู้ช่วยผู้จัดการร้าน (Manager Assistant)</span>
+                              <p className="text-[11px] text-[var(--color-text-subtle)] leading-relaxed">
+                                รวมผู้ช่วยผู้จัดการร้านที่มีการสะสมคะแนนจากการปฏิบัติงาน
+                              </p>
+                            </div>
+                          </label>
+                        </div>
+                      </div>
+
+                      {/* Operation Options */}
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        {/* Transaction Audit */}
+                        <label className="flex items-start gap-3 p-3.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-2)]/60 hover:bg-[var(--color-surface-2)] transition-all cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={(draft.config as unknown as Partial<ResetScoresConfig>)?.recordTransaction !== false}
+                            onChange={(e) =>
+                              handleConfigChange(job.id, "recordTransaction", e.target.checked)
+                            }
+                            className="mt-1 h-4 w-4 rounded-sm border-gray-300 text-purple-600 focus:ring-purple-500"
+                          />
+                          <div className="space-y-0.5">
+                            <span className="text-xs font-bold text-[var(--color-text)] flex items-center gap-1.5">
+                              <ShieldCheck size={13} className="text-purple-600 dark:text-purple-400" />
+                              บันทึกประวัติธุรกรรมแต้ม (Audit Trail)
+                            </span>
+                            <p className="text-[11px] text-[var(--color-text-subtle)] leading-relaxed">
+                              บันทึกรายการล้างคะแนนเดิมลงในตารางประวัติธุรกรรมแต้มเพื่อใช้ตรวจสอบย้อนหลัง
+                            </p>
+                          </div>
+                        </label>
+
+                        {/* Broadcast Notification */}
+                        <label className="flex items-start gap-3 p-3.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-2)]/60 hover:bg-[var(--color-surface-2)] transition-all cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={(draft.config as unknown as Partial<ResetScoresConfig>)?.notifyEmployees !== false}
+                            onChange={(e) =>
+                              handleConfigChange(job.id, "notifyEmployees", e.target.checked)
+                            }
+                            className="mt-1 h-4 w-4 rounded-sm border-gray-300 text-purple-600 focus:ring-purple-500"
+                          />
+                          <div className="space-y-0.5">
+                            <span className="text-xs font-bold text-[var(--color-text)] flex items-center gap-1.5">
+                              <Bell size={13} className="text-purple-600 dark:text-purple-400" />
+                              ส่งแจ้งเตือนเริ่มรอบเดือนใหม่
+                            </span>
+                            <p className="text-[11px] text-[var(--color-text-subtle)] leading-relaxed">
+                              แจ้งเตือนพนักงานทุกคนว่าคะแนนสะสมเริ่มรอบใหม่แล้ว เพื่อกระตุ้นการมีส่วนร่วม
+                            </p>
+                          </div>
+                        </label>
+
+                        {/* Reset Streaks Option */}
+                        <label className="flex items-start gap-3 p-3.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-2)]/60 hover:bg-[var(--color-surface-2)] transition-all cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={Boolean((draft.config as unknown as Partial<ResetScoresConfig>)?.resetStreaks)}
+                            onChange={(e) =>
+                              handleConfigChange(job.id, "resetStreaks", e.target.checked)
+                            }
+                            className="mt-1 h-4 w-4 rounded-sm border-gray-300 text-purple-600 focus:ring-purple-500"
+                          />
+                          <div className="space-y-0.5">
+                            <span className="text-xs font-bold text-[var(--color-text)] flex items-center gap-1.5">
+                              <Activity size={13} className="text-purple-600 dark:text-purple-400" />
+                              รีเซ็ตสตรีคความต่อเนื่อง (Streak)
+                            </span>
+                            <p className="text-[11px] text-[var(--color-text-subtle)] leading-relaxed">
+                              ค่าเริ่มต้นคือปิดไว้ (คงสตรีคไว้เพื่อวัดความต่อเนื่องข้ามเดือน หากเปิดจะล้างสตรีคเป็น 0 ด้วย)
+                            </p>
+                          </div>
+                        </label>
                       </div>
                     </div>
                   )}

@@ -3,10 +3,27 @@ import { tasks, taskWork, shiftSession, users, branches, refrigerators, refriger
 import { IChecklistService, INotificationService } from "./types";
 import { ShiftSession, ShiftType, ChecklistItem } from "../types";
 
+export function isSpecialZeroPointTask(taskName: string): boolean {
+  const lower = (taskName || "").toLowerCase();
+  return (
+    lower.includes("turn off light") ||
+    lower.includes("turn off refriderator") ||
+    lower.includes("turn off refrigerator") ||
+    lower.includes("turn off air conditioning") ||
+    lower.includes("lock the store") ||
+    lower.includes("ปิดไฟส่องสว่าง") ||
+    lower.includes("ปิดไฟตู้แช่") ||
+    lower.includes("ปิดเครื่องปรับอากาศ") ||
+    lower.includes("ปิดแอร์") ||
+    lower.includes("ล็อคประตูร้าน") ||
+    lower.includes("ล็อคร้าน")
+  );
+}
+
 function mapPositionToTaskRole(pos: string): "cashier" | "stock" | "manager_assistant" {
   if (pos.includes("แคชเชียร์") || pos.includes("cashier")) return "cashier";
   if (pos.includes("สต็อก") || pos.includes("stock")) return "stock";
-  if (pos.includes("ผู้ช่วย") || pos.includes("assistant")) return "manager_assistant";
+  if (pos.includes("ผู้ช่วย") || pos.includes("assistant") || pos.includes("ผู้จัดการ") || pos.includes("manager")) return "manager_assistant";
   return "cashier";
 }
 
@@ -51,11 +68,11 @@ export class ChecklistService implements IChecklistService {
 
       let validUserId = userId;
       if (!isValidUuid(userId)) {
-        const targetRole = taskRole === "manager_assistant" ? "manager_assistant" : "employee";
+        const targetRoles = taskRole === "manager_assistant" ? ["manager", "manager_assistant"] : ["employee"];
         const [foundUser] = await this.db
           .select({ id: users.id })
           .from(users)
-          .where(eq(users.role, targetRole))
+          .where(inArray(users.role, targetRoles as any))
           .limit(1);
         if (foundUser) {
           validUserId = foundUser.id;
@@ -266,6 +283,8 @@ export class ChecklistService implements IChecklistService {
           }
         }
 
+        const isSpecial = isSpecialZeroPointTask(t.name);
+
         return {
           id: t.id,
           label: t.name,
@@ -274,6 +293,8 @@ export class ChecklistService implements IChecklistService {
           taskWorkId: work?.id,
           isLate,
           comment: work?.comment ?? null,
+          isSpecial,
+          zeroPoints: isSpecial,
         };
       });
 

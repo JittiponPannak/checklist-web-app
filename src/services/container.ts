@@ -21,7 +21,7 @@ export function createServiceContainer(customDb?: any, customSupabaseClient?: an
   const auth = new AuthService(database, customSupabaseClient);
   const branch = new BranchService(database);
   const refrigerator = new RefrigeratorService(database, notifications);
-  const cron = new CronService(database, checklist, manager, refrigerator);
+  const cron = new CronService(database, checklist, manager, refrigerator, points);
 
   return {
     auth,

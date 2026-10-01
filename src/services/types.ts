@@ -74,6 +74,18 @@ export interface IPointService {
     leaderboard: LeaderboardEntry[];
     error?: string;
   }>;
+
+  resetEmployeeScores(params?: {
+    resetRoles?: string[];
+    recordTransaction?: boolean;
+    notifyEmployees?: boolean;
+    resetStreaks?: boolean;
+  }): Promise<{
+    success: boolean;
+    affectedUsersCount: number;
+    totalPointsReset: number;
+    error?: string;
+  }>;
 }
 
 export interface IChecklistService {
@@ -353,7 +365,7 @@ export interface IRefrigeratorService {
   }>;
 }
 
-export type CronJobId = "cleanup-data" | "end-shifts" | "daily-refrigerators";
+export type CronJobId = "cleanup-data" | "end-shifts" | "daily-refrigerators" | "reset-scores";
 
 export interface CleanupDataConfig {
   retentionDays: number;
@@ -372,6 +384,13 @@ export interface EndShiftsConfig {
 export interface DailyRefrigeratorsConfig {
   createDailyTasks: boolean;
   markMissedYesterdayTasks: boolean;
+}
+
+export interface ResetScoresConfig {
+  resetRoles: string[];
+  recordTransaction: boolean;
+  notifyEmployees: boolean;
+  resetStreaks: boolean;
 }
 
 export interface CronSetting {

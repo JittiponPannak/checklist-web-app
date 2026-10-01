@@ -50,6 +50,8 @@ export interface ChecklistItem {
   taskWorkId?: string;
   isLate?: boolean;
   comment?: string | null;
+  isSpecial?: boolean;
+  zeroPoints?: boolean;
 }
 
 export interface ShiftSession {

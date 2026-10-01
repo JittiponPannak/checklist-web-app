@@ -796,6 +796,7 @@ export function AdminDashboardView({
                       <th className="py-3.5 px-3">รหัสผ่าน</th>
                       <th className="py-3.5 px-3">บทบาทระบบ (Role)</th>
                       <th className="py-3.5 px-3">ตำแหน่งที่กำหนด</th>
+                      <th className="py-3.5 px-3">คะแนนสะสม (แต้ม)</th>
                       <th className="py-3.5 px-3 text-right">ปรับเปลี่ยนสิทธิ์</th>
                     </tr>
                   </thead>
@@ -841,6 +842,12 @@ export function AdminDashboardView({
                           </span>
                         </td>
                         <td className="py-3.5 px-3 text-[var(--color-text-muted)]">{u.position || "-"}</td>
+                        <td className="py-3.5 px-3">
+                          <span className="font-mono font-bold text-amber-700 dark:text-amber-400">
+                            {u.point ?? 0}
+                          </span>
+                          <span className="text-[10px] text-[var(--color-text-subtle)] ml-1">แต้ม</span>
+                        </td>
                         <td className="py-3.5 px-3 text-right">
                           <select
                             value={u.role}

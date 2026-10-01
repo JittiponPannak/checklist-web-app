@@ -39,6 +39,24 @@ import { BranchLeaveManagementView } from "./BranchLeaveManagementView";
 
 export type ExecutiveRole = "manager_assistant" | "manager" | "committee" | "general_manager";
 
+function isSpecialClosingTask(item: ChecklistItem): boolean {
+  if (item.isSpecial || item.zeroPoints) return true;
+  const lower = (item.label || "").toLowerCase();
+  return (
+    lower.includes("turn off light") ||
+    lower.includes("turn off refriderator") ||
+    lower.includes("turn off refrigerator") ||
+    lower.includes("turn off air conditioning") ||
+    lower.includes("lock the store") ||
+    lower.includes("ปิดไฟส่องสว่าง") ||
+    lower.includes("ปิดไฟตู้แช่") ||
+    lower.includes("ปิดเครื่องปรับอากาศ") ||
+    lower.includes("ปิดแอร์") ||
+    lower.includes("ล็อคประตูร้าน") ||
+    lower.includes("ล็อคร้าน")
+  );
+}
+
 export function ExecutiveDashboard({
   user,
   onLogout,
@@ -308,15 +326,16 @@ export function ExecutiveDashboard({
     fetchSpecificHistoryDate(val);
   };
 
-  // Load assistant manager checklist directly from Supabase DB
+  // Load assistant manager or manager checklist directly from Supabase DB
   const loadAssistantChecklist = useCallback(async (shift: ShiftType, isSilent = false) => {
-    if (currentRole !== "manager_assistant") return;
+    if (currentRole !== "manager_assistant" && currentRole !== "manager") return;
     try {
       if (!isSilent) setIsLoadingChecklist(true);
+      const userPosition = currentRole === "manager" ? "ผู้จัดการร้าน" : "ผู้ช่วยผู้จัดการร้าน";
       const res = await getOrCreateShiftSessionAction({
         userId: user.id,
         userName: user.name,
-        position: "ผู้ช่วยผู้จัดการร้าน",
+        position: userPosition,
         shift: shift,
       });
       if (res.success && res.session) {
@@ -345,7 +364,7 @@ export function ExecutiveDashboard({
   }, [currentRole, user]);
 
   useEffect(() => {
-    if (currentRole === "manager_assistant") {
+    if (currentRole === "manager_assistant" || currentRole === "manager") {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       loadAssistantChecklist(myChecklistShift);
 
@@ -369,7 +388,7 @@ export function ExecutiveDashboard({
       setIsNavbarRefreshing(true);
       await Promise.all([
         loadDbSessions(true),
-        currentRole === "manager_assistant" ? loadAssistantChecklist(myChecklistShift, false) : Promise.resolve(),
+        (currentRole === "manager_assistant" || currentRole === "manager") ? loadAssistantChecklist(myChecklistShift, false) : Promise.resolve(),
         activeTab === "history" ? loadHistorySessions() : Promise.resolve(),
       ]);
       if (typeof window !== "undefined") {
@@ -392,7 +411,7 @@ export function ExecutiveDashboard({
       invalidateBranchCache();
       await Promise.all([
         loadDbSessions(true),
-        currentRole === "manager_assistant" ? loadAssistantChecklist(myChecklistShift, false) : Promise.resolve(),
+        (currentRole === "manager_assistant" || currentRole === "manager") ? loadAssistantChecklist(myChecklistShift, false) : Promise.resolve(),
         activeTab === "history" ? loadHistorySessions() : Promise.resolve(),
       ]);
       if (typeof window !== "undefined") {
@@ -622,7 +641,7 @@ export function ExecutiveDashboard({
       secureRemoveItem("app_manager_read_notifs");
       showToast("รีเซ็ตข้อมูลเช็คลิสต์ประจำวันเรียบร้อยแล้ว ✓");
       await loadDbSessions(true);
-      if (currentRole === "manager_assistant") {
+      if (currentRole === "manager_assistant" || currentRole === "manager") {
         await loadAssistantChecklist(myChecklistShift);
       }
       setShowResetModal(false);
@@ -776,7 +795,7 @@ export function ExecutiveDashboard({
               </Link>
             </div>
 
-            {currentRole === "manager_assistant" && (
+            {(currentRole === "manager_assistant" || currentRole === "manager") && (
               <button
                 type="button"
                 onClick={() => setActiveTab("checklist")}
@@ -786,7 +805,7 @@ export function ExecutiveDashboard({
                   <path d="M9 11l3 3L22 4" />
                   <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
                 </svg>
-                <span>ตรวจเช็คลิสต์ประจำกะ →</span>
+                <span>{currentRole === "manager" ? "ตรวจเช็คลิสต์ผู้จัดการ & ปิดร้าน →" : "ตรวจเช็คลิสต์ประจำกะ →"}</span>
               </button>
             )}
           </div>
@@ -794,7 +813,7 @@ export function ExecutiveDashboard({
 
         {/* ─── Navigation Tabs (Tailored to Executive & Operations) ──────────── */}
         <div className="bg-[var(--color-surface-2)] p-1.5 rounded-2xl border border-[var(--color-border)] shadow-2xs">
-          <div className={`grid ${currentRole === "manager_assistant" ? "grid-cols-2 sm:grid-cols-5" : "grid-cols-2 sm:grid-cols-4"} gap-1`}>
+          <div className={`grid ${(currentRole === "manager_assistant" || currentRole === "manager") ? "grid-cols-2 sm:grid-cols-5" : "grid-cols-2 sm:grid-cols-4"} gap-1`}>
             {[
               {
                 id: "overview" as DashboardTab,
@@ -802,13 +821,13 @@ export function ExecutiveDashboard({
                 Icon: ClipboardCheck,
                 desc: "ตรวจรับรองกะและแจ้งเตือน",
               },
-              ...(currentRole === "manager_assistant"
+              ...(currentRole === "manager_assistant" || currentRole === "manager"
                 ? [
                   {
                     id: "checklist" as DashboardTab,
-                    label: "เช็คลิสต์ตรวจงานของฉัน",
+                    label: currentRole === "manager" ? "เช็คลิสต์ตรวจงานผู้จัดการ" : "เช็คลิสต์ตรวจงานของฉัน",
                     Icon: CheckCircle2,
-                    desc: "บันทึกเช็คลิสต์ประจำกะ",
+                    desc: "บันทึกเช็คลิสต์ประจำกะ & ปิดร้าน",
                   },
                 ]
                 : []),
@@ -1589,19 +1608,25 @@ export function ExecutiveDashboard({
           </div>
         )}
 
-        {/* ─── TAB 2: MY CHECKLIST (ASSISTANT MANAGER ONLY) ─────────────────── */}
-        {activeTab === "checklist" && currentRole === "manager_assistant" && (
+        {/* ─── TAB 2: MY CHECKLIST (MANAGER & ASSISTANT MANAGER) ─────────────────── */}
+        {activeTab === "checklist" && (currentRole === "manager_assistant" || currentRole === "manager") && (
           <div className="space-y-4 animate-fade-in">
             <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-4 sm:p-6 shadow-sm space-y-4 sm:space-y-5">
               {/* Header: Title, Description & Shift Toggle */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[var(--color-border)] pb-4">
                 <div>
                   <h3 className="text-sm sm:text-base font-bold text-[var(--color-text)] flex items-center gap-2">
-                    <roleConfig.Icon size={18} className="text-amber-700 shrink-0" />
-                    <span>เช็คลิสต์ตรวจงานประจำกะ</span>
+                    <CheckCircle2 size={18} className="text-amber-700 shrink-0" />
+                    <span>
+                      {currentRole === "manager"
+                        ? "เช็คลิสต์ตรวจงานผู้จัดการร้าน & ชุดงานพิเศษปิดร้าน"
+                        : "เช็คลิสต์ตรวจงานประจำกะ & ชุดงานพิเศษปิดร้าน"}
+                    </span>
                   </h3>
                   <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
-                    บันทึกผลการตรวจสอบขั้นตอนการปฏิบัติงานของผู้ช่วยผู้จัดการร้าน
+                    {currentRole === "manager"
+                      ? "บันทึกผลการตรวจสอบขั้นตอนการปฏิบัติงานของผู้จัดการร้าน และชุดงานปิดร้าน (Zero Points)"
+                      : "บันทึกผลการตรวจสอบขั้นตอนการปฏิบัติงานของผู้ช่วยผู้จัดการร้าน และชุดงานปิดร้าน (Zero Points)"}
                   </p>
                 </div>
 
@@ -1620,10 +1645,44 @@ export function ExecutiveDashboard({
                           : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
                         }`}
                     >
-                      {sh === "morning" ? "กะเช้า" : "กะบ่าย"}
+                      {sh === "morning" ? "กะเช้า" : "กะบ่าย & ปิดร้าน"}
                     </button>
                   ))}
                 </div>
+              </div>
+
+              {/* Special Store Closing Checklist Notice Banner */}
+              <div className="bg-gradient-to-r from-amber-500/15 via-amber-500/5 to-transparent border border-amber-500/30 rounded-xl p-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div className="flex items-start sm:items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-900 dark:text-amber-300 flex items-center justify-center shrink-0 text-base shadow-2xs">
+                    🛡️
+                  </div>
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-xs sm:text-sm font-bold text-amber-950 dark:text-amber-200">
+                        ชุดงานพิเศษปิดร้าน (สำหรับผู้จัดการ & ผู้ช่วยผู้จัดการร้าน)
+                      </span>
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-400 text-amber-950 shadow-2xs">
+                        ไม่มีคะแนน • 0 Points
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-amber-900/80 dark:text-amber-300/80 mt-0.5">
+                      4 รายการตรวจความปลอดภัย: 1) ปิดไฟ 2) ปิดไฟตู้แช่ 3) ปิดแอร์ 4) ล็อคประตูร้าน • ปฏิบัติงานในกะบ่าย/ปิดร้าน (ไม่นำมาคิดแต้มสะสม)
+                    </p>
+                  </div>
+                </div>
+                {myChecklistShift !== "afternoon" && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMyChecklistShift("afternoon");
+                      loadAssistantChecklist("afternoon");
+                    }}
+                    className="self-end sm:self-center px-3 py-1.5 text-xs font-bold rounded-lg bg-amber-600 hover:bg-amber-700 text-white transition-all cursor-pointer whitespace-nowrap shadow-2xs"
+                  >
+                    ดูกะบ่าย & ปิดร้าน →
+                  </button>
+                )}
               </div>
 
               {isLoadingChecklist ? (
@@ -1832,6 +1891,12 @@ export function ExecutiveDashboard({
                                         {item.category && (
                                           <span className="text-xs font-semibold text-[var(--color-text)] bg-[var(--color-surface-2)] px-1.5 py-0.5 rounded border border-[var(--color-border)]">
                                             {item.category}
+                                          </span>
+                                        )}
+                                        {isSpecialClosingTask(item) && (
+                                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-amber-500/15 text-amber-900 dark:text-amber-300 border border-amber-400/40">
+                                            <span>🛡️ ชุดงานพิเศษปิดร้าน</span>
+                                            <span className="text-[10px] font-mono text-amber-700 dark:text-amber-400 font-semibold">(0 แต้ม / Zero Points)</span>
                                           </span>
                                         )}
                                       </div>
