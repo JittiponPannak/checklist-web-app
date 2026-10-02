@@ -26,6 +26,7 @@ export async function registerAction(data: {
   role?: Role;
   position?: string;
   branchId?: string;
+  leaveQuota?: number | null;
 }): Promise<AuthResponse> {
   const services = getServices();
   return await services.auth.register(data);
@@ -49,4 +50,12 @@ export async function syncOAuthUserAction(userData: {
 }): Promise<AuthResponse> {
   const services = getServices();
   return await services.auth.syncOAuthUser(userData);
+}
+
+export async function updateUserRoleAction(
+  userId: string,
+  role: Role
+): Promise<{ success: boolean; error?: string }> {
+  const services = getServices();
+  return await services.auth.updateUserRole(userId, role);
 }

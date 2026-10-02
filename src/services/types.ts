@@ -9,6 +9,7 @@ export interface IAuthService {
     role?: Role;
     position?: string;
     branchId?: string;
+    leaveQuota?: number | null;
   }): Promise<{ success: boolean; user?: User; error?: string }>;
   getUserById(id: string): Promise<{ success: boolean; user?: User; error?: string }>;
   getAllUsers(): Promise<{ success: boolean; users?: User[]; error?: string }>;
@@ -18,6 +19,7 @@ export interface IAuthService {
     name?: string;
     role?: Role;
   }): Promise<{ success: boolean; user?: User; error?: string }>;
+  updateUserRole(userId: string, role: Role): Promise<{ success: boolean; error?: string }>;
   seedUsersIfEmpty(): Promise<void>;
 }
 
@@ -305,6 +307,12 @@ export interface IManagerService {
     branchId: string;
     quota: number;
   }): Promise<{ success: boolean; error?: string }>;
+
+  getAllUsersLeaveQuotas(): Promise<{
+    success: boolean;
+    quotas?: Record<string, LeaveQuotaInfo>;
+    error?: string;
+  }>;
 }
 
 export interface IBranchService {

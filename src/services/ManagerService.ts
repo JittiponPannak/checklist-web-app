@@ -1580,4 +1580,74 @@ export class ManagerService implements IManagerService {
       return { success: false, error: "ไม่สามารถอัปเดตโควตาการลาของสาขาได้" };
     }
   }
+
+  async getAllUsersLeaveQuotas(): Promise<{
+    success: boolean;
+    quotas?: Record<string, LeaveQuotaInfo>;
+    error?: string;
+  }> {
+    try {
+      const allUsers = await this.db.select().from(users);
+      const allBranches = await this.db.select().from(branches);
+      const allLeaves = await this.db.select().from(employeeLeaves);
+
+      const currentYearStr = new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Bangkok", year: "numeric" }).format(new Date());
+
+      const calcDays = (start: string, end: string) => {
+        try {
+          const s = new Date(start).getTime();
+          const e = new Date(end).getTime();
+          if (isNaN(s) || isNaN(e)) return 1;
+          const diffDays = Math.round((e - s) / 86400000);
+          return Math.max(1, diffDays + 1);
+        } catch {
+          return 1;
+        }
+      };
+
+      const quotaMap: Record<string, LeaveQuotaInfo> = {};
+
+      for (const u of allUsers) {
+        const userBranch = allBranches.find((b: any) => Array.isArray(b.members) && b.members.includes(u.id));
+        const branchDefaultQuota = typeof userBranch?.leave_quota === "number" ? userBranch.leave_quota : 3;
+        const customQuota = typeof u.leave_quota === "number" ? u.leave_quota : null;
+        const allocatedQuota = customQuota !== null ? customQuota : branchDefaultQuota;
+
+        let usedDays = 0;
+        let pendingDays = 0;
+
+        for (const l of allLeaves) {
+          if (l.user_id === u.id) {
+            if (l.start_date?.startsWith(currentYearStr) || l.end_date?.startsWith(currentYearStr)) {
+              const days = calcDays(l.start_date, l.end_date);
+              const st = l.status || "approved";
+              if (st === "approved") {
+                usedDays += days;
+              } else if (st === "pending") {
+                pendingDays += days;
+              }
+            }
+          }
+        }
+
+        const remainingDays = Math.max(0, allocatedQuota - usedDays - pendingDays);
+
+        quotaMap[u.id] = {
+          userId: u.id,
+          branchId: userBranch?.id,
+          allocatedQuota,
+          branchDefaultQuota,
+          customQuota,
+          usedDays,
+          pendingDays,
+          remainingDays,
+        };
+      }
+
+      return { success: true, quotas: quotaMap };
+    } catch (err: unknown) {
+      console.error("ManagerService.getAllUsersLeaveQuotas error:", err);
+      return { success: false, error: "เกิดข้อผิดพลาดในการคำนวณโควตาวันลาของผู้ใช้งาน" };
+    }
+  }
 }

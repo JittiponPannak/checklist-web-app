@@ -121,6 +121,7 @@ export class AuthService implements IAuthService {
     role?: Role;
     position?: string;
     branchId?: string;
+    leaveQuota?: number | null;
   }): Promise<{ success: boolean; user?: User; error?: string }> {
     const cleanName = (data.name || "").trim();
     const cleanUsername = (data.username || "").trim().toLowerCase();
@@ -157,6 +158,7 @@ export class AuthService implements IAuthService {
           username: cleanUsername,
           password: cleanPassword,
           role: dbRole as any,
+          leave_quota: typeof data.leaveQuota === "number" ? Math.max(0, Math.floor(data.leaveQuota)) : null,
           last_login: new Date(),
         })
         .returning();
@@ -198,6 +200,7 @@ export class AuthService implements IAuthService {
         pointStreak: 0,
         pointStreakType: "none",
         longestStreak: 0,
+        leaveQuota: typeof created.leave_quota === "number" ? created.leave_quota : null,
       };
 
       return { success: true, user: userObj };
@@ -288,6 +291,7 @@ export class AuthService implements IAuthService {
           pointStreak: u.point_streak || 0,
           pointStreakType: u.point_streak_type as any,
           longestStreak: u.longest_streak || 0,
+          leaveQuota: typeof u.leave_quota === "number" ? u.leave_quota : null,
         };
       });
 
@@ -347,6 +351,26 @@ export class AuthService implements IAuthService {
     } catch (err: any) {
       console.error("AuthService.syncOAuthUser error:", err);
       return { success: false, error: err?.message || "Failed to sync OAuth user" };
+    }
+  }
+
+  async updateUserRole(userId: string, role: Role): Promise<{ success: boolean; error?: string }> {
+    try {
+      if (!userId) return { success: false, error: "ไม่พบรหัสผู้ใช้" };
+      const validRoles: Role[] = ["admin", "committee", "general_manager", "manager", "manager_assistant", "employee"];
+      if (!validRoles.includes(role)) {
+        return { success: false, error: "บทบาทไม่ถูกต้อง" };
+      }
+
+      await this.db
+        .update(users)
+        .set({ role: role as any })
+        .where(eq(users.id, userId));
+
+      return { success: true };
+    } catch (err: unknown) {
+      console.error("AuthService.updateUserRole error:", err);
+      return { success: false, error: "ไม่สามารถปรับปรุงสิทธิ์ของผู้ใช้ในฐานข้อมูลได้" };
     }
   }
 }

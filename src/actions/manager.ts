@@ -145,4 +145,13 @@ export async function updateBranchLeaveQuotaAction(params: {
   return await services.manager.updateBranchLeaveQuota(params);
 }
 
+export async function getAllUsersLeaveQuotasAction(): Promise<{
+  success: boolean;
+  quotas?: Record<string, LeaveQuotaInfo>;
+  error?: string;
+}> {
+  const services = getServices();
+  return await services.manager.getAllUsersLeaveQuotas();
+}
+
 
