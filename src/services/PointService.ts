@@ -2,6 +2,11 @@ import { eq, desc, sql, inArray } from "drizzle-orm";
 import { users, pointTransactions, shiftSession, taskWork, tasks, branches } from "../db/schema";
 import { IPointService, INotificationService } from "./types";
 import { PointTransaction, LeaderboardEntry, Role } from "../types";
+<<<<<<< Updated upstream
+=======
+import { isSpecialZeroPointTask } from "./ChecklistService";
+import { isValidUuid } from "../utils/validation";
+>>>>>>> Stashed changes
 
 export class PointService implements IPointService {
   constructor(private db: any, private notificationService?: INotificationService) {}
@@ -211,6 +216,18 @@ export class PointService implements IPointService {
     error?: string;
   }> {
     try {
+      if (!isValidUuid(userId)) {
+        return {
+          success: false,
+          points: 0,
+          streak: 0,
+          streakType: "none",
+          longestStreak: 0,
+          transactions: [],
+          error: "ไม่พบผู้ใช้งาน",
+        };
+      }
+
       const [user] = await this.db
         .select()
         .from(users)
