@@ -338,62 +338,6 @@ export function RefrigeratorConfigView({ user }: { user: User }) {
                                             </div>
                                         </div>
 
-                                        {/* Temperature Presets */}
-                                        <div>
-                                            <span className="block font-semibold text-[11px] text-[var(--color-text-muted)] mb-1.5">
-                                                เกณฑ์อุณหภูมิมาตรฐาน (กดเพื่อเลือกด่วน):
-                                            </span>
-                                            <div className="grid grid-cols-2 gap-1.5">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => { setFormMinTemp(0); setFormMaxTemp(4); }}
-                                                    className={`p-2 rounded-xl border text-left transition-all cursor-pointer ${
-                                                        formMinTemp === 0 && formMaxTemp === 4
-                                                            ? "bg-amber-100 dark:bg-amber-950/80 border-amber-400 text-amber-950 dark:text-amber-100 font-bold shadow-2xs"
-                                                            : "bg-[var(--color-surface)] border-[var(--color-border)] hover:border-amber-400 text-[var(--color-text)]"
-                                                    }`}
-                                                >
-                                                    <span className="block text-[11px]">🧊 แช่เย็น</span>
-                                                    <span className="text-[10px] text-[var(--color-text-muted)] font-mono">0°C ~ 4°C</span>
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => { setFormMinTemp(-20); setFormMaxTemp(-15); }}
-                                                    className={`p-2 rounded-xl border text-left transition-all cursor-pointer ${
-                                                        formMinTemp === -20 && formMaxTemp === -15
-                                                            ? "bg-amber-100 dark:bg-amber-950/80 border-amber-400 text-amber-950 dark:text-amber-100 font-bold shadow-2xs"
-                                                            : "bg-[var(--color-surface)] border-[var(--color-border)] hover:border-amber-400 text-[var(--color-text)]"
-                                                    }`}
-                                                >
-                                                    <span className="block text-[11px]">❄️ แช่แข็ง</span>
-                                                    <span className="text-[10px] text-[var(--color-text-muted)] font-mono">-20°C ~ -15°C</span>
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => { setFormMinTemp(-24); setFormMaxTemp(-18); }}
-                                                    className={`p-2 rounded-xl border text-left transition-all cursor-pointer ${
-                                                        formMinTemp === -24 && formMaxTemp === -18
-                                                            ? "bg-amber-100 dark:bg-amber-950/80 border-amber-400 text-amber-950 dark:text-amber-100 font-bold shadow-2xs"
-                                                            : "bg-[var(--color-surface)] border-[var(--color-border)] hover:border-amber-400 text-[var(--color-text)]"
-                                                    }`}
-                                                >
-                                                    <span className="block text-[11px]">🍦 ไอศกรีม</span>
-                                                    <span className="text-[10px] text-[var(--color-text-muted)] font-mono">-24°C ~ -18°C</span>
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => { setFormMinTemp(2); setFormMaxTemp(6); }}
-                                                    className={`p-2 rounded-xl border text-left transition-all cursor-pointer ${
-                                                        formMinTemp === 2 && formMaxTemp === 6
-                                                            ? "bg-amber-100 dark:bg-amber-950/80 border-amber-400 text-amber-950 dark:text-amber-100 font-bold shadow-2xs"
-                                                            : "bg-[var(--color-surface)] border-[var(--color-border)] hover:border-amber-400 text-[var(--color-text)]"
-                                                    }`}
-                                                >
-                                                    <span className="block text-[11px]">🥤 เครื่องดื่ม</span>
-                                                    <span className="text-[10px] text-[var(--color-text-muted)] font-mono">2°C ~ 6°C</span>
-                                                </button>
-                                            </div>
-                                        </div>
 
                                         {/* Maintenance toggle */}
                                         <div className="pt-1">

@@ -136,6 +136,24 @@ export class ChecklistService implements IChecklistService {
         dbTasks = [];
       }
 
+      // Manager role policy: Managers do NOT do regular assistant manager tasks,
+      // ONLY the special store closing tasks (4 safety items).
+      const [userRow] = await this.db
+        .select({ role: users.role })
+        .from(users)
+        .where(eq(users.id, validUserId))
+        .limit(1);
+
+      const isManager =
+        userRow?.role === "manager" ||
+        ((position.includes("ผู้จัดการ") || position.includes("manager")) &&
+          !position.includes("ผู้ช่วย") &&
+          !position.includes("assistant"));
+
+      if (isManager) {
+        dbTasks = dbTasks.filter((t: any) => isSpecialZeroPointTask(t.name));
+      }
+
       const [existingSession] = await this.db
         .select()
         .from(shiftSession)
@@ -427,30 +445,57 @@ export class ChecklistService implements IChecklistService {
     taskId?: string;
     completed: boolean;
     comment?: string;
-  }): Promise<{ success: boolean; completedAt?: string | null; error?: string }> {
+  }): Promise<{ success: boolean; completedAt?: string | null; taskWorkId?: string; error?: string }> {
     try {
       const { taskWorkId, shiftSessionId, taskId, completed, comment } = params;
       const completedAt = completed ? new Date() : null;
 
       let targetShiftSessionId = shiftSessionId;
+      let resolvedTaskWorkId = taskWorkId;
 
       if (taskWorkId && isValidUuid(taskWorkId)) {
-        await this.db
+        const updatedRows = await this.db
           .update(taskWork)
           .set({
             timestamp: completedAt,
             comment: completed ? (comment ?? null) : null,
           })
-          .where(eq(taskWork.id, taskWorkId));
+          .where(eq(taskWork.id, taskWorkId))
+          .returning({ id: taskWork.id, shift_session: taskWork.shift_session });
 
-        if (!targetShiftSessionId) {
-          const [work] = await this.db
-            .select({ shift_session: taskWork.shift_session })
+        if (updatedRows && updatedRows.length > 0) {
+          if (!targetShiftSessionId) {
+            targetShiftSessionId = updatedRows[0].shift_session;
+          }
+          resolvedTaskWorkId = updatedRows[0].id;
+        } else if (shiftSessionId && taskId && isValidUuid(shiftSessionId) && isValidUuid(taskId)) {
+          // If taskWorkId didn't match an existing row, fallback to (shift_session, task)
+          const [existing] = await this.db
+            .select({ id: taskWork.id })
             .from(taskWork)
-            .where(eq(taskWork.id, taskWorkId))
+            .where(and(eq(taskWork.shift_session, shiftSessionId), eq(taskWork.task, taskId)))
             .limit(1);
-          if (work) {
-            targetShiftSessionId = work.shift_session;
+
+          if (existing) {
+            await this.db
+              .update(taskWork)
+              .set({
+                timestamp: completedAt,
+                comment: completed ? (comment ?? null) : null,
+              })
+              .where(eq(taskWork.id, existing.id));
+            resolvedTaskWorkId = existing.id;
+          } else {
+            const [inserted] = await this.db
+              .insert(taskWork)
+              .values({
+                shift_session: shiftSessionId,
+                task: taskId,
+                timestamp: completedAt,
+                comment: completed ? (comment ?? null) : null,
+              })
+              .returning({ id: taskWork.id });
+            resolvedTaskWorkId = inserted?.id;
           }
         }
       } else if (shiftSessionId && taskId && isValidUuid(shiftSessionId) && isValidUuid(taskId)) {
@@ -468,13 +513,18 @@ export class ChecklistService implements IChecklistService {
               comment: completed ? (comment ?? null) : null,
             })
             .where(eq(taskWork.id, existing.id));
+          resolvedTaskWorkId = existing.id;
         } else {
-          await this.db.insert(taskWork).values({
-            shift_session: shiftSessionId,
-            task: taskId,
-            timestamp: completedAt,
-            comment: completed ? (comment ?? null) : null,
-          });
+          const [inserted] = await this.db
+            .insert(taskWork)
+            .values({
+              shift_session: shiftSessionId,
+              task: taskId,
+              timestamp: completedAt,
+              comment: completed ? (comment ?? null) : null,
+            })
+            .returning({ id: taskWork.id });
+          resolvedTaskWorkId = inserted?.id;
         }
       } else {
         return { success: false, error: "ข้อมูลระบุรายการไม่ถูกต้อง" };
@@ -640,7 +690,11 @@ export class ChecklistService implements IChecklistService {
         }
       }
 
-      return { success: true, completedAt: completedAt ? completedAt.toISOString() : null };
+      return {
+        success: true,
+        completedAt: completedAt ? completedAt.toISOString() : null,
+        taskWorkId: resolvedTaskWorkId,
+      };
     } catch (err: any) {
       console.error("ChecklistService.toggleTaskWork error:", err);
       return { success: false, error: err?.message || "เกิดข้อผิดพลาดในการบันทึกสถานะงาน" };
@@ -695,9 +749,21 @@ export class ChecklistService implements IChecklistService {
           )
         );
 
-      const activeTasks = branchTaskIds.length > 0
+      const [sessUser] = await this.db
+        .select({ role: users.role })
+        .from(users)
+        .where(eq(users.id, sess.user))
+        .limit(1);
+
+      const isManagerUser = sessUser?.role === "manager";
+
+      let activeTasks = branchTaskIds.length > 0
         ? dbTasks.filter((t: any) => branchTaskIds.includes(t.id))
         : dbTasks;
+
+      if (isManagerUser && sess.task_role === "manager_assistant") {
+        activeTasks = activeTasks.filter((t: any) => isSpecialZeroPointTask(t.name));
+      }
 
       const works = await this.db
         .select({

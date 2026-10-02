@@ -19,7 +19,7 @@ export async function toggleTaskWorkAction(params: {
   taskId?: string;
   completed: boolean;
   comment?: string;
-}): Promise<{ success: boolean; completedAt?: string | null; error?: string }> {
+}): Promise<{ success: boolean; completedAt?: string | null; taskWorkId?: string; error?: string }> {
   const services = getServices();
   return await services.checklist.toggleTaskWork(params);
 }

@@ -109,8 +109,10 @@ export function ExecutiveDashboard({
   const [shiftQueueTimeFilter, setShiftQueueTimeFilter] = useState<"all" | ShiftType>("all");
   const [historyStatusFilter, setHistoryStatusFilter] = useState<"all" | "pending" | "approved">("all");
 
-  // Checklist for Assistant Manager self-check (connected to Supabase)
-  const [myChecklistShift, setMyChecklistShift] = useState<ShiftType>("morning");
+  // Checklist for Assistant Manager or Manager special closing tasks (connected to Supabase)
+  const [myChecklistShift, setMyChecklistShift] = useState<ShiftType>(() => {
+    return currentRole === "manager" ? "afternoon" : "morning";
+  });
   const [myChecklistItems, setMyChecklistItems] = useState<ChecklistItem[]>([]);
   const [myChecklistFilter, setMyChecklistFilter] = useState<"all" | "pending" | "completed">("all");
   const [assistantSession, setAssistantSession] = useState<ShiftSession | null>(null);
@@ -366,7 +368,10 @@ export function ExecutiveDashboard({
       if (res.success && res.session) {
         setAssistantSession(res.session);
         setMyChecklistItems((prev) => {
-          const fresh = res.session!.items || [];
+          let fresh = res.session!.items || [];
+          if (currentRole === "manager") {
+            fresh = fresh.filter((i) => isSpecialClosingTask(i));
+          }
           const curSig = prev
             .map((i) => `${i.id}:${i.completedAt || ""}:${i.completedByName || ""}:${i.comment || ""}`)
             .join("|");
@@ -843,9 +848,9 @@ export function ExecutiveDashboard({
                 ? [
                   {
                     id: "checklist" as DashboardTab,
-                    label: currentRole === "manager" ? "เช็คลิสต์ตรวจงานผู้จัดการ" : "เช็คลิสต์ตรวจงานของฉัน",
+                    label: currentRole === "manager" ? "ชุดงานพิเศษปิดร้าน" : "เช็คลิสต์ตรวจงานของฉัน",
                     Icon: CheckCircle2,
-                    desc: "บันทึกเช็คลิสต์ประจำกะ & ปิดร้าน",
+                    desc: currentRole === "manager" ? "ตรวจความปลอดภัยปิดร้าน (4 ข้อ)" : "บันทึกเช็คลิสต์ประจำกะ & ปิดร้าน",
                   },
                 ]
                 : []),
@@ -1710,13 +1715,13 @@ export function ExecutiveDashboard({
                     <CheckCircle2 size={18} className="text-amber-700 shrink-0" />
                     <span>
                       {currentRole === "manager"
-                        ? "เช็คลิสต์ตรวจงานผู้จัดการร้าน & ชุดงานพิเศษปิดร้าน"
+                        ? "ชุดงานพิเศษปิดร้าน (สำหรับผู้จัดการร้าน)"
                         : "เช็คลิสต์ตรวจงานประจำกะ & ชุดงานพิเศษปิดร้าน"}
                     </span>
                   </h3>
                   <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
                     {currentRole === "manager"
-                      ? "บันทึกผลการตรวจสอบขั้นตอนการปฏิบัติงานของผู้จัดการร้าน และชุดงานปิดร้าน (Zero Points)"
+                      ? "บันทึกผลการตรวจสอบชุดงานปิดร้าน 4 รายการความปลอดภัย (0 แต้ม • แชร์ร่วมระดับสาขา)"
                       : "บันทึกผลการตรวจสอบขั้นตอนการปฏิบัติงานของผู้ช่วยผู้จัดการร้าน และชุดงานปิดร้าน (Zero Points)"}
                   </p>
                 </div>
@@ -1751,7 +1756,9 @@ export function ExecutiveDashboard({
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="text-xs sm:text-sm font-bold text-amber-950 dark:text-amber-200">
-                        ชุดงานพิเศษปิดร้าน (สำหรับผู้จัดการ & ผู้ช่วยผู้จัดการร้าน)
+                        {currentRole === "manager"
+                          ? "ชุดงานพิเศษปิดร้าน (ผู้จัดการร้านปฏิบัติเฉพาะชุดงานปิดร้าน 4 ข้อ)"
+                          : "ชุดงานพิเศษปิดร้าน (สำหรับผู้จัดการ & ผู้ช่วยผู้จัดการร้าน)"}
                       </span>
                       <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-400 text-amber-950 shadow-2xs">
                         ไม่มีคะแนน • 0 Points
@@ -1870,8 +1877,36 @@ export function ExecutiveDashboard({
 
                           if (totalCount === 0) {
                             return (
-                              <div className="py-10 text-center text-[var(--color-text-muted)] text-xs border border-dashed border-[var(--color-border)] rounded-xl bg-[var(--color-surface-2)]/40 p-4">
-                                ไม่พบรายการเช็คลิสต์ของตำแหน่งผู้ช่วยผู้จัดการร้านสำหรับกะนี้
+                              <div className="py-10 text-center text-[var(--color-text-muted)] text-xs border border-dashed border-[var(--color-border)] rounded-xl bg-[var(--color-surface-2)]/40 p-5">
+                                {currentRole === "manager" ? (
+                                  <div className="space-y-2 max-w-md mx-auto">
+                                    <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-200 flex items-center justify-center mx-auto text-lg">
+                                      🛡️
+                                    </div>
+                                    <p className="font-bold text-sm text-[var(--color-text)]">
+                                      ผู้จัดการร้านไม่มีงานตรวจเช็คลิสต์ในกะเช้า
+                                    </p>
+                                    <p className="text-xs text-[var(--color-text-muted)]">
+                                      งานตรวจประจำกะเป็นหน้าที่ของผู้ช่วยผู้จัดการร้าน โดยผู้จัดการร้านจะปฏิบัติเฉพาะชุดงานพิเศษปิดร้าน 4 รายการในกะบ่าย & ปิดร้าน
+                                    </p>
+                                    {myChecklistShift !== "afternoon" && (
+                                      <div className="pt-2">
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            setMyChecklistShift("afternoon");
+                                            loadAssistantChecklist("afternoon");
+                                          }}
+                                          className="px-4 py-2 text-xs font-bold rounded-xl bg-amber-400 text-amber-950 hover:bg-amber-300 transition-all cursor-pointer shadow-xs"
+                                        >
+                                          สลับไปดูกะบ่าย & ปิดร้าน →
+                                        </button>
+                                      </div>
+                                    )}
+                                  </div>
+                                ) : (
+                                  "ไม่พบรายการเช็คลิสต์ของตำแหน่งผู้ช่วยผู้จัดการร้านสำหรับกะนี้"
+                                )}
                               </div>
                             );
                           }

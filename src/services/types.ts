@@ -104,7 +104,7 @@ export interface IChecklistService {
     taskId?: string;
     completed: boolean;
     comment?: string;
-  }): Promise<{ success: boolean; completedAt?: string | null; error?: string }>;
+  }): Promise<{ success: boolean; completedAt?: string | null; taskWorkId?: string; error?: string }>;
 
   validateShiftCompletion(shiftSessionId: string): Promise<{
     success: boolean;

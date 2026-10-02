@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { ChecklistItem, ShiftSession, ShiftType } from "../../types";
-import { fmtTime, getSelectedShift, isTodayThai } from "../../data/storage";
+import { fmtTime, isTodayThai } from "../../data/storage";
 import { secureGetItem, secureSetItem, secureRemoveItem } from "../../utils/crypto";
 import { getShiftBadge } from "../common/Badge";
 import { useModalFocusTrap } from "../common/ModalFocusTrap";
@@ -13,7 +13,6 @@ import {
   Check, 
   CheckCircle2, 
   Clock, 
-  Lock, 
   LogOut, 
   Sparkles, 
   ArrowRight, 
@@ -23,7 +22,7 @@ import {
 } from "lucide-react";
 import { BranchRefrigeratorChecklist } from "./BranchRefrigeratorChecklist";
 import { LateReasonModal } from "../common/LateReasonModal";
-import { getOrCreateShiftSessionAction, validateShiftCompletionAction } from "../../actions/checklist";
+import { getOrCreateShiftSessionAction, validateShiftCompletionAction, toggleTaskWorkAction } from "../../actions/checklist";
 
 function getCategoryColor(category?: string) {
   if (!category) {
@@ -59,7 +58,7 @@ function getCategoryColor(category?: string) {
 
 export function ChecklistPage({
   session,
-  selectedShift: propSelectedShift,
+  selectedShift: _selectedShift,
   onUpdate,
   onEndShift,
   onOpenDashboard,
@@ -85,9 +84,6 @@ export function ChecklistPage({
     session.taskRole === "stock" ||
     Boolean(session.userPosition?.includes("สต็อก") || session.userPosition?.includes("stock"));
 
-  const activeSelectedShift = propSelectedShift || (typeof window !== "undefined"
-    ? getSelectedShift()
-    : null);
 
   const hasNextShift = session.shift === "morning";
 
@@ -114,23 +110,28 @@ export function ChecklistPage({
 
   const [items, setItems] = useState<ChecklistItem[]>(session.items || []);
   const [shiftCompleted, setShiftCompleted] = useState<boolean>(Boolean(session.completedAt));
+  const [prevSession, setPrevSession] = useState(session);
 
-  useEffect(() => {
+  if (session !== prevSession) {
+    setPrevSession(session);
     if (session.items) {
       setItems(session.items);
     }
-  }, [session.items]);
-
-  useEffect(() => {
     setShiftCompleted(Boolean(session.completedAt));
-  }, [session.completedAt]);
+  }
 
   const itemsRef = useRef(items);
-  itemsRef.current = items;
   const sessionRef = useRef(session);
-  sessionRef.current = session;
   const onUpdateRef = useRef(onUpdate);
-  onUpdateRef.current = onUpdate;
+
+  useEffect(() => {
+    itemsRef.current = items;
+    sessionRef.current = session;
+    onUpdateRef.current = onUpdate;
+  });
+
+  // Track in-flight or recently toggled task IDs to prevent background DB sync from reverting them
+  const pendingTogglesRef = useRef<Map<string, { completed: boolean; comment: string | null; timestamp: number }>>(new Map());
 
   // Background sync every 8 seconds to reflect tasks added/disabled by manager live
   useEffect(() => {
@@ -163,28 +164,36 @@ export function ChecklistPage({
             return;
           }
 
-          const curSig = curItems.map((i) => `${i.id}:${i.label}:${i.completedAt || ""}:${i.comment || ""}`).join("|");
-          const freshSig = freshItems.map((i) => `${i.id}:${i.label}:${i.completedAt || ""}:${i.comment || ""}`).join("|");
+          // Build a safe signature that compares meaningful completion state without millisecond string noise
+          const makeSig = (list: ChecklistItem[]) =>
+            list.map((i) => `${i.id}:${i.label}:${Boolean(i.completedAt)}:${i.comment || ""}:${i.taskWorkId || ""}`).join("|");
+
+          const curSig = makeSig(curItems);
+          const freshSig = makeSig(freshItems);
 
           if (curSig !== freshSig) {
+            const now = Date.now();
             const merged = freshItems.map((fItem) => {
               const localMatch = curItems.find((i) => i.id === fItem.id);
-              if (localMatch && localMatch.completedAt && !fItem.completedAt) {
-                return {
-                  ...fItem,
-                  completedAt: localMatch.completedAt,
-                  comment: localMatch.comment,
-                  isLate: localMatch.isLate,
-                };
+              const pending = pendingTogglesRef.current.get(fItem.id);
+
+              // 1. If this item has a pending toggle within the lock window (e.g. 8 seconds), preserve local state!
+              if (pending && (now - pending.timestamp < 8000)) {
+                return localMatch || fItem;
               }
+
+              // 2. Otherwise adopt DB update (handles external manager toggles, shared store closing task updates, etc.)
               return fItem;
             });
 
-            setItems(merged);
-            onUpdateRef.current({
-              ...currentSess,
-              items: merged,
-            });
+            const mergedSig = makeSig(merged);
+            if (mergedSig !== curSig) {
+              setItems(merged);
+              onUpdateRef.current({
+                ...currentSess,
+                items: merged,
+              });
+            }
           }
         }
       } catch (err) {
@@ -213,7 +222,6 @@ export function ChecklistPage({
   const allDone = progress === 100;
 
   const canContinueShift = hasNextShift && progress === 100 && !shiftCompleted;
-  const canFinishShift = progress === 100 && !shiftCompleted;
 
   const filteredItems = items.filter((i) => {
     if (filter === "pending") return !i.completedAt;
@@ -227,32 +235,92 @@ export function ChecklistPage({
     deadlineText?: string;
   } | null>(null);
 
-  function applyToggle(id: string, comment: string | null, isLate: boolean) {
-    const updated = items.map((item) =>
-      item.id === id
-        ? {
-            ...item,
-            completedAt: new Date().toISOString(),
-            isLate,
-            comment: comment ?? item.comment ?? null,
+  const executeToggle = useCallback(
+    async (targetItem: ChecklistItem, willBeDone: boolean, comment?: string | null, isLate: boolean = false) => {
+      const itemId = targetItem.id;
+      const nowIso = new Date().toISOString();
+      const targetComment = willBeDone ? (comment ?? targetItem.comment ?? null) : null;
+      const targetIsLate = willBeDone ? isLate : false;
+      const now = Date.now();
+
+      // 1. Lock in pending toggles with current timestamp
+      pendingTogglesRef.current.set(itemId, {
+        completed: willBeDone,
+        comment: targetComment,
+        timestamp: now,
+      });
+
+      // 2. Optimistic local UI update
+      const updated = items.map((item) =>
+        item.id === itemId
+          ? {
+              ...item,
+              completedAt: willBeDone ? nowIso : null,
+              isLate: targetIsLate,
+              comment: targetComment,
+            }
+          : item
+      );
+      setItems(updated);
+      if (shiftCompleted) {
+        setShiftCompleted(false);
+      }
+
+      const allComplete = updated.length > 0 && updated.every((i) => i.completedAt);
+      let updatedSession = { ...session, completedAt: null, items: updated };
+      if (allComplete && !session.notified) {
+        updatedSession = { ...updatedSession, notified: true };
+      }
+      onUpdate(updatedSession);
+
+      // 3. Direct DB persistence online
+      try {
+        const res = await toggleTaskWorkAction({
+          shiftSessionId: session.id,
+          taskId: itemId,
+          taskWorkId: targetItem.taskWorkId,
+          completed: willBeDone,
+          comment: willBeDone ? (targetComment || undefined) : undefined,
+        });
+
+        if (res.success) {
+          if (res.taskWorkId && res.taskWorkId !== targetItem.taskWorkId) {
+            setItems((prev) =>
+              prev.map((i) => (i.id === itemId ? { ...i, taskWorkId: res.taskWorkId } : i))
+            );
           }
-        : item
-    );
-    setItems(updated);
-    if (shiftCompleted) {
-      setShiftCompleted(false);
-    }
-    const allComplete = updated.length > 0 && updated.every((i) => i.completedAt);
-    let updatedSession = { ...session, completedAt: null, items: updated };
-    if (allComplete && !session.notified) {
-      updatedSession = { ...updatedSession, notified: true };
-    }
-    onUpdate(updatedSession);
-  }
+        } else {
+          console.error("toggleTaskWorkAction error from DB:", res.error);
+          // Revert local state if DB explicitly failed
+          pendingTogglesRef.current.delete(itemId);
+          setItems((prev) =>
+            prev.map((i) => (i.id === itemId ? targetItem : i))
+          );
+          alert(`บันทึกสถานะงานไม่สำเร็จ: ${res.error || "เกิดข้อผิดพลาดในการเชื่อมต่อฐานข้อมูล"}`);
+        }
+      } catch (err) {
+        console.error("Failed to execute toggle in DB:", err);
+        pendingTogglesRef.current.delete(itemId);
+        setItems((prev) =>
+          prev.map((i) => (i.id === itemId ? targetItem : i))
+        );
+        alert("ไม่สามารถบันทึกสถานะงานไปยังฐานข้อมูลได้ กรุณาลองใหม่อีกครั้ง");
+      } finally {
+        // Retain lock for a safe buffer (5s) so that background polling doesn't overwrite with stale read
+        setTimeout(() => {
+          pendingTogglesRef.current.delete(itemId);
+        }, 5000);
+      }
+    },
+    [items, onUpdate, session, shiftCompleted]
+  );
 
   function handleLateReasonSubmit(reason: string) {
     if (!lateModalTarget) return;
-    applyToggle(lateModalTarget.id, reason, true);
+    const targetItem = items.find((i) => i.id === lateModalTarget.id);
+    if (targetItem) {
+      void executeToggle(targetItem, true, reason, true);
+    }
     setLateModalTarget(null);
   }
 
@@ -261,14 +329,8 @@ export function ChecklistPage({
     if (!targetItem) return;
 
     if (targetItem.completedAt) {
-      const updated = items.map((item) =>
-        item.id === id ? { ...item, completedAt: null, isLate: false, comment: null } : item
-      );
-      setItems(updated);
-      if (shiftCompleted) {
-        setShiftCompleted(false);
-      }
-      onUpdate({ ...session, completedAt: null, items: updated });
+      // Uncheck task
+      void executeToggle(targetItem, false, null, false);
       return;
     }
 
@@ -297,7 +359,7 @@ export function ChecklistPage({
       return;
     }
 
-    applyToggle(id, null, false);
+    void executeToggle(targetItem, true, null, false);
   }
 
   function handleToggleContinue() {

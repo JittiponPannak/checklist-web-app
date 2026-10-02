@@ -19,7 +19,6 @@ import {
 } from "../data/storage";
 import {
   getOrCreateShiftSessionAction,
-  toggleTaskWorkAction,
   endShiftSessionAction,
 } from "../actions/checklist";
 import { getUserByIdAction, syncOAuthUserAction } from "../actions/auth";
@@ -390,22 +389,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       : [...allSessions, updated];
     saveSessions(next);
     setSessionsState(next);
-
-    const changedItem = updated.items.find((item) => {
-      const prev = activeSession?.items.find((p) => p.id === item.id);
-      return prev ? prev.completedAt !== item.completedAt : false;
-    });
-
-    if (changedItem) {
-      toggleTaskWorkAction({
-        taskWorkId: changedItem.taskWorkId,
-        shiftSessionId: updated.id,
-        taskId: changedItem.id,
-        completed: Boolean(changedItem.completedAt),
-        comment: changedItem.comment || undefined,
-      }).catch((err) => console.error("Failed to sync toggle to DB:", err));
-    }
-
     setActiveSession(updated);
   }
 
