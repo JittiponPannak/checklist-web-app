@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 import { BranchRefrigeratorChecklist } from "./BranchRefrigeratorChecklist";
 import { LateReasonModal } from "../common/LateReasonModal";
-import { getOrCreateShiftSessionAction } from "../../actions/checklist";
+import { getOrCreateShiftSessionAction, validateShiftCompletionAction } from "../../actions/checklist";
 
 function getCategoryColor(category?: string) {
   if (!category) {
@@ -68,11 +68,15 @@ export function ChecklistPage({
   session: ShiftSession;
   selectedShift?: ShiftType | null;
   onUpdate: (s: ShiftSession) => void;
-  onEndShift: (continueNextShift?: boolean) => void;
+  onEndShift: (continueNextShift?: boolean, reason?: string) => void;
   onOpenDashboard?: () => void;
   onExit?: () => void;
 }) {
   const [showConfirm, setShowConfirm] = useState(false);
+  const [showIncompleteModal, setShowIncompleteModal] = useState(false);
+  const [incompleteReason, setIncompleteReason] = useState("");
+  const [dbPendingTasks, setDbPendingTasks] = useState<Array<{ id: string; name: string }>>([]);
+  const [isValidatingDb, setIsValidatingDb] = useState(false);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
   const [filter, setFilter] = useState<"all" | "pending" | "done">("all");
   const [mobileTab, setMobileTab] = useState<"tasks" | "refrigerators">("tasks");
@@ -98,6 +102,10 @@ export function ChecklistPage({
   const { dialogRef: confirmDialogRef, handleKeyDown: handleConfirmKeyDown } = useModalFocusTrap(
     showConfirm,
     () => setShowConfirm(false)
+  );
+  const { dialogRef: incompleteDialogRef, handleKeyDown: handleIncompleteKeyDown } = useModalFocusTrap(
+    showIncompleteModal,
+    () => setShowIncompleteModal(false)
   );
   const { dialogRef: exitDialogRef, handleKeyDown: handleExitKeyDown } = useModalFocusTrap(
     showExitConfirm,
@@ -305,10 +313,54 @@ export function ChecklistPage({
     }
   }
 
-  function endShift() {
+  async function handleInitiateEndShift() {
+    if (shiftCompleted || isValidatingDb) return;
+    setIsValidatingDb(true);
+    try {
+      // Validate live directly from the database online
+      const res = await validateShiftCompletionAction(session.id);
+      if (res.success) {
+        if (res.isComplete) {
+          setShowConfirm(true);
+        } else {
+          setDbPendingTasks(res.pendingTasks || []);
+          setShowIncompleteModal(true);
+        }
+      } else {
+        // Fallback to local check if connection fails
+        if (done === total && total > 0) {
+          setShowConfirm(true);
+        } else {
+          const localPending = items.filter((i) => !i.completedAt).map((i) => ({ id: i.id, name: i.label }));
+          setDbPendingTasks(localPending);
+          setShowIncompleteModal(true);
+        }
+      }
+    } catch (err) {
+      console.error("Online validation check error:", err);
+      if (done === total && total > 0) {
+        setShowConfirm(true);
+      } else {
+        const localPending = items.filter((i) => !i.completedAt).map((i) => ({ id: i.id, name: i.label }));
+        setDbPendingTasks(localPending);
+        setShowIncompleteModal(true);
+      }
+    } finally {
+      setIsValidatingDb(false);
+    }
+  }
+
+  function endCompleteShift() {
     setShowConfirm(false);
     setShiftCompleted(true);
     onEndShift(continueShift);
+  }
+
+  function endIncompleteShift() {
+    if (!incompleteReason.trim()) return;
+    setShowIncompleteModal(false);
+    setShiftCompleted(true);
+    onEndShift(continueShift, incompleteReason.trim());
   }
 
   return (
@@ -713,25 +765,33 @@ export function ChecklistPage({
             {/* Primary Action Button: "จบกะงาน" */}
             <button
               type="button"
-              disabled={!canFinishShift}
-              onClick={() => setShowConfirm(true)}
+              disabled={shiftCompleted || isValidatingDb}
+              onClick={handleInitiateEndShift}
               className={`text-xs sm:text-sm px-2.5 sm:px-5 py-2 sm:py-2.5 rounded-xl font-extrabold flex items-center justify-center gap-1.5 min-h-[40px] sm:min-h-[44px] transition-all cursor-pointer shadow-xs min-w-0 truncate ${
-                !canFinishShift
+                shiftCompleted
                   ? "bg-[var(--color-surface-2)] text-[var(--color-text-muted)] font-bold border border-[var(--color-border)] cursor-not-allowed shadow-none"
-                  : "bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm hover:shadow-md active:scale-95 ring-2 ring-emerald-400/40"
+                  : isValidatingDb
+                  ? "bg-amber-500/20 text-amber-800 dark:text-amber-200 border border-amber-500/40 cursor-wait"
+                  : allDone
+                  ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm hover:shadow-md active:scale-95 ring-2 ring-emerald-400/40"
+                  : "bg-amber-600 hover:bg-amber-700 text-white shadow-sm hover:shadow-md active:scale-95"
               }`}
             >
-              {!canFinishShift ? (
+              {isValidatingDb ? (
                 <>
-                  <Lock size={14} className="shrink-0" />
-                  <span className="hidden md:inline">ตรวจให้ครบทุกข้อเพื่อจบกะ </span>
-                  <span className="hidden sm:inline md:hidden">ตรวจให้ครบ </span>
-                  <span className="truncate">(เหลือ {total - done} ข้อ)</span>
+                  <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin shrink-0" />
+                  <span>กำลังตรวจสถานะออนไลน์...</span>
                 </>
-              ) : (
+              ) : allDone ? (
                 <>
                   <Sparkles size={15} className="shrink-0" />
                   <span>ส่งมอบงานจบกะ</span>
+                </>
+              ) : (
+                <>
+                  <AlertCircle size={15} className="shrink-0" />
+                  <span className="hidden sm:inline">จบกะงาน </span>
+                  <span className="truncate">(เหลืองาน {total - done} ข้อ)</span>
                 </>
               )}
             </button>
@@ -739,7 +799,7 @@ export function ChecklistPage({
         </div>
       </footer>
 
-      {/* Confirmation Finish Modal */}
+      {/* Confirmation Finish Modal for 100% Completed */}
       {showConfirm && (
         <div
           className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-50 px-4 animate-in fade-in duration-150"
@@ -763,7 +823,7 @@ export function ChecklistPage({
               ยืนยันการส่งมอบงานจบกะ?
             </h2>
             <p className="text-sm text-[var(--color-text-muted)] mb-4 leading-relaxed font-medium">
-              คุณได้ตรวจสอบเช็คลิสต์ครบถ้วนสมบูรณ์ 100% แล้ว เมื่อกดยืนยัน ระบบจะบันทึกผลและส่งแจ้งเตือนไปยังผู้จัดการร้านเพื่อรอรับรองผล
+              คุณได้ตรวจสอบเช็คลิสต์ครบถ้วนสมบูรณ์ 100% แล้ว (ตรวจสอบสดจากฐานข้อมูลเรียบร้อย) เมื่อกดยืนยัน ระบบจะบันทึกผลและส่งแจ้งเตือนไปยังผู้จัดการร้านเพื่อตรวจรับรอง
             </p>
 
             {continueShift && (
@@ -783,10 +843,107 @@ export function ChecklistPage({
               </button>
               <button
                 type="button"
-                onClick={endShift}
+                onClick={endCompleteShift}
                 className="flex-1 min-h-[44px] sm:min-h-[36px] py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 dark:bg-amber-400 text-amber-950 text-xs sm:text-sm font-extrabold transition-all shadow-sm cursor-pointer"
               >
                 ส่งมอบงานจบกะ
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Incomplete Shift Reason Modal */}
+      {showIncompleteModal && (
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 px-4 animate-in fade-in duration-150"
+          onClick={() => setShowIncompleteModal(false)}
+          onKeyDown={handleIncompleteKeyDown}
+        >
+          <div
+            ref={incompleteDialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="incomplete-modal-title"
+            tabIndex={-1}
+            className="bg-[var(--color-surface)] border border-amber-500/50 rounded-2xl p-5 sm:p-7 w-full max-w-md focus-visible:outline-none shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-amber-100 dark:bg-amber-950/80 border border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-200 flex items-center justify-center shrink-0 shadow-xs">
+                <AlertCircle size={24} />
+              </div>
+              <div>
+                <h2 id="incomplete-modal-title" className="text-base sm:text-lg font-extrabold text-[var(--color-text)]">
+                  แจ้งจบกะงาน (มีงานค้าง)
+                </h2>
+                <p className="text-xs text-[var(--color-text-muted)] font-medium">
+                  ตรวจสอบสดจากฐานข้อมูลออนไลน์ (Live DB Verified)
+                </p>
+              </div>
+            </div>
+
+            <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-950 dark:text-amber-200 space-y-1.5">
+              <div className="font-extrabold flex items-center gap-1.5">
+                <span>⚠️ ตรวจพบงานที่ยังไม่ได้ทำ {dbPendingTasks.length} รายการ</span>
+              </div>
+              <p className="text-[11px] leading-relaxed text-amber-900/80 dark:text-amber-300/80">
+                คุณสามารถจบกะได้ แต่จำเป็นต้องระบุเหตุผลเพื่อส่งให้ผู้จัดการและผู้ช่วยผู้จัดการพิจารณาดำเนินการ
+              </p>
+            </div>
+
+            {/* List of pending tasks */}
+            {dbPendingTasks.length > 0 && (
+              <div className="space-y-1.5">
+                <span className="text-[11px] font-bold text-[var(--color-text-muted)]">
+                  รายการงานคงค้างในระบบ ({dbPendingTasks.length} ข้อ):
+                </span>
+                <div className="max-h-28 overflow-y-auto p-2.5 rounded-xl bg-[var(--color-surface-2)] border border-[var(--color-border)] text-xs space-y-1">
+                  {dbPendingTasks.map((t, idx) => (
+                    <div key={t.id || idx} className="flex items-start gap-1.5 text-[var(--color-text)] font-medium">
+                      <span className="text-amber-600 font-bold shrink-0">•</span>
+                      <span className="break-words leading-tight">{t.name}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Reason Textarea */}
+            <div className="space-y-1.5">
+              <label htmlFor="incomplete-shift-reason" className="text-xs font-bold text-[var(--color-text)] flex items-center justify-between">
+                <span>ระบุเหตุผลที่ทำงานไม่ครบก่อนจบกะ <span className="text-rose-500">*</span></span>
+                <span className="text-[10px] text-[var(--color-text-muted)] font-normal">จำเป็นต้องระบุ</span>
+              </label>
+              <textarea
+                id="incomplete-shift-reason"
+                rows={3}
+                value={incompleteReason}
+                onChange={(e) => setIncompleteReason(e.target.value)}
+                placeholder="เช่น สินค้าหมดสต็อก, มีเหตุฉุกเฉินหน้าร้าน, ป่วยกะทันหัน, ลูกค้าหน้าร้านแน่นมาก ฯลฯ"
+                className="w-full text-xs sm:text-sm p-3 rounded-xl border border-[var(--color-border)] focus:border-amber-500 focus:ring-1 focus:ring-amber-500 bg-[var(--color-surface)] text-[var(--color-text)] resize-none transition-all placeholder:text-[var(--color-text-muted)]/60"
+              />
+            </div>
+
+            <div className="p-3 rounded-xl bg-[var(--color-surface-2)] border border-[var(--color-border)] text-[11px] text-[var(--color-text-muted)] leading-relaxed">
+              <span className="font-bold text-[var(--color-text)]">ℹ️ ผลกระทบการจบกะงานไม่ครบ:</span> เหตุผลของคุณจะถูกส่งแจ้งเตือนไปยังผู้จัดการร้านและผู้ช่วยผู้จัดการร้านทันที ผู้บริหารสามารถเลือกพิจารณาได้ว่า: <strong>อนุโลม (ไม่ลงโทษ)</strong>, <strong>หักคะแนน</strong>, <strong>ตัดสตรีคเป็น 0</strong> หรือ <strong>หักโควตาลา</strong> (คล้ายระบบลางาน)
+            </div>
+
+            <div className="flex gap-2.5 pt-1">
+              <button
+                type="button"
+                onClick={() => setShowIncompleteModal(false)}
+                className="flex-1 min-h-[44px] sm:min-h-[36px] py-2.5 rounded-xl border border-[var(--color-border)] text-xs sm:text-sm font-bold text-[var(--color-text)] hover:bg-[var(--color-surface-2)] transition-colors cursor-pointer"
+              >
+                กลับไปตรวจต่อ
+              </button>
+              <button
+                type="button"
+                disabled={!incompleteReason.trim()}
+                onClick={endIncompleteShift}
+                className="flex-1 min-h-[44px] sm:min-h-[36px] py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-amber-400 text-amber-950 text-xs sm:text-sm font-extrabold transition-all shadow-sm cursor-pointer"
+              >
+                ยืนยันจบกะและส่งเหตุผล
               </button>
             </div>
           </div>

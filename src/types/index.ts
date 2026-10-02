@@ -84,6 +84,14 @@ export interface ShiftSession {
   items: ChecklistItem[];
   notified: boolean;
   branchName?: string;
+  incompleteReason?: string | null;
+  incompleteStatus?: "none" | "pending_review" | "reviewed";
+  incompleteAction?: "no_penalty" | "deduct_points" | "break_streak" | "deduct_leave_quota" | string | null;
+  incompleteActionPoints?: number;
+  incompleteActionNote?: string | null;
+  incompleteReviewedBy?: string | null;
+  incompleteReviewedByName?: string | null;
+  incompleteReviewedAt?: string | null;
 }
 
 export interface Notification {

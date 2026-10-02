@@ -69,6 +69,14 @@ export const shiftSession = checklistSchema.table.withRLS("shift_session", {
     end: timestamp("end_timestamp"),
     manager_assistance_approve_timestamp: timestamp("manager_assistance_approve_timestamp"),
     manager_approve_timestamp: timestamp("manager_approve_timestamp"),
+
+    incomplete_reason: text("incomplete_reason"),
+    incomplete_status: text("incomplete_status").default("none"),
+    incomplete_action: text("incomplete_action"),
+    incomplete_action_points: integer("incomplete_action_points").default(0),
+    incomplete_action_note: text("incomplete_action_note"),
+    incomplete_reviewed_by: uuid("incomplete_reviewed_by").references(() => users.id),
+    incomplete_reviewed_at: timestamp("incomplete_reviewed_at"),
 });
 
 export const taskWork = checklistSchema.table.withRLS("task_work", {

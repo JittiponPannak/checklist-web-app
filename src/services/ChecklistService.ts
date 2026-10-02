@@ -405,6 +405,13 @@ export class ChecklistService implements IChecklistService {
         items,
         notified: isAllComplete,
         branchName: branchNameForSession,
+        incompleteReason: activeDbSession.incomplete_reason || null,
+        incompleteStatus: (activeDbSession.incomplete_status as any) || "none",
+        incompleteAction: activeDbSession.incomplete_action || null,
+        incompleteActionPoints: activeDbSession.incomplete_action_points || 0,
+        incompleteActionNote: activeDbSession.incomplete_action_note || null,
+        incompleteReviewedBy: activeDbSession.incomplete_reviewed_by || null,
+        incompleteReviewedAt: activeDbSession.incomplete_reviewed_at ? new Date(activeDbSession.incomplete_reviewed_at).toISOString() : null,
       };
 
       return { success: true, session: sessionObj };
@@ -640,16 +647,124 @@ export class ChecklistService implements IChecklistService {
     }
   }
 
-  async endShiftSession(shiftSessionId: string): Promise<{ success: boolean; error?: string }> {
+  async validateShiftCompletion(shiftSessionId: string): Promise<{
+    success: boolean;
+    isComplete: boolean;
+    totalTasks: number;
+    doneTasks: number;
+    pendingTasks: Array<{ id: string; name: string }>;
+    error?: string;
+  }> {
     try {
+      if (!isValidUuid(shiftSessionId)) {
+        return { success: false, isComplete: false, totalTasks: 0, doneTasks: 0, pendingTasks: [], error: "ID ของกะไม่ถูกต้อง" };
+      }
+
+      const [sess] = await this.db
+        .select()
+        .from(shiftSession)
+        .where(eq(shiftSession.id, shiftSessionId))
+        .limit(1);
+
+      if (!sess) {
+        return { success: false, isComplete: false, totalTasks: 0, doneTasks: 0, pendingTasks: [], error: "ไม่พบข้อมูลกะในระบบ" };
+      }
+
+      // Branch task filtering
+      const [branch] = await this.db
+        .select({ tasks: branches.tasks })
+        .from(branches)
+        .where(eq(branches.id, sess.branch))
+        .limit(1);
+
+      const branchTaskIds = branch?.tasks || [];
+
+      const allowedShifts: ("morning" | "afternoon" | "morning_afternoon")[] =
+        sess.shift === "morning_afternoon"
+          ? ["morning", "afternoon", "morning_afternoon"]
+          : [sess.shift, "morning_afternoon"];
+
+      const dbTasks = await this.db
+        .select()
+        .from(tasks)
+        .where(
+          and(
+            eq(tasks.task_role, sess.task_role),
+            inArray(tasks.shift, allowedShifts),
+            eq(tasks.disabled, false)
+          )
+        );
+
+      const activeTasks = branchTaskIds.length > 0
+        ? dbTasks.filter((t: any) => branchTaskIds.includes(t.id))
+        : dbTasks;
+
+      const works = await this.db
+        .select({
+          taskId: taskWork.task,
+          timestamp: taskWork.timestamp,
+        })
+        .from(taskWork)
+        .where(eq(taskWork.shift_session, shiftSessionId));
+
+      const doneTaskIds = new Set(
+        works.filter((w: any) => w.timestamp !== null).map((w: any) => w.taskId)
+      );
+
+      const pendingTasks: Array<{ id: string; name: string }> = [];
+      for (const t of activeTasks) {
+        if (!doneTaskIds.has(t.id)) {
+          pendingTasks.push({ id: t.id, name: t.name });
+        }
+      }
+
+      const totalTasks = activeTasks.length;
+      const doneTasks = totalTasks - pendingTasks.length;
+      const isComplete = totalTasks > 0 && pendingTasks.length === 0;
+
+      return {
+        success: true,
+        isComplete,
+        totalTasks,
+        doneTasks,
+        pendingTasks,
+      };
+    } catch (err: any) {
+      console.error("ChecklistService.validateShiftCompletion error:", err);
+      return { success: false, isComplete: false, totalTasks: 0, doneTasks: 0, pendingTasks: [], error: err?.message || "ตรวจสอบสถานะงานไม่สำเร็จ" };
+    }
+  }
+
+  async endShiftSession(params: string | { shiftSessionId: string; reason?: string }): Promise<{ success: boolean; error?: string }> {
+    try {
+      const shiftSessionId = typeof params === "string" ? params : params.shiftSessionId;
+      const rawReason = typeof params === "string" ? undefined : params.reason?.trim();
+
       if (!isValidUuid(shiftSessionId)) {
         return { success: false, error: "ID ของกะไม่ถูกต้อง" };
       }
 
+      // Check online validation from DB directly
+      const validation = await this.validateShiftCompletion(shiftSessionId);
+      if (!validation.success) {
+        return { success: false, error: validation.error || "ไม่สามารถตรวจสอบสถานะงานในฐานข้อมูลได้" };
+      }
+
+      const isIncomplete = !validation.isComplete;
+      if (isIncomplete && !rawReason) {
+        return {
+          success: false,
+          error: `ตรวจพบงานค้าง ${validation.pendingTasks.length} ข้อในระบบ กรุณาระบุเหตุผลที่ไม่สามารถทำงานให้ครบถ้วนก่อนจบกะ`,
+        };
+      }
+
+      const now = new Date();
       const [endedSession] = await this.db
         .update(shiftSession)
         .set({
-          end: new Date(),
+          end: now,
+          incomplete_reason: isIncomplete ? rawReason : null,
+          incomplete_status: isIncomplete ? "pending_review" : "none",
         })
         .where(eq(shiftSession.id, shiftSessionId))
         .returning();
@@ -661,27 +776,65 @@ export class ChecklistService implements IChecklistService {
           .where(eq(users.id, endedSession.user))
           .limit(1);
 
-        const shiftName = endedSession.shift === "morning" ? "กะเช้า" : endedSession.shift === "afternoon" ? "กะบ่าย" : "กะเช้า-บ่าย";
+        const shiftName =
+          endedSession.shift === "morning"
+            ? "กะเช้า"
+            : endedSession.shift === "afternoon"
+            ? "กะบ่าย"
+            : "กะเช้า-บ่าย";
 
-        // Notify employee
-        await this.notificationService.createNotification({
-          recipientId: endedSession.user,
-          title: `🏁 บันทึกการจบกะงานสำเร็จ`,
-          message: `คุณได้ส่งมอบกะงาน ${shiftName} เรียบร้อยแล้ว รายงานถูกส่งไปยังผู้จัดการร้านเพื่อตรวจรับรองและให้แต้มรางวัล`,
-          type: "shift_submitted",
-          shiftSessionId: endedSession.id,
-          branchId: endedSession.branch,
-        });
+        if (isIncomplete) {
+          // Notify both manager and assistant manager of the branch
+          const pendingCount = validation.pendingTasks.length;
+          const notifMsg = `พนักงาน ${u?.name || "พนักงาน"} ได้จบกะ ${shiftName} โดยเหลืองานค้าง ${pendingCount} ข้อ เหตุผล: "${rawReason}" กรุณาตรวจสอบและพิจารณาการดำเนินการ (หักคะแนน, ตัดสตรีค หรือตัดโควตา)`;
 
-        // Notify branch managers
-        await this.notificationService.createNotification({
-          branchId: endedSession.branch,
-          recipientRole: "manager",
-          title: `🏁 พนักงานจบกะงาน: ${u?.name || "พนักงาน"}`,
-          message: `${u?.name || "พนักงาน"} ได้ส่งมอบและจบกะงาน ${shiftName} ประจำสาขาเรียบร้อยแล้ว พร้อมให้เข้าตรวจรับรอง`,
-          type: "shift_submitted",
-          shiftSessionId: endedSession.id,
-        });
+          await this.notificationService.createNotification({
+            branchId: endedSession.branch,
+            recipientRole: "manager",
+            title: `⚠️ จบกะงานไม่ครบ: ${u?.name || "พนักงาน"} (${shiftName})`,
+            message: notifMsg,
+            type: "incomplete_shift",
+            shiftSessionId: endedSession.id,
+          });
+
+          await this.notificationService.createNotification({
+            branchId: endedSession.branch,
+            recipientRole: "manager_assistant",
+            title: `⚠️ จบกะงานไม่ครบ: ${u?.name || "พนักงาน"} (${shiftName})`,
+            message: notifMsg,
+            type: "incomplete_shift",
+            shiftSessionId: endedSession.id,
+          });
+
+          // Notify employee
+          await this.notificationService.createNotification({
+            recipientId: endedSession.user,
+            title: `⚠️ บันทึกการจบกะ (มีงานค้าง ${pendingCount} ข้อ)`,
+            message: `คุณได้จบกะงาน ${shiftName} เรียบร้อยแล้ว เหตุผลของคุณถูกส่งไปยังผู้จัดการและผู้ช่วยผู้จัดการเพื่อพิจารณาการดำเนินการต่อไป`,
+            type: "incomplete_shift",
+            shiftSessionId: endedSession.id,
+            branchId: endedSession.branch,
+          });
+        } else {
+          // Standard full completion notifications
+          await this.notificationService.createNotification({
+            recipientId: endedSession.user,
+            title: `🏁 บันทึกการจบกะงานสำเร็จ`,
+            message: `คุณได้ส่งมอบกะงาน ${shiftName} ครบถ้วน 100% เรียบร้อยแล้ว รายงานถูกส่งไปยังผู้จัดการร้านเพื่อตรวจรับรอง`,
+            type: "shift_submitted",
+            shiftSessionId: endedSession.id,
+            branchId: endedSession.branch,
+          });
+
+          await this.notificationService.createNotification({
+            branchId: endedSession.branch,
+            recipientRole: "manager",
+            title: `🏁 พนักงานจบกะงาน: ${u?.name || "พนักงาน"}`,
+            message: `${u?.name || "พนักงาน"} ได้ส่งมอบและจบกะงาน ${shiftName} ครบ 100% เรียบร้อยแล้ว พร้อมให้เข้าตรวจรับรอง`,
+            type: "shift_submitted",
+            shiftSessionId: endedSession.id,
+          });
+        }
       }
 
       return { success: true };

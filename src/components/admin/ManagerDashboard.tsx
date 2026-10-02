@@ -1393,6 +1393,8 @@ export function ManagerDashboard({
       <SessionDetailModal
         session={selectedSession}
         onClose={() => setSelectedSession(null)}
+        reviewerId={user.id}
+        canReviewIncomplete={user.role === "manager" || user.role === "admin"}
       />
     </div>
   );

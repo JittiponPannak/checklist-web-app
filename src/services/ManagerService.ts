@@ -1,8 +1,8 @@
 import { eq, and, gte, lte, lt, desc, inArray, sql } from "drizzle-orm";
-import { tasks, taskWork, shiftSession, users, branches, employeeLeaves } from "../db/schema";
+import { tasks, taskWork, shiftSession, users, branches, employeeLeaves, pointTransactions } from "../db/schema";
 import { IManagerService, IPointService, INotificationService, BranchEmployeeStatus } from "./types";
 import { ShiftType, Role, LeaveType, EmployeeLeave, LeaveQuotaInfo } from "../types";
-import { isPaidLeave, getLeaveTypeLabel } from "../utils/leave";
+import { isPaidLeave } from "../utils/leave";
 
 export interface ManagerShiftSummary {
   id: string;
@@ -32,6 +32,13 @@ export interface ManagerShiftSummary {
     comment?: string | null;
   }>;
   branchName?: string;
+  incompleteReason?: string | null;
+  incompleteStatus?: "none" | "pending_review" | "reviewed";
+  incompleteAction?: string | null;
+  incompleteActionPoints?: number;
+  incompleteActionNote?: string | null;
+  incompleteReviewedBy?: string | null;
+  incompleteReviewedAt?: string | null;
 }
 
 function mapDbShiftToUi(dbShift: "morning" | "afternoon" | "morning_afternoon"): ShiftType {
@@ -192,6 +199,15 @@ export class ManagerService implements IManagerService {
             : null,
           items,
           branchName: dbBranches.find((b: any) => b.id === sess.branch)?.name,
+          incompleteReason: sess.incomplete_reason || null,
+          incompleteStatus: (sess.incomplete_status as any) || "none",
+          incompleteAction: sess.incomplete_action || null,
+          incompleteActionPoints: sess.incomplete_action_points || 0,
+          incompleteActionNote: sess.incomplete_action_note || null,
+          incompleteReviewedBy: sess.incomplete_reviewed_by || null,
+          incompleteReviewedAt: sess.incomplete_reviewed_at
+            ? new Date(sess.incomplete_reviewed_at).toISOString()
+            : null,
         };
       });
 
@@ -322,6 +338,15 @@ export class ManagerService implements IManagerService {
             : null,
           items,
           branchName: dbBranches.find((b: any) => b.id === sess.branch)?.name,
+          incompleteReason: sess.incomplete_reason || null,
+          incompleteStatus: (sess.incomplete_status as any) || "none",
+          incompleteAction: sess.incomplete_action || null,
+          incompleteActionPoints: sess.incomplete_action_points || 0,
+          incompleteActionNote: sess.incomplete_action_note || null,
+          incompleteReviewedBy: sess.incomplete_reviewed_by || null,
+          incompleteReviewedAt: sess.incomplete_reviewed_at
+            ? new Date(sess.incomplete_reviewed_at).toISOString()
+            : null,
         };
       });
 
@@ -451,6 +476,118 @@ export class ManagerService implements IManagerService {
     } catch (err: any) {
       console.error("ManagerService.approveShiftSession error:", err);
       return { success: false, error: err?.message || "เกิดข้อผิดพลาดในการรับรองผลงาน" };
+    }
+  }
+
+  async reviewIncompleteShift(params: {
+    shiftSessionId: string;
+    reviewerId: string;
+    action: "no_penalty" | "deduct_points" | "break_streak" | "deduct_leave_quota";
+    pointsToDeduct?: number;
+    note?: string;
+  }): Promise<{ success: boolean; error?: string }> {
+    try {
+      const { shiftSessionId, reviewerId, action, pointsToDeduct = 0, note } = params;
+      if (!shiftSessionId || !reviewerId) {
+        return { success: false, error: "ข้อมูลระบุไม่ครบถ้วน" };
+      }
+
+      const [sess] = await this.db
+        .select()
+        .from(shiftSession)
+        .where(eq(shiftSession.id, shiftSessionId))
+        .limit(1);
+
+      if (!sess) {
+        return { success: false, error: "ไม่พบข้อมูลกะงานในระบบ" };
+      }
+
+      const [reviewer] = await this.db
+        .select({ id: users.id, name: users.name, role: users.role })
+        .from(users)
+        .where(eq(users.id, reviewerId))
+        .limit(1);
+
+      if (!reviewer) {
+        return { success: false, error: "ไม่พบข้อมูลผู้พิจารณา" };
+      }
+
+      const [targetUser] = await this.db
+        .select()
+        .from(users)
+        .where(eq(users.id, sess.user))
+        .limit(1);
+
+      if (!targetUser) {
+        return { success: false, error: "ไม่พบข้อมูลพนักงานเจ้าของกะ" };
+      }
+
+      let actionDesc = "";
+      const now = new Date();
+
+      if (action === "no_penalty") {
+        actionDesc = "อนุโลม (ไม่ลงโทษ / ไม่หักคะแนนหรือสตรีค)";
+      } else if (action === "deduct_points") {
+        const deduct = Math.max(1, pointsToDeduct || 5);
+        actionDesc = `หักคะแนน ${deduct} แต้ม`;
+        const newPoint = Math.max(0, (targetUser.point || 0) - deduct);
+        await this.db
+          .update(users)
+          .set({ point: newPoint })
+          .where(eq(users.id, targetUser.id));
+
+        await this.db.insert(pointTransactions).values({
+          user_id: targetUser.id,
+          points: -deduct,
+          type: "penalty",
+          shift_session_id: sess.id,
+          description: `หักคะแนนจากการจบกะงานไม่ครบ: ${note || "พิจารณาโดยผู้บริหาร"}`,
+          created_at: now,
+        });
+      } else if (action === "break_streak") {
+        actionDesc = "ตัดสตรีคการทำงานต่อเนื่องเป็น 0";
+        await this.db
+          .update(users)
+          .set({ point_streak: 0, point_streak_type: "none" })
+          .where(eq(users.id, targetUser.id));
+      } else if (action === "deduct_leave_quota") {
+        const currentQuota = targetUser.leave_quota ?? 3;
+        const newQuota = Math.max(0, currentQuota - 1);
+        actionDesc = "หักโควตาการลา 1 วัน";
+        await this.db
+          .update(users)
+          .set({ leave_quota: newQuota })
+          .where(eq(users.id, targetUser.id));
+      }
+
+      await this.db
+        .update(shiftSession)
+        .set({
+          incomplete_status: "reviewed",
+          incomplete_action: action,
+          incomplete_action_points: action === "deduct_points" ? (pointsToDeduct || 5) : 0,
+          incomplete_action_note: note || null,
+          incomplete_reviewed_by: reviewerId,
+          incomplete_reviewed_at: now,
+        })
+        .where(eq(shiftSession.id, shiftSessionId));
+
+      if (this.notificationService) {
+        const reviewerRoleName = reviewer.role === "manager_assistant" ? "ผู้ช่วยผู้จัดการร้าน" : "ผู้จัดการร้าน";
+        await this.notificationService.createNotification({
+          recipientId: targetUser.id,
+          branchId: sess.branch,
+          title: `⚖️ ผลการพิจารณาจบกะงานไม่ครบ`,
+          message: `${reviewerRoleName} (${reviewer.name}) ได้พิจารณาผลการจบกะงานไม่ครบของคุณ: ${actionDesc}${note ? ` (หมายเหตุ: ${note})` : ""}`,
+          type: "system",
+          shiftSessionId: sess.id,
+        });
+      }
+
+      return { success: true };
+    } catch (err: any) {
+      console.error("ManagerService.reviewIncompleteShift error:", err);
+      return { success: false, error: err?.message || "เกิดข้อผิดพลาดในการบันทึกผลการพิจารณา" };
     }
   }
 

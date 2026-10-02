@@ -106,7 +106,16 @@ export interface IChecklistService {
     comment?: string;
   }): Promise<{ success: boolean; completedAt?: string | null; error?: string }>;
 
-  endShiftSession(shiftSessionId: string): Promise<{ success: boolean; error?: string }>;
+  validateShiftCompletion(shiftSessionId: string): Promise<{
+    success: boolean;
+    isComplete: boolean;
+    totalTasks: number;
+    doneTasks: number;
+    pendingTasks: Array<{ id: string; name: string }>;
+    error?: string;
+  }>;
+
+  endShiftSession(params: string | { shiftSessionId: string; reason?: string }): Promise<{ success: boolean; error?: string }>;
 
   getPositionShiftsStatus(position: string, userId?: string): Promise<{
     success: boolean;
@@ -211,6 +220,14 @@ export interface IManagerService {
     shiftSessionId: string;
     role: "manager" | "manager_assistant" | "committee" | "general_manager" | Role;
     isException?: boolean;
+  }): Promise<{ success: boolean; error?: string }>;
+
+  reviewIncompleteShift(params: {
+    shiftSessionId: string;
+    reviewerId: string;
+    action: "no_penalty" | "deduct_points" | "break_streak" | "deduct_leave_quota";
+    pointsToDeduct?: number;
+    note?: string;
   }): Promise<{ success: boolean; error?: string }>;
 
   getBranchStaffStatus(branchId?: string): Promise<{

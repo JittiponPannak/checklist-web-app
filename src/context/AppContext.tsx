@@ -39,7 +39,7 @@ interface AppContextType {
   selectShift: (shift: ShiftType) => Promise<void>;
   selectPosition: (position: string) => void;
   updateSession: (updated: ShiftSession) => void;
-  endShift: (continueNextShift?: boolean) => void;
+  endShift: (continueNextShift?: boolean, reason?: string) => Promise<void>;
   setCurrentUser: (user: User | null) => void;
   setSelectedShift: (shift: ShiftType | null) => void;
   setActiveSession: (session: ShiftSession | null) => void;
@@ -409,13 +409,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setActiveSession(updated);
   }
 
-  async function endShift(continueNextShift?: boolean) {
+  async function endShift(continueNextShift?: boolean, reason?: string) {
     await withLoading(async () => {
       if (activeSession) {
         const endedAt = new Date().toISOString();
         const updated: ShiftSession = {
           ...activeSession,
           completedAt: activeSession.completedAt || endedAt,
+          incompleteReason: reason || activeSession.incompleteReason || null,
         };
         const allSessions = getSessions();
         const hasSess = allSessions.some((s) => s.id === updated.id);
@@ -426,7 +427,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         setSessionsState(next);
 
         try {
-          await endShiftSessionAction(activeSession.id);
+          await endShiftSessionAction({
+            shiftSessionId: activeSession.id,
+            reason,
+          });
         } catch (err) {
           console.error("Failed to end shift in DB:", err);
         }

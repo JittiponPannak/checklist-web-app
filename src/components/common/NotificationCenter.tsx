@@ -168,6 +168,8 @@ export function NotificationCenter() {
         return <Award className="w-4 h-4 text-amber-500" />;
       case "shift_submitted":
         return <Clock className="w-4 h-4 text-blue-500" />;
+      case "incomplete_shift":
+        return <AlertTriangle className="w-4 h-4 text-amber-500" />;
       case "shift_approved":
         return <ShieldCheck className="w-4 h-4 text-emerald-500" />;
       case "refrigerator_alert":

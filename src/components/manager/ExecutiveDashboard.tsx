@@ -150,6 +150,13 @@ export function ExecutiveDashboard({
           })),
           notified: true,
           branchName: s.branchName,
+          incompleteReason: s.incompleteReason,
+          incompleteStatus: s.incompleteStatus,
+          incompleteAction: s.incompleteAction,
+          incompleteActionPoints: s.incompleteActionPoints,
+          incompleteActionNote: s.incompleteActionNote,
+          incompleteReviewedBy: s.incompleteReviewedBy,
+          incompleteReviewedAt: s.incompleteReviewedAt,
         }));
         setSessions(mappedSessions);
 
@@ -184,12 +191,17 @@ export function ExecutiveDashboard({
 
             const eventTime = s.completedAt || latestTaskTime || s.startedAt;
             const isRead = s.managerApproved || readIds.includes(s.id);
+            const isIncomplete = s.incompleteStatus === "pending_review" || (!s.isAllDone && Boolean(s.incompleteReason));
 
             return {
               id: `notif-${s.id}`,
-              title: `รายงานการส่งงาน: ${s.userName}`,
-              message: `${s.userPosition || "พนักงาน"} ส่งงานกะ ${s.shift}`,
-              type: "shift_submitted",
+              title: isIncomplete
+                ? `⚠️ งานไม่ครบ: ${s.userName}`
+                : `รายงานการส่งงาน: ${s.userName}`,
+              message: isIncomplete
+                ? `${s.userPosition || "พนักงาน"} จบกะโดยมีงานไม่ครบ: "${s.incompleteReason || "รอพิจารณา"}"`
+                : `${s.userPosition || "พนักงาน"} ส่งงานกะ ${s.shift}`,
+              type: isIncomplete ? "incomplete_shift" : "shift_submitted",
               shiftSessionId: s.id,
               userName: s.userName,
               userPosition: s.userPosition,
@@ -261,6 +273,13 @@ export function ExecutiveDashboard({
           })),
           notified: true,
           branchName: s.branchName,
+          incompleteReason: s.incompleteReason,
+          incompleteStatus: s.incompleteStatus,
+          incompleteAction: s.incompleteAction,
+          incompleteActionPoints: s.incompleteActionPoints,
+          incompleteActionNote: s.incompleteActionNote,
+          incompleteReviewedBy: s.incompleteReviewedBy,
+          incompleteReviewedAt: s.incompleteReviewedAt,
         }));
         setHistorySessions(mappedSessions);
       }
@@ -309,6 +328,13 @@ export function ExecutiveDashboard({
           })),
           notified: true,
           branchName: s.branchName,
+          incompleteReason: s.incompleteReason,
+          incompleteStatus: s.incompleteStatus,
+          incompleteAction: s.incompleteAction,
+          incompleteActionPoints: s.incompleteActionPoints,
+          incompleteActionNote: s.incompleteActionNote,
+          incompleteReviewedBy: s.incompleteReviewedBy,
+          incompleteReviewedAt: s.incompleteReviewedAt,
         }));
         setSpecificDaySessions(mappedSessions);
       }
@@ -1318,6 +1344,33 @@ export function ExecutiveDashboard({
                               </div>
                             )}
 
+                            {/* Incomplete shift badge and reason on mobile card */}
+                            {(sess.incompleteStatus === "pending_review" || (sess.incompleteReason && sess.incompleteStatus !== "reviewed")) && (
+                              <div className="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 text-xs space-y-1">
+                                <div className="flex items-center gap-1.5 text-amber-900 dark:text-amber-200 font-bold">
+                                  <AlertCircle size={13} className="shrink-0 text-amber-600 dark:text-amber-400" />
+                                  <span>งานไม่ครบ (รอพิจารณามาตรการ):</span>
+                                </div>
+                                <p className="text-[11px] text-[var(--color-text)] pl-4 italic">
+                                  "{sess.incompleteReason || "ไม่ได้ระบุเหตุผล"}"
+                                </p>
+                              </div>
+                            )}
+                            {sess.incompleteStatus === "reviewed" && (
+                              <div className="p-2.5 rounded-xl bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 text-xs flex items-center justify-between">
+                                <div className="flex items-center gap-1.5 text-blue-900 dark:text-blue-200 font-bold">
+                                  <CheckCircle2 size={13} className="shrink-0 text-blue-600 dark:text-blue-400" />
+                                  <span>พิจารณางานไม่ครบแล้ว</span>
+                                </div>
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-200">
+                                  {sess.incompleteAction === "no_penalty" && "🛡️ อนุโลม"}
+                                  {sess.incompleteAction === "deduct_points" && `🎯 หัก ${sess.incompleteActionPoints || 0} แต้ม`}
+                                  {sess.incompleteAction === "break_streak" && "⚡ ตัดสตรีค"}
+                                  {sess.incompleteAction === "deduct_leave_quota" && "📅 หักลา 1 วัน"}
+                                </span>
+                              </div>
+                            )}
+
                             {/* Status & Action */}
                             {(() => {
                               const app = approvals[sess.id] || {};
@@ -1428,6 +1481,28 @@ export function ExecutiveDashboard({
                                         >
                                           <AlertCircle size={10} className="text-rose-600" />
                                           <span>ล่าช้า {lateItems.length} ข้อ</span>
+                                        </span>
+                                      </div>
+                                    )}
+                                    {(sess.incompleteStatus === "pending_review" || (sess.incompleteReason && sess.incompleteStatus !== "reviewed")) && (
+                                      <div className="mt-1">
+                                        <span
+                                          className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-900 dark:text-amber-200 bg-amber-100 dark:bg-amber-950/80 border border-amber-300 dark:border-amber-800 px-1.5 py-0.5 rounded cursor-help"
+                                          title={`เหตุผลจบกะงานไม่ครบ: ${sess.incompleteReason || "ไม่ระบุ"}`}
+                                        >
+                                          <AlertCircle size={10} className="text-amber-600 dark:text-amber-400" />
+                                          <span>งานไม่ครบ (รอพิจารณา)</span>
+                                        </span>
+                                      </div>
+                                    )}
+                                    {sess.incompleteStatus === "reviewed" && (
+                                      <div className="mt-1">
+                                        <span
+                                          className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-900 dark:text-blue-200 bg-blue-50 dark:bg-blue-950/80 border border-blue-200 dark:border-blue-800 px-1.5 py-0.5 rounded"
+                                          title={`พิจารณาแล้ว: ${sess.incompleteAction || "-"}`}
+                                        >
+                                          <CheckCircle2 size={10} className="text-blue-600 dark:text-blue-400" />
+                                          <span>พิจารณางานไม่ครบแล้ว</span>
                                         </span>
                                       </div>
                                     )}
@@ -2297,6 +2372,11 @@ export function ExecutiveDashboard({
             canApprove={canApprove}
             isApproved={isApproved}
             approveRoleTitle={approveTitle}
+            reviewerId={user.id}
+            canReviewIncomplete={["manager", "manager_assistant", "general_manager", "committee"].includes(currentRole)}
+            onReviewSuccess={() => {
+              loadDbSessions();
+            }}
             onApprove={(sessId, isException) => {
               handleApproveSession(
                 sessId,

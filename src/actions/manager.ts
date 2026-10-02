@@ -38,6 +38,17 @@ export async function approveShiftSessionAction(params: {
   return await services.manager.approveShiftSession(params);
 }
 
+export async function reviewIncompleteShiftAction(params: {
+  shiftSessionId: string;
+  reviewerId: string;
+  action: "no_penalty" | "deduct_points" | "break_streak" | "deduct_leave_quota";
+  pointsToDeduct?: number;
+  note?: string;
+}): Promise<{ success: boolean; error?: string }> {
+  const services = getServices();
+  return await services.manager.reviewIncompleteShift(params);
+}
+
 export async function getBranchStaffStatusAction(branchId?: string): Promise<{
   success: boolean;
   employees?: BranchEmployeeStatus[];
