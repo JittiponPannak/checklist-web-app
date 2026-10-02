@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState, useTransition } from "react";
+import React, { createContext, useContext, useEffect, useState, useTransition, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { ShiftSession, ShiftType, User } from "../types";
 import { STAFF_POSITIONS } from "../types";
@@ -59,6 +59,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [activeSession, setActiveSessionState] = useState<ShiftSession | null>(null);
   const [sessions, setSessionsState] = useState<ShiftSession[]>([]);
 
+  // Keep ref to activeSession so date check doesn't recreate callback or trigger effect loops
+  const activeSessionRef = useRef(activeSession);
+  useEffect(() => {
+    activeSessionRef.current = activeSession;
+  });
+
   const refreshUserData = async () => {
     if (!currentUser?.id) return;
     try {
@@ -76,10 +82,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (typeof window === "undefined") return;
     const currentThaiDate = getThaiDateString();
     const lastVisit = localStorage.getItem("app_last_visit_date");
+    const currentSession = activeSessionRef.current;
 
     // Condition 1: Recorded date is different from today's Thai date
     // Condition 2: Active session exists in state but started on a past day
-    const isPastSession = activeSession?.startedAt && !isTodayThai(activeSession.startedAt);
+    const isPastSession = currentSession?.startedAt && !isTodayThai(currentSession.startedAt);
     const dateChanged = Boolean(lastVisit && lastVisit !== currentThaiDate);
 
     if (dateChanged || isPastSession) {
@@ -98,7 +105,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         router.replace("/shift");
       }
     }
-  }, [activeSession, router]);
+  }, [router]);
 
   useEffect(() => {
     // Check if the last time the user visited the site is a different day
@@ -123,6 +130,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const storedShift = storedSession ? getSelectedShift() : null;
     const storedSessions = getSessions();
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (storedUser) setCurrentUserState(storedUser);
     if (storedShift) {
       setSelectedShiftState(storedShift);
@@ -132,6 +140,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     // Only restore active session if it matches the current user and is from today
     if (storedSession && storedUser && storedSession.userId === storedUser.id) {
+      setActiveSessionState(storedSession);
+    } else if (storedSession && isTodayThai(storedSession.startedAt)) {
       setActiveSessionState(storedSession);
     } else {
       secureRemoveItem("app_active_session");
@@ -192,7 +202,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       document.removeEventListener("visibilitychange", onActivity);
       clearInterval(interval);
     };
-  }, [checkDateRollover]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function setCurrentUser(user: User | null) {
     setCurrentUserState(user);
