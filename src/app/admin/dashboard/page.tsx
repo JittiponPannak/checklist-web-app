@@ -24,7 +24,7 @@ export default function AdminDashboardPage() {
   const activeUser = currentUser || {
     id: "preview-admin-user",
     name: "คุณสมเกียรติ บริหารกิจ",
-    email: "admin@factory.com",
+    username: "admin",
     role: "admin" as const,
     position: "ผู้ดูแลระบบส่วนกลาง",
   };

@@ -39,7 +39,7 @@ async function runTest() {
   if (!userA) {
     const [newAss] = await db.insert(users).values({
       name: "สมชาย ผู้ช่วยทดสอบ",
-      email: `test_asst_${Date.now()}@test.com`,
+      username: `test_asst_${Date.now()}`,
       role: "manager_assistant",
       point: 100,
       point_streak: 2,
@@ -57,7 +57,7 @@ async function runTest() {
   if (!userB) {
     const [newMgr] = await db.insert(users).values({
       name: "สมศรี ผู้จัดการทดสอบ",
-      email: `test_mgr_${Date.now()}@test.com`,
+      username: `test_mgr_${Date.now()}`,
       role: "manager",
       point: 100,
       point_streak: 5,
@@ -66,9 +66,9 @@ async function runTest() {
   }
 
   // User C: Manager in Branch 2
-  let [userC] = await db.insert(users).values({
+  const [userC] = await db.insert(users).values({
     name: "วิชัย ผู้จัดการสาขา 2",
-    email: `test_mgr2_${Date.now()}@test.com`,
+    username: `test_mgr2_${Date.now()}`,
     role: "manager",
     point: 100,
     point_streak: 3,

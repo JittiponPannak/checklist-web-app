@@ -22,7 +22,6 @@ export async function loginAction(username: string, password: string): Promise<A
 export async function registerAction(data: {
   name: string;
   username: string;
-  email?: string;
   password?: string;
   role?: Role;
   position?: string;
@@ -44,7 +43,7 @@ export async function getUserByIdAction(id: string): Promise<AuthResponse> {
 
 export async function syncOAuthUserAction(userData: {
   id: string;
-  email: string;
+  username?: string;
   name?: string;
   role?: Role;
 }): Promise<AuthResponse> {

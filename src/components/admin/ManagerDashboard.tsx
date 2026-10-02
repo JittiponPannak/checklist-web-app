@@ -201,7 +201,6 @@ export function ManagerDashboard({
     const matchesSearch =
       emp.name.toLowerCase().includes(staffSearch.toLowerCase()) ||
       (emp.username && emp.username.toLowerCase().includes(staffSearch.toLowerCase())) ||
-      (emp.email && emp.email.toLowerCase().includes(staffSearch.toLowerCase())) ||
       (emp.position && emp.position.toLowerCase().includes(staffSearch.toLowerCase()));
     if (!matchesSearch) return false;
     if (staffFilter === "unassigned") return !emp.position;
@@ -1045,7 +1044,7 @@ export function ManagerDashboard({
                 <div className="flex flex-1 gap-2 flex-wrap sm:flex-nowrap">
                   <input
                     type="text"
-                    placeholder="ค้นหาพนักงานด้วยชื่อ, อีเมล หรือตำแหน่ง..."
+                    placeholder="ค้นหาพนักงานด้วยชื่อ, ชื่อผู้ใช้ หรือตำแหน่ง..."
                     value={staffSearch}
                     onChange={(e) => setStaffSearch(e.target.value)}
                     className="flex-1 bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-xs text-slate-900 placeholder:text-slate-500 focus:border-slate-900 focus:bg-[var(--color-surface)] focus-visible:outline-2 focus-visible:outline-slate-900 transition-colors"

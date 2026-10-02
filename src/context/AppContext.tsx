@@ -163,15 +163,19 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     supabase.auth.getUser().then(({ data }) => {
       if (data?.user) {
         const authUser = data.user;
+        const username =
+          authUser.user_metadata?.user_name ||
+          authUser.email?.split("@")[0]?.toLowerCase() ||
+          `user_${authUser.id.substring(0, 6)}`;
+
         const name =
           authUser.user_metadata?.full_name ||
           authUser.user_metadata?.name ||
-          authUser.email?.split("@")[0] ||
-          "ผู้ใช้งาน";
+          username;
 
         syncOAuthUserAction({
           id: authUser.id,
-          email: authUser.email!,
+          username,
           name,
         }).then((syncRes) => {
           if (syncRes.success && syncRes.user) {

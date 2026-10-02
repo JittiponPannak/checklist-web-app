@@ -5,7 +5,6 @@ export interface IAuthService {
   register(data: {
     name: string;
     username: string;
-    email?: string;
     password?: string;
     role?: Role;
     position?: string;
@@ -15,7 +14,6 @@ export interface IAuthService {
   getAllUsers(): Promise<{ success: boolean; users?: User[]; error?: string }>;
   syncOAuthUser(userData: {
     id: string;
-    email?: string;
     username?: string;
     name?: string;
     role?: Role;
@@ -159,7 +157,6 @@ export interface BranchEmployeeStatus {
   id: string;
   name: string;
   username?: string;
-  email?: string;
   role: Role;
   position?: string;
   branchId?: string;

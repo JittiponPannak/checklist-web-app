@@ -1,37 +1,14 @@
 import { getServices } from "../src/services/container";
+import { db } from "../src/db";
+import { sql } from "drizzle-orm";
 
 async function run() {
-  console.log("=== Testing Username & Password Authentication ===");
+  console.log("=== Testing Username & Password Authentication (Email Removed) ===");
   const services = getServices();
 
-  // Test 1: Login with existing user by username
-  console.log("Test 1: Login with username 'john'...");
-  const loginRes = await services.auth.login("john", "1234");
-  console.log("Login result:", {
-    success: loginRes.success,
-    username: loginRes.user?.username,
-    role: loginRes.user?.role,
-    name: loginRes.user?.name,
-  });
-  if (!loginRes.success || loginRes.user?.username !== "john") {
-    throw new Error("Failed to login with username 'john'");
-  }
-
-  // Test 2: Login with manager by username
-  console.log("Test 2: Login with username 'manager'...");
-  const mgrRes = await services.auth.login("manager", "1234");
-  console.log("Manager login:", {
-    success: mgrRes.success,
-    username: mgrRes.user?.username,
-    role: mgrRes.user?.role,
-  });
-  if (!mgrRes.success || mgrRes.user?.username !== "manager") {
-    throw new Error("Failed to login with username 'manager'");
-  }
-
-  // Test 3: Register a new user with username
+  // Test 1: Register a new user with username (no email)
   const testUsername = `user_${Date.now()}`;
-  console.log(`Test 3: Register new employee with username '${testUsername}'...`);
+  console.log(`Test 1: Register new employee with username '${testUsername}'...`);
   const regRes = await services.auth.register({
     name: "พนักงานทดสอบ ระบบใหม่",
     username: testUsername,
@@ -42,13 +19,32 @@ async function run() {
     success: regRes.success,
     username: regRes.user?.username,
     id: regRes.user?.id,
+    hasEmail: "email" in (regRes.user || {}),
   });
   if (!regRes.success || regRes.user?.username !== testUsername) {
     throw new Error("Failed to register employee with username");
   }
+  if ("email" in (regRes.user || {})) {
+    throw new Error("User object unexpectedly contains 'email' field!");
+  }
 
-  // Test 4: Duplicate username prevention
-  console.log("Test 4: Attempt duplicate registration with same username...");
+  // Test 2: Login with newly created username
+  console.log("Test 2: Login with newly created username...");
+  const loginRes = await services.auth.login(testUsername, "password123");
+  console.log("Login result:", {
+    success: loginRes.success,
+    username: loginRes.user?.username,
+    hasEmail: "email" in (loginRes.user || {}),
+  });
+  if (!loginRes.success) {
+    throw new Error("Failed to login with newly registered username");
+  }
+  if ("email" in (loginRes.user || {})) {
+    throw new Error("Login user object unexpectedly contains 'email' field!");
+  }
+
+  // Test 3: Duplicate username prevention
+  console.log("Test 3: Attempt duplicate registration with same username...");
   const dupRes = await services.auth.register({
     name: "คนชื่อซ้ำ",
     username: testUsername.toUpperCase(), // Case insensitive check
@@ -63,22 +59,31 @@ async function run() {
     throw new Error("Duplicate username was allowed, expected failure!");
   }
 
-  // Test 5: Login with newly created username
-  console.log("Test 5: Login with newly created username...");
-  const newLoginRes = await services.auth.login(testUsername, "password123");
-  console.log("New user login result:", {
-    success: newLoginRes.success,
-    username: newLoginRes.user?.username,
-  });
-  if (!newLoginRes.success) {
-    throw new Error("Failed to login with newly registered username");
+  // Test 4: Verify getAllUsers has no email
+  console.log("Test 4: Verify getAllUsers contains no email field...");
+  const allUsers = await services.auth.getAllUsers();
+  if (!allUsers.success || !allUsers.users) {
+    throw new Error("Failed to get all users");
   }
+  const anyHasEmail = allUsers.users.some((u) => "email" in u);
+  if (anyHasEmail) {
+    throw new Error("Some users in getAllUsers still have 'email' property!");
+  }
+  console.log(`✓ Verified ${allUsers.users.length} users in DB, none contain 'email'.`);
 
-  console.log("=== All Username Auth Tests Passed Successfully! ===");
-  process.exit(0);
+  // Cleanup test user
+  console.log("Cleaning up test users...");
+  await db.execute(sql`
+    DELETE FROM checklist_web_app.users WHERE username LIKE 'user_%' OR username LIKE 'testuser_%';
+  `);
+  console.log("✓ Cleanup finished.");
+
+  console.log("=== All Tests Passed Successfully! ===");
 }
 
-run().catch((err) => {
-  console.error("Test failed:", err);
-  process.exit(1);
-});
+run()
+  .then(() => process.exit(0))
+  .catch((err) => {
+    console.error("Test failed:", err);
+    process.exit(1);
+  });

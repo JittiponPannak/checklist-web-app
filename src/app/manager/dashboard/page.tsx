@@ -32,7 +32,7 @@ export default function ManagerDashboardPage() {
   const activeUser = currentUser || {
     id: "preview-exec-user",
     name: "คุณวิภาดา สุขเจริญ",
-    email: "manager@factory.com",
+    username: "manager",
     role: "manager" as const,
     position: "ผู้จัดการร้าน",
   };

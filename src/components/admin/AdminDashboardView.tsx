@@ -811,8 +811,8 @@ export function AdminDashboardView({
                 type="text"
                 value={userSearch}
                 onChange={(e) => setUserSearch(e.target.value)}
-                placeholder="ค้นหาชื่อผู้ใช้งาน, อีเมล หรือตำแหน่ง..."
-                aria-label="ค้นหาชื่อผู้ใช้งาน อีเมล หรือตำแหน่ง"
+                placeholder="ค้นหาชื่อผู้ใช้งาน หรือตำแหน่ง..."
+                aria-label="ค้นหาชื่อผู้ใช้งาน หรือตำแหน่ง"
                 className="bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-xl px-3.5 py-2 text-xs text-[var(--color-text)] placeholder:text-[var(--color-text-subtle)] focus:outline-none focus:border-amber-400 w-full sm:w-80"
               />
 

@@ -33,7 +33,6 @@ export class AuthService implements IAuthService {
           INITIAL_USERS.map((u) => ({
             name: u.name,
             username: u.username.toLowerCase(),
-            email: `${u.username.toLowerCase()}@local`,
             password: u.password,
             role: u.role,
           }))
@@ -56,16 +55,11 @@ export class AuthService implements IAuthService {
     try {
       await this.seedUsersIfEmpty();
 
-      // Support login by username or legacy email/name
+      // Support login by username
       const result = await this.db
         .select()
         .from(users)
-        .where(
-          or(
-            eq(sql`lower(${users.username})`, cleanUsername),
-            eq(sql`lower(${users.email})`, cleanUsername)
-          )
-        )
+        .where(eq(sql`lower(${users.username})`, cleanUsername))
         .limit(1);
 
       if (result.length === 0) {
@@ -103,7 +97,6 @@ export class AuthService implements IAuthService {
         id: foundUser.id,
         name: foundUser.name,
         username: foundUser.username || foundUser.name,
-        email: foundUser.email || undefined,
         role: foundUser.role as Role,
         position: defaultPosition,
         branchName,
@@ -124,14 +117,13 @@ export class AuthService implements IAuthService {
   async register(data: {
     name: string;
     username: string;
-    email?: string;
     password?: string;
     role?: Role;
     position?: string;
     branchId?: string;
   }): Promise<{ success: boolean; user?: User; error?: string }> {
     const cleanName = (data.name || "").trim();
-    const cleanUsername = (data.username || data.email || "").trim().toLowerCase();
+    const cleanUsername = (data.username || "").trim().toLowerCase();
     const cleanPassword = data.password ? data.password.trim() : null;
 
     let dbRole: Role = "employee";
@@ -151,12 +143,7 @@ export class AuthService implements IAuthService {
       const existing = await this.db
         .select({ id: users.id })
         .from(users)
-        .where(
-          or(
-            eq(sql`lower(${users.username})`, cleanUsername),
-            eq(sql`lower(${users.email})`, cleanUsername)
-          )
-        )
+        .where(eq(sql`lower(${users.username})`, cleanUsername))
         .limit(1);
 
       if (existing.length > 0) {
@@ -168,7 +155,6 @@ export class AuthService implements IAuthService {
         .values({
           name: cleanName,
           username: cleanUsername,
-          email: data.email?.trim().toLowerCase() || `${cleanUsername}@local`,
           password: cleanPassword,
           role: dbRole as any,
           last_login: new Date(),
@@ -204,7 +190,6 @@ export class AuthService implements IAuthService {
         id: created.id,
         name: created.name,
         username: created.username,
-        email: created.email || undefined,
         role: created.role as Role,
         position: isManagement ? data.position ?? "ผู้จัดการร้าน" : undefined,
         branchName: assignedBranchName,
@@ -257,7 +242,6 @@ export class AuthService implements IAuthService {
         id: foundUser.id,
         name: foundUser.name,
         username: foundUser.username || foundUser.name,
-        email: foundUser.email || undefined,
         role: foundUser.role as Role,
         position: defaultPosition,
         branchName,
@@ -295,7 +279,6 @@ export class AuthService implements IAuthService {
           id: u.id,
           name: u.name,
           username: u.username || u.name,
-          email: u.email || undefined,
           password: u.password || undefined,
           role: u.role as Role,
           position: defaultPosition,
@@ -317,19 +300,24 @@ export class AuthService implements IAuthService {
 
   async syncOAuthUser(userData: {
     id: string;
-    email: string;
+    username?: string;
     name?: string;
     role?: Role;
   }): Promise<{ success: boolean; user?: User; error?: string }> {
     try {
-      const cleanEmail = userData.email.trim().toLowerCase();
-      const displayName = userData.name || cleanEmail.split("@")[0] || "ผู้ใช้งาน";
+      const cleanUsername = (userData.username || `user_${userData.id.substring(0, 6)}`).trim().toLowerCase();
+      const displayName = userData.name || cleanUsername || "ผู้ใช้งาน";
 
-      // 1. Check if user with this email or id already exists
+      // 1. Check if user with this id or username already exists
       const [existing] = await this.db
         .select()
         .from(users)
-        .where(sql`lower(${users.email}) = ${cleanEmail}`)
+        .where(
+          or(
+            eq(users.id, userData.id),
+            eq(sql`lower(${users.username})`, cleanUsername)
+          )
+        )
         .limit(1);
 
       if (existing) {
@@ -348,7 +336,7 @@ export class AuthService implements IAuthService {
         .values({
           id: userData.id,
           name: displayName,
-          email: cleanEmail,
+          username: cleanUsername,
           password: null,
           role: (userData.role as any) || "employee",
           last_login: new Date(),

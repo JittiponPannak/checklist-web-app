@@ -136,7 +136,7 @@ export function BranchStaffPresenceView({
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
         const matchesName = emp.name.toLowerCase().includes(q);
-        const matchesUsername = (emp.username || emp.email || "").toLowerCase().includes(q);
+        const matchesUsername = (emp.username || "").toLowerCase().includes(q);
         const matchesPosition = emp.position?.toLowerCase().includes(q);
         if (!matchesName && !matchesUsername && !matchesPosition) return false;
       }
@@ -472,7 +472,7 @@ export function BranchStaffPresenceView({
               <Search size={14} className="absolute left-2.5 top-2.5 text-[var(--color-text-muted)]" />
               <input
                 type="text"
-                placeholder="ค้นหาชื่อ หรืออีเมล..."
+                placeholder="ค้นหาชื่อ หรือชื่อผู้ใช้..."
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 className="w-full pl-8 pr-3 py-1.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-xs focus:outline-2 focus:outline-amber-500"
@@ -757,7 +757,7 @@ export function BranchStaffPresenceView({
                 </div>
                 <div>
                   <h2 className="text-base font-bold text-[var(--color-text)]">{inspectedEmployee.name}</h2>
-                  <p className="text-xs text-[var(--color-text-muted)]">@{inspectedEmployee.username || inspectedEmployee.email || inspectedEmployee.name}</p>
+                  <p className="text-xs text-[var(--color-text-muted)]">@{inspectedEmployee.username || inspectedEmployee.name}</p>
                 </div>
               </div>
               <button

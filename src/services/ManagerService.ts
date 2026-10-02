@@ -624,7 +624,7 @@ export class ManagerService implements IManagerService {
         return {
           id: u.id,
           name: u.name,
-          email: u.email,
+          username: u.username,
           role: u.role,
           position,
           branchId: activeBranchId,
