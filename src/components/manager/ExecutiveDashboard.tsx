@@ -32,9 +32,9 @@ import { NavbarRefreshControl } from "../common/NavbarRefreshControl";
 import { invalidateBranchCache } from "../../utils/cache";
 import { LeaderboardWidget } from "./LeaderboardWidget";
 import { ErrorBoundary } from "../common/ErrorBoundary";
-import { ClipboardCheck, ShieldCheck, Building2, Award, Snowflake, History, CheckCircle2, AlertCircle, LogOut, HeartPulse } from "lucide-react";
+import { ClipboardCheck, ShieldCheck, Building2, Award, Snowflake, History, CheckCircle2, AlertCircle, LogOut, HeartPulse, Users } from "lucide-react";
+import Link from "next/link";
 import { LateReasonModal } from "../common/LateReasonModal";
-import { BranchLeaveManagementView } from "./BranchLeaveManagementView";
 
 export type ExecutiveRole = "manager_assistant" | "manager" | "committee" | "general_manager";
 
@@ -117,7 +117,7 @@ export function ExecutiveDashboard({
   const [isLoadingChecklist, setIsLoadingChecklist] = useState(false);
 
   // Navigation tab
-  type DashboardTab = "overview" | "checklist" | "history" | "refrigerator" | "leaves";
+  type DashboardTab = "overview" | "checklist" | "history" | "refrigerator";
   const [activeTab, setActiveTab] = useState<DashboardTab>("overview");
 
   // Load live shift sessions from Supabase DB
@@ -736,6 +736,15 @@ export function ExecutiveDashboard({
           </div>
 
           <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+            <Link
+              href="/manager/leaves"
+              className="text-xs font-bold text-[var(--color-text)] hover:text-amber-950 dark:hover:text-amber-200 bg-[var(--color-surface)] hover:bg-amber-100 dark:hover:bg-amber-950/70 border border-[var(--color-border)] hover:border-amber-400 px-3 py-1.5 rounded-xl transition-all inline-flex items-center gap-1.5 shrink-0 shadow-2xs cursor-pointer min-h-[36px]"
+              title="ระบบจัดการการลาและสถานะพนักงาน"
+            >
+              <HeartPulse size={16} className="text-rose-500 shrink-0" />
+              <span className="hidden sm:inline">การลา & สถานะพนักงาน</span>
+            </Link>
+
             <NavbarRefreshControl
               onRefresh={handleNavbarRefresh}
               onRefreshFromDb={handleNavbarRefreshFromDb}
@@ -800,11 +809,29 @@ export function ExecutiveDashboard({
               ภารกิจหลักวันนี้: <span className="font-semibold text-[var(--color-text)]">{roleConfig.primaryDuty}</span>
             </p>
           </div>
+
+          {/* Quick Access to Leave & Staff Status */}
+          <div className="flex items-center gap-2 z-10 shrink-0 flex-wrap sm:flex-nowrap">
+            <Link
+              href="/manager/leaves"
+              className="px-3.5 py-2 rounded-xl text-xs font-bold bg-[var(--color-surface-2)] hover:bg-rose-50 dark:hover:bg-rose-950/40 text-[var(--color-text)] hover:text-rose-700 dark:hover:text-rose-300 border border-[var(--color-border)] hover:border-rose-300 transition-all flex items-center gap-1.5 shadow-2xs"
+            >
+              <HeartPulse size={15} className="text-rose-500 shrink-0" />
+              <span>จัดการการลา</span>
+            </Link>
+            <Link
+              href="/manager/staff-status"
+              className="px-3.5 py-2 rounded-xl text-xs font-bold bg-[var(--color-surface-2)] hover:bg-amber-50 dark:hover:bg-amber-950/40 text-[var(--color-text)] hover:text-amber-800 dark:hover:text-amber-200 border border-[var(--color-border)] hover:border-amber-300 transition-all flex items-center gap-1.5 shadow-2xs"
+            >
+              <Users size={15} className="text-amber-600 shrink-0" />
+              <span>สถานะพนักงาน</span>
+            </Link>
+          </div>
         </header>
 
         {/* ─── Navigation Tabs (Tailored to Executive & Operations) ──────────── */}
         <div className="bg-[var(--color-surface-2)] p-1.5 rounded-2xl border border-[var(--color-border)] shadow-2xs">
-          <div className={`grid ${(currentRole === "manager_assistant" || currentRole === "manager") ? "grid-cols-2 sm:grid-cols-5" : "grid-cols-2 sm:grid-cols-4"} gap-1`}>
+          <div className={`grid ${(currentRole === "manager_assistant" || currentRole === "manager") ? "grid-cols-2 sm:grid-cols-4" : "grid-cols-1 sm:grid-cols-3"} gap-1.5`}>
             {[
               {
                 id: "overview" as DashboardTab,
@@ -822,12 +849,6 @@ export function ExecutiveDashboard({
                   },
                 ]
                 : []),
-              {
-                id: "leaves" as DashboardTab,
-                label: "การลา & วันหยุด",
-                Icon: HeartPulse,
-                desc: "บันทึกและจัดการลาป่วย/ลากิจ",
-              },
               {
                 id: "refrigerator" as DashboardTab,
                 label: "ตู้แช่ & ตรวจสอบงาน",
@@ -863,13 +884,6 @@ export function ExecutiveDashboard({
         </div>
 
         {/* ─── TAB CONTENT ─────────────────────────────────────────────────── */}
-        {activeTab === "leaves" && (
-          <BranchLeaveManagementView
-            currentUser={user}
-            onBackToDashboard={() => setActiveTab("overview")}
-          />
-        )}
-
         {activeTab === "refrigerator" && (
           <RefrigeratorConfigView user={user} />
         )}
@@ -996,6 +1010,43 @@ export function ExecutiveDashboard({
                       : "สาขาพร้อมเปิดทำการเต็มมาตรฐาน รับรองครบทุกกะงานแล้ว"}
                   </p>
                 </div>
+              </div>
+            </div>
+
+            {/* ─── Staff Presence & Leave Management Hub Card ─── */}
+            <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-4 sm:p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-start sm:items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
+                  <HeartPulse size={20} />
+                </div>
+                <div>
+                  <h4 className="text-xs sm:text-sm font-bold text-[var(--color-text)] flex items-center gap-2">
+                    <span>การบริหารจัดการกำลังพล & วันลาพนักงาน</span>
+                    <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/80 text-amber-950 dark:text-amber-200 border border-amber-300 dark:border-amber-800">
+                      HR & Staff
+                    </span>
+                  </h4>
+                  <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
+                    ตรวจสอบสถานะการเข้ากะของพนักงานประจำวัน บันทึกและอนุมัติการลาป่วย/ลากิจ พร้อมระบบคุ้มครองสตรีค
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0 flex-wrap sm:flex-nowrap">
+                <Link
+                  href="/manager/staff-status"
+                  className="w-full sm:w-auto px-3.5 py-2 rounded-xl text-xs font-bold bg-[var(--color-surface-2)] hover:bg-[var(--color-surface)] text-[var(--color-text)] border border-[var(--color-border)] hover:border-amber-400 transition-all flex items-center justify-center gap-1.5 shadow-2xs"
+                >
+                  <Users size={14} className="text-amber-600" />
+                  <span>สถานะกะพนักงาน</span>
+                </Link>
+                <Link
+                  href="/manager/leaves"
+                  className="w-full sm:w-auto px-4 py-2 rounded-xl text-xs font-bold bg-amber-400 hover:bg-amber-300 active:bg-amber-500 text-amber-950 transition-all flex items-center justify-center gap-1.5 shadow-xs"
+                >
+                  <HeartPulse size={14} className="text-rose-600" />
+                  <span>ระบบจัดการการลา →</span>
+                </Link>
               </div>
             </div>
 
@@ -1352,7 +1403,7 @@ export function ExecutiveDashboard({
                                   <span>งานไม่ครบ (รอพิจารณามาตรการ):</span>
                                 </div>
                                 <p className="text-[11px] text-[var(--color-text)] pl-4 italic">
-                                  "{sess.incompleteReason || "ไม่ได้ระบุเหตุผล"}"
+                                  &ldquo;{sess.incompleteReason || "ไม่ได้ระบุเหตุผล"}&rdquo;
                                 </p>
                               </div>
                             )}

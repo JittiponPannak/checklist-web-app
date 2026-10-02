@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { ShiftSession } from "../../types";
 import { fmtDate, fmtTime } from "../../data/storage";
 import { Badge, Divider, getShiftBadge } from "../common/Badge";
@@ -27,7 +27,7 @@ export function SessionDetailModal({
   canReviewIncomplete?: boolean;
   onReviewSuccess?: () => void;
 }) {
-  const [currentSession, setCurrentSession] = useState<ShiftSession | null>(session);
+  const [sessionOverride, setSessionOverride] = useState<Partial<ShiftSession> | null>(null);
   const [showApprovalPrompt, setShowApprovalPrompt] = useState(false);
   const [incompleteAction, setIncompleteAction] = useState<"no_penalty" | "deduct_points" | "break_streak" | "deduct_leave_quota">("no_penalty");
   const [pointsToDeduct, setPointsToDeduct] = useState<number>(5);
@@ -35,10 +35,7 @@ export function SessionDetailModal({
   const [isSubmittingReview, setIsSubmittingReview] = useState<boolean>(false);
   const [reviewFeedback, setReviewFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
-  useEffect(() => {
-    setCurrentSession(session);
-    setReviewFeedback(null);
-  }, [session]);
+  const currentSession = session ? { ...session, ...sessionOverride } : null;
 
   const { dialogRef, handleKeyDown } = useModalFocusTrap(Boolean(session), onClose);
 
@@ -52,7 +49,6 @@ export function SessionDetailModal({
     currentSession.incompleteStatus === "pending_review" ||
     currentSession.incompleteStatus === "reviewed"
   );
-  const isPendingReview = currentSession.incompleteStatus === "pending_review" || (Boolean(currentSession.incompleteReason) && currentSession.incompleteStatus !== "reviewed");
   const isReviewed = currentSession.incompleteStatus === "reviewed";
 
   const handleReviewIncomplete = async () => {
@@ -70,18 +66,13 @@ export function SessionDetailModal({
 
       if (res.success) {
         setReviewFeedback({ type: "success", message: "บันทึกผลการพิจารณามาตรการเรียบร้อยแล้ว" });
-        setCurrentSession((prev) =>
-          prev
-            ? {
-                ...prev,
-                incompleteStatus: "reviewed",
-                incompleteAction,
-                incompleteActionPoints: incompleteAction === "deduct_points" ? pointsToDeduct : 0,
-                incompleteActionNote: incompleteNote.trim() || null,
-                incompleteReviewedAt: new Date().toISOString(),
-              }
-            : null
-        );
+        setSessionOverride({
+          incompleteStatus: "reviewed",
+          incompleteAction,
+          incompleteActionPoints: incompleteAction === "deduct_points" ? pointsToDeduct : 0,
+          incompleteActionNote: incompleteNote.trim() || null,
+          incompleteReviewedAt: new Date().toISOString(),
+        });
         onReviewSuccess?.();
       } else {
         setReviewFeedback({ type: "error", message: res.error || "เกิดข้อผิดพลาดในการบันทึก" });
@@ -166,7 +157,7 @@ export function SessionDetailModal({
                   <div className="text-[11px] text-[var(--color-text)] space-y-1 bg-[var(--color-surface)] p-2.5 rounded-xl border border-blue-200/60 dark:border-blue-900/60">
                     <div>
                       <span className="font-semibold text-[var(--color-text-muted)]">เหตุผลของพนักงาน:</span>{" "}
-                      <span className="italic font-medium text-[var(--color-text)]">"{currentSession.incompleteReason}"</span>
+                      <span className="italic font-medium text-[var(--color-text)]">&ldquo;{currentSession.incompleteReason}&rdquo;</span>
                     </div>
                     {currentSession.incompleteActionNote && (
                       <div>
@@ -199,7 +190,7 @@ export function SessionDetailModal({
                       <div className="mt-2 p-2.5 rounded-xl bg-[var(--color-surface)] border border-amber-200 dark:border-amber-900/60 text-xs">
                         <span className="font-bold text-amber-800 dark:text-amber-300 block mb-0.5">เหตุผลที่ระบุจากพนักงาน:</span>
                         <p className="font-medium text-[var(--color-text)] italic break-words">
-                          "{currentSession.incompleteReason || "ไม่ได้ระบุเหตุผล"}"
+                          &ldquo;{currentSession.incompleteReason || "ไม่ได้ระบุเหตุผล"}&rdquo;
                         </p>
                       </div>
                     </div>
