@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState, useTransition, useRef, useCallback } from "react";
+import React, { createContext, useContext, useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { ShiftSession, ShiftType, User } from "../types";
 import { STAFF_POSITIONS } from "../types";
@@ -53,52 +53,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const { startLoading, withLoading } = useLoading();
   const [, startTransition] = useTransition();
   const [isReady, setIsReady] = useState(false);
+  const [currentUser, setCurrentUserState] = useState<User | null>(null);
+  const [selectedShift, setSelectedShiftState] = useState<ShiftType | null>(null);
 
-  const [currentUser, setCurrentUserState] = useState<User | null>(() => {
-    if (typeof window === "undefined") return null;
-    return getCurrentUser();
-  });
+  const [activeSession, setActiveSessionState] = useState<ShiftSession | null>(null);
+  const [sessions, setSessionsState] = useState<ShiftSession[]>([]);
 
-  const [activeSession, setActiveSessionState] = useState<ShiftSession | null>(() => {
-    if (typeof window === "undefined") return null;
-    const storedUser = getCurrentUser();
-    const storedSession = getActiveSession();
-    if (storedSession && storedUser && storedSession.userId === storedUser.id) {
-      return storedSession;
-    }
-    if (storedSession && isTodayThai(storedSession.startedAt)) {
-      return storedSession;
-    }
-    return null;
-  });
-
-  const [selectedShift, setSelectedShiftState] = useState<ShiftType | null>(() => {
-    if (typeof window === "undefined") return null;
-    const storedSession = getActiveSession();
-    return storedSession ? getSelectedShift() : null;
-  });
-
-  const [sessions, setSessionsState] = useState<ShiftSession[]>(() => {
-    if (typeof window === "undefined") return [];
-    const storedUser = getCurrentUser();
-    const storedSessions = getSessions();
-    if (storedSessions && storedUser) {
-      return storedSessions.filter((s) => s.userId === storedUser.id);
-    }
-    return [];
-  });
-
-  // Keep stable refs to avoid re-triggering effects and callbacks
-  const routerRef = useRef(router);
-  const activeSessionRef = useRef(activeSession);
-  const currentUserRef = useRef(currentUser);
-  const checkDateRolloverRef = useRef<() => void>(() => {});
-
-  const refreshUserData = useCallback(async () => {
-    const user = currentUserRef.current;
-    if (!user?.id) return;
+  const refreshUserData = async () => {
+    if (!currentUser?.id) return;
     try {
-      const res = await getUserByIdAction(user.id);
+      const res = await getUserByIdAction(currentUser.id);
       if (res.success && res.user) {
         setCurrentUserState(res.user);
         saveCurrentUser(res.user);
@@ -106,17 +70,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     } catch (err) {
       console.warn("Failed to refresh user data:", err);
     }
-  }, []);
+  };
 
-  const checkDateRollover = useCallback(() => {
+  const checkDateRollover = React.useCallback(() => {
     if (typeof window === "undefined") return;
     const currentThaiDate = getThaiDateString();
     const lastVisit = localStorage.getItem("app_last_visit_date");
-    const currentSession = activeSessionRef.current;
 
     // Condition 1: Recorded date is different from today's Thai date
     // Condition 2: Active session exists in state but started on a past day
-    const isPastSession = currentSession?.startedAt && !isTodayThai(currentSession.startedAt);
+    const isPastSession = activeSession?.startedAt && !isTodayThai(activeSession.startedAt);
     const dateChanged = Boolean(lastVisit && lastVisit !== currentThaiDate);
 
     if (dateChanged || isPastSession) {
@@ -132,17 +95,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       window.dispatchEvent(new CustomEvent("app:date-rollover", { detail: { date: currentThaiDate } }));
 
       if (window.location.pathname.includes("/checklist")) {
-        routerRef.current.replace("/shift");
+        router.replace("/shift");
       }
     }
-  }, []);
-
-  useEffect(() => {
-    routerRef.current = router;
-    activeSessionRef.current = activeSession;
-    currentUserRef.current = currentUser;
-    checkDateRolloverRef.current = checkDateRollover;
-  });
+  }, [activeSession, router]);
 
   useEffect(() => {
     // Check if the last time the user visited the site is a different day
@@ -161,24 +117,45 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
+    const storedUser = getCurrentUser();
     const storedSession = getActiveSession();
-    if (storedSession && !isTodayThai(storedSession.startedAt)) {
+    // Only restore shift if there's a valid today session
+    const storedShift = storedSession ? getSelectedShift() : null;
+    const storedSessions = getSessions();
+
+    if (storedUser) setCurrentUserState(storedUser);
+    if (storedShift) {
+      setSelectedShiftState(storedShift);
+    } else {
+      secureRemoveItem("app_selected_shift");
+    }
+
+    // Only restore active session if it matches the current user and is from today
+    if (storedSession && storedUser && storedSession.userId === storedUser.id) {
+      setActiveSessionState(storedSession);
+    } else {
       secureRemoveItem("app_active_session");
       secureRemoveItem("app_selected_shift");
+      setActiveSessionState(null);
+    }
+
+    if (storedSessions && storedUser) {
+      const userSessions = storedSessions.filter((s) => s.userId === storedUser.id);
+      setSessionsState(userSessions);
+    } else {
+      setSessionsState([]);
     }
 
     // Set up real-time listener for tab focus, visibility change, and heartbeat
     const onActivity = () => {
       if (typeof document !== "undefined" && !document.hidden) {
-        checkDateRolloverRef.current();
+        checkDateRollover();
       }
     };
 
     window.addEventListener("focus", onActivity);
     document.addEventListener("visibilitychange", onActivity);
-    const interval = setInterval(() => {
-      checkDateRolloverRef.current();
-    }, 30000);
+    const interval = setInterval(checkDateRollover, 30000);
 
     // Check Supabase Auth state for OAuth logins
     const supabase = createClient();
@@ -208,7 +185,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }
     });
 
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsReady(true);
 
     return () => {
@@ -216,22 +192,22 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       document.removeEventListener("visibilitychange", onActivity);
       clearInterval(interval);
     };
-  }, []);
+  }, [checkDateRollover]);
 
-  const setCurrentUser = useCallback((user: User | null) => {
+  function setCurrentUser(user: User | null) {
     setCurrentUserState(user);
     saveCurrentUser(user);
-  }, []);
+  }
 
-  const setSelectedShift = useCallback((shift: ShiftType | null) => {
+  function setSelectedShift(shift: ShiftType | null) {
     setSelectedShiftState(shift);
     saveSelectedShift(shift);
-  }, []);
+  }
 
-  const setActiveSession = useCallback((session: ShiftSession | null) => {
+  function setActiveSession(session: ShiftSession | null) {
     setActiveSessionState(session);
     saveActiveSession(session);
-  }, []);
+  }
 
   function login(user: User, shift?: ShiftType, redirectPath?: unknown) {
     startLoading("กำลังเข้าสู่ระบบ...", true);
