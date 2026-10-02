@@ -2,7 +2,6 @@ import { eq, and, or, gte, lte, lt, desc, asc, inArray, isNull, sql } from "driz
 import { tasks, taskWork, shiftSession, users, branches, refrigerators, refrigeratorTasks, notifications, pointTransactions } from "../db/schema";
 import { IChecklistService, INotificationService } from "./types";
 import { ShiftSession, ShiftType, ChecklistItem } from "../types";
-import { isValidUuid } from "../utils/validation";
 
 function mapPositionToTaskRole(pos: string): "cashier" | "stock" | "manager_assistant" {
   if (pos.includes("แคชเชียร์") || pos.includes("cashier")) return "cashier";
@@ -15,6 +14,10 @@ function mapShiftToDbShift(shift: ShiftType): "morning" | "afternoon" | "morning
   if (shift === "morning") return "morning";
   if (shift === "afternoon") return "afternoon";
   return "morning_afternoon";
+}
+
+function isValidUuid(id: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 }
 
 function getThaiStartAndEndOfDay(baseDate = new Date()) {

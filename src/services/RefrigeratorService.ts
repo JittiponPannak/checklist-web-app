@@ -2,7 +2,6 @@ import { eq, and, sql, inArray } from "drizzle-orm";
 import { refrigerators, branches, refrigeratorTasks, users } from "../db/schema";
 import { IRefrigeratorService, INotificationService, RefrigeratorTaskItem } from "./types";
 import { ShiftType } from "../types";
-import { isValidUuid } from "../utils/validation";
 
 export interface RefrigeratorConfig {
   id: string;
@@ -23,26 +22,21 @@ export class RefrigeratorService implements IRefrigeratorService {
   constructor(private db: any, private notificationService?: INotificationService) {}
 
   private async getBranchForUser(userId: string) {
-      // ids are uuid columns; a placeholder/expired-session id would raise 22P02.
-      let branch;
-      if (isValidUuid(userId)) {
-        [branch] = await this.db
-          .select({ id: branches.id, name: branches.name, refrigerators: branches.refrigerators })
-          .from(branches)
-          .where(sql`${userId} = ANY(${branches.members})`)
-          .limit(1);
-      }
+    let [branch] = await this.db
+      .select({ id: branches.id, name: branches.name, refrigerators: branches.refrigerators })
+      .from(branches)
+      .where(sql`${userId} = ANY(${branches.members})`)
+      .limit(1);
 
-      // Fallback for managers/admins who are not in any branch's member list.
-      if (!branch) {
-        [branch] = await this.db
-          .select({ id: branches.id, name: branches.name, refrigerators: branches.refrigerators })
-          .from(branches)
-          .limit(1);
-      }
-
-      return branch;
+    if (!branch) {
+      [branch] = await this.db
+        .select({ id: branches.id, name: branches.name, refrigerators: branches.refrigerators })
+        .from(branches)
+        .limit(1);
     }
+
+    return branch;
+  }
 
   async getRefrigerators(userId: string): Promise<{ success: boolean; data?: RefrigeratorConfig[]; error?: string }> {
     try {

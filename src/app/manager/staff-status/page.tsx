@@ -13,16 +13,15 @@ export default function ManagerStaffStatusPage() {
   useEffect(() => {
     if (!isReady) return;
     // Allow manager, manager_assistant, general_manager, committee, and admin
-    if (!currentUser || currentUser.role === "employee") {
-      router.replace("/");
+    if (currentUser && currentUser.role === "employee") {
+      router.replace("/checklist");
     }
   }, [currentUser, isReady, router]);
 
-  if (!isReady || !currentUser) {
+  if (!isReady) {
     return <LoadingSpinner text="กำลังโหลดข้อมูลสถานะพนักงาน..." />;
   }
 
-<<<<<<< Updated upstream
   const activeUser = currentUser || {
     id: "preview-manager-user",
     name: "คุณวิภาดา สุขเจริญ",
@@ -32,7 +31,4 @@ export default function ManagerStaffStatusPage() {
   };
 
   return <BranchStaffPresenceView currentUser={activeUser} />;
-=======
-  return <BranchStaffUnifiedHub currentUser={currentUser} initialTab="presence" />;
->>>>>>> Stashed changes
 }
