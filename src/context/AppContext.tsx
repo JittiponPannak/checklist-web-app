@@ -36,7 +36,7 @@ interface AppContextType {
   isReady: boolean;
   login: (user: User, shift?: ShiftType, redirectPath?: string) => void;
   logout: (redirectTo?: string) => void;
-  selectShift: (shift: ShiftType) => void;
+  selectShift: (shift: ShiftType) => Promise<void>;
   selectPosition: (position: string) => void;
   updateSession: (updated: ShiftSession) => void;
   endShift: (continueNextShift?: boolean) => void;
@@ -76,14 +76,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (typeof window === "undefined") return;
     const currentThaiDate = getThaiDateString();
     const lastVisit = localStorage.getItem("app_last_visit_date");
-    const activeSess = getActiveSession();
 
     // Condition 1: Recorded date is different from today's Thai date
     // Condition 2: Active session exists in state but started on a past day
     const isPastSession = activeSession?.startedAt && !isTodayThai(activeSession.startedAt);
     const dateChanged = Boolean(lastVisit && lastVisit !== currentThaiDate);
 
-    if (dateChanged || isPastSession || (!activeSess && activeSession)) {
+    if (dateChanged || isPastSession) {
       console.info("Daily cache rollover triggered. Purging previous day's operational cache...");
       localStorage.setItem("app_last_visit_date", currentThaiDate);
       evictDailyCache();
@@ -323,7 +322,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     });
   }
 
-  async function selectShift(shift: ShiftType) {
+  async function selectShift(shift: ShiftType): Promise<void> {
     if (!currentUser) return;
 
     await withLoading(async () => {
@@ -351,16 +350,19 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           setSessionsState(next);
           setActiveSession(session);
 
-          startTransition(() => {
-            router.push(currentUser.role === "manager" ? "/admin/dashboard" : "/checklist");
-          });
+          const targetPath = currentUser.role === "manager" ? "/admin/dashboard" : "/checklist";
+          router.push(targetPath);
           return;
         } else {
           alert("ดึงข้อมูลจากฐานข้อมูลไม่สำเร็จ: " + (res.error || ""));
+          throw new Error(res.error || "ดึงข้อมูลจากฐานข้อมูลไม่สำเร็จ");
         }
       } catch (err) {
         console.warn("Could not sync shift session from DB:", err);
-        alert("เกิดข้อผิดพลาดในการดึงข้อมูลจากระบบ กรุณาลองใหม่อีกครั้ง");
+        if (!(err instanceof Error && err.message.includes("ดึงข้อมูลจากฐานข้อมูลไม่สำเร็จ"))) {
+          alert("เกิดข้อผิดพลาดในการดึงข้อมูลจากระบบ กรุณาลองใหม่อีกครั้ง");
+        }
+        throw err;
       }
     }, "กำลังเตรียมเช็คลิสต์ประจำกะ...");
   }
